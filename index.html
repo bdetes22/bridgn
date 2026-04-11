@@ -3035,6 +3035,101 @@ const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ─── AUTH SCREENS ─────────────────────────────────────────────────────────────
+// ─── PARTICLE CANVAS ──────────────────────────────────────────────────────────
+function ParticleCanvas() {
+  const ref = useRef(null);
+  useEffect(()=>{
+    const canvas = ref.current;
+    const ctx = canvas.getContext("2d");
+    let W, H;
+
+    const resize = () => {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const mouse = {x:-9999, y:-9999};
+    const onMove = e => { mouse.x = e.clientX; mouse.y = e.clientY; };
+    window.addEventListener("mousemove", onMove, {passive:true});
+
+    const COLS = ["rgba(91,138,245,0.4)","rgba(167,139,250,0.3)"];
+    const COUNT = 60;
+    const particles = Array.from({length:COUNT}, ()=>({
+      x:  Math.random() * window.innerWidth,
+      y:  Math.random() * window.innerHeight,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      r:  1 + Math.random(),
+      col: COLS[Math.random() < 0.5 ? 0 : 1]
+    }));
+
+    let raf;
+    const REPEL  = 120;
+    const CONNECT = 100;
+
+    const tick = () => {
+      ctx.clearRect(0, 0, W, H);
+
+      // ── update ──────────────────────────────────────────────────────────────
+      for(const p of particles) {
+        const dx = p.x - mouse.x;
+        const dy = p.y - mouse.y;
+        const d  = Math.sqrt(dx*dx + dy*dy);
+        if(d < REPEL && d > 0) {
+          const f = (1 - d / REPEL) * 0.22;
+          p.vx += (dx / d) * f;
+          p.vy += (dy / d) * f;
+        }
+        p.vx *= 0.97;
+        p.vy *= 0.97;
+        const spd = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+        if(spd > 1.5) { p.vx = p.vx/spd*1.5; p.vy = p.vy/spd*1.5; }
+        p.x = (p.x + p.vx + W) % W;
+        p.y = (p.y + p.vy + H) % H;
+      }
+
+      // ── connection lines ─────────────────────────────────────────────────────
+      ctx.lineWidth = 0.5;
+      for(let i = 0; i < COUNT; i++) {
+        const a = particles[i];
+        for(let j = i + 1; j < COUNT; j++) {
+          const b = particles[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const d  = Math.sqrt(dx*dx + dy*dy);
+          if(d < CONNECT) {
+            ctx.strokeStyle = `rgba(91,138,245,${((1 - d/CONNECT) * 0.12).toFixed(3)})`;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // ── dots ─────────────────────────────────────────────────────────────────
+      for(const p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.col;
+        ctx.fill();
+      }
+
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+
+    return ()=>{
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", onMove);
+    };
+  }, []);
+
+  return <canvas ref={ref} style={{position:"fixed",top:0,left:0,pointerEvents:"none",zIndex:-1}}/>;
+}
+
 // ─── CURSOR GLOW ──────────────────────────────────────────────────────────────
 function CursorGlow() {
   const ref = useRef(null);
@@ -3278,6 +3373,7 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   React.createElement(React.Fragment, null,
+    React.createElement(ParticleCanvas),
     React.createElement(CursorGlow),
     React.createElement(App)
   )
