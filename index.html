@@ -147,6 +147,36 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 .fade-in{animation:fadeIn .2s ease}
 .trust-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:linear-gradient(135deg,rgba(52,211,153,.15),rgba(8,145,178,.15));border:1px solid rgba(52,211,153,.3);border-radius:99px;font-size:11px;font-weight:700;color:var(--green)}
+/* ── HAMBURGER (hidden on desktop) ── */
+.nav-hamburger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:34px;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);cursor:pointer;flex-shrink:0}
+.nav-hamburger span{display:block;width:16px;height:2px;background:var(--text2);border-radius:2px;transition:all .2s}
+.sidebar-mob-header{display:none}
+/* ── MOBILE OVERLAY ── */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:299;backdrop-filter:blur(2px)}
+.sidebar-overlay.show{display:block}
+/* ── MOBILE BREAKPOINT ── */
+@media(max-width:768px){
+  .nav-hamburger{display:flex}
+  .sidebar-mob-header{display:flex}
+  .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:300;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);width:260px;padding-top:0}
+  .sidebar.mob-open{transform:translateX(0)}
+  .main-layout{overflow:auto}
+  .content-area{padding:16px 14px}
+  .g4{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(2,1fr)}
+  .g2{grid-template-columns:1fr}
+  .frow{grid-template-columns:1fr}
+  .ph-row{flex-wrap:wrap;gap:12px}
+  .stat-value{font-size:22px}
+  .page-title{font-size:22px}
+  .det-body{padding:16px}
+  table.tbl{display:block;overflow-x:auto;white-space:nowrap}
+}
+@media(max-width:480px){
+  .g4,.g3{grid-template-columns:1fr}
+  .navbar{padding:0 12px;gap:10px}
+  .content-area{padding:12px}
+}
 </style>
 </head>
 <body>
@@ -341,10 +371,13 @@ function StarRating({value,onChange,readonly}) {
 }
 
 // ─── NAV + SIDEBAR ────────────────────────────────────────────────────────────
-function Navbar({role,setPage,userInitials,onSignOut}) {
+function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle}) {
   const [showMenu,setShowMenu] = useState(false);
   return (
     <nav className="navbar">
+      <div className="nav-hamburger" onClick={onMenuToggle} aria-label="Open menu">
+        <span/><span/><span/>
+      </div>
       <span className="nav-logo" onClick={()=>setPage("dashboard")}>Bridgn</span>
       <div style={{marginRight:"auto",marginLeft:16}}>
         <span style={{padding:"5px 14px",borderRadius:99,fontSize:12,fontWeight:700,background:role==="creator"?"rgba(91,138,245,.15)":"rgba(240,160,80,.15)",color:role==="creator"?"var(--accent)":"var(--accent2)",border:"1px solid "+(role==="creator"?"rgba(91,138,245,.3)":"rgba(240,160,80,.3)")}}>
@@ -372,7 +405,7 @@ function Navbar({role,setPage,userInitials,onSignOut}) {
   );
 }
 
-function Sidebar({role,page,setPage,userName,userInitials}) {
+function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
   const cNav = [
     {section:"Overview"},
     {k:"dashboard",l:"Dashboard",i:"⊞"},
@@ -419,11 +452,15 @@ function Sidebar({role,page,setPage,userName,userInitials}) {
   ];
   const nav = role==="creator"?cNav:bNav;
   return (
-    <aside className="sidebar">
+    <aside className={"sidebar"+(mobOpen?" mob-open":"")}>
+      <div className="sidebar-mob-header" style={{alignItems:"center",justifyContent:"space-between",padding:"16px 14px 8px",borderBottom:"1px solid var(--border)",marginBottom:4}}>
+        <span style={{fontFamily:"DM Serif Display,serif",fontSize:20,background:"linear-gradient(135deg,var(--accent),#a78bfa)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>Bridgn</span>
+        <button onClick={onClose} style={{background:"none",border:"none",color:"var(--text3)",fontSize:20,cursor:"pointer",lineHeight:1,padding:"2px 4px"}}>✕</button>
+      </div>
       {nav.map((n,i)=>n.section?(
         <div key={i} className="sidebar-label">{n.section}</div>
       ):(
-        <button key={n.k} className={"nav-item"+(page===n.k?" active":"")} onClick={()=>setPage(n.k)}>
+        <button key={n.k} className={"nav-item"+(page===n.k?" active":"")} onClick={()=>{setPage(n.k);onClose&&onClose();}}>
           <span className="nav-icon">{n.i}</span>
           <span style={{flex:1}}>{n.l}</span>
           {n.soon&&<span style={{fontSize:"9px",fontWeight:700,background:"rgba(167,139,250,.15)",color:"var(--purple)",border:"1px solid rgba(167,139,250,.3)",borderRadius:99,padding:"1px 6px",letterSpacing:".04em",flexShrink:0}}>SOON</span>}
@@ -3045,6 +3082,7 @@ function App() {
   const [selected,setSelected] = useState(null);
   const [deals,setDeals] = useState([]);
   const [availStatus,setAvailStatus] = useState("open");
+  const [mobSidebar,setMobSidebar] = useState(false);
 
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
@@ -3138,9 +3176,10 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Navbar role={role} setPage={setPage} userInitials={userInitials} onSignOut={handleSignOut}/>
+      <Navbar role={role} setPage={setPage} userInitials={userInitials} onSignOut={handleSignOut} onMenuToggle={()=>setMobSidebar(o=>!o)}/>
       <div className="main-layout">
-        <Sidebar role={role} page={page} setPage={setPage} userName={userName} userInitials={userInitials}/>
+        <div className={"sidebar-overlay"+(mobSidebar?" show":"")} onClick={()=>setMobSidebar(false)}/>
+        <Sidebar role={role} page={page} setPage={setPage} userName={userName} userInitials={userInitials} mobOpen={mobSidebar} onClose={()=>setMobSidebar(false)}/>
         <main className="content-area">
           {render()}
         </main>
