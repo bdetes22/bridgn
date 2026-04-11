@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -23,7 +23,7 @@
   --shadow-lg:0 20px 60px rgba(0,0,0,.7),0 4px 20px rgba(0,0,0,.45);
   --radius:14px;--radius-sm:9px;--radius-lg:20px
 }
-body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+body{font-family:"Space Grotesk",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
 body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
     radial-gradient(ellipse at 8% 35%,rgba(91,138,245,.11) 0%,transparent 52%),
@@ -37,9 +37,9 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
 .sidebar{width:240px;background:rgba(10,11,18,.97);border-right:1px solid var(--border);padding:10px 0 0;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
 .content-area{flex:1;overflow-y:auto;padding:32px 36px;background:var(--bg);background-image:radial-gradient(circle,rgba(255,255,255,.022) 1px,transparent 1px);background-size:28px 28px}
 .navbar{height:64px;background:rgba(10,11,18,.93);backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid var(--border);box-shadow:0 1px 0 rgba(240,160,80,.07),0 4px 24px rgba(0,0,0,.3);display:flex;align-items:center;padding:0 22px;gap:14px;position:sticky;top:0;z-index:100;flex-shrink:0}
-.nav-logo{font-family:"DM Serif Display",serif;font-size:24px;letter-spacing:-.5px;margin-right:auto;cursor:pointer;user-select:none;background:linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-logo{font-family:"Syne",sans-serif;font-size:25px;font-weight:800;letter-spacing:-.5px;margin-right:auto;cursor:pointer;user-select:none;background:linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .role-toggle{display:flex;background:rgba(0,0,0,.5);border-radius:var(--radius-sm);padding:3px;border:1px solid var(--border)}
-.role-btn{padding:5px 16px;border-radius:7px;border:none;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:13px;font-weight:500;transition:all .18s;background:transparent;color:var(--text2)}
+.role-btn{padding:5px 16px;border-radius:7px;border:none;cursor:pointer;font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:500;transition:all .18s;background:transparent;color:var(--text2)}
 .role-btn.active{background:var(--surface2);color:var(--text);box-shadow:var(--shadow-sm)}
 .nav-notif{width:36px;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;font-size:15px;transition:all .18s}
 .nav-notif:hover{border-color:rgba(240,160,80,.4);background:rgba(240,160,80,.08)}
@@ -56,7 +56,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
 .card-lg{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.05)}
 .card-hover{transition:box-shadow .22s,transform .22s,border-color .22s;cursor:pointer}
 .card-hover:hover{box-shadow:var(--shadow-lg),0 0 0 1px rgba(91,138,245,.14);transform:translateY(-3px);border-color:rgba(91,138,245,.22)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 19px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:14px;font-weight:600;transition:all .18s;white-space:nowrap;line-height:1;letter-spacing:.01em}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 19px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:"Space Grotesk",sans-serif;font-size:14px;font-weight:600;transition:all .18s;white-space:nowrap;line-height:1;letter-spacing:.01em}
 .btn:disabled{opacity:.45;cursor:default}
 .btn-primary{background:linear-gradient(135deg,#6699ff,var(--accent));color:white;box-shadow:0 2px 14px rgba(91,138,245,.32),0 1px 3px rgba(0,0,0,.25)}
 .btn-primary:hover:not(:disabled){background:linear-gradient(135deg,#78aaff,#6699ff);box-shadow:0 4px 22px rgba(91,138,245,.45),0 1px 4px rgba(0,0,0,.2);transform:translateY(-1px)}
@@ -91,10 +91,10 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
 .stat-card::before{content:"";position:absolute;top:-28px;right:-28px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(240,160,80,.12),transparent 68%);pointer-events:none}
 .stat-card::after{content:"";position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(240,160,80,.18),transparent);pointer-events:none}
 .stat-label{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
-.stat-value{font-size:32px;font-weight:700;color:var(--text);font-family:"DM Serif Display",serif;line-height:1;letter-spacing:-.5px}
+.stat-value{font-size:36px;font-weight:700;color:var(--text);font-family:"Syne",sans-serif;line-height:1;letter-spacing:-.5px}
 .stat-change{font-size:12px;margin-top:7px;font-weight:500}
 .stat-up{color:var(--green)}.stat-neutral{color:var(--text3)}
-.page-title{font-family:"DM Serif Display",serif;font-size:30px;color:var(--text);line-height:1.15;letter-spacing:-.3px}
+.page-title{font-family:"Syne",sans-serif;font-size:36px;font-weight:800;color:var(--text);line-height:1.1;letter-spacing:-.5px}
 .page-subtitle{font-size:13px;color:var(--text2);margin-top:5px;line-height:1.5}
 .ph-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:32px}
 .g2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
@@ -103,7 +103,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
 .section{margin-bottom:30px}
 .section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .section-title{font-size:13px;font-weight:700;color:var(--text);letter-spacing:.01em}
-.section-link{font-size:12px;color:var(--accent2);cursor:pointer;font-weight:600;background:none;border:none;font-family:"DM Sans",sans-serif;letter-spacing:.02em;transition:color .15s}
+.section-link{font-size:12px;color:var(--accent2);cursor:pointer;font-weight:600;background:none;border:none;font-family:"Space Grotesk",sans-serif;letter-spacing:.02em;transition:color .15s}
 .section-link:hover{color:#ffba70}
 .deal-row{padding:14px 18px;display:flex;align-items:center;gap:14px}
 .deal-row+.deal-row{border-top:1px solid rgba(33,39,61,.9)}
@@ -115,32 +115,32 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
 .cr-av{width:58px;height:58px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:white;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 .cr-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:12px 0}
 .cr-stat{background:var(--surface2);padding:11px 6px}
-.cr-stat-v{font-size:15px;font-weight:700;color:var(--text);font-family:"DM Serif Display",serif}
+.cr-stat-v{font-size:17px;font-weight:700;color:var(--text);font-family:"Syne",sans-serif;letter-spacing:-.2px}
 .cr-stat-l{font-size:9px;color:var(--text3);font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
-.search-input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:border-color .18s,box-shadow .18s}
+.search-input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"Space Grotesk",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:border-color .18s,box-shadow .18s}
 .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,138,245,.12)}
-.filter-btn{padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);font-family:"DM Sans",sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s}
+.filter-btn{padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s}
 .filter-btn.active,.filter-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
 .det-banner{height:180px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;display:flex;align-items:flex-end;padding:22px;position:relative;overflow:hidden}
 .det-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,.08))}
 .det-av{width:68px;height:68px;border-radius:50%;border:3px solid rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;color:white;position:relative;z-index:1;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 .det-name-wrap{position:relative;z-index:1;margin-left:14px;flex:1}
-.det-name{font-size:22px;font-weight:700;color:white;font-family:"DM Serif Display",serif;letter-spacing:-.2px}
+.det-name{font-size:26px;font-weight:800;color:white;font-family:"Syne",sans-serif;letter-spacing:-.3px}
 .det-sub{font-size:13px;color:rgba(255,255,255,.68);margin-top:3px}
 .det-body{padding:24px 28px}
 .det-stats{display:grid;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:22px}
 .det-stat{background:var(--surface2);padding:16px;text-align:center}
-.det-stat-v{font-size:20px;font-weight:700;color:var(--text);font-family:"DM Serif Display",serif}
+.det-stat-v{font-size:24px;font-weight:700;color:var(--text);font-family:"Syne",sans-serif;letter-spacing:-.2px}
 .det-stat-l{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-weight:800;margin-top:4px}
 .det-sec{margin-bottom:22px}
 .det-sec-title{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:10px}
 .fg{margin-bottom:18px}
 .fl{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:7px;letter-spacing:.01em}
-.fi{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:all .18s}
+.fi{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"Space Grotesk",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:all .18s}
 .fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,138,245,.12)}
-.fta{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:all .18s;resize:vertical;min-height:90px}
+.fta{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"Space Grotesk",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:all .18s;resize:vertical;min-height:90px}
 .fta:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,138,245,.12)}
-.fsel{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;cursor:pointer}
+.fsel{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"Space Grotesk",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;cursor:pointer}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .prog-bar{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden}
 .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),#7ba8ff)}
@@ -182,8 +182,8 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
   .g2{grid-template-columns:1fr}
   .frow{grid-template-columns:1fr}
   .ph-row{flex-wrap:wrap;gap:12px}
-  .stat-value{font-size:24px}
-  .page-title{font-size:24px}
+  .stat-value{font-size:26px}
+  .page-title{font-size:28px}
   .det-body{padding:16px}
   table.tbl{display:block;overflow-x:auto;white-space:nowrap}
 }
@@ -354,7 +354,7 @@ function Modal({onClose,children,maxWidth=520}) {
 
 function Toast({msg,emoji}) {
   return (
-    <div style={{position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:"#1a1916",color:"white",borderRadius:12,padding:"11px 20px",fontSize:"14px",fontWeight:600,display:"flex",alignItems:"center",gap:8,zIndex:999,boxShadow:"var(--shadow-lg)",fontFamily:"DM Sans,sans-serif",pointerEvents:"none",animation:"fadeIn .18s ease",whiteSpace:"nowrap"}}>
+    <div style={{position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:"#1a1916",color:"white",borderRadius:12,padding:"11px 20px",fontSize:"14px",fontWeight:600,display:"flex",alignItems:"center",gap:8,zIndex:999,boxShadow:"var(--shadow-lg)",fontFamily:"Space Grotesk,sans-serif",pointerEvents:"none",animation:"fadeIn .18s ease",whiteSpace:"nowrap"}}>
       {emoji&&<span style={{fontSize:"16px"}}>{emoji}</span>}{msg}
     </div>
   );
@@ -409,10 +409,10 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle}) {
               <div style={{fontSize:13,fontWeight:600,marginTop:3}}>{userInitials}</div>
               <div style={{fontSize:11,color:"var(--text3)",marginTop:2,textTransform:"capitalize"}}>{role} Account</div>
             </div>
-            <button onClick={()=>{setShowMenu(false);setPage("public-profile");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>👤 My Profile</button>
-            <button onClick={()=>{setShowMenu(false);setPage("notifications");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>🔔 Notifications</button>
+            <button onClick={()=>{setShowMenu(false);setPage("public-profile");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>👤 My Profile</button>
+            <button onClick={()=>{setShowMenu(false);setPage("notifications");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>🔔 Notifications</button>
             <div style={{height:1,background:"var(--border)"}}></div>
-            <button onClick={()=>{setShowMenu(false);onSignOut&&onSignOut();}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,color:"var(--red)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>🚪 Sign Out</button>
+            <button onClick={()=>{setShowMenu(false);onSignOut&&onSignOut();}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--red)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>🚪 Sign Out</button>
           </div>
         )}
       </div>
@@ -469,7 +469,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
   return (
     <aside className={"sidebar"+(mobOpen?" mob-open":"")}>
       <div className="sidebar-mob-header" style={{alignItems:"center",justifyContent:"space-between",padding:"16px 14px 8px",borderBottom:"1px solid var(--border)",marginBottom:4}}>
-        <span style={{fontFamily:"DM Serif Display,serif",fontSize:20,background:"linear-gradient(135deg,var(--accent),#a78bfa)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>Bridgn</span>
+        <span style={{fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,letterSpacing:"-.4px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>Bridgn</span>
         <button onClick={onClose} style={{background:"none",border:"none",color:"var(--text3)",fontSize:20,cursor:"pointer",lineHeight:1,padding:"2px 4px"}}>✕</button>
       </div>
       {nav.map((n,i)=>n.section?(
@@ -504,7 +504,7 @@ function AvailabilityBanner({status,setStatus}) {
         <div style={{fontSize:"13px",fontWeight:700,color:open?"var(--green)":"var(--red)"}}>{open?"Open to Collaborations":"Currently Unavailable"}</div>
         <div style={{fontSize:"12px",color:"var(--text3)",marginTop:1}}>{open?"Brands can see you are available and are more likely to reach out.":"Your profile is hidden from brand discovery."}</div>
       </div>
-      <button onClick={()=>setStatus(open?"closed":"open")} style={{padding:"6px 13px",borderRadius:"var(--radius-sm)",border:"1px solid "+(open?"rgba(52,211,153,.4)":"rgba(248,113,113,.4)"),background:"transparent",fontFamily:"DM Sans,sans-serif",fontSize:"12px",fontWeight:600,cursor:"pointer",color:open?"var(--green)":"var(--red)"}}>
+      <button onClick={()=>setStatus(open?"closed":"open")} style={{padding:"6px 13px",borderRadius:"var(--radius-sm)",border:"1px solid "+(open?"rgba(52,211,153,.4)":"rgba(248,113,113,.4)"),background:"transparent",fontFamily:"Space Grotesk,sans-serif",fontSize:"12px",fontWeight:600,cursor:"pointer",color:open?"var(--green)":"var(--red)"}}>
         {open?"Mark Unavailable":"Mark Available"}
       </button>
     </div>
@@ -593,7 +593,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
                     <div className="deal-sub">{d.platform} · Due {d.deadline}</div>
                     <div style={{marginTop:6}}><div className="prog-bar"><div className="prog-fill" style={{width:((d.progress/6)*100)+"%"}}></div></div></div>
                   </div>
-                  <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${d.amount.toLocaleString()}</div><StatusBadge s={d.status}/></div>
+                  <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</div><StatusBadge s={d.status}/></div>
                 </div>
               ))}
             </div>
@@ -665,7 +665,7 @@ function CampaignsPage({setPage}) {
             <div style={{fontSize:"12px",color:"var(--green)",opacity:.8}}>We will email you at {email} when the campaign feed launches.</div>
           </div>
         )}
-        <div style={{marginTop:28,fontSize:"13px",color:"var(--text3)"}}>In the meantime, brands can still reach you directly —<button onClick={()=>setPage("public-profile")} style={{background:"none",border:"none",cursor:"pointer",color:"var(--accent)",fontWeight:600,fontFamily:"DM Sans,sans-serif",fontSize:"13px",marginLeft:4}}>make sure your profile is ready.</button></div>
+        <div style={{marginTop:28,fontSize:"13px",color:"var(--text3)"}}>In the meantime, brands can still reach you directly —<button onClick={()=>setPage("public-profile")} style={{background:"none",border:"none",cursor:"pointer",color:"var(--accent)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif",fontSize:"13px",marginLeft:4}}>make sure your profile is ready.</button></div>
       </div>
       <div style={{marginTop:8}}>
         <div style={{fontSize:"12px",fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:"var(--text3)",marginBottom:14,textAlign:"center"}}>A sneak peek at what is coming</div>
@@ -759,7 +759,7 @@ function CreatorDealsPage({setPage,setSelected,deals}) {
                 {d.status==="Active"&&<div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:((d.progress/6)*100)+"%"}}></div></div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>Step {d.progress} of 6</div></div>}
               </div>
               <div style={{textAlign:"right"}}>
-                <div style={{fontSize:"17px",fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${d.amount.toLocaleString()}</div>
+                <div style={{fontSize:"17px",fontWeight:700,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</div>
                 <div style={{marginTop:5}}><StatusBadge s={d.status}/></div>
               </div>
               <div style={{color:"var(--text3)",fontSize:"18px",marginLeft:4}}>›</div>
@@ -966,7 +966,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
                     {step.active&&<span style={{fontSize:"10px",fontWeight:700,color:g[0],background:g[0]+"14",padding:"1px 7px",borderRadius:99}}>Now</span>}
                   </div>
                   <div style={{fontSize:"12px",color:step.done?"var(--text3)":step.active?"var(--text2)":"var(--text3)",lineHeight:1.5}}>{step.desc}</div>
-                  {step.active&&step.cta&&<button onClick={()=>setModal(step.key)} style={{marginTop:10,padding:"7px 16px",borderRadius:"var(--radius-sm)",border:"none",background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",color:"white",fontFamily:"DM Sans,sans-serif",fontSize:"12px",fontWeight:600,cursor:"pointer"}}>{step.cta}</button>}
+                  {step.active&&step.cta&&<button onClick={()=>setModal(step.key)} style={{marginTop:10,padding:"7px 16px",borderRadius:"var(--radius-sm)",border:"none",background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",color:"white",fontFamily:"Space Grotesk,sans-serif",fontSize:"12px",fontWeight:600,cursor:"pointer"}}>{step.cta}</button>}
                 </div>
               </div>
             </div>
@@ -999,10 +999,10 @@ function ActiveDealPage({deal:initDeal,setPage}) {
       {modal&&(
         <Modal onClose={()=>setModal(null)}>
           <div style={{padding:26}}>
-            {modal==="accepted"&&<><div style={{fontSize:"26px",marginBottom:10}}>🤝</div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:8}}>Deal Accepted</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:20}}>Review and sign the agreement to get started.</div><button onClick={()=>setModal("signed")} className="btn btn-primary btn-lg" style={{width:"100%"}}>Review Agreement</button></>}
+            {modal==="accepted"&&<><div style={{fontSize:"26px",marginBottom:10}}>🤝</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:8}}>Deal Accepted</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:20}}>Review and sign the agreement to get started.</div><button onClick={()=>setModal("signed")} className="btn btn-primary btn-lg" style={{width:"100%"}}>Review Agreement</button></>}
             {modal==="signed"&&(
               <>
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:14}}>Partnership Agreement</div>
+                <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Partnership Agreement</div>
                 <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"14px",maxHeight:180,overflowY:"auto",marginBottom:16,fontSize:"13px",color:"var(--text2)",lineHeight:1.75}}>
                   <strong style={{color:"var(--text)"}}>Deliverables:</strong> {deal.deliverables}<br/><br/>
                   <strong style={{color:"var(--text)"}}>Payment:</strong> ${deal.amount.toLocaleString()} upon approval<br/><br/>
@@ -1018,7 +1018,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
             )}
             {modal==="brief"&&(
               <>
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:14}}>Creative Brief</div>
+                <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Creative Brief</div>
                 <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"14px",marginBottom:16,fontSize:"13px",color:"var(--text2)",lineHeight:1.8}}>
                   <strong style={{color:"var(--text)"}}>Tone:</strong> Authentic, lifestyle-forward<br/>
                   <strong style={{color:"var(--text)"}}>Key message:</strong> Natural product use in daily life<br/>
@@ -1030,7 +1030,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
             )}
             {modal==="content"&&(
               <>
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:14}}>Submit Content</div>
+                <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Submit Content</div>
                 {!submitted?(
                   <>
                     <div onClick={()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setSubmitted(true);},1400);}} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"28px",textAlign:"center",marginBottom:14,cursor:"pointer",background:"var(--bg)"}}>
@@ -1039,7 +1039,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
                     <button onClick={()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setSubmitted(true);},1400);}} disabled={submitting} className="btn btn-primary" style={{width:"100%"}}>Submit for Review</button>
                   </>
                 ):(
-                  <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:"40px",marginBottom:10}}>🎉</div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"18px",marginBottom:6}}>Content Submitted!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>{deal.brand} will review within 48 hours.</div><button onClick={()=>setModal(null)} className="btn btn-primary">Close</button></div>
+                  <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:"40px",marginBottom:10}}>🎉</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:6}}>Content Submitted!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>{deal.brand} will review within 48 hours.</div><button onClick={()=>setModal(null)} className="btn btn-primary">Close</button></div>
                 )}
               </>
             )}
@@ -1220,7 +1220,7 @@ function OfferPage({offer,setPage}) {
           <div style={{display:"flex",gap:14,marginBottom:16}}>
             <div className="deal-av" style={{background:bc(o.ci),width:48,height:48,fontSize:"15px"}}>{o.bi}</div>
             <div style={{flex:1}}><div style={{fontSize:"17px",fontWeight:700}}>{o.brand}</div><div style={{fontSize:"12px",color:"var(--text2)"}}>{o.platform} · Direct Offer</div></div>
-            <div style={{fontSize:"24px",fontWeight:700,color:"var(--accent)",fontFamily:"DM Serif Display,serif"}}>${o.amount.toLocaleString()}</div>
+            <div style={{fontSize:"24px",fontWeight:700,color:"var(--accent)",fontFamily:"Syne,sans-serif"}}>${o.amount.toLocaleString()}</div>
           </div>
           <div style={{background:"var(--surface2)",borderRadius:"var(--radius)",padding:"12px 16px",fontSize:"13px",lineHeight:1.65,marginBottom:16,borderLeft:"3px solid var(--accent)",fontStyle:"italic",color:"var(--text2)"}}>"{o.message}"</div>
           <div className="g2">
@@ -1293,7 +1293,7 @@ function CreatorAnalyticsPage() {
                           <span style={{fontSize:"13px"}}>📄</span><span style={{fontSize:"12px",fontWeight:500,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.file}</span><span style={{fontSize:"11px",color:u.age===0?"var(--green)":"var(--text3)",fontWeight:600,flexShrink:0}}>{u.age===0?"Just now":u.age+"d ago"}</span>
                         </div>
                         <div style={{fontSize:"11px",color:"var(--text3)",marginBottom:10}}>🔒 Brands see upload timestamp — cannot be edited</div>
-                        <div style={{display:"flex",gap:7}}><button onClick={()=>simulate(p)} style={{padding:"6px 12px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",fontFamily:"DM Sans,sans-serif",fontSize:"12px",cursor:"pointer",color:"var(--accent)"}}>Update</button><button onClick={()=>remove(p)} className="btn btn-danger btn-sm">Remove</button></div>
+                        <div style={{display:"flex",gap:7}}><button onClick={()=>simulate(p)} style={{padding:"6px 12px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",fontFamily:"Space Grotesk,sans-serif",fontSize:"12px",cursor:"pointer",color:"var(--accent)"}}>Update</button><button onClick={()=>remove(p)} className="btn btn-danger btn-sm">Remove</button></div>
                       </div>
                     ):(
                       <div onClick={()=>!isUp&&simulate(p)} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"22px",textAlign:"center",cursor:"pointer",background:"var(--bg)"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=g[0];}} onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";}}>
@@ -1328,7 +1328,7 @@ function ContentCalendarPage({deals}) {
         <>
           <div style={{display:"flex",gap:8,marginBottom:14,alignItems:"center"}}>
             <button className="btn btn-secondary btn-sm">‹</button>
-            <span style={{fontFamily:"DM Serif Display,serif",fontSize:"17px",fontWeight:700,flex:1,textAlign:"center"}}>April 2025</span>
+            <span style={{fontFamily:"Syne,sans-serif",fontSize:"17px",fontWeight:700,flex:1,textAlign:"center"}}>April 2025</span>
             <button className="btn btn-secondary btn-sm">›</button>
           </div>
           <div className="card-lg" style={{overflow:"hidden"}}>
@@ -1398,7 +1398,7 @@ function RateCardPage() {
           <div className="fg"><label className="fl">Primary Niche</label><select className="fsel" value={niche} onChange={e=>setNiche(e.target.value)}>{["Lifestyle","Wellness","Fashion","Beauty","Food","Tech","Finance","Gaming","Travel","Fitness","Education"].map(n=><option key={n}>{n}</option>)}</select></div>
           {hasData&&<div style={{padding:"13px 15px",background:"var(--surface2)",borderRadius:"var(--radius)",border:"1px solid var(--border)"}}>
             <div className="det-sec-title" style={{marginBottom:5}}>Your Tier</div>
-            <div style={{fontSize:"20px",fontWeight:700,color:tierColor,fontFamily:"DM Serif Display,serif"}}>{tier} Creator</div>
+            <div style={{fontSize:"20px",fontWeight:700,color:tierColor,fontFamily:"Syne,sans-serif"}}>{tier} Creator</div>
             <div style={{fontSize:"12px",color:"var(--text2)",marginTop:3}}>{f.toLocaleString()} followers · {eng}% engagement</div>
           </div>}
         </div>
@@ -1413,7 +1413,7 @@ function RateCardPage() {
                 <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}>
                   <span style={{fontSize:"20px",flexShrink:0}}>{r.icon}</span>
                   <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600}}>{r.type}</div><div style={{height:3,background:"var(--surface2)",borderRadius:99,overflow:"hidden",width:140,marginTop:7}}><div style={{height:"100%",borderRadius:99,background:"linear-gradient(90deg,var(--accent),var(--accent2))",width:((i+1)/rates.length*80+20)+"%"}}></div></div></div>
-                  <div style={{textAlign:"right"}}><div style={{fontSize:"15px",fontWeight:700,fontFamily:"DM Serif Display,serif",color:"var(--accent)"}}>${r.low.toLocaleString()} – ${r.high.toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>per deliverable</div></div>
+                  <div style={{textAlign:"right"}}><div style={{fontSize:"15px",fontWeight:700,fontFamily:"Syne,sans-serif",color:"var(--accent)"}}>${r.low.toLocaleString()} – ${r.high.toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>per deliverable</div></div>
                 </div>
               ))}
             </div>
@@ -1436,7 +1436,7 @@ function MediaKitPage({userName,userInitials}) {
       <div style={{background:"var(--surface)",borderRadius:"var(--radius-lg)",overflow:"hidden",boxShadow:"var(--shadow-lg)",maxWidth:720,margin:"0 auto"}}>
         <div style={{height:170,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",position:"relative",display:"flex",alignItems:"flex-end",padding:"22px 28px",gap:18}}>
           <div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>
-          <div style={{flex:1}}><div style={{fontFamily:"DM Serif Display,serif",fontSize:"24px",color:"white",fontWeight:700}}>{userName}</div></div>
+          <div style={{flex:1}}><div style={{fontFamily:"Syne,sans-serif",fontSize:"24px",color:"white",fontWeight:700}}>{userName}</div></div>
           <div style={{textAlign:"right"}}><div style={{fontSize:"11px",fontWeight:700,color:"rgba(255,255,255,.6)",textTransform:"uppercase",letterSpacing:".08em"}}>bridgn.com/{handle}</div></div>
         </div>
         <div style={{padding:"24px 28px"}}>
@@ -1500,7 +1500,7 @@ function InvoicesPage({role}) {
       </div>
       <div className="g3 section" style={{gap:12}}>
         {(isBrand?[["Total Paid","$"+totalPaid.toLocaleString(),"💸"],["Pending","$"+pending.reduce((a,b)=>a+b.amount,0).toLocaleString(),"⏳"],["Avg Turnaround","3.2 days","⚡"]]:[["Total Earned","$"+totalPaid.toLocaleString(),"💰"],["Pending Payout","$"+pending.reduce((a,b)=>a+b.amount,0).toLocaleString(),"⏳"],["Sent",String(rows.length),"🧾"]]).map(([l,v,icon],i)=>(
-          <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}><span style={{fontSize:"24px"}}>{icon}</span><div><div style={{fontSize:"20px",fontWeight:700,fontFamily:"DM Serif Display,serif",lineHeight:1}}>{v}</div><div style={{fontSize:"10px",color:"var(--text3)",fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",marginTop:3}}>{l}</div></div></div>
+          <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}><span style={{fontSize:"24px"}}>{icon}</span><div><div style={{fontSize:"20px",fontWeight:700,fontFamily:"Syne,sans-serif",lineHeight:1}}>{v}</div><div style={{fontSize:"10px",color:"var(--text3)",fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",marginTop:3}}>{l}</div></div></div>
         ))}
       </div>
       <div className="card-lg" style={{overflow:"hidden"}}>
@@ -1514,7 +1514,7 @@ function InvoicesPage({role}) {
                 <td style={{fontWeight:600,color:"var(--accent)"}}>{inv.id}</td>
                 <td>{isBrand?inv.from:inv.to}</td>
                 <td style={{color:"var(--text2)"}}>{inv.campaign}</td>
-                <td style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${inv.amount.toLocaleString()}</td>
+                <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${inv.amount.toLocaleString()}</td>
                 <td style={{color:"var(--text3)"}}>{inv.date}</td>
                 <td><span className={"badge "+(inv.status==="Paid"?"badge-green":inv.status==="Pending"||inv.status==="Due"?"badge-yellow":"badge-gray")}>{inv.status}</span></td>
                 <td>{isBrand&&inv.status==="Due"?<button className="btn btn-primary btn-sm">Release Payment</button>:!isBrand&&inv.status==="Pending"?<button className="btn btn-secondary btn-sm">Follow Up</button>:<button className="btn btn-secondary btn-sm">View</button>}</td>
@@ -1527,7 +1527,7 @@ function InvoicesPage({role}) {
         <Modal onClose={()=>{setModal(null);setSent(false);}}>
           {!sent?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:16}}>Create Invoice</div>
+              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Create Invoice</div>
               <div className="fg"><label className="fl">Bill To</label><input className="fi" value={form.to} onChange={e=>up("to",e.target.value)} placeholder="Brand name"/></div>
               <div className="frow"><div className="fg"><label className="fl">Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="2500"/></div><div className="fg"><label className="fl">Due Date</label><input className="fi" type="date" value={form.dueDate} onChange={e=>up("dueDate",e.target.value)}/></div></div>
               <div className="fg"><label className="fl">Line Items / Notes</label><textarea className="fta" style={{minHeight:70}} value={form.notes} onChange={e=>up("notes",e.target.value)} placeholder="e.g. 2x Feed Posts, 1x Reel as per agreement..."></textarea></div>
@@ -1535,7 +1535,7 @@ function InvoicesPage({role}) {
               <div style={{display:"flex",gap:9}}><button onClick={()=>setSent(true)} className="btn btn-primary btn-lg" style={{flex:1}}>Send Invoice</button><button onClick={()=>setModal(null)} className="btn btn-secondary btn-lg">Cancel</button></div>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🧾</div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:8}}>Invoice Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.to||"The brand"}</strong> has been emailed a payment link.</div><button onClick={()=>{setModal(null);setSent(false);}} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🧾</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:8}}>Invoice Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.to||"The brand"}</strong> has been emailed a payment link.</div><button onClick={()=>{setModal(null);setSent(false);}} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -1558,7 +1558,7 @@ function PublicProfilePage({setPage,userName,userInitials}) {
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(0,0,0,.6),transparent)"}}></div>
           <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"22px 26px",display:"flex",gap:16,alignItems:"flex-end"}}>
             <div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2.5px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>
-            <div style={{flex:1}}><div style={{fontSize:"22px",fontWeight:700,color:"white",fontFamily:"DM Serif Display,serif"}}>{userName}</div></div>
+            <div style={{flex:1}}><div style={{fontSize:"22px",fontWeight:700,color:"white",fontFamily:"Syne,sans-serif"}}>{userName}</div></div>
             <button onClick={()=>setBookingModal(true)} className="btn btn-primary btn-lg" style={{flexShrink:0}}>Work With Me</button>
           </div>
         </div>
@@ -1573,10 +1573,10 @@ function PublicProfilePage({setPage,userName,userInitials}) {
       {bookingModal&&(
         <Modal onClose={()=>{setBookingModal(false);setBookSent(false);}}>
           {bookSent?(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🎉</div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:7}}>Inquiry Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{userName}</strong> will review and reply within 48 hours.</div><button onClick={()=>{setBookingModal(false);setBookSent(false);}} className="btn btn-primary">Got it</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🎉</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Inquiry Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{userName}</strong> will review and reply within 48 hours.</div><button onClick={()=>{setBookingModal(false);setBookSent(false);}} className="btn btn-primary">Got it</button></div>
           ):(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:16}}>Work with {(userName||"me").split(" ")[0]}</div>
+              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Work with {(userName||"me").split(" ")[0]}</div>
               <div className="fg"><label className="fl">Your Brand Name</label><input className="fi" value={bookForm.name} onChange={e=>setBookForm(f=>({...f,name:e.target.value}))} placeholder="Luxara Skincare"/></div>
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={bookForm.email} onChange={e=>setBookForm(f=>({...f,email:e.target.value}))} placeholder="your@brand.com"/></div>
               <div className="frow"><div className="fg"><label className="fl">Budget</label><input className="fi" value={bookForm.budget} onChange={e=>setBookForm(f=>({...f,budget:e.target.value}))} placeholder="$2,000"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={bookForm.platform} onChange={e=>setBookForm(f=>({...f,platform:e.target.value}))}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Multiple</option></select></div></div>
@@ -1638,7 +1638,7 @@ function EarningsPage() {
                 <div key={i} className="deal-row" style={i>0?{borderTop:"1px solid var(--border)"}:{}}>
                   <div className="deal-av" style={{background:bc(b.ci),width:34,height:34,fontSize:"11px"}}>{b.bi}</div>
                   <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600}}>{b.brand}</div><div style={{fontSize:"11px",color:"var(--text2)",marginTop:1}}>{b.deals} deals · ${b.avgDeal.toLocaleString()} avg</div><div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:(b.amount/ytd*100)+"%",background:bc(b.ci)}}></div></div></div></div>
-                  <div style={{fontWeight:700,fontFamily:"DM Serif Display,serif",fontSize:"16px"}}>${b.amount.toLocaleString()}</div>
+                  <div style={{fontWeight:700,fontFamily:"Syne,sans-serif",fontSize:"16px"}}>${b.amount.toLocaleString()}</div>
                 </div>
               ))}
             </div>
@@ -1652,7 +1652,7 @@ function EarningsPage() {
                 <div key={i} className="card" style={{padding:"13px 16px",display:"flex",gap:12,alignItems:"flex-start"}}>
                   <div style={{width:30,height:30,borderRadius:"50%",background:bc(ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",fontWeight:700,color:"white",flexShrink:0}}>{brand.slice(0,2)}</div>
                   <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600}}>{brand} · <PlatformBadge p={plat}/></div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>{note}</div></div>
-                  <div style={{fontSize:"15px",fontWeight:700,fontFamily:"DM Serif Display,serif",color:"var(--accent)"}}>{val}</div>
+                  <div style={{fontSize:"15px",fontWeight:700,fontFamily:"Syne,sans-serif",color:"var(--accent)"}}>{val}</div>
                 </div>
               ))}
             </div>
@@ -1704,7 +1704,7 @@ function ContractVaultPage() {
                 <div style={{fontSize:"12px",color:"var(--text2)"}}>{c.campaign} · {c.type}</div>
               </div>
               <div style={{textAlign:"right"}}>
-                <div style={{fontSize:"16px",fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${c.amount.toLocaleString()}</div>
+                <div style={{fontSize:"16px",fontWeight:700,fontFamily:"Syne,sans-serif"}}>${c.amount.toLocaleString()}</div>
                 <div style={{fontSize:"11px",color:c.status==="Expiring"?"var(--accent2)":c.status==="Expired"?"var(--red)":"var(--text3)",marginTop:3}}>
                   {c.status==="Expired"?"Expired":c.status==="Expiring"?"Expires in "+c.daysLeft+"d":"Expires "+c.expires}
                 </div>
@@ -1765,7 +1765,7 @@ function AvailabilityPage() {
         {[["Open Days",String(openDays),"var(--green)"],["Blocked",String(blocked.length),"var(--red)"],["Booked",String(booked.length),"var(--accent2)"]].map(([l,v,col],i)=>(
           <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}>
             <div style={{width:12,height:12,borderRadius:"50%",background:col,flexShrink:0}}></div>
-            <div><div style={{fontSize:"20px",fontWeight:700,fontFamily:"DM Serif Display,serif",lineHeight:1,color:col}}>{v}</div><div style={{fontSize:"11px",color:"var(--text3)",fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",marginTop:3}}>{l}</div></div>
+            <div><div style={{fontSize:"20px",fontWeight:700,fontFamily:"Syne,sans-serif",lineHeight:1,color:col}}>{v}</div><div style={{fontSize:"11px",color:"var(--text3)",fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",marginTop:3}}>{l}</div></div>
           </div>
         ))}
       </div>
@@ -1779,7 +1779,7 @@ function AvailabilityPage() {
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 18px",borderBottom:"1px solid var(--border)"}}>
           <div style={{display:"flex",gap:8,alignItems:"center"}}>
             <button className="btn btn-secondary btn-sm">‹</button>
-            <span style={{fontFamily:"DM Serif Display,serif",fontSize:"16px",fontWeight:700}}>April 2025</span>
+            <span style={{fontFamily:"Syne,sans-serif",fontSize:"16px",fontWeight:700}}>April 2025</span>
             <button className="btn btn-secondary btn-sm">›</button>
           </div>
           <button className="btn btn-secondary btn-sm" onClick={()=>setBlocked([])}>Clear All Blocked</button>
@@ -1842,7 +1842,7 @@ function ExpensesPage() {
                   <tr key={e.id}>
                     <td style={{fontWeight:500}}>{e.desc}</td>
                     <td><span className="badge badge-gray" style={{fontSize:"11px"}}>{e.category}</span></td>
-                    <td style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${e.amount.toLocaleString()}</td>
+                    <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${e.amount.toLocaleString()}</td>
                     <td style={{color:"var(--text3)"}}>{e.date}</td>
                     <td><span className={"badge "+(e.deductible?"badge-green":"badge-gray")} style={{fontSize:"11px"}}>{e.deductible?"Yes":"No"}</span></td>
                   </tr>
@@ -1877,7 +1877,7 @@ function ExpensesPage() {
       {modal&&(
         <Modal onClose={()=>setModal(false)}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:16}}>Add Expense</div>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Add Expense</div>
             <div className="fg"><label className="fl">Description</label><input className="fi" value={form.desc} onChange={e=>up("desc",e.target.value)} placeholder="e.g. Studio rental for brand shoot"/></div>
             <div className="frow"><div className="fg"><label className="fl">Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="250"/></div><div className="fg"><label className="fl">Date</label><input className="fi" type="date" value={form.date} onChange={e=>up("date",e.target.value)}/></div></div>
             <div className="fg"><label className="fl">Category</label><select className="fsel" value={form.category} onChange={e=>up("category",e.target.value)}>{CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></div>
@@ -2015,7 +2015,7 @@ function CreatorProfilePage({creator,setPage}) {
             <div style={{width:72,height:72,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2.5px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"24px",fontWeight:800,color:"white",flexShrink:0}}>{c.init}</div>
             <div style={{flex:1}}>
               <div style={{display:"flex",gap:9,alignItems:"center",marginBottom:4,flexWrap:"wrap"}}>
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",color:"white",fontWeight:700}}>{c.name}</div>
+                <div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",color:"white",fontWeight:700}}>{c.name}</div>
                 {hasTrust&&<TrustBadge paidOnTime={c.paidOnTime} total={c.totalDeals}/>}
               </div>
               <div style={{fontSize:"13px",color:"rgba(255,255,255,.8)"}}>{c.niche} · {c.loc}</div>
@@ -2030,7 +2030,7 @@ function CreatorProfilePage({creator,setPage}) {
         <div style={{padding:"0 0 0"}}>
           <div style={{display:"flex",borderBottom:"1px solid var(--border)",padding:"0 22px"}}>
             {["overview","analytics","scorecard"].map(t=>(
-              <button key={t} onClick={()=>setTab(t)} style={{padding:"13px 16px",background:"none",border:"none",borderBottom:"2px solid "+(tab===t?"var(--accent)":"transparent"),cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:"13px",fontWeight:tab===t?600:400,color:tab===t?"var(--accent)":"var(--text2)",textTransform:"capitalize",transition:"color .12s"}}>{t}</button>
+              <button key={t} onClick={()=>setTab(t)} style={{padding:"13px 16px",background:"none",border:"none",borderBottom:"2px solid "+(tab===t?"var(--accent)":"transparent"),cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:"13px",fontWeight:tab===t?600:400,color:tab===t?"var(--accent)":"var(--text2)",textTransform:"capitalize",transition:"color .12s"}}>{t}</button>
             ))}
           </div>
           {tab==="overview"&&(
@@ -2109,13 +2109,13 @@ function CreatorProfilePage({creator,setPage}) {
         <Modal onClose={()=>{setInviteModal(false);setSent(false);}}>
           {!sent?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:16}}>Invite {c.name.split(" ")[0]} to Campaign</div>
+              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Invite {c.name.split(" ")[0]} to Campaign</div>
               <div className="fg"><label className="fl">Select Campaign</label><select className="fsel" value={inviteForm.campaign} onChange={e=>setInviteForm(f=>({...f,campaign:e.target.value}))}><option value="">Choose a campaign...</option>{BRAND_CAMPAIGNS.map(x=><option key={x.id} value={x.title}>{x.title}</option>)}</select></div>
               <div className="fg"><label className="fl">Personal Message (optional)</label><textarea className="fta" value={inviteForm.message} onChange={e=>setInviteForm(f=>({...f,message:e.target.value}))} placeholder={"Tell "+c.name.split(" ")[0]+" why you think they are a great fit..."}></textarea></div>
               <div style={{display:"flex",gap:9}}><button onClick={()=>setSent(true)} disabled={!inviteForm.campaign} className="btn btn-primary btn-lg" style={{flex:1,opacity:inviteForm.campaign?1:.5}}>Send Invite</button><button onClick={()=>setInviteModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>✉️</div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{c.name}</strong> will receive your campaign invite and can respond from their Bridgn dashboard.</div><button onClick={()=>{setInviteModal(false);setSent(false);}} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>✉️</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{c.name}</strong> will receive your campaign invite and can respond from their Bridgn dashboard.</div><button onClick={()=>{setInviteModal(false);setSent(false);}} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -2186,10 +2186,10 @@ function BrandCampaignsPage({setPage,setSelected}) {
       {modal&&(
         <Modal onClose={()=>setModal(false)} maxWidth={580}>
           {created?(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🚀</div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:7}}>Campaign Live!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.title}</strong> is now live. Start inviting creators to apply.</div><div style={{display:"flex",gap:9,justifyContent:"center"}}><button onClick={()=>setPage("browse")} className="btn btn-primary">Find Creators</button><button onClick={()=>setModal(false)} className="btn btn-secondary">Close</button></div></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🚀</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Campaign Live!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.title}</strong> is now live. Start inviting creators to apply.</div><div style={{display:"flex",gap:9,justifyContent:"center"}}><button onClick={()=>setPage("browse")} className="btn btn-primary">Find Creators</button><button onClick={()=>setModal(false)} className="btn btn-secondary">Close</button></div></div>
           ):(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:18}}>New Campaign — Step {step} of 2</div>
+              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:18}}>New Campaign — Step {step} of 2</div>
               {step===1&&(
                 <>
                   <div className="fg"><label className="fl">Campaign Title</label><input className="fi" value={form.title} onChange={e=>up("title",e.target.value)} placeholder="e.g. Summer Hydration Campaign"/></div>
@@ -2250,7 +2250,7 @@ function CampaignCalendarPage() {
         </div>
         <div className="card-lg" style={{overflow:"hidden",marginBottom:18}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 20px",borderBottom:"1px solid var(--border)"}}>
-            <div style={{display:"flex",gap:8,alignItems:"center"}}><button className="btn btn-secondary btn-sm">‹</button><span style={{fontFamily:"DM Serif Display,serif",fontSize:"17px",fontWeight:700}}>April 2025</span><button className="btn btn-secondary btn-sm">›</button></div>
+            <div style={{display:"flex",gap:8,alignItems:"center"}}><button className="btn btn-secondary btn-sm">‹</button><span style={{fontFamily:"Syne,sans-serif",fontSize:"17px",fontWeight:700}}>April 2025</span><button className="btn btn-secondary btn-sm">›</button></div>
             <span style={{fontSize:"12px",color:"var(--text3)"}}>{calEvents.length} deliverables this month</span>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",background:"var(--surface2)",borderBottom:"1px solid var(--border)"}}>
@@ -2314,7 +2314,7 @@ function BrandDealsPage({setPage,setSelected}) {
                 <td><div style={{display:"flex",gap:9,alignItems:"center"}}><div style={{width:28,height:28,borderRadius:"50%",background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",fontWeight:700,color:"white",flexShrink:0}}>{d.ci2}</div><span style={{fontWeight:500}}>{d.creator}</span></div></td>
                 <td style={{color:"var(--text2)"}}>{d.campaign}</td>
                 <td><PlatformBadge p={d.platform}/></td>
-                <td style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${d.amount.toLocaleString()}</td>
+                <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</td>
                 <td>{d.source==="external"?<ExtBadge/>:<span className="badge badge-blue" style={{fontSize:"11px"}}>Bridgn</span>}</td>
                 <td>{d.escrow?<EscrowBadge released={false}/>:<span style={{fontSize:"11px",color:"var(--text3)"}}>—</span>}</td>
                 <td><StatusBadge s={d.status}/></td>
@@ -2407,7 +2407,7 @@ function ContentLibraryPage() {
             <div style={{height:120,background:"linear-gradient(135deg,"+bg(selected.ci)[0]+","+bg(selected.ci)[1]+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"40px",borderRadius:"var(--radius-lg) var(--radius-lg) 0 0"}}>{selected.thumbnail}</div>
             <div style={{padding:"20px 22px"}}>
               <div style={{display:"flex",gap:7,marginBottom:10,flexWrap:"wrap"}}><PlatformBadge p={selected.platform}/><span className="badge badge-gray">{selected.type}</span><span className={"badge "+(selected.approved?"badge-green":"badge-yellow")}>{selected.approved?"Approved":"Pending Approval"}</span></div>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"18px",marginBottom:4}}>{selected.creator}</div>
+              <div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:4}}>{selected.creator}</div>
               <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:16}}>{selected.campaign} · Delivered {selected.delivered}</div>
               <div className="g2" style={{gap:10,marginBottom:16}}>
                 {[["Usage Rights",selected.rights],["Rights Expire",selected.rightsExp],["Days Remaining",selected.daysLeft+"d"],["Campaign",selected.campaign]].map(([l,v],i)=>(
@@ -2456,13 +2456,13 @@ function AffiliateManagerPage() {
                     <code style={{background:"var(--surface2)",padding:"2px 7px",borderRadius:5,fontSize:"11px",fontWeight:700,color:"var(--accent2)",letterSpacing:".05em"}}>{a.code}</code>
                     <div style={{display:"flex",gap:5,marginTop:3,alignItems:"center"}}>
                       <span style={{fontSize:"10px",color:"var(--text3)"}}>{a.link}</span>
-                      <button onClick={()=>copy(a.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"10px",color:copied===a.id?"var(--green)":"var(--accent)",fontWeight:600,fontFamily:"DM Sans,sans-serif"}}>{copied===a.id?"Copied!":"Copy"}</button>
+                      <button onClick={()=>copy(a.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"10px",color:copied===a.id?"var(--green)":"var(--accent)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{copied===a.id?"Copied!":"Copy"}</button>
                     </div>
                   </div>
                 </td>
                 <td style={{fontWeight:600}}>{a.clicks.toLocaleString()}</td>
                 <td style={{fontWeight:600,color:"var(--green)"}}>{a.conversions.toLocaleString()}</td>
-                <td style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${a.revenue.toLocaleString()}</td>
+                <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${a.revenue.toLocaleString()}</td>
                 <td style={{fontWeight:700,color:"var(--accent2)"}}>${a.commission.toLocaleString()}</td>
                 <td><span className="badge badge-teal" style={{fontSize:"10px"}}>{a.rate}%</span></td>
                 <td><button className="btn btn-secondary btn-sm">Edit</button></td>
@@ -2474,7 +2474,7 @@ function AffiliateManagerPage() {
       {modal&&(
         <Modal onClose={()=>setModal(false)}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:16}}>Create Affiliate Link</div>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Create Affiliate Link</div>
             <div className="fg"><label className="fl">Creator Name</label><input className="fi" value={newLink.creator} onChange={e=>setNewLink(f=>({...f,creator:e.target.value}))} placeholder="Creator name"/></div>
             <div className="fg"><label className="fl">Campaign</label><input className="fi" value={newLink.campaign} onChange={e=>setNewLink(f=>({...f,campaign:e.target.value}))} placeholder="Campaign name"/></div>
             <div className="frow">
@@ -2524,7 +2524,7 @@ function BriefBuilderPage() {
               <div style={{display:"flex",gap:10,marginBottom:16,alignItems:"center"}}>
                 <span style={{fontSize:"24px"}}>{t.icon}</span>
                 <div style={{flex:1}}><div style={{fontSize:"15px",fontWeight:700}}>{t.label} Brief</div></div>
-                <button onClick={()=>{setTemplate(null);setFields({});}} style={{fontSize:"12px",color:"var(--text3)",background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>Change template</button>
+                <button onClick={()=>{setTemplate(null);setFields({});}} style={{fontSize:"12px",color:"var(--text3)",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif"}}>Change template</button>
               </div>
               <div className="fg"><label className="fl">Send to Creator</label><select className="fsel" value={creator} onChange={e=>setCreator(e.target.value)}><option value="">Select creator...</option>{CREATORS.map(c=><option key={c.id} value={c.name}>{c.name}</option>)}</select></div>
               {t.fields.map((f,i)=>(
@@ -2538,7 +2538,7 @@ function BriefBuilderPage() {
           </div>
           <div className="card-lg" style={{padding:"18px 22px",background:"rgba(8,145,178,.04)",border:"1.5px solid rgba(8,145,178,.25)"}}>
             <div style={{fontSize:"12px",fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:"var(--teal)",marginBottom:14}}>Creator will see this</div>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"16px",marginBottom:10}}>{t.label} Brief</div>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"16px",marginBottom:10}}>{t.label} Brief</div>
             {t.fields.map((f,i)=>(
               <div key={i} style={{marginBottom:12}}>
                 <div style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:"var(--text3)",marginBottom:4}}>{f}</div>
@@ -2602,7 +2602,7 @@ function CreatorScorecardsPage() {
         <Modal onClose={()=>setModal(false)} maxWidth={520}>
           {!submitted?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:16}}>Rate a Creator</div>
+              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Rate a Creator</div>
               <div className="fg"><label className="fl">Creator</label><select className="fsel" value={form.ci} onChange={e=>up("ci",parseInt(e.target.value))}><option value={-1}>Select creator...</option>{CREATORS.map((c,i)=><option key={i} value={i}>{c.name}</option>)}</select></div>
               <div className="fg"><label className="fl">Campaign</label><select className="fsel" value={form.campaign} onChange={e=>up("campaign",e.target.value)}><option value="">Select campaign...</option>{BRAND_CAMPAIGNS.map(c=><option key={c.id} value={c.title}>{c.title}</option>)}</select></div>
               <div className="divider"></div>
@@ -2618,7 +2618,7 @@ function CreatorScorecardsPage() {
               <button onClick={submit} disabled={form.ci<0||!form.campaign||form.communication===0} className="btn btn-primary btn-lg" style={{width:"100%",opacity:form.ci>=0&&form.campaign&&form.communication>0?1:.5}}>Submit Scorecard</button>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🏅</div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:7}}>Scorecard Saved!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>This is private to your brand. It helps inform future hiring decisions on Bridgn.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🏅</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Scorecard Saved!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>This is private to your brand. It helps inform future hiring decisions on Bridgn.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -2679,7 +2679,7 @@ function TeamManagementPage() {
         <Modal onClose={()=>setModal(false)}>
           {!sent?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:16}}>Invite Team Member</div>
+              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Invite Team Member</div>
               <div className="fg"><label className="fl">Full Name</label><input className="fi" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Alex Chen"/></div>
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="alex@yourbrand.com"/></div>
               <div className="fg"><label className="fl">Role</label>
@@ -2695,7 +2695,7 @@ function TeamManagementPage() {
               <div style={{display:"flex",gap:9,marginTop:20}}><button onClick={invite} disabled={!form.name||!form.email} className="btn btn-primary btn-lg" style={{flex:1,opacity:form.name&&form.email?1:.5}}>Send Invite</button><button onClick={()=>setModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>✉️</div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}><strong>{form.name}</strong> will receive an email invitation to join your brand account.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>✉️</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}><strong>{form.name}</strong> will receive an email invitation to join your brand account.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -2735,7 +2735,7 @@ function ROITrackerPage() {
                 <td style={{color:"var(--text2)"}}>{r.campaign}</td>
                 <td><PlatformBadge p={r.platform}/></td>
                 <td style={{fontWeight:600}}>${r.spend.toLocaleString()}</td>
-                <td style={{fontWeight:700,fontFamily:"DM Serif Display,serif",color:"var(--green)"}}>${r.revenue.toLocaleString()}</td>
+                <td style={{fontWeight:700,fontFamily:"Syne,sans-serif",color:"var(--green)"}}>${r.revenue.toLocaleString()}</td>
                 <td><div style={{display:"flex",gap:7,alignItems:"center"}}><div style={{width:60,height:5,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}><div style={{height:"100%",background:r.roi>300?"var(--green)":r.roi>100?"var(--accent)":"var(--accent2)",borderRadius:99,width:Math.min((r.roi/700)*100,100)+"%"}}></div></div><span style={{fontSize:"13px",fontWeight:700,color:r.roi>300?"var(--green)":r.roi>100?"var(--accent)":"var(--accent2)"}}>{r.roi}%</span></div></td>
                 <td style={{color:"var(--text2)"}}>{r.clicks.toLocaleString()}</td>
                 <td style={{color:"var(--text2)"}}>{r.conv.toLocaleString()}</td>
@@ -2843,7 +2843,7 @@ function ShortlistsPage({setPage,setSelected}) {
       {modal&&(
         <Modal onClose={()=>setModal(false)} maxWidth={400}>
           <div style={{padding:24}}>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"18px",marginBottom:14}}>New Shortlist</div>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:14}}>New Shortlist</div>
             <div className="fg"><label className="fl">List Name</label><input className="fi" value={listName} onChange={e=>setListName(e.target.value)} placeholder="e.g. Spring Campaign, Q3 Push..."/></div>
             <div style={{display:"flex",gap:9}}><button onClick={create} disabled={!listName.trim()} className="btn btn-primary btn-lg" style={{flex:1,opacity:listName.trim()?1:.5}}>Create List</button><button onClick={()=>setModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
           </div>
@@ -2977,28 +2977,28 @@ function AuthScreen({onAuth}) {
       <div style={{position:"fixed",width:350,height:350,borderRadius:"50%",background:"radial-gradient(circle,rgba(167,139,250,.06),transparent 68%)",top:"40%",left:"30%",pointerEvents:"none"}}></div>
       <div style={{width:"100%",maxWidth:440,position:"relative",zIndex:1,animation:"fadeIn .4s cubic-bezier(.16,1,.3,1)"}}>
         <div style={{textAlign:"center",marginBottom:40}}>
-          <div style={{fontFamily:"DM Serif Display,serif",fontSize:44,background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",marginBottom:10,letterSpacing:"-.5px"}}>Bridgn</div>
+          <div style={{fontFamily:"Syne,sans-serif",fontSize:52,fontWeight:800,background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",marginBottom:10,letterSpacing:"-1px"}}>Bridgn</div>
           <div style={{fontSize:14,color:"var(--text2)",letterSpacing:".01em"}}>The creator &amp; brand partnership platform</div>
         </div>
         <div className="card-lg" style={{padding:36,boxShadow:"0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.07)"}}>
           {mode==="login"&&(
             <>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:22,marginBottom:6}}>Welcome back</div>
+              <div style={{fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Welcome back</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Sign in to your Bridgn account</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
               <div className="fg"><label className="fl">Password</label><input className="fi" type="password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="Your password" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
-              <div style={{textAlign:"right",marginTop:-8,marginBottom:20}}><button onClick={()=>{setMode("reset");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"DM Sans,sans-serif"}}>Forgot password?</button></div>
+              <div style={{textAlign:"right",marginTop:-8,marginBottom:20}}><button onClick={()=>{setMode("reset");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif"}}>Forgot password?</button></div>
               <button onClick={handleLogin} disabled={loading||!form.email||!form.password} className="btn btn-primary btn-lg" style={{width:"100%",opacity:loading||!form.email||!form.password?.6:1}}>
                 {loading?<span style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>Signing in...</span>:"Sign In"}
               </button>
-              <div style={{textAlign:"center",marginTop:20,fontSize:13,color:"var(--text2)"}}>No account?<button onClick={()=>{setMode("signup");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"DM Sans,sans-serif",marginLeft:6}}>Create one free</button></div>
+              <div style={{textAlign:"center",marginTop:20,fontSize:13,color:"var(--text2)"}}>No account?<button onClick={()=>{setMode("signup");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif",marginLeft:6}}>Create one free</button></div>
             </>
           )}
           {mode==="signup"&&(
             <>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:22,marginBottom:6}}>Create your account</div>
+              <div style={{fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Create your account</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Join Bridgn free — no credit card needed</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               <div className="fg"><label className="fl">Full Name</label><input className="fi" value={form.name} onChange={e=>up("name",e.target.value)} placeholder="Jordan Davis"/></div>
@@ -3007,19 +3007,19 @@ function AuthScreen({onAuth}) {
               <div className="fg">
                 <label className="fl">I am joining as a...</label>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9,marginTop:4}}>
-                  <button onClick={()=>up("role","creator")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="creator"?"var(--accent)":"var(--border)"),background:form.role==="creator"?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:500,color:form.role==="creator"?"var(--accent)":"var(--text2)",transition:"all .12s"}}>✨ Creator</button>
-                  <button onClick={()=>up("role","brand")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="brand"?"var(--accent2)":"var(--border)"),background:form.role==="brand"?"var(--accent2-light)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:500,color:form.role==="brand"?"var(--accent2)":"var(--text2)",transition:"all .12s"}}>📋 Brand</button>
+                  <button onClick={()=>up("role","creator")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="creator"?"var(--accent)":"var(--border)"),background:form.role==="creator"?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500,color:form.role==="creator"?"var(--accent)":"var(--text2)",transition:"all .12s"}}>✨ Creator</button>
+                  <button onClick={()=>up("role","brand")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="brand"?"var(--accent2)":"var(--border)"),background:form.role==="brand"?"var(--accent2-light)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500,color:form.role==="brand"?"var(--accent2)":"var(--text2)",transition:"all .12s"}}>📋 Brand</button>
                 </div>
               </div>
               <button onClick={handleSignup} disabled={loading||!form.email||!form.password||!form.name} className="btn btn-primary btn-lg" style={{width:"100%",marginTop:8,opacity:loading||!form.email||!form.password||!form.name?.6:1}}>
                 {loading?<span style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>Creating account...</span>:"Create Account"}
               </button>
-              <div style={{textAlign:"center",marginTop:20,fontSize:13,color:"var(--text2)"}}>Already have an account?<button onClick={()=>{setMode("login");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"DM Sans,sans-serif",marginLeft:6}}>Sign in</button></div>
+              <div style={{textAlign:"center",marginTop:20,fontSize:13,color:"var(--text2)"}}>Already have an account?<button onClick={()=>{setMode("login");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif",marginLeft:6}}>Sign in</button></div>
             </>
           )}
           {mode==="reset"&&(
             <>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:22,marginBottom:6}}>Reset your password</div>
+              <div style={{fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Reset your password</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Enter your email and we will send a reset link.</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
@@ -3027,7 +3027,7 @@ function AuthScreen({onAuth}) {
               <button onClick={handleReset} disabled={loading||!form.email} className="btn btn-primary btn-lg" style={{width:"100%",opacity:loading||!form.email?.6:1}}>
                 {loading?"Sending...":"Send Reset Link"}
               </button>
-              <div style={{textAlign:"center",marginTop:20}}><button onClick={()=>{setMode("login");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"DM Sans,sans-serif"}}>Back to sign in</button></div>
+              <div style={{textAlign:"center",marginTop:20}}><button onClick={()=>{setMode("login");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif"}}>Back to sign in</button></div>
             </>
           )}
         </div>
@@ -3077,7 +3077,7 @@ function App() {
 
   if(authLoading) return (
     <div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <div style={{fontFamily:"DM Serif Display,serif",fontSize:32,background:"linear-gradient(135deg,var(--accent),#a78bfa)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>Bridgn</div>
+      <div style={{fontFamily:"Syne,sans-serif",fontSize:40,fontWeight:800,letterSpacing:"-1px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>Bridgn</div>
       <div style={{width:28,height:28,border:"2.5px solid var(--border)",borderTop:"2.5px solid var(--accent)",borderRadius:"50%",animation:"spin .8s linear infinite"}}></div>
     </div>
   );
