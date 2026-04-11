@@ -2806,108 +2806,23 @@ function ShortlistsPage({setPage,setSelected}) {
 }
 
 // ─── MESSAGES ─────────────────────────────────────────────────────────────────
-function MessagesPage({role}) {
-  const THREADS=[
-    {id:1,name:"Halo Health",init:"HH",ci:0,last:"Looking forward to the first draft!",time:"10:15 AM",unread:2,deal:{brand:"Halo Health",campaign:"Spring Wellness Launch",amount:2500,status:"Active",deadline:"Apr 15",platform:"Instagram",deliverables:"3x Posts, 2x Stories, 1x Reel",progress:65}},
-    {id:2,name:"NovaTech",init:"NT",ci:1,last:"Great. Let us know when you are ready to sign.",time:"Yesterday",unread:0,deal:{brand:"NovaTech",campaign:"Tech Unboxing Series",amount:5000,status:"Pending",deadline:"Apr 22",platform:"YouTube",deliverables:"1x Review, 2x Shorts",progress:10}},
-    {id:3,name:"Luxe Threads",init:"LT",ci:2,last:"Brief has been updated — please review.",time:"Apr 22",unread:1,deal:{brand:"Luxe Threads",campaign:"SS25 Collection",amount:3200,status:"Active",deadline:"Apr 20",platform:"Instagram",deliverables:"2x Feed Posts, 1x Reel",progress:33}},
-    {id:4,name:"GlowUp Co.",init:"GU",ci:5,last:"Payment has been released!",time:"Apr 10",unread:0,deal:null},
-  ];
-  const BTHREADS=[
-    {id:1,name:"Aisha Okafor",init:"AO",ci:0,last:"Got it! I will review and confirm by end of day.",time:"10:15 AM",unread:1,deal:{brand:"Halo Health",campaign:"Spring Wellness Launch",amount:2500,status:"Active",deadline:"Apr 15",platform:"Instagram",deliverables:"3x Posts, 2x Stories, 1x Reel",progress:65}},
-    {id:2,name:"Priya Mehta",init:"PM",ci:4,last:"Content is almost ready, sending tomorrow.",time:"Yesterday",unread:0,deal:{brand:"Internal",campaign:"Beauty Box Deal",amount:3000,status:"Active",deadline:"Apr 28",platform:"Instagram",deliverables:"2x Reels, 3x Stories",progress:50}},
-    {id:3,name:"Marcus Tran",init:"MT",ci:1,last:"Video is live! Link in the deal room.",time:"Apr 18",unread:0,deal:{brand:"Internal",campaign:"Tech Unboxing",amount:5000,status:"Completed",deadline:"Mar 18",platform:"YouTube",deliverables:"1x Review, 2x Shorts",progress:100}},
-  ];
-  const threads=role==="creator"?THREADS:BTHREADS;
-  const [active,setActive] = useState(threads[0]);
-  const [msgs,setMsgs] = useState({
-    1:[{from:"brand",text:"Brief is uploaded. Please review before creating content.",time:"Apr 4, 9:00 AM"},{from:"me",text:"Got it! I will review and confirm by end of day.",time:"Apr 4, 10:15 AM"},{from:"brand",text:"Looks great. Looking forward to the first draft.",time:"Apr 4, 11:30 AM"}],
-    2:[{from:"brand",text:"Happy to have you on board. Please check the agreement.",time:"Apr 3, 2:00 PM"},{from:"me",text:"Sounds great. I will take a look.",time:"Apr 3, 3:00 PM"}],
-    3:[{from:"brand",text:"Brief has been updated — please review.",time:"Apr 22, 9:00 AM"}],
-    4:[{from:"brand",text:"Payment has been released! Great work on the campaign.",time:"Apr 10, 4:00 PM"},{from:"me",text:"Thank you so much! It was a pleasure working together.",time:"Apr 10, 4:30 PM"}],
-  });
-  const [input,setInput] = useState("");
-  const sendMsg=()=>{if(!input.trim()||!active)return;setMsgs(m=>({...m,[active.id]:[...(m[active.id]||[]),{from:"me",text:input,time:"Just now"}]}));setInput("");};
-  const activeMsgs=msgs[active?.id]||[];
-  const g=active?bg(active.ci):bg(0);
+function MessagesPage({setPage}) {
   return (
-    <div className="fade-in" style={{height:"calc(100vh - 120px)",display:"flex",gap:0,overflow:"hidden",borderRadius:"var(--radius-lg)",boxShadow:"var(--shadow-lg)",border:"1px solid var(--border)"}}>
-      <div style={{width:270,borderRight:"1px solid var(--border)",background:"var(--surface)",display:"flex",flexDirection:"column",flexShrink:0}}>
-        <div style={{padding:"14px 16px",borderBottom:"1px solid var(--border)"}}>
-          <div style={{fontSize:"15px",fontWeight:700,marginBottom:8}}>Messages</div>
-          <div style={{position:"relative"}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"var(--text3)",pointerEvents:"none",fontSize:"13px"}}>🔍</span><input className="search-input" style={{fontSize:"12px",paddingLeft:28}} placeholder="Search conversations..."/></div>
-        </div>
-        <div style={{flex:1,overflowY:"auto"}}>
-          {threads.map(t=>(
-            <div key={t.id} onClick={()=>setActive(t)} style={{padding:"12px 14px",cursor:"pointer",borderBottom:"1px solid var(--border)",background:active?.id===t.id?"rgba(91,138,245,.08)":"transparent",transition:"background .1s",position:"relative"}}>
-              {active?.id===t.id&&<div style={{position:"absolute",left:0,top:0,bottom:0,width:3,background:"var(--accent)"}}></div>}
-              <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-                <div style={{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,"+bg(t.ci)[0]+","+bg(t.ci)[1]+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",fontWeight:700,color:"white",flexShrink:0}}>{t.init}</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2}}>
-                    <span style={{fontSize:"13px",fontWeight:600}}>{t.name}</span>
-                    <span style={{fontSize:"10px",color:"var(--text3)"}}>{t.time}</span>
-                  </div>
-                  <div style={{fontSize:"11px",color:"var(--text2)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.last}</div>
-                </div>
-                {t.unread>0&&<div style={{width:16,height:16,borderRadius:"50%",background:"var(--accent)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"9px",fontWeight:700,color:"white",flexShrink:0}}>{t.unread}</div>}
-              </div>
-              {t.deal&&<div style={{marginTop:7,marginLeft:46,padding:"4px 8px",background:"rgba(91,138,245,.08)",borderRadius:6,border:"1px solid rgba(91,138,245,.2)",fontSize:"10px",color:"var(--accent)",fontWeight:600,display:"flex",gap:5,alignItems:"center"}}>🤝 {t.deal.campaign}</div>}
-            </div>
-          ))}
+    <div className="fade-in">
+      <div className="ph-row">
+        <div>
+          <div className="page-title">Messages</div>
+          <div className="page-subtitle">All deal communication happens inside the Deal Room.</div>
         </div>
       </div>
-      <div style={{flex:1,display:"flex",flexDirection:"column",background:"var(--bg)",minWidth:0}}>
-        {active?(
-          <>
-            <div style={{padding:"13px 18px",borderBottom:"1px solid var(--border)",background:"var(--surface)",display:"flex",gap:12,alignItems:"center"}}>
-              <div style={{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",fontWeight:700,color:"white",flexShrink:0}}>{active.init}</div>
-              <div style={{flex:1}}><div style={{fontSize:"14px",fontWeight:700}}>{active.name}</div>{active.deal&&<div style={{fontSize:"11px",color:"var(--accent)"}}>🤝 {active.deal.campaign}</div>}</div>
-            </div>
-            <div style={{flex:1,overflowY:"auto",padding:"18px",display:"flex",flexDirection:"column",gap:10}}>
-              {activeMsgs.map((m,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:m.from==="me"?"flex-end":"flex-start",animation:"fadeIn .15s ease"}}>
-                  <div style={{maxWidth:"70%",padding:"10px 14px",borderRadius:m.from==="me"?"14px 14px 3px 14px":"14px 14px 14px 3px",background:m.from==="me"?"var(--accent)":"var(--surface)",fontSize:"13px",lineHeight:1.6,boxShadow:"var(--shadow-sm)"}}>
-                    {m.text}
-                    <div style={{fontSize:"9px",opacity:.5,marginTop:4,textAlign:m.from==="me"?"right":"left"}}>{m.time}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{padding:"12px 16px",borderTop:"1px solid var(--border)",background:"var(--surface)",display:"flex",gap:9}}>
-              <input className="fi" style={{flex:1,padding:"9px 13px"}} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()} placeholder={"Message "+active.name+"..."}/>
-              <button onClick={sendMsg} disabled={!input.trim()} className="btn btn-primary" style={{opacity:input.trim()?1:.5}}>Send</button>
-            </div>
-          </>
-        ):null}
-      </div>
-      {active?.deal&&(
-        <div style={{width:240,borderLeft:"1px solid var(--border)",background:"var(--surface)",padding:"16px",overflowY:"auto",flexShrink:0}}>
-          <div style={{fontSize:"11px",fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:"var(--text3)",marginBottom:12}}>Deal Info</div>
-          <div style={{background:"linear-gradient(135deg,"+g[0]+"18,"+g[1]+"10)",border:"1px solid "+g[0]+"30",borderRadius:"var(--radius)",padding:"12px",marginBottom:12}}>
-            <div style={{fontSize:"11px",color:"var(--text3)",marginBottom:4}}>Campaign</div>
-            <div style={{fontSize:"13px",fontWeight:700,lineHeight:1.3}}>{active.deal.campaign}</div>
-          </div>
-          {[["Platform",active.deal.platform],["Amount","$"+active.deal.amount.toLocaleString()],["Deadline",active.deal.deadline]].map(([l,v],i)=>(
-            <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--border)",alignItems:"center"}}>
-              <span style={{fontSize:"11px",color:"var(--text3)",fontWeight:600}}>{l}</span>
-              <span style={{fontSize:"12px",fontWeight:600}}>{v}</span>
-            </div>
-          ))}
-          <div style={{marginTop:12}}>
-            <div style={{fontSize:"11px",color:"var(--text3)",fontWeight:600,marginBottom:5}}>Progress</div>
-            <div style={{height:5,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}><div style={{height:"100%",borderRadius:99,background:"linear-gradient(90deg,"+g[0]+","+g[1]+")",width:active.deal.progress+"%"}}></div></div>
-            <div style={{fontSize:"10px",color:"var(--text3)",marginTop:3}}>{active.deal.progress}% complete</div>
-          </div>
-          <div style={{marginTop:12}}>
-            <div style={{fontSize:"11px",color:"var(--text3)",fontWeight:600,marginBottom:6}}>Deliverables</div>
-            <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.7}}>{active.deal.deliverables}</div>
-          </div>
-          <div style={{marginTop:14,padding:"8px 0",borderTop:"1px solid var(--border)"}}>
-            <StatusBadge s={active.deal.status}/>
-          </div>
+      <div className="card" style={{padding:"56px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
+        <div style={{fontSize:"40px",marginBottom:16}}>💬</div>
+        <div style={{fontSize:"16px",fontWeight:700,marginBottom:10}}>No messages yet</div>
+        <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.75,marginBottom:28}}>
+          Messages are tied to active deals. Once you have a live deal, all communication with your partner happens directly inside the Deal Room — keeping everything in one place.
         </div>
-      )}
+        <button className="btn btn-primary" onClick={()=>setPage("deals")}>View My Deals</button>
+      </div>
     </div>
   );
 }
@@ -3145,7 +3060,7 @@ function App() {
         case "contracts":    return React.createElement(ContractVaultPage,{});
         case "availability": return React.createElement(AvailabilityPage,{});
         case "expenses":     return React.createElement(ExpensesPage,{});
-        case "messages":     return React.createElement(MessagesPage,{role});
+        case "messages":     return React.createElement(MessagesPage,{setPage});
         case "notifications":return React.createElement(NotificationsPage,{setPage});
         default:             return React.createElement(CreatorDashboard,{setPage,setSelected,deals,availStatus,setAvailStatus,userName});
       }
@@ -3167,7 +3082,7 @@ function App() {
         case "ai-match":      return React.createElement(AIMatchPage,{setPage,setSelected});
         case "shortlists":    return React.createElement(ShortlistsPage,{setPage,setSelected});
         case "invoices":      return React.createElement(InvoicesPage,{role});
-        case "messages":      return React.createElement(MessagesPage,{role});
+        case "messages":      return React.createElement(MessagesPage,{setPage});
         case "notifications": return React.createElement(NotificationsPage,{setPage});
         default:              return React.createElement(BrandDashboard,{setPage,setSelected});
       }
