@@ -372,7 +372,7 @@ function Navbar({role,setPage,userInitials,onSignOut}) {
   );
 }
 
-function Sidebar({role,page,setPage}) {
+function Sidebar({role,page,setPage,userName,userInitials}) {
   const cNav = [
     {section:"Overview"},
     {k:"dashboard",l:"Dashboard",i:"⊞"},
@@ -431,10 +431,10 @@ function Sidebar({role,page,setPage}) {
       ))}
       <div className="sidebar-footer">
         <div style={{display:"flex",alignItems:"center",gap:10,padding:10,borderRadius:"var(--radius-sm)",cursor:"pointer"}}>
-          <div className="nav-avatar" style={{flexShrink:0}}>{role==="creator"?"JD":"AC"}</div>
+          <div className="nav-avatar" style={{flexShrink:0}}>{userInitials||"?"}</div>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:"13px",fontWeight:600}}>{role==="creator"?"Jordan Davis":"Acme Corp"}</div>
-            <div style={{fontSize:"11px",color:"var(--text3)",marginTop:1}}>{role==="creator"?"Lifestyle Creator":"Brand Account"}</div>
+            <div style={{fontSize:"13px",fontWeight:600}}>{userName||"My Account"}</div>
+            <div style={{fontSize:"11px",color:"var(--text3)",marginTop:1}}>{role==="creator"?"Creator Account":"Brand Account"}</div>
           </div>
         </div>
       </div>
@@ -1197,7 +1197,7 @@ function OfferPage({offer,setPage}) {
 // ─── CREATOR ANALYTICS ───────────────────────────────────────────────────────
 function CreatorAnalyticsPage() {
   const [uploads,setUploads] = useState({
-    Instagram:{uploaded:true,date:"Mar 21, 2025",age:4,file:"instagram_insights_mar21.pdf"},
+    Instagram:{uploaded:false,date:null,age:null,file:null},
     TikTok:{uploaded:false,date:null,age:null,file:null},
     YouTube:{uploaded:false,date:null,age:null,file:null},
   });
@@ -1261,16 +1261,10 @@ function CreatorAnalyticsPage() {
 }
 
 // ─── CONTENT CALENDAR ─────────────────────────────────────────────────────────
-function ContentCalendarPage() {
+function ContentCalendarPage({deals}) {
   const [view,setView] = useState("month");
-  const today = 25;
-  const EVENTS=[
-    {day:15,label:"Halo Health — 3x Posts",color:"#5b8af5",platform:"Instagram",daysLeft:-10},
-    {day:20,label:"Luxe Threads — Reel",color:"#f0a050",platform:"Instagram",daysLeft:-5},
-    {day:22,label:"Halo Health — Stories",color:"#5b8af5",platform:"Instagram",daysLeft:-3},
-    {day:28,label:"NovaTech — Review Video",color:"#34d399",platform:"YouTube",daysLeft:3},
-    {day:30,label:"GlowUp — 5x TikToks",color:"#f87171",platform:"TikTok",daysLeft:5},
-  ];
+  const today = new Date().getDate();
+  const EVENTS=[];
   const days = Array.from({length:30},(_,i)=>i+1);
   return (
     <div className="fade-in">
@@ -1309,7 +1303,9 @@ function ContentCalendarPage() {
       )}
       {view==="list"&&(
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {[...EVENTS].sort((a,b)=>a.day-b.day).map((e,i)=>{
+          {EVENTS.length===0?(
+            <div className="card" style={{padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:"32px",marginBottom:12}}>📅</div><div style={{fontSize:"15px",fontWeight:600,marginBottom:6}}>No deadlines yet</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65}}>Your content deadlines will appear here once you have active deals.</div></div>
+          ):[...EVENTS].sort((a,b)=>a.day-b.day).map((e,i)=>{
             const dl=e.day-today;
             return (
               <div key={i} className="card" style={{padding:"13px 18px",display:"flex",gap:12,alignItems:"center",borderLeft:"3px solid "+e.color}}>
@@ -1330,10 +1326,11 @@ function ContentCalendarPage() {
 
 // ─── RATE CARD ────────────────────────────────────────────────────────────────
 function RateCardPage() {
-  const [followers,setFollowers] = useState("280000");
-  const [eng,setEng] = useState("6.2");
+  const [followers,setFollowers] = useState("");
+  const [eng,setEng] = useState("");
   const [niche,setNiche] = useState("Lifestyle");
   const f=parseInt(followers)||0;const e=parseFloat(eng)||0;
+  const hasData=f>0&&e>0;
   const mult={Tech:1.4,Finance:1.4,Fashion:1.2,Beauty:1.15,Wellness:1.1,Gaming:0.9}[niche]||1.0;
   const base=(f/1000)*0.01*e*mult;
   const rates=[["Instagram Feed Post","📸",0.8,1.2],["Instagram Reel","🎬",1.0,1.6],["Instagram Stories (3x)","📱",0.4,0.7],["TikTok Video","♪",0.6,1.1],["YouTube Integration","▶",2.0,3.5],["UGC Package (no post)","🎨",0.3,0.6],["Brand Ambassador (mo.)","🌟",4.0,8.0]].map(([type,icon,lo,hi])=>({type,icon,low:Math.round(base*lo*100)*10,high:Math.round(base*hi*100)*10}));
@@ -1347,26 +1344,30 @@ function RateCardPage() {
           <div className="fg"><label className="fl">Total Followers</label><input className="fi" value={followers} onChange={e=>setFollowers(e.target.value)} placeholder="280000"/></div>
           <div className="fg"><label className="fl">Avg Engagement Rate (%)</label><input className="fi" value={eng} onChange={e=>setEng(e.target.value)} placeholder="6.2"/></div>
           <div className="fg"><label className="fl">Primary Niche</label><select className="fsel" value={niche} onChange={e=>setNiche(e.target.value)}>{["Lifestyle","Wellness","Fashion","Beauty","Food","Tech","Finance","Gaming","Travel","Fitness","Education"].map(n=><option key={n}>{n}</option>)}</select></div>
-          <div style={{padding:"13px 15px",background:"var(--surface2)",borderRadius:"var(--radius)",border:"1px solid var(--border)"}}>
+          {hasData&&<div style={{padding:"13px 15px",background:"var(--surface2)",borderRadius:"var(--radius)",border:"1px solid var(--border)"}}>
             <div className="det-sec-title" style={{marginBottom:5}}>Your Tier</div>
             <div style={{fontSize:"20px",fontWeight:700,color:tierColor,fontFamily:"DM Serif Display,serif"}}>{tier} Creator</div>
             <div style={{fontSize:"12px",color:"var(--text2)",marginTop:3}}>{f.toLocaleString()} followers · {eng}% engagement</div>
-          </div>
+          </div>}
         </div>
         <div>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
             <span style={{fontSize:"14px",fontWeight:700}}>Suggested Rates</span>
-            <button className="btn btn-secondary btn-sm">Download PDF</button>
+            {hasData&&<button className="btn btn-secondary btn-sm">Download PDF</button>}
           </div>
-          <div style={{display:"flex",flexDirection:"column",gap:9}}>
-            {rates.map((r,i)=>(
-              <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}>
-                <span style={{fontSize:"20px",flexShrink:0}}>{r.icon}</span>
-                <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600}}>{r.type}</div><div style={{height:3,background:"var(--surface2)",borderRadius:99,overflow:"hidden",width:140,marginTop:7}}><div style={{height:"100%",borderRadius:99,background:"linear-gradient(90deg,var(--accent),var(--accent2))",width:((i+1)/rates.length*80+20)+"%"}}></div></div></div>
-                <div style={{textAlign:"right"}}><div style={{fontSize:"15px",fontWeight:700,fontFamily:"DM Serif Display,serif",color:"var(--accent)"}}>${r.low.toLocaleString()} – ${r.high.toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>per deliverable</div></div>
-              </div>
-            ))}
-          </div>
+          {hasData?(
+            <div style={{display:"flex",flexDirection:"column",gap:9}}>
+              {rates.map((r,i)=>(
+                <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}>
+                  <span style={{fontSize:"20px",flexShrink:0}}>{r.icon}</span>
+                  <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600}}>{r.type}</div><div style={{height:3,background:"var(--surface2)",borderRadius:99,overflow:"hidden",width:140,marginTop:7}}><div style={{height:"100%",borderRadius:99,background:"linear-gradient(90deg,var(--accent),var(--accent2))",width:((i+1)/rates.length*80+20)+"%"}}></div></div></div>
+                  <div style={{textAlign:"right"}}><div style={{fontSize:"15px",fontWeight:700,fontFamily:"DM Serif Display,serif",color:"var(--accent)"}}>${r.low.toLocaleString()} – ${r.high.toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>per deliverable</div></div>
+                </div>
+              ))}
+            </div>
+          ):(
+            <div className="card" style={{padding:"28px 20px",textAlign:"center"}}><div style={{fontSize:"28px",marginBottom:10}}>💲</div><div style={{fontSize:"14px",fontWeight:600,marginBottom:6}}>Enter your stats to see rates</div><div style={{fontSize:"12px",color:"var(--text2)"}}>Add your follower count and engagement rate on the left to generate suggested rates.</div></div>
+          )}
         </div>
       </div>
     </div>
@@ -1374,22 +1375,22 @@ function RateCardPage() {
 }
 
 // ─── MEDIA KIT ────────────────────────────────────────────────────────────────
-function MediaKitPage() {
-  const c=CREATORS[0];const [preview,setPreview] = useState(false);const [bio,setBio] = useState("Hey! I am Jordan, a lifestyle and wellness creator based in LA. I partner with brands to create authentic content that genuinely resonates.");const [tagline,setTagline] = useState("Authentic content. Real audiences. Lasting partnerships.");
-  const g=bg(c.ci);
+function MediaKitPage({userName,userInitials}) {
+  const [preview,setPreview] = useState(false);const [bio,setBio] = useState("");const [tagline,setTagline] = useState("");
+  const g=bg(0);const handle=(userName||"you").toLowerCase().replace(/\s+/g,"");
   if(preview) return (
     <div className="fade-in">
       <div style={{display:"flex",gap:8,marginBottom:18}}><button className="btn btn-secondary btn-sm" onClick={()=>setPreview(false)}>Edit</button><div style={{flex:1}}/><button className="btn btn-secondary btn-sm">Copy Link</button><button className="btn btn-primary btn-sm">Download PDF</button></div>
       <div style={{background:"var(--surface)",borderRadius:"var(--radius-lg)",overflow:"hidden",boxShadow:"var(--shadow-lg)",maxWidth:720,margin:"0 auto"}}>
         <div style={{height:170,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",position:"relative",display:"flex",alignItems:"flex-end",padding:"22px 28px",gap:18}}>
-          <div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{c.init}</div>
-          <div style={{flex:1}}><div style={{fontFamily:"DM Serif Display,serif",fontSize:"24px",color:"white",fontWeight:700}}>{c.name}</div><div style={{fontSize:"13px",color:"rgba(255,255,255,.8)",marginTop:2}}>{c.niche} · {c.loc}</div></div>
-          <div style={{textAlign:"right"}}><div style={{fontSize:"11px",fontWeight:700,color:"rgba(255,255,255,.6)",textTransform:"uppercase",letterSpacing:".08em",marginBottom:5}}>bridgn.com/{c.handle}</div><div style={{display:"flex",gap:5,flexWrap:"wrap",justifyContent:"flex-end"}}>{c.platforms.map(p=><PlatformBadge key={p} p={p}/>)}</div></div>
+          <div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>
+          <div style={{flex:1}}><div style={{fontFamily:"DM Serif Display,serif",fontSize:"24px",color:"white",fontWeight:700}}>{userName}</div></div>
+          <div style={{textAlign:"right"}}><div style={{fontSize:"11px",fontWeight:700,color:"rgba(255,255,255,.6)",textTransform:"uppercase",letterSpacing:".08em"}}>bridgn.com/{handle}</div></div>
         </div>
         <div style={{padding:"24px 28px"}}>
           <div style={{fontStyle:"italic",fontSize:"14px",color:"var(--text2)",lineHeight:1.75,borderLeft:"3px solid var(--accent)",paddingLeft:14,marginBottom:22}}>{tagline}</div>
           <div className="det-stats" style={{gridTemplateColumns:"repeat(4,1fr)",marginBottom:22}}>
-            {[[c.followers,"Followers"],[c.engagement,"Engagement"],[c.auth,"Authenticity"],[c.rating+"★","Rating"]].map(([v,l],i)=>(
+            {[["—","Followers"],["—","Engagement"],["—","Authenticity"],["—","Rating"]].map(([v,l],i)=>(
               <div key={i} className="det-stat"><div className="det-stat-v" style={{color:"var(--accent)"}}>{v}</div><div className="det-stat-l">{l}</div></div>
             ))}
           </div>
@@ -1420,7 +1421,7 @@ function MediaKitPage() {
           </div>
           <div className="card-lg" style={{padding:"16px 20px"}}>
             <div style={{fontSize:"13px",fontWeight:700,marginBottom:9}}>Share options</div>
-            {[["🔗","Public link","bridgn.com/jordan/kit"],["📄","PDF download","Print-ready, 1 page"]].map(([icon,title,desc],i)=>(
+            {[["🔗","Public link","bridgn.com/"+handle+"/kit"],["📄","PDF download","Print-ready, 1 page"]].map(([icon,title,desc],i)=>(
               <div key={i} style={{display:"flex",gap:9,padding:"9px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",marginBottom:7,alignItems:"center"}}>
                 <span>{icon}</span><div style={{flex:1}}><div style={{fontSize:"12px",fontWeight:500}}>{title}</div><div style={{fontSize:"11px",color:"var(--text3)"}}>{desc}</div></div><button className="btn btn-secondary btn-sm">Share</button>
               </div>
@@ -1436,8 +1437,8 @@ function MediaKitPage() {
 function InvoicesPage({role}) {
   const [modal,setModal] = useState(null);const [form,setForm] = useState({to:"",amount:"",dueDate:"",notes:""});const [sent,setSent] = useState(false);
   const up=(k,v)=>setForm(f=>({...f,[k]:v}));const isBrand=role==="brand";
-  const CINV=[{id:"INV-001",to:"Halo Health",amount:2500,status:"Paid",date:"Apr 2, 2025",campaign:"Spring Wellness"},{id:"INV-002",to:"Luxe Threads",amount:3200,status:"Pending",date:"Apr 10, 2025",campaign:"SS25 Feature"},{id:"INV-003",to:"GlowUp Co.",amount:1800,status:"Paid",date:"Mar 5, 2025",campaign:"TikTok Deal"}];
-  const BINV=[{id:"INV-001",from:"Aisha Okafor",amount:2500,status:"Paid",date:"Apr 2, 2025",campaign:"Spring Wellness"},{id:"INV-002",from:"Priya Mehta",amount:3000,status:"Due",date:"Apr 8, 2025",campaign:"Beauty Box Deal"},{id:"INV-003",from:"Marcus Tran",amount:5000,status:"Paid",date:"Mar 18, 2025",campaign:"Tech Unboxing"}];
+  const CINV=[];
+  const BINV=[];
   const rows=isBrand?BINV:CINV;const totalPaid=rows.filter(i=>i.status==="Paid").reduce((a,b)=>a+b.amount,0);const pending=rows.filter(i=>i.status==="Pending"||i.status==="Due");
   return (
     <div className="fade-in">
@@ -1454,7 +1455,9 @@ function InvoicesPage({role}) {
         <table className="tbl">
           <thead><tr><th>Invoice</th><th>{isBrand?"Creator":"Client"}</th><th>Campaign</th><th>Amount</th><th>Date</th><th>Status</th><th></th></tr></thead>
           <tbody>
-            {rows.map(inv=>(
+            {rows.length===0?(
+              <tr><td colSpan={7} style={{textAlign:"center",padding:"28px",color:"var(--text3)",fontSize:"13px"}}>No invoices yet</td></tr>
+            ):rows.map(inv=>(
               <tr key={inv.id}>
                 <td style={{fontWeight:600,color:"var(--accent)"}}>{inv.id}</td>
                 <td>{isBrand?inv.from:inv.to}</td>
@@ -1489,27 +1492,27 @@ function InvoicesPage({role}) {
 }
 
 // ─── PUBLIC PROFILE ───────────────────────────────────────────────────────────
-function PublicProfilePage({setPage}) {
-  const c=CREATORS[0];const [copied,setCopied] = useState(false);const [bookingModal,setBookingModal] = useState(false);const [bookForm,setBookForm] = useState({name:"",email:"",budget:"",platform:"Instagram",description:""});const [bookSent,setBookSent] = useState(false);
-  const g=bg(c.ci);const copy=()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);};
+function PublicProfilePage({setPage,userName,userInitials}) {
+  const [copied,setCopied] = useState(false);const [bookingModal,setBookingModal] = useState(false);const [bookForm,setBookForm] = useState({name:"",email:"",budget:"",platform:"Instagram",description:""});const [bookSent,setBookSent] = useState(false);
+  const g=bg(0);const handle=(userName||"you").toLowerCase().replace(/\s+/g,"");const copy=()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);};
   return (
     <div className="fade-in">
       <div style={{background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"11px 16px",marginBottom:18,display:"flex",gap:9,alignItems:"center"}}>
-        <span>👁</span><div style={{flex:1,fontSize:"12px",color:"var(--text2)"}}>Your public page: <strong style={{color:"var(--accent)"}}>bridgn.com/{c.handle}</strong></div>
+        <span>👁</span><div style={{flex:1,fontSize:"12px",color:"var(--text2)"}}>Your public page: <strong style={{color:"var(--accent)"}}>bridgn.com/{handle}</strong></div>
         <button onClick={copy} className="btn btn-secondary btn-sm">{copied?"Copied!":"Copy Link"}</button>
       </div>
       <div className="card-lg" style={{overflow:"hidden",marginBottom:18}}>
         <div style={{height:180,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",position:"relative"}}>
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(0,0,0,.6),transparent)"}}></div>
           <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"22px 26px",display:"flex",gap:16,alignItems:"flex-end"}}>
-            <div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2.5px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{c.init}</div>
-            <div style={{flex:1}}><div style={{fontSize:"22px",fontWeight:700,color:"white",fontFamily:"DM Serif Display,serif"}}>{c.name}</div><div style={{fontSize:"13px",color:"rgba(255,255,255,.8)",marginTop:2}}>{c.niche} · {c.loc}</div><div style={{display:"flex",gap:5,marginTop:7,flexWrap:"wrap"}}>{c.platforms.map(p=><PlatformBadge key={p} p={p}/>)}</div></div>
+            <div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2.5px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>
+            <div style={{flex:1}}><div style={{fontSize:"22px",fontWeight:700,color:"white",fontFamily:"DM Serif Display,serif"}}>{userName}</div></div>
             <button onClick={()=>setBookingModal(true)} className="btn btn-primary btn-lg" style={{flexShrink:0}}>Work With Me</button>
           </div>
         </div>
         <div style={{padding:"22px 26px"}}>
           <div className="det-stats" style={{gridTemplateColumns:"repeat(4,1fr)"}}>
-            {[[c.followers,"Followers"],[c.engagement,"Engagement"],[c.auth,"Authenticity"],[c.rating+"★","Brand Rating"]].map(([v,l],i)=>(
+            {[["—","Followers"],["—","Engagement"],["—","Authenticity"],["—","Brand Rating"]].map(([v,l],i)=>(
               <div key={i} className="det-stat"><div className="det-stat-v">{v}</div><div className="det-stat-l">{l}</div></div>
             ))}
           </div>
@@ -1518,10 +1521,10 @@ function PublicProfilePage({setPage}) {
       {bookingModal&&(
         <Modal onClose={()=>{setBookingModal(false);setBookSent(false);}}>
           {bookSent?(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🎉</div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:7}}>Inquiry Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{c.name}</strong> will review and reply within 48 hours.</div><button onClick={()=>{setBookingModal(false);setBookSent(false);}} className="btn btn-primary">Got it</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🎉</div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:7}}>Inquiry Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{userName}</strong> will review and reply within 48 hours.</div><button onClick={()=>{setBookingModal(false);setBookSent(false);}} className="btn btn-primary">Got it</button></div>
           ):(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:16}}>Work with {c.name.split(" ")[0]}</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",marginBottom:16}}>Work with {(userName||"me").split(" ")[0]}</div>
               <div className="fg"><label className="fl">Your Brand Name</label><input className="fi" value={bookForm.name} onChange={e=>setBookForm(f=>({...f,name:e.target.value}))} placeholder="Luxara Skincare"/></div>
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={bookForm.email} onChange={e=>setBookForm(f=>({...f,email:e.target.value}))} placeholder="your@brand.com"/></div>
               <div className="frow"><div className="fg"><label className="fl">Budget</label><input className="fi" value={bookForm.budget} onChange={e=>setBookForm(f=>({...f,budget:e.target.value}))} placeholder="$2,000"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={bookForm.platform} onChange={e=>setBookForm(f=>({...f,platform:e.target.value}))}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Multiple</option></select></div></div>
@@ -1537,15 +1540,23 @@ function PublicProfilePage({setPage}) {
 
 // ─── EARNINGS & P&L ──────────────────────────────────────────────────────────
 function EarningsPage() {
-  const maxAmt = Math.max(...EARNINGS_MONTHLY.map(e=>e.amount));
-  const ytd = EARNINGS_MONTHLY.reduce((s,e)=>s+e.amount,0);
-  const avg = Math.round(ytd/EARNINGS_MONTHLY.length);
-  const best = EARNINGS_BY_BRAND.reduce((a,b)=>a.amount>b.amount?a:b);
+  const earningsMonthly = [];
+  const earningsByBrand = [];
+  if(!earningsMonthly.length) return (
+    <div className="fade-in">
+      <div className="ph-row"><div><div className="page-title">Earnings & P&L</div><div className="page-subtitle">Your income, brand performance, and business health at a glance.</div></div></div>
+      <div className="card" style={{padding:"48px 20px",textAlign:"center"}}><div style={{fontSize:"36px",marginBottom:14}}>📈</div><div style={{fontSize:"16px",fontWeight:600,marginBottom:8}}>No earnings yet</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,maxWidth:340,margin:"0 auto"}}>Once you complete deals and receive payments, your income, P&L, and brand breakdown will appear here.</div></div>
+    </div>
+  );
+  const maxAmt = Math.max(...earningsMonthly.map(e=>e.amount));
+  const ytd = earningsMonthly.reduce((s,e)=>s+e.amount,0);
+  const avg = Math.round(ytd/earningsMonthly.length);
+  const best = earningsByBrand.reduce((a,b)=>a.amount>b.amount?a:b);
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Earnings & P&L</div><div className="page-subtitle">Your income, brand performance, and business health at a glance.</div></div><button className="btn btn-secondary">Export CSV</button></div>
       <div className="g4 section" style={{gap:12}}>
-        {[["YTD Earnings","$"+ytd.toLocaleString(),"stat-up"],["Monthly Avg","$"+avg.toLocaleString(),"stat-neutral"],["Best Brand",best.brand,"stat-neutral"],["Deals Closed",String(EARNINGS_BY_BRAND.reduce((s,b)=>s+b.deals,0)),"stat-neutral"]].map(([l,v,cls],i)=>(
+        {[["YTD Earnings","$"+ytd.toLocaleString(),"stat-up"],["Monthly Avg","$"+avg.toLocaleString(),"stat-neutral"],["Best Brand",best.brand,"stat-neutral"],["Deals Closed",String(earningsByBrand.reduce((s,b)=>s+b.deals,0)),"stat-neutral"]].map(([l,v,cls],i)=>(
           <div key={i} className="card stat-card"><div className="stat-label">{l}</div><div className="stat-value" style={{fontSize:i===2?"18px":"28px"}}>{v}</div></div>
         ))}
       </div>
@@ -1555,8 +1566,8 @@ function EarningsPage() {
             <div className="section-hdr"><span className="section-title">Monthly Revenue</span><span style={{fontSize:"12px",color:"var(--text3)"}}>Last 6 months</span></div>
             <div className="card-lg" style={{padding:"20px 22px"}}>
               <div style={{display:"flex",alignItems:"flex-end",gap:10,height:140}}>
-                {EARNINGS_MONTHLY.map((m,i)=>{
-                  const h=Math.round((m.amount/maxAmt)*120);const isLast=i===EARNINGS_MONTHLY.length-1;
+                {earningsMonthly.map((m,i)=>{
+                  const h=Math.round((m.amount/maxAmt)*120);const isLast=i===earningsMonthly.length-1;
                   return (
                     <div key={m.month} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
                       <div style={{fontSize:"10px",color:isLast?"var(--accent)":"var(--text3)",fontWeight:isLast?700:400}}>${(m.amount/1000).toFixed(1)}k</div>
@@ -1571,7 +1582,7 @@ function EarningsPage() {
           <div className="section">
             <div className="section-hdr"><span className="section-title">By Brand</span></div>
             <div className="card-lg" style={{overflow:"hidden"}}>
-              {EARNINGS_BY_BRAND.map((b,i)=>(
+              {earningsByBrand.map((b,i)=>(
                 <div key={i} className="deal-row" style={i>0?{borderTop:"1px solid var(--border)"}:{}}>
                   <div className="deal-av" style={{background:bc(b.ci),width:34,height:34,fontSize:"11px"}}>{b.bi}</div>
                   <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600}}>{b.brand}</div><div style={{fontSize:"11px",color:"var(--text2)",marginTop:1}}>{b.deals} deals · ${b.avgDeal.toLocaleString()} avg</div><div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:(b.amount/ytd*100)+"%",background:bc(b.ci)}}></div></div></div></div>
@@ -1613,14 +1624,15 @@ function EarningsPage() {
 
 // ─── CONTRACT VAULT ───────────────────────────────────────────────────────────
 function ContractVaultPage() {
+  const [contracts] = useState([]);
   const [search,setSearch] = useState("");const [filter,setFilter] = useState("All");const [selected,setSelected] = useState(null);
-  const list = CONTRACTS_DATA.filter(c=>(filter==="All"||c.status===filter)&&(!search||c.brand.toLowerCase().includes(search.toLowerCase())||c.campaign.toLowerCase().includes(search.toLowerCase())));
+  const list = contracts.filter(c=>(filter==="All"||c.status===filter)&&(!search||c.brand.toLowerCase().includes(search.toLowerCase())||c.campaign.toLowerCase().includes(search.toLowerCase())));
   const statusColor = {Active:"var(--green)",Expiring:"var(--accent2)",Expired:"var(--red)"};
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Contract Vault</div><div className="page-subtitle">All your signed agreements in one place with expiry tracking.</div></div></div>
       <div className="g3 section" style={{gap:12}}>
-        {[["Active",CONTRACTS_DATA.filter(c=>c.status==="Active").length,"badge-green"],["Expiring Soon",CONTRACTS_DATA.filter(c=>c.status==="Expiring").length,"badge-orange"],["Expired",CONTRACTS_DATA.filter(c=>c.status==="Expired").length,"badge-gray"]].map(([l,v,b],i)=>(
+        {[["Active",contracts.filter(c=>c.status==="Active").length,"badge-green"],["Expiring Soon",contracts.filter(c=>c.status==="Expiring").length,"badge-orange"],["Expired",contracts.filter(c=>c.status==="Expired").length,"badge-gray"]].map(([l,v,b],i)=>(
           <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}><span className={"badge "+b} style={{fontSize:"18px",padding:"6px 10px"}}>{v}</span><div style={{fontSize:"13px",fontWeight:600,color:"var(--text)"}}>{l}</div></div>
         ))}
       </div>
@@ -1629,7 +1641,9 @@ function ContractVaultPage() {
         {["All","Active","Expiring","Expired"].map(x=><button key={x} className={"filter-btn"+(filter===x?" active":"")} onClick={()=>setFilter(x)} style={{padding:"7px 11px"}}>{x}</button>)}
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {list.map(c=>(
+        {list.length===0?(
+          <div className="card" style={{padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:"32px",marginBottom:12}}>📂</div><div style={{fontSize:"15px",fontWeight:600,marginBottom:6}}>No contracts yet</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65}}>Signed agreements will appear here once you complete your first deal.</div></div>
+        ):list.map(c=>(
           <div key={c.id} className="card card-hover" style={{padding:"15px 18px",borderLeft:"3px solid "+statusColor[c.status]}} onClick={()=>setSelected(c)}>
             <div style={{display:"flex",gap:12,alignItems:"center"}}>
               <div style={{width:40,height:40,borderRadius:"50%",background:bc(c.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px",fontWeight:700,color:"white",flexShrink:0}}>{c.bi}</div>
@@ -1650,6 +1664,7 @@ function ContractVaultPage() {
       </div>
       {selected&&(
         <Modal onClose={()=>setSelected(null)} maxWidth={540}>
+
           <div>
             <div style={{padding:"18px 22px",borderBottom:"1px solid var(--border)"}}>
               <div style={{display:"flex",gap:12,alignItems:"center"}}>
@@ -1681,8 +1696,8 @@ function ContractVaultPage() {
 // ─── AVAILABILITY ─────────────────────────────────────────────────────────────
 function AvailabilityPage() {
   const [status,setStatus] = useState("open");
-  const [blocked,setBlocked] = useState([3,4,5,8,9,26,27]);
-  const [booked,setBooked] = useState([15,16,22,23,24]);
+  const [blocked,setBlocked] = useState([]);
+  const [booked,setBooked] = useState([]);
   const days = Array.from({length:30},(_,i)=>i+1);
   const toggle=(d)=>{
     if(booked.includes(d)) return;
@@ -1745,7 +1760,7 @@ function AvailabilityPage() {
 
 // ─── EXPENSES & TAX ───────────────────────────────────────────────────────────
 function ExpensesPage() {
-  const [expenses,setExpenses] = useState(EXPENSES_DATA);const [modal,setModal] = useState(false);const [form,setForm] = useState({desc:"",amount:"",date:"",category:"Production",deductible:true});
+  const [expenses,setExpenses] = useState([]);const [modal,setModal] = useState(false);const [form,setForm] = useState({desc:"",amount:"",date:"",category:"Production",deductible:true});
   const up=(k,v)=>setForm(f=>({...f,[k]:v}));
   const CATEGORIES=["Production","Equipment","Software","Travel","Wardrobe","Meals","Education","Marketing"];
   const deductible=expenses.filter(e=>e.deductible).reduce((s,e)=>s+e.amount,0);
@@ -1769,7 +1784,9 @@ function ExpensesPage() {
             <table className="tbl">
               <thead><tr><th>Description</th><th>Category</th><th>Amount</th><th>Date</th><th>Deductible</th></tr></thead>
               <tbody>
-                {expenses.map(e=>(
+                {expenses.length===0?(
+                  <tr><td colSpan={5} style={{textAlign:"center",padding:"28px",color:"var(--text3)",fontSize:"13px"}}>No expenses yet — add your first one above.</td></tr>
+                ):expenses.map(e=>(
                   <tr key={e.id}>
                     <td style={{fontWeight:500}}>{e.desc}</td>
                     <td><span className="badge badge-gray" style={{fontSize:"11px"}}>{e.category}</span></td>
@@ -1796,7 +1813,7 @@ function ExpensesPage() {
           </div>
           <div className="card-lg" style={{padding:"16px 18px"}}>
             <div style={{fontSize:"13px",fontWeight:700,marginBottom:12}}>Tax Estimate</div>
-            {[["Total Revenue","$14,200"],["Business Expenses","- $"+deductible.toLocaleString()],["Net Income","$"+(14200-deductible).toLocaleString()],["Est. Tax (25%)","$"+estimatedTax.toLocaleString()]].map(([l,v],i,arr)=>(
+            {[["Total Revenue","$0"],["Business Expenses","- $"+deductible.toLocaleString()],["Net Income","$0"],["Est. Tax (25%)","$"+estimatedTax.toLocaleString()]].map(([l,v],i,arr)=>(
               <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:i<arr.length-1?"1px solid var(--border)":"none",fontWeight:i===arr.length-1?700:400,color:i===arr.length-1?"var(--accent2)":"var(--text)"}}>
                 <span style={{fontSize:"13px",color:"var(--text2)"}}>{l}</span><span style={{fontSize:"13px"}}>{v}</span>
               </div>
@@ -3081,11 +3098,11 @@ function App() {
         case "dispute":      return React.createElement(DisputePage,{deal:selected,setPage});
         case "offer":        return React.createElement(OfferPage,{offer:selected,setPage});
         case "analytics":    return React.createElement(CreatorAnalyticsPage,{});
-        case "calendar":     return React.createElement(ContentCalendarPage,{});
+        case "calendar":     return React.createElement(ContentCalendarPage,{deals});
         case "rate-card":    return React.createElement(RateCardPage,{});
-        case "media-kit":    return React.createElement(MediaKitPage,{});
+        case "media-kit":    return React.createElement(MediaKitPage,{userName,userInitials});
         case "invoices":     return React.createElement(InvoicesPage,{role});
-        case "public-profile": return React.createElement(PublicProfilePage,{setPage});
+        case "public-profile": return React.createElement(PublicProfilePage,{setPage,userName,userInitials});
         case "earnings":     return React.createElement(EarningsPage,{});
         case "contracts":    return React.createElement(ContractVaultPage,{});
         case "availability": return React.createElement(AvailabilityPage,{});
@@ -3123,7 +3140,7 @@ function App() {
     <div className="app-shell">
       <Navbar role={role} setPage={setPage} userInitials={userInitials} onSignOut={handleSignOut}/>
       <div className="main-layout">
-        <Sidebar role={role} page={page} setPage={setPage}/>
+        <Sidebar role={role} page={page} setPage={setPage} userName={userName} userInitials={userInitials}/>
         <main className="content-area">
           {render()}
         </main>
