@@ -93,11 +93,11 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 .pb-yt{background:#2a0f0f;color:#fca5a5;border:1px solid rgba(252,165,165,.12)}
 .pb-tt{background:#0b2a1c;color:#6ee7b7;border:1px solid rgba(110,231,183,.12)}
 .pb-tw{background:#162050;color:#93c5fd;border:1px solid rgba(147,197,253,.12)}
-.stat-card{padding:24px;position:relative;overflow:hidden}
+.stat-card{padding:24px;position:relative;overflow:hidden;background:rgba(255,255,255,.055)}
 .stat-card::before{content:"";position:absolute;top:-28px;right:-28px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(240,160,80,.12),transparent 68%);pointer-events:none}
 .stat-card::after{content:"";position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(240,160,80,.18),transparent);pointer-events:none}
 .stat-label{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
-.stat-value{font-size:36px;font-weight:700;color:var(--text);font-family:"Syne",sans-serif;line-height:1;letter-spacing:-.5px}
+.stat-value{font-size:36px;font-weight:700;font-family:"Syne",sans-serif;line-height:1;letter-spacing:-.5px;background:linear-gradient(180deg,#ffffff 0%,rgba(255,255,255,.7) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .stat-change{font-size:12px;margin-top:7px;font-weight:500}
 .stat-up{color:var(--green)}.stat-neutral{color:var(--text3)}
 .page-title{font-family:"Syne",sans-serif;font-size:36px;font-weight:800;color:var(--text);line-height:1.1;letter-spacing:-.5px}
@@ -519,6 +519,71 @@ function AvailabilityBanner({status,setStatus}) {
   );
 }
 
+// ─── STAT CARD UTILITIES ──────────────────────────────────────────────────────
+function useCountUp(rawValue, duration=1200) {
+  const parse = v => {
+    const m = String(v).match(/^([^0-9]*)([0-9,]+(?:\.[0-9]+)?)(.*)$/);
+    return m ? {pre:m[1], num:parseFloat(m[2].replace(/,/g,'')), suf:m[3]} : null;
+  };
+  const parsed = React.useMemo(()=>parse(rawValue),[rawValue]);
+  const fmt = (pre,n,suf) => pre+Math.round(n).toLocaleString()+suf;
+  const [display, setDisplay] = useState(()=>parsed ? fmt(parsed.pre,0,parsed.suf) : rawValue);
+  const raf = useRef(null);
+  useEffect(()=>{
+    if(raf.current) cancelAnimationFrame(raf.current);
+    if(!parsed||parsed.num===0){setDisplay(rawValue);return;}
+    const {pre,num,suf}=parsed;
+    const start=performance.now();
+    const tick=now=>{
+      const t=Math.min((now-start)/duration,1);
+      const e=1-Math.pow(1-t,3);
+      setDisplay(fmt(pre,num*e,suf));
+      if(t<1) raf.current=requestAnimationFrame(tick);
+      else setDisplay(rawValue);
+    };
+    raf.current=requestAnimationFrame(tick);
+    return ()=>{if(raf.current) cancelAnimationFrame(raf.current);};
+  },[rawValue]);
+  return display;
+}
+
+function StatSparkline({data, color="#5b8af5"}) {
+  const pts = (data&&data.length>=2 ? data : [0,0,0,0,0,0,0]);
+  const W=80, H=28;
+  const max=Math.max(...pts,1), min=Math.min(...pts,0), range=max-min||1;
+  const coords=pts.map((v,i)=>[
+    parseFloat(((i/(pts.length-1))*W).toFixed(1)),
+    parseFloat((H-((v-min)/range)*(H-8)-4).toFixed(1))
+  ]);
+  const line=coords.map((p,i)=>(i===0?"M":"L")+p[0]+","+p[1]).join(" ");
+  const fill=line+" L"+W+","+H+" L0,"+H+" Z";
+  const gid="spkg"+color.replace(/[^a-z0-9]/gi,"").slice(-8);
+  return (
+    <svg viewBox={"0 0 "+W+" "+H} style={{width:"100%",height:28,display:"block",marginTop:12,overflow:"visible"}}>
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d={fill} fill={"url(#"+gid+")"}/>
+      <path d={line} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function StatCard({label, value, change, changeClass, sparkData, sparkColor, valueStyle}) {
+  const displayed = useCountUp(value);
+  return (
+    <div className="card stat-card">
+      <div className="stat-label">{label}</div>
+      <div className="stat-value" style={valueStyle||{}}>{displayed}</div>
+      {change&&<div className={"stat-change "+(changeClass||"")}>{change}</div>}
+      <StatSparkline data={sparkData} color={sparkColor||"#5b8af5"}/>
+    </div>
+  );
+}
+
 // ─── CREATOR DASHBOARD ────────────────────────────────────────────────────────
 function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,userName}) {
   const active = deals.filter(d=>d.status==="Active");
@@ -533,12 +598,13 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
         <button className="btn btn-primary" onClick={()=>setPage("new-deal")}>+ New Deal</button>
       </div>
       <div className="g4 section">
-        {[["Total Earnings","$0","Start adding deals to track earnings","stat-neutral"],["Active Deals",String(active.length),"","stat-neutral"],["In Escrow","$"+escrowTotal.toLocaleString(),pendingEscrow.length>0?pendingEscrow.length+" deals protected":"No escrow yet","stat-neutral"],["Pending Payouts","$0","No pending invoices","stat-neutral"]].map(([l,v,c,cls],i)=>(
-          <div key={i} className="card stat-card">
-            <div className="stat-label">{l}</div>
-            <div className="stat-value">{v}</div>
-            {c&&<div className={"stat-change "+cls}>{c}</div>}
-          </div>
+        {[
+          {l:"Total Earnings",v:"$0",c:"Start adding deals to track earnings",cls:"stat-neutral",spk:[0,0,0,0,0,0,0]},
+          {l:"Active Deals",v:String(active.length),c:"",cls:"stat-neutral",spk:[0,0,0,0,0,0,active.length]},
+          {l:"In Escrow",v:"$"+escrowTotal.toLocaleString(),c:pendingEscrow.length>0?pendingEscrow.length+" deals protected":"No escrow yet",cls:"stat-neutral",spk:[0,0,0,0,0,0,escrowTotal]},
+          {l:"Pending Payouts",v:"$0",c:"No pending invoices",cls:"stat-neutral",spk:[0,0,0,0,0,0,0]}
+        ].map((s,i)=>(
+          <StatCard key={i} label={s.l} value={s.v} change={s.c} changeClass={s.cls} sparkData={s.spk}/>
         ))}
       </div>
       {pendingEscrow.length>0&&(
@@ -1616,8 +1682,13 @@ function EarningsPage() {
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Earnings & P&L</div><div className="page-subtitle">Your income, brand performance, and business health at a glance.</div></div><button className="btn btn-secondary">Export CSV</button></div>
       <div className="g4 section" style={{gap:12}}>
-        {[["YTD Earnings","$"+ytd.toLocaleString(),"stat-up"],["Monthly Avg","$"+avg.toLocaleString(),"stat-neutral"],["Best Brand",best.brand,"stat-neutral"],["Deals Closed",String(earningsByBrand.reduce((s,b)=>s+b.deals,0)),"stat-neutral"]].map(([l,v,cls],i)=>(
-          <div key={i} className="card stat-card"><div className="stat-label">{l}</div><div className="stat-value" style={{fontSize:i===2?"18px":"28px"}}>{v}</div></div>
+        {[
+          {l:"YTD Earnings",v:"$"+ytd.toLocaleString(),spk:earningsMonthly.map(m=>m.amount),sc:"#34d399"},
+          {l:"Monthly Avg",v:"$"+avg.toLocaleString(),spk:earningsMonthly.map(m=>m.amount)},
+          {l:"Best Brand",v:best.brand,spk:earningsByBrand.map(b=>b.amount),vs:{fontSize:"18px",WebkitTextFillColor:"rgba(255,255,255,.85)"}},
+          {l:"Deals Closed",v:String(earningsByBrand.reduce((s,b)=>s+b.deals,0)),spk:earningsByBrand.map(b=>b.deals)}
+        ].map((s,i)=>(
+          <StatCard key={i} label={s.l} value={s.v} sparkData={s.spk} sparkColor={s.sc} valueStyle={s.vs}/>
         ))}
       </div>
       <div className="g2" style={{gap:20,alignItems:"start"}}>
@@ -1833,8 +1904,13 @@ function ExpensesPage() {
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Expenses & Tax</div><div className="page-subtitle">Track business expenses and estimate your tax obligations.</div></div><button className="btn btn-primary" onClick={()=>setModal(true)}>+ Add Expense</button></div>
       <div className="g4 section" style={{gap:12}}>
-        {[["Total Expenses","$"+total.toLocaleString()],["Deductible","$"+deductible.toLocaleString()],["Non-Deductible","$"+nonDeductible.toLocaleString()],["Est. Tax Savings","$"+estimatedTax.toLocaleString()]].map(([l,v],i)=>(
-          <div key={i} className="card stat-card"><div className="stat-label">{l}</div><div className="stat-value">{v}</div></div>
+        {[
+          {l:"Total Expenses",v:"$"+total.toLocaleString()},
+          {l:"Deductible",v:"$"+deductible.toLocaleString(),sc:"#34d399"},
+          {l:"Non-Deductible",v:"$"+nonDeductible.toLocaleString(),sc:"#f87171"},
+          {l:"Est. Tax Savings",v:"$"+estimatedTax.toLocaleString(),sc:"#a78bfa"}
+        ].map((s,i)=>(
+          <StatCard key={i} label={s.l} value={s.v} sparkColor={s.sc}/>
         ))}
       </div>
       <div className="g2" style={{gap:20,alignItems:"start"}}>
@@ -1913,8 +1989,13 @@ function BrandDashboard({setPage,setSelected}) {
         </div>
       </div>
       <div className="g4 section">
-        {[["Active Deals","0",""],["Creators Working With","0",""],["Total In Escrow","$0",""],["Content Pieces","0",""]].map(([l,v,c],i)=>(
-          <div key={i} className="card stat-card"><div className="stat-label">{l}</div><div className="stat-value">{v}</div>{c&&<div className="stat-change stat-up">{c}</div>}</div>
+        {[
+          {l:"Active Deals",v:"0",spk:[0,0,0,0,0,0,0]},
+          {l:"Creators Working With",v:"0",spk:[0,0,0,0,0,0,0]},
+          {l:"Total In Escrow",v:"$0",spk:[0,0,0,0,0,0,0]},
+          {l:"Content Pieces",v:"0",spk:[0,0,0,0,0,0,0]}
+        ].map((s,i)=>(
+          <StatCard key={i} label={s.l} value={s.v} sparkData={s.spk}/>
         ))}
       </div>
       <div className="g2" style={{gap:22,alignItems:"start"}}>
@@ -2445,8 +2526,13 @@ function AffiliateManagerPage() {
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Affiliate Manager</div><div className="page-subtitle">Generate links and codes, track clicks, conversions and commissions.</div></div><button className="btn btn-primary" onClick={()=>setModal(true)}>+ New Link</button></div>
       <div className="g4 section" style={{gap:12}}>
-        {[["Total Revenue","$"+totalRev.toLocaleString()],["Commissions","$"+totalComm.toLocaleString()],["Conversions",String(totalConv)],["Creators",String(links.length)]].map(([l,v],i)=>(
-          <div key={i} className="card stat-card"><div className="stat-label">{l}</div><div className="stat-value">{v}</div></div>
+        {[
+          {l:"Total Revenue",v:"$"+totalRev.toLocaleString(),sc:"#34d399"},
+          {l:"Commissions",v:"$"+totalComm.toLocaleString()},
+          {l:"Conversions",v:String(totalConv),sc:"#a78bfa"},
+          {l:"Creators",v:String(links.length)}
+        ].map((s,i)=>(
+          <StatCard key={i} label={s.l} value={s.v} sparkColor={s.sc}/>
         ))}
       </div>
       <div className="card-lg" style={{overflow:"hidden"}}>
@@ -2729,8 +2815,13 @@ function ROITrackerPage() {
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">ROI Tracker</div><div className="page-subtitle">Measure the real return on every creator investment.</div></div></div>
       <div className="g4 section" style={{gap:12}}>
-        {[["Total Spend","$"+totalSpend.toLocaleString()],["Total Revenue","$"+totalRev.toLocaleString()],["Avg ROI",avgROI+"%"],["Net Profit","$"+(totalRev-totalSpend).toLocaleString()]].map(([l,v],i)=>(
-          <div key={i} className="card stat-card"><div className="stat-label">{l}</div><div className="stat-value">{v}</div>{i===2&&<div className="stat-change stat-up">↑ vs industry avg 150%</div>}</div>
+        {[
+          {l:"Total Spend",v:"$"+totalSpend.toLocaleString(),sc:"#f87171"},
+          {l:"Total Revenue",v:"$"+totalRev.toLocaleString(),sc:"#34d399"},
+          {l:"Avg ROI",v:avgROI+"%",c:"↑ vs industry avg 150%",cls:"stat-up",sc:"#a78bfa"},
+          {l:"Net Profit",v:"$"+(totalRev-totalSpend).toLocaleString(),sc:"#34d399"}
+        ].map((s,i)=>(
+          <StatCard key={i} label={s.l} value={s.v} change={s.c} changeClass={s.cls} sparkColor={s.sc}/>
         ))}
       </div>
       <div className="card-lg" style={{overflow:"hidden"}}>
