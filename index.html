@@ -176,6 +176,9 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 .star-btn:hover{transform:scale(1.25);filter:drop-shadow(0 0 5px rgba(240,160,80,.45))}
 @keyframes livePulse{0%{transform:scale(1);opacity:.85}65%{transform:scale(1.45);opacity:0}100%{transform:scale(1.45);opacity:0}}
 @keyframes navShimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+@keyframes toastIn{from{transform:translateX(calc(100% + 32px));opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toastOut{from{transform:translateX(0);opacity:1}to{transform:translateX(calc(100% + 32px));opacity:0}}
+@keyframes drainBar{from{width:100%}to{width:0%}}
 @keyframes nebulaA{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(4%,3%) scale(1.06)}50%{transform:translate(-2%,6%) scale(.97)}75%{transform:translate(-5%,-2%) scale(1.04)}}
 @keyframes nebulaB{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-5%,-4%) scale(1.09)}66%{transform:translate(4%,-6%) scale(.94)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -386,10 +389,75 @@ function Modal({onClose,children,maxWidth=520}) {
   );
 }
 
-function Toast({msg,emoji}) {
+function Toast({msg, emoji, type, duration=3000, onDone}) {
+  const [out, setOut] = useState(false);
+
+  // Infer type from message content when not explicitly passed
+  const kind = type||(()=>{
+    const m = String(msg);
+    if(/✅|uploaded|saved|created|invited|success|added|sent/i.test(m)) return "success";
+    if(/❌|error|failed|denied/i.test(m)) return "error";
+    if(/removed|deleted|cancelled|⚠️/i.test(m)) return "warning";
+    return "info";
+  })();
+
+  const palette = {success:"#34d399", error:"#f87171", warning:"#fbbf24", info:"#5b8af5"};
+  const color = palette[kind]||palette.info;
+
+  useEffect(()=>{
+    // Gentle 880 Hz chime for success via Web Audio API
+    if(kind==="success") {
+      try {
+        const ac = new (window.AudioContext||window.webkitAudioContext)();
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.connect(gain);
+        gain.connect(ac.destination);
+        osc.type = "sine";
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0, ac.currentTime);
+        gain.gain.linearRampToValueAtTime(0.07, ac.currentTime+0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+0.2);
+        osc.start(ac.currentTime);
+        osc.stop(ac.currentTime+0.22);
+      } catch(e) {}
+    }
+    // Begin exit animation before parent unmounts
+    const t1 = setTimeout(()=>setOut(true), duration-380);
+    // Signal parent to unmount
+    const t2 = setTimeout(()=>onDone&&onDone(), duration);
+    return ()=>{ clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
   return (
-    <div style={{position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:"#1a1916",color:"white",borderRadius:12,padding:"11px 20px",fontSize:"14px",fontWeight:600,display:"flex",alignItems:"center",gap:8,zIndex:999,boxShadow:"var(--shadow-lg)",fontFamily:"Space Grotesk,sans-serif",pointerEvents:"none",animation:"fadeIn .18s ease",whiteSpace:"nowrap"}}>
-      {emoji&&<span style={{fontSize:"16px"}}>{emoji}</span>}{msg}
+    <div style={{
+      position:"fixed", top:24, right:24, zIndex:9999,
+      minWidth:288, maxWidth:360,
+      background:"rgba(10,12,22,.88)",
+      backdropFilter:"blur(20px) saturate(150%)",
+      WebkitBackdropFilter:"blur(20px) saturate(150%)",
+      border:"1px solid rgba(255,255,255,.09)",
+      borderLeft:`3px solid ${color}`,
+      borderRadius:14,
+      padding:"14px 18px 18px",
+      display:"flex", alignItems:"flex-start", gap:11,
+      boxShadow:"0 8px 40px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07)",
+      fontFamily:'"Space Grotesk",sans-serif',
+      pointerEvents:"none",
+      overflow:"hidden",
+      animation: out
+        ? "toastOut .32s ease-in forwards"
+        : "toastIn .38s cubic-bezier(.16,1,.3,1) forwards"
+    }}>
+      {emoji&&<span style={{fontSize:"18px",flexShrink:0,lineHeight:1.3,marginTop:1}}>{emoji}</span>}
+      <span style={{fontSize:"14px",fontWeight:600,color:"var(--text)",lineHeight:1.45,flex:1}}>{msg}</span>
+      {/* Draining progress bar */}
+      <div style={{position:"absolute",bottom:0,left:0,right:0,height:2,background:"rgba(255,255,255,.05)"}}>
+        <div style={{
+          height:"100%", background:color, opacity:.65,
+          animation:`drainBar ${duration}ms linear forwards`
+        }}/>
+      </div>
     </div>
   );
 }
@@ -1367,7 +1435,7 @@ function CreatorAnalyticsPage() {
   const [uploading,setUploading] = useState(null);
   const [toast,setToast] = useState(null);
   const platforms=["Instagram","TikTok","YouTube"];
-  const showToast=msg=>{setToast(msg);setTimeout(()=>setToast(null),2500);};
+  const showToast=msg=>{setToast(msg);};
   const simulate=p=>{setUploading(p);setTimeout(()=>{setUploads(u=>({...u,[p]:{uploaded:true,date:"Mar 25, 2025",age:0,file:p.toLowerCase()+"_insights_mar25.pdf"}}));setUploading(null);showToast("✅ "+p+" analytics uploaded!");},1800);};
   const remove=p=>{setUploads(u=>({...u,[p]:{uploaded:false,date:null,age:null,file:null}}));showToast(p+" analytics removed.");};
   const uploaded=Object.values(uploads).filter(u=>u.uploaded).length;
@@ -1418,7 +1486,7 @@ function CreatorAnalyticsPage() {
           );
         })}
       </div>
-      {toast&&<Toast msg={toast}/>}
+      {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
     </div>
   );
 }
@@ -2075,7 +2143,7 @@ function BrandDashboard({setPage,setSelected}) {
 // ─── BROWSE CREATORS ──────────────────────────────────────────────────────────
 function BrowseCreatorsPage({setPage,setSelected}) {
   const [search,setSearch] = useState("");const [niche,setNiche] = useState("All");const [sort,setSort] = useState("rating");const [short,setShort] = useState([]);const [toast,setToast] = useState(null);
-  const showToast=(m,e)=>{setToast({m,e});setTimeout(()=>setToast(null),2000);};
+  const showToast=(m,e)=>{setToast({m,e});};
   let list=CREATORS.filter(c=>(!search||c.name.toLowerCase().includes(search.toLowerCase()))&&(niche==="All"||c.niche.includes(niche)));
   if(sort==="rating") list=[...list].sort((a,b)=>parseFloat(b.rating)-parseFloat(a.rating));
   if(sort==="followers") list=[...list].sort((a,b)=>parseInt(b.followers)-parseInt(a.followers));
@@ -2120,7 +2188,7 @@ function BrowseCreatorsPage({setPage,setSelected}) {
           );
         })}
       </div>
-      {toast&&<Toast msg={toast.m} emoji={toast.e}/>}
+      {toast&&<Toast msg={toast.m} emoji={toast.e} onDone={()=>setToast(null)}/>}
     </div>
   );
 }
@@ -2148,7 +2216,7 @@ function CreatorProfilePage({creator,setPage}) {
               <div style={{display:"flex",gap:5,marginTop:7,flexWrap:"wrap"}}>{c.platforms.map(p=><PlatformBadge key={p} p={p}/>)}</div>
             </div>
             <div style={{display:"flex",gap:7,flexShrink:0}}>
-              <button className="btn btn-secondary btn-sm" onClick={()=>{setToast("Added to shortlist");setTimeout(()=>setToast(null),2000);}}>⭐ Shortlist</button>
+              <button className="btn btn-secondary btn-sm" onClick={()=>{setToast("Added to shortlist");}}>⭐ Shortlist</button>
               <button className="btn btn-primary" onClick={()=>setInviteModal(true)}>Invite to Campaign</button>
             </div>
           </div>
@@ -2245,7 +2313,7 @@ function CreatorProfilePage({creator,setPage}) {
           )}
         </Modal>
       )}
-      {toast&&<Toast msg={toast}/>}
+      {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
     </div>
   );
 }
