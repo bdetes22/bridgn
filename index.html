@@ -184,6 +184,9 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeInScale{from{opacity:0;transform:translateY(6px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes pageEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes drawLine{from{stroke-dashoffset:var(--line-len,34)}to{stroke-dashoffset:0}}
+@keyframes escrowShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+.escrow-amount-shimmer{display:inline-block;background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:escrowShimmer 2.8s linear infinite}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes slideIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
@@ -689,6 +692,26 @@ function AnimNum({value, style, className}) {
   return <span className={className} style={style}>{useCountUp(v)}</span>;
 }
 
+// Renders text character by character at `speed` ms per char when animate=true.
+// Falls back to plain text instantly when animate=false.
+function TypewriterText({text, animate, speed=30}) {
+  const [displayed, setDisplayed] = useState(animate ? "" : text);
+  const timer = useRef(null);
+  useEffect(() => {
+    if (!animate) { setDisplayed(text); return; }
+    setDisplayed("");
+    let i = 0;
+    const tick = () => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i < text.length) timer.current = setTimeout(tick, speed);
+    };
+    timer.current = setTimeout(tick, speed);
+    return () => clearTimeout(timer.current);
+  }, [text, animate]);
+  return <span>{displayed}</span>;
+}
+
 // ─── CREATOR DASHBOARD ────────────────────────────────────────────────────────
 function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,userName}) {
   const active = deals.filter(d=>d.status==="Active");
@@ -966,7 +989,7 @@ function DealRoomPage({setPage,setSelected,deals}) {
   const g=bg(activeDeal.ci);
   const DELIVERABLES = activeDeal.deliverables.split(",").map(d=>d.trim());
   const [approved,setApproved] = useState(DELIVERABLES.map(()=>false));
-  const sendMsg=()=>{if(!msgInput.trim())return;setMsgs(m=>[...m,{from:"me",text:msgInput,time:"Just now"}]);setMsgInput("");};
+  const sendMsg=()=>{if(!msgInput.trim())return;setMsgs(m=>[...m,{from:"me",text:msgInput,time:"Just now",animate:true}]);setMsgInput("");};
   const pct = Math.round((activeDeal.progress/6)*100);
   return (
     <div className="fade-in">
@@ -1043,7 +1066,7 @@ function DealRoomPage({setPage,setSelected,deals}) {
             <div style={{background:activeDeal.escrowReleased?"var(--green-bg)":"rgba(8,145,178,.08)",border:"1.5px solid "+(activeDeal.escrowReleased?"rgba(52,211,153,.3)":"rgba(8,145,178,.3)"),borderRadius:"var(--radius-lg)",padding:"18px 22px",display:"flex",gap:14,alignItems:"center"}}>
               <span style={{fontSize:"28px"}}>🔒</span>
               <div style={{flex:1}}>
-                <div style={{fontSize:"15px",fontWeight:700,color:activeDeal.escrowReleased?"var(--green)":"var(--teal)",marginBottom:4}}>Escrow: ${activeDeal.amount.toLocaleString()}</div>
+                <div style={{fontSize:"15px",fontWeight:700,marginBottom:4}}>Escrow: <span className="escrow-amount-shimmer" style={{background:`linear-gradient(90deg,${activeDeal.escrowReleased?"var(--green)":"var(--teal)"} 25%,rgba(255,255,255,.95) 50%,${activeDeal.escrowReleased?"var(--green)":"var(--teal)"} 75%)`,backgroundSize:"200% auto"}}>${activeDeal.amount.toLocaleString()}</span></div>
                 <div style={{fontSize:"13px",color:"var(--text2)"}}>{activeDeal.escrowReleased?"Payment has been released to your account.":"Funds are secured. Released automatically when brand approves your content."}</div>
               </div>
               {!activeDeal.escrowReleased&&<span className="badge badge-teal">Protected</span>}
@@ -1060,7 +1083,7 @@ function DealRoomPage({setPage,setSelected,deals}) {
               {msgs.map((m,i)=>(
                 <div key={i} style={{display:"flex",justifyContent:m.from==="me"?"flex-end":"flex-start"}}>
                   <div style={{maxWidth:"82%",padding:"8px 12px",borderRadius:m.from==="me"?"12px 12px 3px 12px":"12px 12px 12px 3px",background:m.from==="me"?"var(--accent)":"var(--surface2)",fontSize:"13px",lineHeight:1.5}}>
-                    {m.text}
+                    <TypewriterText text={m.text} animate={!!m.animate} speed={30}/>
                     <div style={{fontSize:"10px",opacity:.55,marginTop:3,textAlign:m.from==="me"?"right":"left"}}>{m.time}</div>
                   </div>
                 </div>
@@ -1073,13 +1096,28 @@ function DealRoomPage({setPage,setSelected,deals}) {
           </div>
           <div className="card-lg" style={{padding:"16px 18px"}}>
             <div style={{fontSize:"13px",fontWeight:700,marginBottom:10}}>Deal Progress</div>
-            {["Offer Accepted","Agreement Signed","Brief Received","Content Created","Brand Review","Completed"].map((step,i)=>(
-              <div key={i} style={{display:"flex",gap:10,alignItems:"center",padding:"7px 0",borderBottom:i<5?"1px solid var(--border)":"none"}}>
-                <div style={{width:20,height:20,borderRadius:"50%",background:activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--accent)":"var(--surface2)",border:"1.5px solid "+(activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--accent)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",flexShrink:0,color:"white",fontWeight:700}}>{activeDeal.progress>i?"✓":i+1}</div>
-                <span style={{fontSize:"12px",fontWeight:activeDeal.progress===i?600:400,color:activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--text)":"var(--text3)"}}>{step}</span>
-                {activeDeal.progress===i&&<span style={{fontSize:"10px",fontWeight:700,color:"var(--accent)",marginLeft:"auto"}}>Current</span>}
-              </div>
-            ))}
+            {/* SVG connector lines drawn between completed step circles */}
+            <div style={{position:"relative"}}>
+              <svg aria-hidden="true" style={{position:"absolute",left:0,top:0,width:20,height:204,pointerEvents:"none",overflow:"visible",zIndex:0}}>
+                {[0,1,2,3,4].map(i=>{
+                  if(activeDeal.progress<=i) return null;
+                  const y1=i*34+17, y2=(i+1)*34+17, len=y2-y1;
+                  return (
+                    <line key={i} x1={10} y1={y1} x2={10} y2={y2}
+                      stroke="var(--green)" strokeWidth={2} strokeLinecap="round"
+                      style={{strokeDasharray:len,strokeDashoffset:len,animation:`drawLine .4s ease-out ${(i*.12).toFixed(2)}s both`}}
+                    />
+                  );
+                })}
+              </svg>
+              {["Offer Accepted","Agreement Signed","Brief Received","Content Created","Brand Review","Completed"].map((step,i)=>(
+                <div key={i} style={{display:"flex",gap:10,alignItems:"center",padding:"7px 0",borderBottom:i<5?"1px solid var(--border)":"none",position:"relative",zIndex:1}}>
+                  <div style={{width:20,height:20,borderRadius:"50%",background:activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--accent)":"var(--surface2)",border:"1.5px solid "+(activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--accent)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",flexShrink:0,color:"white",fontWeight:700,boxShadow:activeDeal.progress>i?"0 0 8px rgba(52,211,153,.45)":activeDeal.progress===i?"0 0 8px rgba(91,138,245,.45)":"none"}}>{activeDeal.progress>i?"✓":i+1}</div>
+                  <span style={{fontSize:"12px",fontWeight:activeDeal.progress===i?600:400,color:activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--text)":"var(--text3)"}}>{step}</span>
+                  {activeDeal.progress===i&&<span style={{fontSize:"10px",fontWeight:700,color:"var(--accent)",marginLeft:"auto"}}>Current</span>}
+                </div>
+              ))}
+            </div>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             <button className="btn btn-secondary btn-sm" style={{width:"100%"}} onClick={()=>setPage("invoices")}>View Invoice</button>
