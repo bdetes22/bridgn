@@ -184,6 +184,8 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeInScale{from{opacity:0;transform:translateY(6px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes pageEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes skelShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+.skel{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);background-size:800px 100%;animation:skelShimmer 1.5s ease-in-out infinite;border-radius:6px;flex-shrink:0}
 @keyframes drawLine{from{stroke-dashoffset:var(--line-len,34)}to{stroke-dashoffset:0}}
 @keyframes escrowShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
 .escrow-amount-shimmer{display:inline-block;background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:escrowShimmer 2.8s linear infinite}
@@ -712,8 +714,236 @@ function TypewriterText({text, animate, speed=30}) {
   return <span>{displayed}</span>;
 }
 
+// ── SKELETON SYSTEM ───────────────────────────────────────────────────────────
+function useSkeleton(ms=600){const[l,setL]=useState(true);useEffect(()=>{const t=setTimeout(()=>setL(false),ms);return()=>clearTimeout(t);},[]);return l;}
+
+function Skel({w="100%",h=14,r=6,style}){
+  return <div className="skel" style={{width:w,height:h,borderRadius:r,flexShrink:0,...style}}/>;
+}
+
+function SkeletonPage({layout="list"}){
+  const Hdr=()=>(
+    <div className="ph-row" style={{marginBottom:24}}>
+      <div style={{display:"flex",flexDirection:"column",gap:9}}><Skel w={190} h={28} r={8}/><Skel w={270} h={13} r={5}/></div>
+      <Skel w={120} h={36} r={8}/>
+    </div>
+  );
+  const SS=()=>(
+    <div className="card stat-card">
+      <Skel w={80} h={11} r={4} style={{marginBottom:14}}/>
+      <Skel w={130} h={36} r={6} style={{marginBottom:12}}/>
+      <Skel w="100%" h={28} r={4}/>
+    </div>
+  );
+  const LR=()=>(
+    <div className="card" style={{padding:"15px 18px",display:"flex",gap:14,alignItems:"center",marginBottom:10}}>
+      <Skel w={42} h={42} r={10}/>
+      <div style={{flex:1,display:"flex",flexDirection:"column",gap:7}}><Skel w="52%" h={14} r={4}/><Skel w="34%" h={11} r={4}/></div>
+      <Skel w={64} h={22} r={6}/><Skel w={80} h={30} r={8}/>
+    </div>
+  );
+  const GC=()=>(
+    <div className="card" style={{padding:"20px"}}>
+      <div style={{display:"flex",gap:12,marginBottom:14,alignItems:"center"}}>
+        <Skel w={48} h={48} r="50%"/>
+        <div style={{flex:1,display:"flex",flexDirection:"column",gap:7}}><Skel w="60%" h={14} r={4}/><Skel w="40%" h={11} r={4}/></div>
+      </div>
+      <div style={{display:"flex",gap:6,marginBottom:12}}>{[0,1,2].map(i=><Skel key={i} w="33%" h={10} r={3}/>)}</div>
+      <Skel w="100%" h={34} r={7}/>
+    </div>
+  );
+
+  if(layout==="dashboard") return (
+    <div className="fade-in">
+      <Hdr/>
+      <div className="g4 section">{[0,1,2,3].map(i=><SS key={i}/>)}</div>
+      <div className="g2" style={{gap:20,alignItems:"start",marginTop:20}}>
+        <div><Skel w={130} h={16} r={5} style={{marginBottom:12}}/>{[0,1,2].map(i=><LR key={i}/>)}</div>
+        <div><Skel w={110} h={16} r={5} style={{marginBottom:12}}/>{[0,1].map(i=><LR key={i}/>)}</div>
+      </div>
+    </div>
+  );
+
+  if(layout==="grid") return (
+    <div className="fade-in">
+      <Hdr/>
+      <div className="card" style={{padding:"13px 16px",marginBottom:18}}>
+        <div style={{display:"flex",gap:8,marginBottom:10}}><Skel w="100%" h={38} r={8}/><Skel w={110} h={38} r={8}/></div>
+        <div style={{display:"flex",gap:6}}>{[60,70,65,72,56,68,72].map((w,i)=><Skel key={i} w={w} h={28} r={6}/>)}</div>
+      </div>
+      <div className="g3">{[0,1,2,3,4,5].map(i=><GC key={i}/>)}</div>
+    </div>
+  );
+
+  if(layout==="deal-room") return (
+    <div className="fade-in">
+      <Hdr/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 360px",gap:20}}>
+        <div style={{display:"flex",flexDirection:"column",gap:16}}>
+          <div className="card-lg" style={{padding:"20px 22px"}}>
+            <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:16}}>
+              <Skel w={44} h={44} r={12}/>
+              <div style={{flex:1,display:"flex",flexDirection:"column",gap:7}}><Skel w="48%" h={16} r={4}/><Skel w="32%" h={12} r={4}/></div>
+            </div>
+            <div style={{display:"flex",gap:10}}>{[0,1,2].map(i=><Skel key={i} w="33%" h={50} r={8}/>)}</div>
+          </div>
+          <div className="card-lg" style={{padding:"18px 22px"}}><Skel w={120} h={14} r={4} style={{marginBottom:14}}/><Skel w="100%" h={110} r={8}/></div>
+          <div className="card-lg" style={{padding:"18px 22px"}}>
+            <Skel w={100} h={14} r={4} style={{marginBottom:14}}/>
+            {[0,1,2].map(i=><Skel key={i} w="100%" h={36} r={6} style={{marginBottom:8}}/>)}
+          </div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          <div className="card-lg" style={{overflow:"hidden"}}>
+            <div style={{padding:"14px 18px",borderBottom:"1px solid var(--border)"}}><Skel w={120} h={14} r={4}/></div>
+            <div style={{padding:14,display:"flex",flexDirection:"column",gap:10,height:220}}>
+              {[{w:"72%",a:"flex-start"},{w:"56%",a:"flex-end"},{w:"68%",a:"flex-start"}].map((m,i)=>(
+                <div key={i} style={{display:"flex",justifyContent:m.a}}><Skel w={m.w} h={38} r={10}/></div>
+              ))}
+            </div>
+            <div style={{padding:"10px 12px",borderTop:"1px solid var(--border)",display:"flex",gap:7}}>
+              <Skel w="100%" h={34} r={7}/><Skel w={60} h={34} r={7}/>
+            </div>
+          </div>
+          <div className="card-lg" style={{padding:"16px 18px"}}>
+            <Skel w={100} h={14} r={4} style={{marginBottom:12}}/>
+            {[0,1,2,3,4,5].map(i=><Skel key={i} w="100%" h={30} r={5} style={{marginBottom:6}}/>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if(layout==="active-deal") return (
+    <div className="fade-in">
+      <div style={{display:"flex",gap:10,marginBottom:20}}><Skel w={110} h={34} r={8}/><Skel w={130} h={34} r={8}/></div>
+      <div className="card-lg" style={{padding:"20px 24px",marginBottom:18}}>
+        <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:16}}>
+          <Skel w={48} h={48} r={12}/>
+          <div style={{flex:1,display:"flex",flexDirection:"column",gap:8}}><Skel w="42%" h={18} r={5}/><Skel w="28%" h={13} r={4}/></div>
+        </div>
+        <div style={{display:"flex",gap:12,marginBottom:14}}>{[0,1,2].map(i=><Skel key={i} w="33%" h={50} r={8}/>)}</div>
+        <Skel w="100%" h={7} r={99}/>
+      </div>
+      <div className="g2" style={{gap:18}}>
+        <div className="card-lg" style={{overflow:"hidden"}}>
+          {[0,1,2,3,4,5].map(i=><Skel key={i} w="100%" h={68} style={{borderRadius:0,marginBottom:1}}/>)}
+        </div>
+        <div className="card-lg" style={{padding:"18px 20px"}}>
+          <Skel w={110} h={14} r={4} style={{marginBottom:14}}/>
+          {[0,1,2,3].map(i=><Skel key={i} w="100%" h={40} r={6} style={{marginBottom:8}}/>)}
+        </div>
+      </div>
+    </div>
+  );
+
+  if(layout==="form") return (
+    <div className="fade-in">
+      <Hdr/>
+      <div className="card-lg" style={{padding:"24px 28px",maxWidth:640}}>
+        <Skel w={200} h={22} r={6} style={{marginBottom:22}}/>
+        <div style={{display:"flex",flexDirection:"column",gap:16}}>
+          {[0,1,2,3].map(i=><div key={i}><Skel w={90} h={12} r={4} style={{marginBottom:8}}/><Skel w="100%" h={40} r={8}/></div>)}
+          <Skel w="100%" h={44} r={9} style={{marginTop:4}}/>
+        </div>
+      </div>
+    </div>
+  );
+
+  if(layout==="detail") return (
+    <div className="fade-in">
+      <Hdr/>
+      <div className="card-lg" style={{overflow:"hidden",marginBottom:18}}>
+        <Skel w="100%" h={140} style={{borderRadius:0}}/>
+        <div style={{padding:"20px 24px"}}>
+          <div style={{display:"flex",gap:12,marginBottom:14}}>{[0,1,2,3].map(i=><Skel key={i} w="25%" h={54} r={8}/>)}</div>
+          <Skel w={180} h={14} r={4} style={{marginBottom:12}}/><Skel w="100%" h={80} r={8} style={{marginBottom:14}}/><Skel w="100%" h={44} r={9}/>
+        </div>
+      </div>
+    </div>
+  );
+
+  if(layout==="analytics") return (
+    <div className="fade-in">
+      <Hdr/>
+      <div className="g3" style={{marginBottom:20}}>
+        {[0,1,2].map(i=>(
+          <div key={i} className="card-lg" style={{padding:"20px"}}>
+            <div style={{display:"flex",gap:12,marginBottom:14,alignItems:"center"}}>
+              <Skel w={36} h={36} r={8}/>
+              <div style={{flex:1,display:"flex",flexDirection:"column",gap:7}}><Skel w="58%" h={14} r={4}/><Skel w="42%" h={11} r={4}/></div>
+            </div>
+            <Skel w="100%" h={54} r={8}/>
+          </div>
+        ))}
+      </div>
+      <div className="card-lg" style={{padding:"20px"}}><Skel w={150} h={18} r={5} style={{marginBottom:18}}/><Skel w="100%" h={160} r={8}/></div>
+    </div>
+  );
+
+  if(layout==="calendar") return (
+    <div className="fade-in">
+      <Hdr/>
+      <div className="card-lg" style={{padding:"20px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+          <Skel w={160} h={22} r={6}/>
+          <div style={{display:"flex",gap:8}}><Skel w={34} h={34} r={7}/><Skel w={34} h={34} r={7}/></div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:6}}>
+          {[0,1,2,3,4,5,6].map(i=><Skel key={i} w="100%" h={20} r={4}/>)}
+        </div>
+        {[0,1,2,3,4].map(row=>(
+          <div key={row} style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:4,marginBottom:4}}>
+            {[0,1,2,3,4,5,6].map(i=><Skel key={i} w="100%" h={54} r={6}/>)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if(layout==="profile") return (
+    <div className="fade-in">
+      <Skel w={130} h={32} r={8} style={{marginBottom:18}}/>
+      <div className="card-lg" style={{overflow:"hidden",marginBottom:18}}>
+        <Skel w="100%" h={140} style={{borderRadius:0}}/>
+        <div style={{padding:"20px 24px",display:"flex",gap:14,alignItems:"center"}}>
+          <Skel w={64} h={64} r="50%"/>
+          <div style={{flex:1,display:"flex",flexDirection:"column",gap:8}}><Skel w={180} h={20} r={5}/><Skel w={120} h={13} r={4}/></div>
+          <Skel w={110} h={36} r={8}/>
+        </div>
+      </div>
+      <div style={{display:"flex",gap:8,marginBottom:18}}>{[80,90,80].map((w,i)=><Skel key={i} w={w} h={34} r={8}/>)}</div>
+      <div className="g2" style={{gap:18}}>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {[0,1,2].map(i=><div key={i} className="card-lg" style={{padding:"18px 22px"}}><Skel w={100} h={14} r={4} style={{marginBottom:12}}/><Skel w="100%" h={80} r={8}/></div>)}
+        </div>
+        <div className="card-lg" style={{padding:"18px 22px"}}>
+          <Skel w={80} h={14} r={4} style={{marginBottom:14}}/>
+          {[0,1,2,3].map(i=><Skel key={i} w="100%" h={36} r={6} style={{marginBottom:8}}/>)}
+        </div>
+      </div>
+    </div>
+  );
+
+  // "simple" / default
+  return (
+    <div className="fade-in">
+      <Hdr/>
+      <div className="card" style={{padding:"48px 24px",textAlign:"center",maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column",gap:14,alignItems:"center"}}>
+        <Skel w={56} h={56} r="50%"/>
+        <Skel w={180} h={20} r={5}/>
+        <Skel w={260} h={13} r={4}/>
+        <Skel w={260} h={13} r={4}/>
+        <Skel w={130} h={40} r={9} style={{marginTop:8}}/>
+      </div>
+    </div>
+  );
+}
+
 // ─── CREATOR DASHBOARD ────────────────────────────────────────────────────────
 function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,userName}) {
+  const loading = useSkeleton();
+  if(loading) return <SkeletonPage layout="dashboard"/>;
   const active = deals.filter(d=>d.status==="Active");
   const external = deals.filter(d=>d.source==="external");
   const pendingEscrow = deals.filter(d=>d.escrow&&!d.escrowReleased&&d.status!=="Completed");
@@ -825,6 +1055,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
 // compete to look good to creators, not the other way around.
 // Build this when we have critical mass of both sides on the platform.
 function CampaignsPage({setPage}) {
+  const loading = useSkeleton();
   const [notified,setNotified] = useState(false);
   const [email,setEmail] = useState("");
   const PREVIEW_POSTS = [
@@ -833,6 +1064,7 @@ function CampaignsPage({setPage}) {
     {bi:"VS",ci:2,brand:"Vestir",budget:"$1,200",platform:"TikTok",teaser:"Summer collection — trend-forward outfit content..."},
     {bi:"CU",ci:3,brand:"Culine",budget:"$3,000",platform:"Instagram",teaser:"Home chef challenge — 3-recipe cookware showcase..."},
   ];
+  if(loading) return <SkeletonPage layout="simple"/>;
   return (
     <div className="fade-in">
       <div style={{maxWidth:580,margin:"0 auto",padding:"20px 0 40px",textAlign:"center"}}>
@@ -903,7 +1135,9 @@ function CampaignsPage({setPage}) {
 
 // ─── CAMPAIGN DETAIL ──────────────────────────────────────────────────────────
 function CampaignDetail({campaign,setPage}) {
+  const loading = useSkeleton();
   const [applied,setApplied] = useState(campaign&&campaign.applied);
+  if(loading) return <SkeletonPage layout="detail"/>;
   if(!campaign) return null;
   const c=campaign;const g=bg(c.ci);
   return (
@@ -939,8 +1173,10 @@ function CampaignDetail({campaign,setPage}) {
 
 // ─── CREATOR DEALS ────────────────────────────────────────────────────────────
 function CreatorDealsPage({setPage,setSelected,deals}) {
+  const loading = useSkeleton();
   const [f,setF] = useState("All");
   const list = f==="All"?deals:deals.filter(d=>d.status===f);
+  if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
       <div className="ph-row">
@@ -975,6 +1211,7 @@ function CreatorDealsPage({setPage,setSelected,deals}) {
 
 // ─── DEAL ROOM ────────────────────────────────────────────────────────────────
 function DealRoomPage({setPage,setSelected,deals}) {
+  const loading = useSkeleton();
   const [activeDeal,setActiveDeal] = useState(deals.find(d=>d.status==="Active")||deals[0]);
   const [msgInput,setMsgInput] = useState("");
   const [msgs,setMsgs] = useState([
@@ -985,6 +1222,7 @@ function DealRoomPage({setPage,setSelected,deals}) {
   const [briefAcknowledged,setBriefAcknowledged] = useState(false);
   const [contentUploaded,setContentUploaded] = useState(false);
   const [uploadingContent,setUploadingContent] = useState(false);
+  if(loading) return <SkeletonPage layout="deal-room"/>;
   if(!activeDeal) return null;
   const g=bg(activeDeal.ci);
   const DELIVERABLES = activeDeal.deliverables.split(",").map(d=>d.trim());
@@ -1131,11 +1369,13 @@ function DealRoomPage({setPage,setSelected,deals}) {
 
 // ─── ACTIVE DEAL ──────────────────────────────────────────────────────────────
 function ActiveDealPage({deal:initDeal,setPage}) {
+  const loading = useSkeleton();
   const [deal] = useState(initDeal);
   const [modal,setModal] = useState(null);
   const [signed,setSigned] = useState(false);
   const [submitted,setSubmitted] = useState(false);
   const [submitting,setSubmitting] = useState(false);
+  if(loading) return <SkeletonPage layout="active-deal"/>;
   if(!deal) return null;
   const g=bg(deal.ci);const pct=Math.round((deal.progress/6)*100);
   const STEPS=[
@@ -1269,12 +1509,14 @@ function ActiveDealPage({deal:initDeal,setPage}) {
 
 // ─── NEW DEAL ─────────────────────────────────────────────────────────────────
 function NewDealPage({setPage,onDealCreated}) {
+  const loading = useSkeleton();
   const [step,setStep] = useState(1);
   const [form,setForm] = useState({brandName:"",brandEmail:"",amount:"",platform:"Instagram",deadline:"",deliverables:"",notes:""});
   const [contractTypes,setContractTypes] = useState(["flat"]);
   const [sending,setSending] = useState(false);
   const [done,setDone] = useState(false);
   const up=(k,v)=>setForm(f=>({...f,[k]:v}));
+  if(loading) return <SkeletonPage layout="form"/>;
   if(done) return (
     <div className="fade-in" style={{maxWidth:520,margin:"50px auto",textAlign:"center"}}>
       <div style={{width:68,height:68,borderRadius:20,background:"var(--green-bg)",border:"1.5px solid rgba(52,211,153,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"30px",margin:"0 auto 18px"}}>🎉</div>
@@ -1376,9 +1618,11 @@ function NewDealPage({setPage,onDealCreated}) {
 
 // ─── DISPUTE PAGE ─────────────────────────────────────────────────────────────
 function DisputePage({deal,setPage}) {
+  const loading = useSkeleton();
   const [type,setType] = useState("");
   const [desc,setDesc] = useState("");
   const [submitted,setSubmitted] = useState(false);
+  if(loading) return <SkeletonPage layout="form"/>;
   if(!deal) return null;
   const TYPES=[
     {id:"content",label:"Content not approved",icon:"🎬",desc:"Brand has not approved submitted content after review period"},
@@ -1424,7 +1668,9 @@ function DisputePage({deal,setPage}) {
 
 // ─── OFFER PAGE ───────────────────────────────────────────────────────────────
 function OfferPage({offer,setPage}) {
+  const loading = useSkeleton();
   const [res,setRes] = useState(null);
+  if(loading) return <SkeletonPage layout="detail"/>;
   if(!offer) return null;
   const o=offer;
   return (
@@ -1465,6 +1711,7 @@ function OfferPage({offer,setPage}) {
 
 // ─── CREATOR ANALYTICS ───────────────────────────────────────────────────────
 function CreatorAnalyticsPage() {
+  const loading = useSkeleton();
   const [uploads,setUploads] = useState({
     Instagram:{uploaded:false,date:null,age:null,file:null},
     TikTok:{uploaded:false,date:null,age:null,file:null},
@@ -1479,6 +1726,7 @@ function CreatorAnalyticsPage() {
   const uploaded=Object.values(uploads).filter(u=>u.uploaded).length;
   const PGRADS=[["#be185d","#c17c3a"],["#065f46","#0891b2"],["#6d28d9","#0369a1"]];
   const PICONS=["📸","🎵","▶️"];
+  if(loading) return <SkeletonPage layout="analytics"/>;
   return (
     <div className="fade-in">
       <div style={{marginBottom:24}}><div className="page-title">My Analytics</div><div className="page-subtitle">Upload your platform insights so brands see verified, timestamped data.</div></div>
@@ -1531,10 +1779,12 @@ function CreatorAnalyticsPage() {
 
 // ─── CONTENT CALENDAR ─────────────────────────────────────────────────────────
 function ContentCalendarPage({deals}) {
+  const loading = useSkeleton();
   const [view,setView] = useState("month");
   const today = new Date().getDate();
   const EVENTS=[];
   const days = Array.from({length:30},(_,i)=>i+1);
+  if(loading) return <SkeletonPage layout="calendar"/>;
   return (
     <div className="fade-in">
       <div className="ph-row">
@@ -1595,6 +1845,7 @@ function ContentCalendarPage({deals}) {
 
 // ─── RATE CARD ────────────────────────────────────────────────────────────────
 function RateCardPage() {
+  const loading = useSkeleton();
   const [followers,setFollowers] = useState("");
   const [eng,setEng] = useState("");
   const [niche,setNiche] = useState("Lifestyle");
@@ -1605,6 +1856,7 @@ function RateCardPage() {
   const rates=[["Instagram Feed Post","📸",0.8,1.2],["Instagram Reel","🎬",1.0,1.6],["Instagram Stories (3x)","📱",0.4,0.7],["TikTok Video","♪",0.6,1.1],["YouTube Integration","▶",2.0,3.5],["UGC Package (no post)","🎨",0.3,0.6],["Brand Ambassador (mo.)","🌟",4.0,8.0]].map(([type,icon,lo,hi])=>({type,icon,low:Math.round(base*lo*100)*10,high:Math.round(base*hi*100)*10}));
   const tier=f<10000?"Nano":f<50000?"Micro":f<250000?"Mid-tier":f<1000000?"Macro":"Mega";
   const tierColor=f<10000?"var(--text3)":f<50000?"var(--green)":f<250000?"var(--accent)":f<1000000?"var(--accent2)":"#f87171";
+  if(loading) return <SkeletonPage layout="form"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Rate Card Generator</div><div className="page-subtitle">Get fair market rate suggestions based on your stats.</div></div></div>
@@ -1645,8 +1897,10 @@ function RateCardPage() {
 
 // ─── MEDIA KIT ────────────────────────────────────────────────────────────────
 function MediaKitPage({userName,userInitials}) {
+  const loading = useSkeleton();
   const [preview,setPreview] = useState(false);const [bio,setBio] = useState("");const [tagline,setTagline] = useState("");
   const g=bg(0);const handle=(userName||"you").toLowerCase().replace(/\s+/g,"");
+  if(loading) return <SkeletonPage layout="profile"/>;
   if(preview) return (
     <div className="fade-in">
       <div style={{display:"flex",gap:8,marginBottom:18}}><button className="btn btn-secondary btn-sm" onClick={()=>setPreview(false)}>Edit</button><div style={{flex:1}}/><button className="btn btn-secondary btn-sm">Copy Link</button><button className="btn btn-primary btn-sm">Download PDF</button></div>
@@ -1704,9 +1958,11 @@ function MediaKitPage({userName,userInitials}) {
 
 // ─── INVOICES ─────────────────────────────────────────────────────────────────
 function InvoicesPage({role}) {
+  const loading = useSkeleton();
   const [modal,setModal] = useState(null);const [form,setForm] = useState({to:"",amount:"",dueDate:"",notes:""});const [sent,setSent] = useState(false);
   const up=(k,v)=>setForm(f=>({...f,[k]:v}));const isBrand=role==="brand";
   const CINV=[];
+  if(loading) return <SkeletonPage layout="list"/>;
   const BINV=[];
   const rows=isBrand?BINV:CINV;const totalPaid=rows.filter(i=>i.status==="Paid").reduce((a,b)=>a+b.amount,0);const pending=rows.filter(i=>i.status==="Pending"||i.status==="Due");
   return (
@@ -1762,8 +2018,10 @@ function InvoicesPage({role}) {
 
 // ─── PUBLIC PROFILE ───────────────────────────────────────────────────────────
 function PublicProfilePage({setPage,userName,userInitials}) {
+  const loading = useSkeleton();
   const [copied,setCopied] = useState(false);const [bookingModal,setBookingModal] = useState(false);const [bookForm,setBookForm] = useState({name:"",email:"",budget:"",platform:"Instagram",description:""});const [bookSent,setBookSent] = useState(false);
   const g=bg(0);const handle=(userName||"you").toLowerCase().replace(/\s+/g,"");const copy=()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);};
+  if(loading) return <SkeletonPage layout="profile"/>;
   return (
     <div className="fade-in">
       <div style={{background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"11px 16px",marginBottom:18,display:"flex",gap:9,alignItems:"center"}}>
@@ -1809,6 +2067,8 @@ function PublicProfilePage({setPage,userName,userInitials}) {
 
 // ─── EARNINGS & P&L ──────────────────────────────────────────────────────────
 function EarningsPage() {
+  const loading = useSkeleton();
+  if(loading) return <SkeletonPage layout="analytics"/>;
   const earningsMonthly = [];
   const earningsByBrand = [];
   if(!earningsMonthly.length) return (
@@ -1898,10 +2158,12 @@ function EarningsPage() {
 
 // ─── CONTRACT VAULT ───────────────────────────────────────────────────────────
 function ContractVaultPage() {
+  const loading = useSkeleton();
   const [contracts] = useState([]);
   const [search,setSearch] = useState("");const [filter,setFilter] = useState("All");const [selected,setSelected] = useState(null);
   const list = contracts.filter(c=>(filter==="All"||c.status===filter)&&(!search||c.brand.toLowerCase().includes(search.toLowerCase())||c.campaign.toLowerCase().includes(search.toLowerCase())));
   const statusColor = {Active:"var(--green)",Expiring:"var(--accent2)",Expired:"var(--red)"};
+  if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Contract Vault</div><div className="page-subtitle">All your signed agreements in one place with expiry tracking.</div></div></div>
@@ -1969,6 +2231,7 @@ function ContractVaultPage() {
 
 // ─── AVAILABILITY ─────────────────────────────────────────────────────────────
 function AvailabilityPage() {
+  const loading = useSkeleton();
   const [status,setStatus] = useState("open");
   const [blocked,setBlocked] = useState([]);
   const [booked,setBooked] = useState([]);
@@ -1980,6 +2243,7 @@ function AvailabilityPage() {
   };
   const getStatus=d=>{if(booked.includes(d))return "booked";if(blocked.includes(d))return "blocked";return "open";};
   const openDays=days.filter(d=>getStatus(d)==="open").length;
+  if(loading) return <SkeletonPage layout="calendar"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Availability</div><div className="page-subtitle">Let brands know when you are open to new work. Click days to block or unblock.</div></div></div>
@@ -2034,6 +2298,7 @@ function AvailabilityPage() {
 
 // ─── EXPENSES & TAX ───────────────────────────────────────────────────────────
 function ExpensesPage() {
+  const loading = useSkeleton();
   const [expenses,setExpenses] = useState([]);const [modal,setModal] = useState(false);const [form,setForm] = useState({desc:"",amount:"",date:"",category:"Production",deductible:true});
   const up=(k,v)=>setForm(f=>({...f,[k]:v}));
   const CATEGORIES=["Production","Equipment","Software","Travel","Wardrobe","Meals","Education","Marketing"];
@@ -2043,6 +2308,7 @@ function ExpensesPage() {
   const estimatedTax=Math.round(deductible*0.25);
   const byCat={};expenses.forEach(e=>{if(e.deductible)byCat[e.category]=(byCat[e.category]||0)+e.amount;});
   const addExpense=()=>{setExpenses(x=>[...x,{id:Date.now(),desc:form.desc,amount:parseFloat(form.amount)||0,date:form.date||"Apr 1, 2025",category:form.category,deductible:form.deductible}]);setModal(false);setForm({desc:"",amount:"",date:"",category:"Production",deductible:true});};
+  if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Expenses & Tax</div><div className="page-subtitle">Track business expenses and estimate your tax obligations.</div></div><button className="btn btn-primary" onClick={()=>setModal(true)}>+ Add Expense</button></div>
@@ -2119,6 +2385,8 @@ function ExpensesPage() {
 
 // ─── BRAND DASHBOARD ──────────────────────────────────────────────────────────
 function BrandDashboard({setPage,setSelected}) {
+  const loading = useSkeleton();
+  if(loading) return <SkeletonPage layout="dashboard"/>;
   const brandDeals=[];
   const active=brandDeals.filter(d=>d.status==="Active");
   const escrowTotal=brandDeals.filter(d=>d.escrow).reduce((s,d)=>s+d.amount,0);
@@ -2180,12 +2448,14 @@ function BrandDashboard({setPage,setSelected}) {
 
 // ─── BROWSE CREATORS ──────────────────────────────────────────────────────────
 function BrowseCreatorsPage({setPage,setSelected}) {
+  const loading = useSkeleton();
   const [search,setSearch] = useState("");const [niche,setNiche] = useState("All");const [sort,setSort] = useState("rating");const [short,setShort] = useState([]);const [toast,setToast] = useState(null);
   const showToast=(m,e)=>{setToast({m,e});};
   let list=CREATORS.filter(c=>(!search||c.name.toLowerCase().includes(search.toLowerCase()))&&(niche==="All"||c.niche.includes(niche)));
   if(sort==="rating") list=[...list].sort((a,b)=>parseFloat(b.rating)-parseFloat(a.rating));
   if(sort==="followers") list=[...list].sort((a,b)=>parseInt(b.followers)-parseInt(a.followers));
   if(sort==="engagement") list=[...list].sort((a,b)=>parseFloat(b.engagement)-parseFloat(a.engagement));
+  if(loading) return <SkeletonPage layout="grid"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Browse Creators</div><div className="page-subtitle">Discover and connect with verified creators.</div></div><button className="btn btn-purple btn-sm" onClick={()=>setPage("ai-match")}>🤖 AI Match</button></div>
@@ -2233,7 +2503,9 @@ function BrowseCreatorsPage({setPage,setSelected}) {
 
 // ─── CREATOR PROFILE (BRAND VIEW) ────────────────────────────────────────────
 function CreatorProfilePage({creator,setPage}) {
+  const loading = useSkeleton();
   const [tab,setTab] = useState("overview");const [inviteModal,setInviteModal] = useState(false);const [inviteForm,setInviteForm] = useState({campaign:"",message:""});const [sent,setSent] = useState(false);const [toast,setToast] = useState(null);
+  if(loading) return <SkeletonPage layout="profile"/>;
   if(!creator) return null;const c=creator;const g=bg(c.ci);
   const sc=SCORECARD_DATA.find(s=>s.ci===c.ci);
   const hasTrust=c.paidOnTime&&c.totalDeals>=3&&(c.paidOnTime/c.totalDeals)>=0.9;
@@ -2358,9 +2630,11 @@ function CreatorProfilePage({creator,setPage}) {
 
 // ─── BRAND CAMPAIGNS ─────────────────────────────────────────────────────────
 function BrandCampaignsPage({setPage,setSelected}) {
+  const loading = useSkeleton();
   const [campaigns,setCampaigns] = useState([]);
   const [modal,setModal] = useState(false);const [step,setStep] = useState(1);const [form,setForm] = useState({title:"",platform:"Instagram",budget:"",type:"Paid",deadline:"",desc:"",deliverables:"",requirements:"",brief:""});const [briefTemplate,setBriefTemplate] = useState(null);const [created,setCreated] = useState(false);
   const up=(k,v)=>setForm(f=>({...f,[k]:v}));
+  if(loading) return <SkeletonPage layout="grid"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Campaigns</div><div className="page-subtitle">Manage and launch your influencer campaigns.</div></div><button className="btn btn-primary" onClick={()=>{setModal(true);setStep(1);setCreated(false);}}>+ New Campaign</button></div>
@@ -2455,9 +2729,11 @@ function BrandCampaignsPage({setPage,setSelected}) {
 
 // ─── CAMPAIGN CALENDAR ────────────────────────────────────────────────────────
 function CampaignCalendarPage() {
+  const loading = useSkeleton();
   const calEvents=[];
   const [selected,setSelected] = useState(null);const days=Array.from({length:30},(_,i)=>i+1);
   const today=new Date().getDate();
+  if(loading) return <SkeletonPage layout="calendar"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Campaign Calendar</div><div className="page-subtitle">Every creator, every deliverable, across all active campaigns — in one view.</div></div></div>
@@ -2526,9 +2802,11 @@ function CampaignCalendarPage() {
 
 // ─── BRAND DEALS ──────────────────────────────────────────────────────────────
 function BrandDealsPage({setPage,setSelected}) {
+  const loading = useSkeleton();
   const [deals] = useState([]);
   const [f,setF] = useState("All");
   const list=f==="All"?deals:deals.filter(d=>d.status===f);
+  if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Deals Manager</div><div className="page-subtitle">All active and past creator partnerships.</div></div></div>
@@ -2568,6 +2846,7 @@ function BrandDealsPage({setPage,setSelected}) {
 
 // ─── CONTENT LIBRARY ──────────────────────────────────────────────────────────
 function ContentLibraryPage() {
+  const loading = useSkeleton();
   const [content] = useState([]);
   const [filterCr,setFilterCr] = useState("All");const [filterCamp,setFilterCamp] = useState("All");const [filterPlat,setFilterPlat] = useState("All");const [viewMode,setViewMode] = useState("grid");const [selected,setSelected] = useState(null);
   let list=content.filter(c=>(filterCr==="All"||c.creator===filterCr)&&(filterCamp==="All"||c.campaign===filterCamp)&&(filterPlat==="All"||c.platform===filterPlat));
@@ -2575,6 +2854,7 @@ function ContentLibraryPage() {
   const campaigns=[...new Set(content.map(c=>c.campaign))];
   const platforms=[...new Set(content.map(c=>c.platform))];
   const rightsColor=d=>{if(d>90)return "var(--green)";if(d>30)return "var(--accent2)";return "var(--red)";};
+  if(loading) return <SkeletonPage layout="grid"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Content Library</div><div className="page-subtitle">Every piece of delivered content, with usage rights tracking.</div></div><div style={{display:"flex",gap:7}}>{["grid","list"].map(v=><button key={v} className={"filter-btn"+(viewMode===v?" active":"")} onClick={()=>setViewMode(v)}>{v==="grid"?"⊞":"≡"}</button>)}</div></div>
@@ -2661,10 +2941,12 @@ function ContentLibraryPage() {
 
 // ─── AFFILIATE MANAGER ────────────────────────────────────────────────────────
 function AffiliateManagerPage() {
+  const loading = useSkeleton();
   const [modal,setModal] = useState(false);const [newLink,setNewLink] = useState({creator:"",campaign:"",code:"",rate:"10"});const [copied,setCopied] = useState(null);const [links,setLinks] = useState([]);
   const totalRev=links.reduce((s,a)=>s+a.revenue,0);const totalComm=links.reduce((s,a)=>s+a.commission,0);const totalConv=links.reduce((s,a)=>s+a.conversions,0);
   const copy=(id)=>{setCopied(id);setTimeout(()=>setCopied(null),2000);};
   const addLink=()=>{setLinks(l=>[...l,{id:Date.now(),creator:newLink.creator,ci:Math.floor(Math.random()*6),code:newLink.code.toUpperCase(),link:"bridgn.com/r/"+newLink.code.toLowerCase(),campaign:newLink.campaign,clicks:0,conversions:0,revenue:0,commission:0,rate:parseInt(newLink.rate)}]);setModal(false);setNewLink({creator:"",campaign:"",code:"",rate:"10"});};
+  if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Affiliate Manager</div><div className="page-subtitle">Generate links and codes, track clicks, conversions and commissions.</div></div><button className="btn btn-primary" onClick={()=>setModal(true)}>+ New Link</button></div>
@@ -2729,8 +3011,10 @@ function AffiliateManagerPage() {
 
 // ─── BRIEF BUILDER ────────────────────────────────────────────────────────────
 function BriefBuilderPage() {
+  const loading = useSkeleton();
   const [template,setTemplate] = useState(null);const [fields,setFields] = useState({});const [sent,setSent] = useState(false);const [creator,setCreator] = useState("");const [preview,setPreview] = useState(false);
   const t=BRIEF_TEMPLATES.find(x=>x.id===template);
+  if(loading) return <SkeletonPage layout="form"/>;
   if(sent) return (
     <div className="fade-in" style={{maxWidth:500,margin:"50px auto",textAlign:"center"}}>
       <div style={{fontSize:"48px",marginBottom:14}}>📋</div>
@@ -2795,10 +3079,12 @@ function BriefBuilderPage() {
 
 // ─── CREATOR SCORECARDS ───────────────────────────────────────────────────────
 function CreatorScorecardsPage() {
+  const loading = useSkeleton();
   const [modal,setModal] = useState(false);const [form,setForm] = useState({ci:-1,campaign:"",communication:0,quality:0,timeliness:0,notes:""});const [cards,setCards] = useState([]);const [submitted,setSubmitted] = useState(false);
   const up=(k,v)=>setForm(f=>({...f,[k]:v}));
   const overallColor=v=>v>=4.5?"var(--green)":v>=4?"var(--accent)":"var(--accent2)";
   const submit=()=>{const avg=((form.communication+form.quality+form.timeliness)/3).toFixed(1);const cr=CREATORS[form.ci];if(!cr)return;setCards(c=>[...c,{id:Date.now(),creator:cr.name,ci:cr.ci,campaign:form.campaign,communication:form.communication,quality:form.quality,timeliness:form.timeliness,overall:parseFloat(avg),notes:form.notes,date:"Apr 25, 2025"}]);setSubmitted(true);};
+  if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Creator Scorecards</div><div className="page-subtitle">Rate creators after each campaign. Build your own private track record.</div></div><button className="btn btn-primary" onClick={()=>{setModal(true);setSubmitted(false);}}>+ Rate a Creator</button></div>
@@ -2865,12 +3151,14 @@ function CreatorScorecardsPage() {
 
 // ─── TEAM MANAGEMENT ──────────────────────────────────────────────────────────
 function TeamManagementPage() {
+  const loading = useSkeleton();
   const [members,setMembers] = useState([]);const [modal,setModal] = useState(false);const [form,setForm] = useState({name:"",email:"",role:"Campaign Manager"});const [sent,setSent] = useState(false);
   const ROLES=[{r:"Admin",desc:"Full access to all features and settings",color:"var(--red)"},
     {r:"Campaign Manager",desc:"Manage campaigns, deals, and creators",color:"var(--accent)"},
     {r:"Finance",desc:"View payments, invoices and ROI only",color:"var(--green)"},
     {r:"Viewer",desc:"Read-only access to campaigns and content",color:"var(--text3)"}];
   const invite=()=>{setMembers(m=>[...m,{id:Date.now(),name:form.name.split(" ")[0],email:form.email,role:form.role,access:ROLES.find(r=>r.r===form.role)?.desc||"",init:form.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),ci:Math.floor(Math.random()*6),joined:"Pending",active:false}]);setSent(true);};
+  if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Team</div><div className="page-subtitle">Manage who on your team has access to Bridgn.</div></div><button className="btn btn-primary" onClick={()=>{setModal(true);setSent(false);}}>+ Invite Member</button></div>
@@ -2942,6 +3230,8 @@ function TeamManagementPage() {
 
 // ─── ROI TRACKER ──────────────────────────────────────────────────────────────
 function ROITrackerPage() {
+  const loading = useSkeleton();
+  if(loading) return <SkeletonPage layout="list"/>;
   const roiData=[];
   if(!roiData.length) return (
     <div className="fade-in">
@@ -2992,9 +3282,11 @@ function ROITrackerPage() {
 
 // ─── AI MATCH ─────────────────────────────────────────────────────────────────
 function AIMatchPage({setPage,setSelected}) {
-  const [q,setQ] = useState("");const [results,setResults] = useState(null);const [loading,setLoading] = useState(false);const [loadMsg,setLoadMsg] = useState("");
+  const loading = useSkeleton();
+  const [q,setQ] = useState("");const [results,setResults] = useState(null);const [searching,setSearching] = useState(false);const [loadMsg,setLoadMsg] = useState("");
   const msgs=["Analyzing niche alignment...","Reviewing engagement data...","Scoring authenticity...","Ranking matches..."];
-  const run=()=>{if(!q.trim())return;setLoading(true);setResults(null);let mi=0;const t=setInterval(()=>{mi=(mi+1)%msgs.length;setLoadMsg(msgs[mi]);},700);setTimeout(()=>{clearInterval(t);setLoading(false);const scored=CREATORS.map(c=>({...c,matchScore:Math.floor(Math.random()*30)+70})).sort((a,b)=>b.matchScore-a.matchScore);setResults(scored);},3000);};
+  const run=()=>{if(!q.trim())return;setSearching(true);setResults(null);let mi=0;const t=setInterval(()=>{mi=(mi+1)%msgs.length;setLoadMsg(msgs[mi]);},700);setTimeout(()=>{clearInterval(t);setSearching(false);const scored=CREATORS.map(c=>({...c,matchScore:Math.floor(Math.random()*30)+70})).sort((a,b)=>b.matchScore-a.matchScore);setResults(scored);},3000);};
+  if(loading) return <SkeletonPage layout="simple"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">AI Match</div><div className="page-subtitle">Describe your campaign, and AI will find your best creator matches.</div></div></div>
@@ -3004,9 +3296,9 @@ function AIMatchPage({setPage,setSelected}) {
         <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
           {["Wellness creator, 100K+ Instagram","Tech reviewer, YouTube, 500K+","Fashion micro-creator, TikTok","UGC creator for beauty brand"].map(ex=><button key={ex} onClick={()=>setQ(ex)} className="collab-chip" style={{cursor:"pointer",background:"var(--accent-light)",color:"var(--accent)",borderColor:"rgba(91,138,245,.3)"}}>{ex}</button>)}
         </div>
-        <button onClick={run} disabled={!q.trim()||loading} className="btn btn-primary btn-lg">{loading?loadMsg:"Find My Matches"}</button>
+        <button onClick={run} disabled={!q.trim()||searching} className="btn btn-primary btn-lg">{searching?loadMsg:"Find My Matches"}</button>
       </div>
-      {loading&&(
+      {searching&&(
         <div style={{textAlign:"center",padding:"30px 0"}}>
           <div style={{fontSize:"32px",animation:"spin 1.2s linear infinite",display:"inline-block",marginBottom:12}}>🔍</div>
           <div style={{fontSize:"14px",color:"var(--accent)",fontWeight:600,animation:"pulse 1.2s infinite"}}>{loadMsg}</div>
@@ -3048,9 +3340,11 @@ function AIMatchPage({setPage,setSelected}) {
 
 // ─── SHORTLISTS ───────────────────────────────────────────────────────────────
 function ShortlistsPage({setPage,setSelected}) {
+  const loading = useSkeleton();
   const [lists,setLists] = useState([]);
   const [modal,setModal] = useState(false);const [listName,setListName] = useState("");
   const create=()=>{if(listName.trim()){setLists(l=>[...l,{id:Date.now(),name:listName,creators:[],created:"Apr 25, 2025"}]);setListName("");setModal(false);}};
+  if(loading) return <SkeletonPage layout="simple"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Shortlists</div><div className="page-subtitle">Save creators to curated lists for each campaign or brief.</div></div><button className="btn btn-primary" onClick={()=>setModal(true)}>+ New List</button></div>
@@ -3097,6 +3391,8 @@ function ShortlistsPage({setPage,setSelected}) {
 
 // ─── MESSAGES ─────────────────────────────────────────────────────────────────
 function MessagesPage({setPage}) {
+  const loading = useSkeleton();
+  if(loading) return <SkeletonPage layout="simple"/>;
   return (
     <div className="fade-in">
       <div className="ph-row">
@@ -3119,11 +3415,13 @@ function MessagesPage({setPage}) {
 
 // ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
 function NotificationsPage({setPage}) {
+  const loading = useSkeleton();
   const [notifs,setNotifs] = useState(NOTIFS);const [filter,setFilter] = useState("All");
   const icons={deal:"🤝",payment:"💰",offer:"✨",analytics:"📊",campaign:"🎯",escrow:"🔒"};
   const colors={deal:"var(--accent)",payment:"var(--green)",offer:"var(--accent2)",analytics:"var(--purple)",campaign:"var(--teal)",escrow:"var(--teal)"};
   const filtered=filter==="All"?notifs:filter==="Unread"?notifs.filter(n=>n.unread):notifs.filter(n=>!n.unread);
   const unreadCount=notifs.filter(n=>n.unread).length;
+  if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
       <div className="ph-row">
