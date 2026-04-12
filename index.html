@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;transition:background-color 300ms ease,color 300ms ease,border-color 300ms ease,box-shadow 300ms ease}
 :root{
   --bg:#060818;--surface:#13161f;--surface2:#191d2c;--border:#21273d;
   --text:#edf0f7;--text2:#8691b0;--text3:#4b5470;
@@ -23,6 +23,39 @@
   --shadow-lg:0 20px 60px rgba(0,0,0,.7),0 4px 20px rgba(0,0,0,.45);
   --radius:14px;--radius-sm:9px;--radius-lg:20px
 }
+html.light{
+  --bg:#f8f7f4;--surface:#ffffff;--surface2:#f0ede8;--border:#e0dbd3;
+  --text:#1a1a2e;--text2:#5a5a7a;--text3:#9898b8;
+  --accent:#4a7ae8;--accent-light:#eaeffd;--accent2:#c4732a;--accent2-light:#fdf3e8;
+  --green:#188f5e;--green-bg:#e4f9f2;--yellow:#a07200;--yellow-bg:#fdf7df;
+  --red:#c23535;--red-bg:#fde8e8;--purple:#6b4ec4;--purple-bg:#eeebff;
+  --teal:#0568a0;--teal-bg:#e0f3ff;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 24px rgba(0,0,0,.07),0 1px 6px rgba(0,0,0,.04);
+  --shadow-lg:0 20px 60px rgba(0,0,0,.1),0 4px 20px rgba(0,0,0,.07)
+}
+html.light body{background:#f8f7f4;background-image:none}
+html.light body::before,html.light body::after{opacity:0}
+html.light .navbar{background:rgba(248,247,244,.94);border-bottom-color:var(--border)}
+html.light .navbar::after{opacity:0}
+html.light .navbar::before{background:linear-gradient(90deg,transparent,rgba(74,122,232,.4),rgba(108,79,196,.4),rgba(74,122,232,.4),transparent)}
+html.light .sidebar{background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(248,247,244,.99));border-right-color:var(--border)}
+html.light .sidebar-divider{background:linear-gradient(90deg,transparent,rgba(74,122,232,.15),rgba(108,79,196,.1),transparent)}
+html.light .content-area{background-image:radial-gradient(circle,rgba(0,0,0,.03) 1px,transparent 1px)}
+html.light .card,html.light .card-lg{background:rgba(255,255,255,.88);border-color:#e8e4de}
+html.light .card-hover:hover{box-shadow:0 12px 40px rgba(0,0,0,.09),0 2px 10px rgba(0,0,0,.05)}
+html.light .stat-card{background:rgba(255,255,255,.72)}
+html.light .stat-value{background:linear-gradient(180deg,#1a1a2e 0%,rgba(26,26,46,.65) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+html.light .tbl th{background:rgba(240,237,232,.92)}
+html.light .role-toggle{background:rgba(0,0,0,.05)}
+html.light .notif-dot{border-color:rgba(248,247,244,.9)}
+html.light .nav-item.active{background:linear-gradient(90deg,rgba(74,122,232,.1),rgba(74,122,232,.06),rgba(74,122,232,.01))}
+html.light .nav-item:hover{background:rgba(74,122,232,.06)}
+html.light .pb-ig{background:#fde8f0;color:#b01050;border-color:rgba(176,16,80,.15)}
+html.light .pb-yt{background:#fde8e8;color:#b80000;border-color:rgba(184,0,0,.15)}
+html.light .pb-tt{background:#e4f9f2;color:#0a7248;border-color:rgba(10,114,72,.15)}
+html.light .pb-tw{background:#e8f0fd;color:#1a4898;border-color:rgba(26,72,152,.15)}
+html.light .skel{background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 50%,rgba(0,0,0,.04) 75%);background-size:800px 100%}
 body{font-family:"Space Grotesk",sans-serif;background:linear-gradient(180deg,#060818 0%,#0a0f1e 100%);background-attachment:fixed;color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
 body::before{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
   background:
@@ -186,6 +219,7 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 @keyframes fadeInScale{from{opacity:0;transform:translateY(6px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes pageEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes skelShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+@keyframes iconSpin{from{transform:rotate(-40deg) scale(.55);opacity:0}to{transform:rotate(0deg) scale(1);opacity:1}}
 .skel{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);background-size:800px 100%;animation:skelShimmer 1.5s ease-in-out infinite;border-radius:6px;flex-shrink:0}
 @keyframes drawLine{from{stroke-dashoffset:var(--line-len,34)}to{stroke-dashoffset:0}}
 @keyframes escrowShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
@@ -535,7 +569,7 @@ function NavClock() {
   );
 }
 
-function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle}) {
+function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle,darkMode,setDarkMode}) {
   const [showMenu,setShowMenu] = useState(false);
   return (
     <nav className="navbar">
@@ -549,6 +583,15 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle}) {
         </span>
       </div>
       <NavClock/>
+      <button
+        onClick={()=>setDarkMode(d=>!d)}
+        title={darkMode?"Switch to light mode":"Switch to dark mode"}
+        style={{width:36,height:36,borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",position:"relative",zIndex:1,flexShrink:0,padding:0}}
+      >
+        <span key={darkMode?"moon":"sun"} style={{animation:"iconSpin 280ms ease both",display:"block",lineHeight:1,fontSize:16}}>
+          {darkMode?"🌙":"☀️"}
+        </span>
+      </button>
       <div className="nav-notif" onClick={()=>setPage("notifications")} style={{position:"relative",zIndex:1}}>🔔</div>
       <div style={{position:"relative",zIndex:1}}>
         <div className="nav-avatar" onClick={()=>setShowMenu(m=>!m)} style={{cursor:"pointer"}}>{userInitials||"?"}</div>
@@ -4535,6 +4578,11 @@ function App() {
   const [socialLinks,setSocialLinks] = useState({ig:"",tt:"",yt:"",tw:"",web:"",bio:"",location:""});
   const [campaignQuestions,setCampaignQuestions] = useState({});
   const [onboarding,setOnboarding] = useState({seen:false,steps:{analytics:false}});
+  const [darkMode,setDarkMode] = useState(true);
+
+  useEffect(()=>{
+    document.documentElement.classList.toggle("light",!darkMode);
+  },[darkMode]);
 
   // Load/save onboarding state from localStorage once user is known
   useEffect(()=>{
@@ -4647,7 +4695,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Navbar role={role} setPage={setPage} userInitials={userInitials} onSignOut={handleSignOut} onMenuToggle={()=>setMobSidebar(o=>!o)}/>
+      <Navbar role={role} setPage={setPage} userInitials={userInitials} onSignOut={handleSignOut} onMenuToggle={()=>setMobSidebar(o=>!o)} darkMode={darkMode} setDarkMode={setDarkMode}/>
       <div className="main-layout">
         <div className={"sidebar-overlay"+(mobSidebar?" show":"")} onClick={()=>setMobSidebar(false)}/>
         <Sidebar role={role} page={page} setPage={setPage} userName={userName} userInitials={userInitials} mobOpen={mobSidebar} onClose={()=>setMobSidebar(false)}/>
