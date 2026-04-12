@@ -52,7 +52,9 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 .nav-avatar:hover{box-shadow:0 0 0 3px rgba(91,138,245,.4),var(--shadow)}
 .sidebar-label{font-size:9px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--text3);padding:0 18px;margin:6px 0 5px}
 .sidebar-divider{height:1px;margin:10px 14px 4px;background:linear-gradient(90deg,transparent,rgba(91,138,245,.22),rgba(167,139,250,.16),transparent)}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:1px 8px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .18s;border:none;background:none;width:calc(100% - 16px);text-align:left;position:relative}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:1px 8px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .18s;border:none;background:none;width:calc(100% - 16px);text-align:left;position:relative;overflow:hidden}
+.nav-item::after{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.06) 50%,transparent 100%);transform:translateX(-100%);pointer-events:none;border-radius:inherit}
+.nav-item:hover::after{animation:navShimmer .4s ease-out forwards}
 .nav-item:hover{background:rgba(91,138,245,.07);color:var(--text);transform:translateX(1px);box-shadow:inset 0 0 20px rgba(91,138,245,.05),0 0 0 1px rgba(91,138,245,.08)}
 .nav-item.active{background:linear-gradient(90deg,rgba(14,165,201,.16),rgba(91,138,245,.12),rgba(91,138,245,.03));color:var(--accent);font-weight:600;border-left:2px solid var(--accent);padding-left:12px;box-shadow:-4px 0 12px rgba(91,138,245,.3),inset 0 0 24px rgba(91,138,245,.06),inset 0 1px 0 rgba(14,165,201,.12)}
 .nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
@@ -173,6 +175,7 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 .star-btn{background:none;border:none;cursor:pointer;font-size:21px;padding:2px;transition:transform .15s,filter .15s}
 .star-btn:hover{transform:scale(1.25);filter:drop-shadow(0 0 5px rgba(240,160,80,.45))}
 @keyframes livePulse{0%{transform:scale(1);opacity:.85}65%{transform:scale(1.45);opacity:0}100%{transform:scale(1.45);opacity:0}}
+@keyframes navShimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 @keyframes nebulaA{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(4%,3%) scale(1.06)}50%{transform:translate(-2%,6%) scale(.97)}75%{transform:translate(-5%,-2%) scale(1.04)}}
 @keyframes nebulaB{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-5%,-4%) scale(1.09)}66%{transform:translate(4%,-6%) scale(.94)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
