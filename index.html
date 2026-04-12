@@ -221,6 +221,9 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 @keyframes skelShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
 @keyframes iconSpin{from{transform:rotate(-40deg) scale(.55);opacity:0}to{transform:rotate(0deg) scale(1);opacity:1}}
 @keyframes deadlinePulse{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}55%{box-shadow:0 0 0 5px rgba(251,191,36,.1),0 0 18px rgba(251,191,36,.07)}}
+@keyframes cardDrop{0%{transform:scale(1.07) translateY(-12px);opacity:.55}65%{transform:scale(.99) translateY(2px);opacity:1}100%{transform:scale(1) translateY(0);opacity:1}}
+@keyframes feedSlideIn{from{opacity:0;transform:translateY(-14px) scaleY(.92);max-height:0}to{opacity:1;transform:translateY(0) scaleY(1);max-height:120px}}
+@keyframes liveDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
 .skel{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);background-size:800px 100%;animation:skelShimmer 1.5s ease-in-out infinite;border-radius:6px;flex-shrink:0}
 @keyframes drawLine{from{stroke-dashoffset:var(--line-len,34)}to{stroke-dashoffset:0}}
 @keyframes escrowShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
@@ -257,7 +260,7 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
   .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:300;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);width:268px;padding-top:0}
   .sidebar.mob-open{transform:translateX(0)}
   .main-layout{overflow:auto;height:calc(100vh - 64px)}
-  .content-area{padding:18px 16px}
+  .content-area{padding:18px 16px 90px}
   .g4{grid-template-columns:repeat(2,1fr)}
   .g3{grid-template-columns:repeat(2,1fr)}
   .g2{grid-template-columns:1fr}
@@ -267,12 +270,32 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
   .page-title{font-size:28px}
   .det-body{padding:16px}
   table.tbl{display:block;overflow-x:auto;white-space:nowrap}
+  .mob-bottom-nav{display:flex}
 }
 @media(max-width:480px){
   .g4,.g3{grid-template-columns:1fr}
   .navbar{padding:0 14px;gap:10px}
-  .content-area{padding:14px}
+  .content-area{padding:14px 14px 90px}
 }
+/* ── MOBILE BOTTOM NAV ── */
+.mob-bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  height:62px;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:rgba(8,9,18,.94);
+  backdrop-filter:blur(24px) saturate(160%);
+  -webkit-backdrop-filter:blur(24px) saturate(160%);
+  border-top:1px solid rgba(255,255,255,.08);
+  box-shadow:0 -1px 0 rgba(255,255,255,.04),0 -8px 32px rgba(0,0,0,.5);
+}
+html.light .mob-bottom-nav{
+  background:rgba(248,247,244,.95);
+  border-top-color:var(--border);
+  box-shadow:0 -1px 0 var(--border),0 -4px 20px rgba(0,0,0,.06);
+}
+@keyframes tabIndicator{from{opacity:0;transform:translateX(-50%) scaleX(.25)}to{opacity:1;transform:translateX(-50%) scaleX(1)}}
+@keyframes tabIconPop{0%{transform:scale(.75);opacity:.4}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
 </style>
 </head>
 <body>
@@ -285,46 +308,12 @@ const GRADS = [["#0f4c81","#1e6bb8"],["#6d28d9","#c17c3a"],["#065f46","#0891b2"]
 const bc = i => PALETTE[i % PALETTE.length];
 const bg = i => GRADS[i % GRADS.length];
 
-const CAMPAIGNS = [
-  {id:1,title:"Spring Wellness Launch",brand:"Halo Health",bi:"HH",ci:0,platform:"Instagram",budget:3500,deadline:"Apr 15",category:"Wellness",desc:"Promote our new adaptogen supplement line with authentic lifestyle content showing daily routines.",requirements:"50K+ followers, Wellness/fitness niche, High engagement",deliverables:"3x Feed Posts, 2x Stories, 1x Reel",payment:"$2,500 flat + 10% commission",applied:false,verified:true},
-  {id:2,title:"Tech Unboxing Series",brand:"NovaTech",bi:"NT",ci:1,platform:"YouTube",budget:8000,deadline:"Apr 22",category:"Tech",desc:"Unbox and review our flagship wireless earbuds. Honest, detailed content from genuine tech enthusiasts.",requirements:"100K+ subscribers, Tech niche, 50K avg views",deliverables:"1x 10-min Review, 2x Shorts",payment:"$5,000 flat",applied:true,verified:true},
-  {id:3,title:"Summer Style Edit",brand:"Vestir",bi:"VS",ci:2,platform:"TikTok",budget:2000,deadline:"May 1",category:"Fashion",desc:"Create fresh trend-forward outfit content featuring our new summer collection.",requirements:"25K+ followers, Fashion/lifestyle niche",deliverables:"3x TikToks, Story reposts",payment:"$1,200 + gifting",applied:false,verified:false},
-  {id:4,title:"Home Chef Challenge",brand:"Culine",bi:"CU",ci:3,platform:"Instagram",budget:4500,deadline:"Apr 30",category:"Food",desc:"Showcase premium cookware in a 3-recipe challenge. Aspirational home cooking content.",requirements:"40K+ followers, Food/lifestyle niche",deliverables:"3x Reels, 1x Recipe blog post",payment:"$3,000 flat",applied:false,verified:true},
-  {id:5,title:"Outdoor Adventure Kit",brand:"TrailCo",bi:"TC",ci:4,platform:"YouTube",budget:6000,deadline:"May 10",category:"Outdoors",desc:"Take our adventure kit on a real expedition and document it authentically.",requirements:"60K+ subscribers, Outdoors/travel niche",deliverables:"2x Long-form, 4x Shorts",payment:"$4,000 + kit gifting",applied:false,verified:false},
-];
-
-const CREATORS = [
-  {id:1,name:"Aisha Okafor",init:"AO",ci:0,niche:"Wellness & Fitness",platforms:["Instagram","TikTok"],followers:"280K",engagement:"6.2%",loc:"Los Angeles",auth:"96%",rating:"4.9",analyticsUpdated:"Mar 21, 2025",analyticsAge:4,analyticsFiles:{Instagram:"aisha_ig_insights_mar21.pdf",TikTok:"aisha_tt_insights_mar21.png"},handle:"aisha",open:true,paidOnTime:12,totalDeals:14},
-  {id:2,name:"Marcus Tran",init:"MT",ci:1,niche:"Tech & Gaming",platforms:["YouTube","Twitter"],followers:"510K",engagement:"4.8%",loc:"Austin",auth:"92%",rating:"4.7",analyticsUpdated:"Mar 18, 2025",analyticsAge:7,analyticsFiles:{YouTube:"marcus_yt_analytics_mar18.pdf"},handle:"marcus",open:true,paidOnTime:8,totalDeals:9},
-  {id:3,name:"Sofia Reyes",init:"SR",ci:2,niche:"Fashion & Lifestyle",platforms:["Instagram","TikTok"],followers:"195K",engagement:"8.1%",loc:"Miami",auth:"98%",rating:"5.0",analyticsUpdated:null,analyticsAge:null,analyticsFiles:{},handle:"sofia",open:false,paidOnTime:6,totalDeals:6},
-  {id:4,name:"James Kim",init:"JK",ci:3,niche:"Food & Travel",platforms:["Instagram","YouTube"],followers:"320K",engagement:"5.5%",loc:"New York",auth:"94%",rating:"4.8",analyticsUpdated:"Jan 19, 2025",analyticsAge:65,analyticsFiles:{Instagram:"james_ig_insights_jan19.png",YouTube:"james_yt_analytics_jan19.pdf"},handle:"james",open:true,paidOnTime:10,totalDeals:11},
-  {id:5,name:"Priya Mehta",init:"PM",ci:4,niche:"Beauty & Skincare",platforms:["Instagram","TikTok"],followers:"440K",engagement:"7.3%",loc:"Chicago",auth:"97%",rating:"4.9",analyticsUpdated:"Mar 24, 2025",analyticsAge:1,analyticsFiles:{Instagram:"priya_ig_insights_mar24.pdf",TikTok:"priya_tt_insights_mar24.png"},handle:"priya",open:true,paidOnTime:15,totalDeals:15},
-  {id:6,name:"Leo Santos",init:"LS",ci:5,niche:"Fitness & Nutrition",platforms:["YouTube","Instagram"],followers:"260K",engagement:"5.9%",loc:"Denver",auth:"93%",rating:"4.6",analyticsUpdated:"Mar 10, 2025",analyticsAge:15,analyticsFiles:{YouTube:"leo_yt_analytics_mar10.pdf",Instagram:"leo_ig_insights_mar10.png"},handle:"leo",open:false,paidOnTime:7,totalDeals:8},
-];
-
-const CREATOR_DEALS_INIT = [
-  {id:1,brand:"Halo Health",bi:"HH",ci:0,amount:2500,platform:"Instagram",status:"Active",deadline:"Apr 14",deliverables:"3x Posts, 2x Stories, 1x Reel",progress:2,source:"platform",campaignTitle:"Spring Wellness Launch",escrow:true,escrowReleased:false},
-  {id:2,brand:"NovaTech",bi:"NT",ci:1,amount:5000,platform:"YouTube",status:"Pending",deadline:"Apr 22",deliverables:"1x Review, 2x Shorts",progress:0,source:"platform",campaignTitle:"Tech Unboxing Series",escrow:false,escrowReleased:false},
-  {id:3,brand:"GlowUp Co.",bi:"GU",ci:5,amount:1800,platform:"TikTok",status:"Completed",deadline:"Mar 10",deliverables:"5x TikToks",progress:6,source:"external",campaignTitle:"Custom Deal",escrow:true,escrowReleased:true},
-  {id:4,brand:"Luxe Threads",bi:"LT",ci:2,amount:3200,platform:"Instagram",status:"Active",deadline:"Apr 10",deliverables:"2x Feed Posts, 1x Reel",progress:1,source:"external",campaignTitle:"SS25 Collection Feature",escrow:true,escrowReleased:false},
-];
-
-const OFFERS = [
-  {id:1,brand:"Luxara Skincare",bi:"LS",ci:4,amount:3800,platform:"Instagram",message:"We have been following your content and love your authentic approach. We would love to partner for our summer hydration campaign.",deadline:"Apr 28",deliverables:"2x Feed Posts, 1x Reel, 3x Stories"},
-];
-
-const BRAND_DEALS = [
-  {id:1,creator:"Aisha Okafor",ci2:"AO",ci:0,campaign:"Spring Wellness Launch",amount:2500,status:"Active",platform:"Instagram",source:"platform",escrow:true},
-  {id:2,creator:"Sofia Reyes",ci2:"SR",ci:2,campaign:"Summer Style Edit",amount:1200,status:"Pending",platform:"TikTok",source:"platform",escrow:false},
-  {id:3,creator:"Marcus Tran",ci2:"MT",ci:1,campaign:"Tech Unboxing Series",amount:5000,status:"Completed",platform:"YouTube",source:"platform",escrow:true},
-  {id:4,creator:"Priya Mehta",ci2:"PM",ci:4,campaign:"Direct Deal",amount:3000,status:"Active",platform:"Instagram",source:"external",escrow:true},
-];
-
-const BRAND_CAMPAIGNS = [
-  {id:1,title:"IG Stories Summer Hydration",platform:"Instagram",type:"Paid",status:"Active",budget:4800,spent:3100,deadline:"Apr 28",applications:14,activeDeals:4,desc:"Promote our new hyaluronic serum through authentic Instagram Stories.",deliverables:"3x Stories per creator, swipe-up link required",requirements:"25K+ followers, Beauty/lifestyle",ci:4},
-  {id:2,title:"YouTube Tech Launch Integrations",platform:"YouTube",type:"Paid",status:"Active",budget:12000,spent:5000,deadline:"May 10",applications:8,activeDeals:2,desc:"Mid-roll integrations for our new wireless earbuds in tech review videos.",deliverables:"1x 60-90s integration per video, link in description",requirements:"80K+ subscribers, Tech niche",ci:1},
-  {id:3,title:"Gifted Campaign Micro Creators",platform:"Instagram",type:"Gifted",status:"Active",budget:0,spent:0,deadline:"May 20",applications:31,activeDeals:12,desc:"Product gifting for micro-creators to post honest reviews.",deliverables:"1x Feed post or Reel, tag brand",requirements:"5K-30K followers, Any lifestyle niche",ci:2},
-];
+const CAMPAIGNS = [];
+const CREATORS = [];
+const CREATOR_DEALS_INIT = [];
+const OFFERS = [];
+const BRAND_DEALS = [];
+const BRAND_CAMPAIGNS = [];
 
 const CONTRACT_TEMPLATES = [
   {id:"flat",label:"Flat Fee",desc:"One-time payment upon deliverable approval",icon:"💰"},
@@ -343,72 +332,15 @@ const BRIEF_TEMPLATES = [
 
 const NOTIFS = [];
 
-const CONTRACTS_DATA = [
-  {id:1,brand:"Halo Health",bi:"HH",ci:0,amount:2500,signed:"Mar 28, 2025",expires:"Jun 28, 2025",daysLeft:64,type:"Flat Fee",status:"Active",campaign:"Spring Wellness Launch",file:"halo_health_agreement_mar28.pdf"},
-  {id:2,brand:"Luxe Threads",bi:"LT",ci:2,amount:3200,signed:"Mar 15, 2025",expires:"Jun 15, 2025",daysLeft:51,type:"Flat Fee",status:"Active",campaign:"SS25 Collection"},
-  {id:3,brand:"GlowUp Co.",bi:"GU",ci:5,amount:1800,signed:"Feb 1, 2025",expires:"May 1, 2025",daysLeft:6,type:"Affiliate",status:"Expiring",campaign:"TikTok Deal"},
-  {id:4,brand:"NovaTech",bi:"NT",ci:1,amount:5000,signed:"Jan 10, 2025",expires:"Apr 10, 2025",daysLeft:-15,type:"Flat Fee",status:"Expired",campaign:"Tech Unboxing"},
-  {id:5,brand:"TerraFit",bi:"TF",ci:4,amount:2000,signed:"Dec 1, 2024",expires:"Mar 1, 2025",daysLeft:-24,type:"Ambassador",status:"Expired",campaign:"Q1 Brand Partnership"},
-];
-
-const EXPENSES_DATA = [
-  {id:1,desc:"Studio rental for Halo Health shoot",amount:450,date:"Mar 20, 2025",category:"Production",deductible:true},
-  {id:2,desc:"Ring light and backdrop setup",amount:280,date:"Mar 5, 2025",category:"Equipment",deductible:true},
-  {id:3,desc:"Editing software subscription",amount:55,date:"Mar 1, 2025",category:"Software",deductible:true},
-  {id:4,desc:"Travel to NovaTech event",amount:380,date:"Feb 28, 2025",category:"Travel",deductible:true},
-  {id:5,desc:"Wardrobe for Luxe Threads shoot",amount:320,date:"Mar 18, 2025",category:"Wardrobe",deductible:true},
-  {id:6,desc:"Lunch — non-business",amount:45,date:"Mar 22, 2025",category:"Meals",deductible:false},
-  {id:7,desc:"Camera lens rental",amount:180,date:"Mar 12, 2025",category:"Equipment",deductible:true},
-];
-
-const EARNINGS_MONTHLY = [
-  {month:"Oct",amount:8200},{month:"Nov",amount:9400},{month:"Dec",amount:11800},
-  {month:"Jan",amount:7600},{month:"Feb",amount:10200},{month:"Mar",amount:14200},
-];
-
-const EARNINGS_BY_BRAND = [
-  {brand:"Halo Health",bi:"HH",ci:0,amount:7500,deals:3,avgDeal:2500},
-  {brand:"Luxe Threads",bi:"LT",ci:2,amount:6400,deals:2,avgDeal:3200},
-  {brand:"GlowUp Co.",bi:"GU",ci:5,amount:3600,deals:2,avgDeal:1800},
-  {brand:"NovaTech",bi:"NT",ci:1,amount:5000,deals:1,avgDeal:5000},
-];
-
-const AFFILIATE_DATA = [
-  {id:1,creator:"Aisha Okafor",ci:0,code:"AISHA20",link:"bridgn.com/r/aisha20",campaign:"Spring Wellness",clicks:4820,conversions:312,revenue:7800,commission:780,rate:10},
-  {id:2,creator:"Priya Mehta",ci:4,code:"PRIYA15",link:"bridgn.com/r/priya15",campaign:"Beauty Box",clicks:6100,conversions:489,revenue:12200,commission:1220,rate:10},
-  {id:3,creator:"Marcus Tran",ci:1,code:"MARCUS10",link:"bridgn.com/r/marcus10",campaign:"Tech Unboxing",clicks:2900,conversions:98,revenue:3200,commission:320,rate:10},
-  {id:4,creator:"Sofia Reyes",ci:2,code:"SOFIA25",link:"bridgn.com/r/sofia25",campaign:"Summer Style",clicks:3400,conversions:201,revenue:5100,commission:510,rate:10},
-];
-
-const CONTENT_LIBRARY_DATA = [
-  {id:1,creator:"Aisha Okafor",ci:0,type:"Reel",platform:"Instagram",campaign:"Spring Wellness",delivered:"Apr 8, 2025",rights:"6 months",rightsExp:"Oct 8, 2025",daysLeft:166,approved:true,thumbnail:"🎬"},
-  {id:2,creator:"Aisha Okafor",ci:0,type:"Feed Post",platform:"Instagram",campaign:"Spring Wellness",delivered:"Apr 6, 2025",rights:"6 months",rightsExp:"Oct 6, 2025",daysLeft:164,approved:true,thumbnail:"📸"},
-  {id:3,creator:"Marcus Tran",ci:1,type:"Review Video",platform:"YouTube",campaign:"Tech Unboxing",delivered:"Mar 18, 2025",rights:"12 months",rightsExp:"Mar 18, 2026",daysLeft:357,approved:true,thumbnail:"▶️"},
-  {id:4,creator:"Priya Mehta",ci:4,type:"Reel",platform:"Instagram",campaign:"Beauty Box",delivered:"Apr 10, 2025",rights:"6 months",rightsExp:"Oct 10, 2025",daysLeft:168,approved:false,thumbnail:"🎬"},
-  {id:5,creator:"Sofia Reyes",ci:2,type:"TikTok",platform:"TikTok",campaign:"Summer Style",delivered:"Apr 5, 2025",rights:"3 months",rightsExp:"Jul 5, 2025",daysLeft:71,approved:true,thumbnail:"♪"},
-  {id:6,creator:"Marcus Tran",ci:1,type:"Short",platform:"YouTube",campaign:"Tech Unboxing",delivered:"Mar 20, 2025",rights:"12 months",rightsExp:"Mar 20, 2026",daysLeft:359,approved:true,thumbnail:"▶️"},
-];
-
-const SCORECARD_DATA = [
-  {id:1,creator:"Aisha Okafor",ci:0,campaign:"Spring Wellness",communication:5,quality:5,timeliness:4,overall:4.8,notes:"Fantastic to work with. Content exceeded expectations.",date:"Apr 12, 2025"},
-  {id:2,creator:"Marcus Tran",ci:1,campaign:"Tech Unboxing",communication:4,quality:5,timeliness:5,overall:4.7,notes:"Very professional. Delivered ahead of schedule.",date:"Mar 20, 2025"},
-];
-
-const TEAM_MEMBERS = [
-  {id:1,name:"Alex Chen",email:"alex@acmecorp.com",role:"Admin",access:"Full access",init:"AC",ci:0,joined:"Jan 15, 2025",active:true},
-  {id:2,name:"Maria Lopez",email:"maria@acmecorp.com",role:"Campaign Manager",access:"Campaigns, Deals, Creators",init:"ML",ci:2,joined:"Feb 1, 2025",active:true},
-  {id:3,name:"James Park",email:"james@acmecorp.com",role:"Finance",access:"Payments, Invoices, ROI",init:"JP",ci:1,joined:"Feb 15, 2025",active:true},
-];
-
-const CAL_EVENTS = [
-  {day:15,label:"Aisha — Halo Health posts",color:"#5b8af5",creator:"Aisha Okafor",campaign:"Spring Wellness"},
-  {day:18,label:"Priya — Beauty Box Reel",color:"#f87171",creator:"Priya Mehta",campaign:"Beauty Box"},
-  {day:20,label:"Sofia — Summer Style TikToks",color:"#34d399",creator:"Sofia Reyes",campaign:"Summer Style"},
-  {day:22,label:"Aisha — Halo Health stories",color:"#5b8af5",creator:"Aisha Okafor",campaign:"Spring Wellness"},
-  {day:25,label:"Marcus — Review Video",color:"#a78bfa",creator:"Marcus Tran",campaign:"Tech Unboxing"},
-  {day:28,label:"Priya — IG Stories go live",color:"#f87171",creator:"Priya Mehta",campaign:"Hydration"},
-  {day:30,label:"All — Monthly reporting due",color:"#f0a050",creator:"All creators",campaign:"All"},
-];
+const CONTRACTS_DATA = [];
+const EXPENSES_DATA = [];
+const EARNINGS_MONTHLY = [];
+const EARNINGS_BY_BRAND = [];
+const AFFILIATE_DATA = [];
+const CONTENT_LIBRARY_DATA = [];
+const SCORECARD_DATA = [];
+const TEAM_MEMBERS = [];
+const CAL_EVENTS = [];
 
 const SOCIALS = [
   {key:"ig",  label:"Instagram",        icon:"📸", color:"#e1306c", placeholder:"@yourhandle"},
@@ -488,6 +420,360 @@ function DeadlineAlertBanner({deals}) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ─── EMPTY STATE ILLUSTRATIONS ───────────────────────────────────────────────
+function EmptySVG({type,size=128}) {
+  const A="#5b8af5",P="#a78bfa",G="#34d399",O="#f0a050",Y="#fbbf24",T="#0891b2";
+  const svgs = {
+    /* ── Deals: two geometric hands meeting ── */
+    deals:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor={A}/><stop offset="100%" stopColor={P}/></linearGradient>
+          <radialGradient id="esg-dr" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor={A} stopOpacity=".35"/><stop offset="100%" stopColor={A} stopOpacity="0"/></radialGradient>
+        </defs>
+        <circle cx="60" cy="42" r="18" fill="url(#esg-dr)"/>
+        {/* Left hand polygon */}
+        <polygon points="6,42 17,27 32,22 44,31 46,42 44,53 32,62 17,57" stroke={A} strokeWidth="1.4" fill={A} fillOpacity=".06" strokeLinejoin="round"/>
+        {/* Left fingers */}
+        <line x1="46" y1="35" x2="57" y2="31" stroke={A} strokeWidth="1.3" strokeLinecap="round"/>
+        <line x1="46" y1="42" x2="59" y2="42" stroke="url(#esg-dl)" strokeWidth="1.6" strokeLinecap="round"/>
+        <line x1="46" y1="49" x2="57" y2="53" stroke={A} strokeWidth="1.3" strokeLinecap="round"/>
+        {/* Right hand polygon */}
+        <polygon points="114,42 103,27 88,22 76,31 74,42 76,53 88,62 103,57" stroke={P} strokeWidth="1.4" fill={P} fillOpacity=".06" strokeLinejoin="round"/>
+        {/* Right fingers */}
+        <line x1="74" y1="35" x2="63" y2="31" stroke={P} strokeWidth="1.3" strokeLinecap="round"/>
+        <line x1="74" y1="42" x2="61" y2="42" stroke="url(#esg-dl)" strokeWidth="1.6" strokeLinecap="round"/>
+        <line x1="74" y1="49" x2="63" y2="53" stroke={P} strokeWidth="1.3" strokeLinecap="round"/>
+        {/* Center join */}
+        <circle cx="60" cy="42" r="5" fill={A} opacity=".65"/>
+        <circle cx="60" cy="42" r="2.2" fill="white" opacity=".5"/>
+        {/* Spark lines */}
+        <line x1="60" y1="20" x2="60" y2="14" stroke={A} strokeWidth="1.1" strokeLinecap="round" opacity=".45"/>
+        <line x1="72" y1="24" x2="76" y2="19" stroke={P} strokeWidth="1.1" strokeLinecap="round" opacity=".45"/>
+        <line x1="48" y1="24" x2="44" y2="19" stroke={A} strokeWidth="1.1" strokeLinecap="round" opacity=".45"/>
+        <circle cx="60" cy="12" r="1.5" fill={A} opacity=".4"/>
+      </svg>
+    ),
+    /* ── Earnings: ascending bars + trend line ── */
+    earnings:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-el" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stopColor={G} stopOpacity=".05"/><stop offset="100%" stopColor={G} stopOpacity=".3"/></linearGradient>
+          <linearGradient id="esg-et" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor={A}/><stop offset="100%" stopColor={G}/></linearGradient>
+        </defs>
+        {/* Grid lines */}
+        {[20,36,52,68].map((y,i)=>(
+          <line key={i} x1="10" y1={y} x2="116" y2={y} stroke="white" strokeWidth=".6" strokeOpacity=".06" strokeDasharray="3,4"/>
+        ))}
+        {/* Bars */}
+        {[[14,48,54],[30,34,54],[46,22,54],[62,13,54],[78,6,54]].map(([x,y,bottom],i)=>(
+          <rect key={i} x={x} y={y} width="14" height={bottom-y} rx="3" fill={G} fillOpacity={.08+i*.045}
+            stroke={G} strokeWidth="1" strokeOpacity={.2+i*.12}/>
+        ))}
+        {/* Trend polyline */}
+        <polyline points="21,48 37,34 53,22 69,13 85,6" stroke="url(#esg-et)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+        {/* Data point circles */}
+        {[[21,48],[37,34],[53,22],[69,13],[85,6]].map(([cx,cy],i)=>(
+          <circle key={i} cx={cx} cy={cy} r={i===4?4:2.5} fill={i===4?G:A} opacity={i===4?1:.7}/>
+        ))}
+        {/* Arrow at end of trend */}
+        <polyline points="82,3 86,6 82,9" stroke={G} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/>
+        {/* Axis */}
+        <line x1="10" y1="68" x2="116" y2="68" stroke="white" strokeWidth="1" strokeOpacity=".12"/>
+        <line x1="10" y1="10" x2="10" y2="68" stroke="white" strokeWidth="1" strokeOpacity=".12"/>
+      </svg>
+    ),
+    /* ── Contracts: layered documents + seal ── */
+    contracts:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-cl" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={P}/><stop offset="100%" stopColor={A}/></linearGradient>
+        </defs>
+        {/* Back papers */}
+        <rect x="30" y="10" width="66" height="52" rx="4" stroke={P} strokeWidth="1.2" fill={P} fillOpacity=".04" strokeOpacity=".35"
+          transform="rotate(-5 63 36)"/>
+        <rect x="26" y="14" width="66" height="52" rx="4" stroke={A} strokeWidth="1.2" fill={A} fillOpacity=".04" strokeOpacity=".45"
+          transform="rotate(-2 59 40)"/>
+        {/* Front paper */}
+        <rect x="22" y="17" width="68" height="52" rx="4" stroke="url(#esg-cl)" strokeWidth="1.5" fill="white" fillOpacity=".04"/>
+        {/* Text lines */}
+        <line x1="32" y1="32" x2="78" y2="32" stroke="white" strokeWidth="1.3" strokeOpacity=".18" strokeLinecap="round"/>
+        <line x1="32" y1="40" x2="74" y2="40" stroke="white" strokeWidth="1.3" strokeOpacity=".14" strokeLinecap="round"/>
+        <line x1="32" y1="48" x2="65" y2="48" stroke="white" strokeWidth="1.3" strokeOpacity=".12" strokeLinecap="round"/>
+        <line x1="32" y1="56" x2="55" y2="56" stroke="white" strokeWidth="1.3" strokeOpacity=".10" strokeLinecap="round"/>
+        {/* Seal circle */}
+        <circle cx="78" cy="56" r="12" stroke={P} strokeWidth="1.4" fill={P} fillOpacity=".09"/>
+        <circle cx="78" cy="56" r="8" stroke={P} strokeWidth=".8" strokeOpacity=".5" strokeDasharray="2,2"/>
+        {/* Star in seal */}
+        <polygon points="78,49 79.5,54 84.5,54 80.5,57 82,62 78,59 74,62 75.5,57 71.5,54 76.5,54"
+          fill={P} fillOpacity=".6" stroke={P} strokeWidth=".5"/>
+      </svg>
+    ),
+    /* ── Offers: geometric envelope + spark ── */
+    offers:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-ol" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={O}/><stop offset="100%" stopColor={P}/></linearGradient>
+        </defs>
+        {/* Envelope body */}
+        <rect x="14" y="26" width="92" height="42" rx="5" stroke="url(#esg-ol)" strokeWidth="1.5" fill={O} fillOpacity=".05"/>
+        {/* V-fold top */}
+        <polyline points="14,26 60,54 106,26" stroke={O} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" strokeOpacity=".8"/>
+        {/* Fold crease */}
+        <line x1="14" y1="68" x2="42" y2="45" stroke={O} strokeWidth="1" strokeOpacity=".3" strokeLinecap="round"/>
+        <line x1="106" y1="68" x2="78" y2="45" stroke={O} strokeWidth="1" strokeOpacity=".3" strokeLinecap="round"/>
+        {/* Spark above */}
+        <polygon points="60,8 62.5,14 68,14 63.5,18 65,24 60,20 55,24 56.5,18 52,14 57.5,14"
+          fill={Y} fillOpacity=".7" stroke={Y} strokeWidth=".8" strokeOpacity=".9"/>
+        {/* Particles */}
+        <circle cx="22" cy="18" r="2" fill={O} opacity=".4"/>
+        <circle cx="100" cy="14" r="1.5" fill={P} opacity=".4"/>
+        <circle cx="112" cy="30" r="1.5" fill={O} opacity=".3"/>
+        <line x1="18" y1="14" x2="21" y2="17" stroke={O} strokeWidth="1" strokeLinecap="round" opacity=".4"/>
+        <line x1="103" y1="11" x2="101" y2="13" stroke={P} strokeWidth="1" strokeLinecap="round" opacity=".4"/>
+      </svg>
+    ),
+    /* ── Creators (browse): profile silhouettes + network ── */
+    creators:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-crl" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={A}/><stop offset="100%" stopColor={T}/></linearGradient>
+        </defs>
+        {/* Connection lines */}
+        <line x1="25" y1="42" x2="60" y2="42" stroke="url(#esg-crl)" strokeWidth="1" strokeOpacity=".3" strokeDasharray="3,3"/>
+        <line x1="60" y1="42" x2="95" y2="42" stroke="url(#esg-crl)" strokeWidth="1" strokeOpacity=".3" strokeDasharray="3,3"/>
+        {/* Person 1 (left) */}
+        <circle cx="25" cy="26" r="10" stroke={A} strokeWidth="1.4" fill={A} fillOpacity=".08"/>
+        <path d="M10,52 Q25,38 40,52" stroke={A} strokeWidth="1.4" fill={A} fillOpacity=".06" strokeLinecap="round"/>
+        {/* Person 2 (center, prominent) */}
+        <circle cx="60" cy="22" r="13" stroke="url(#esg-crl)" strokeWidth="1.6" fill={A} fillOpacity=".1"/>
+        <path d="M40,54 Q60,36 80,54" stroke="url(#esg-crl)" strokeWidth="1.6" fill={A} fillOpacity=".08" strokeLinecap="round"/>
+        {/* Person 3 (right) */}
+        <circle cx="95" cy="26" r="10" stroke={T} strokeWidth="1.4" fill={T} fillOpacity=".08"/>
+        <path d="M80,52 Q95,38 110,52" stroke={T} strokeWidth="1.4" fill={T} fillOpacity=".06" strokeLinecap="round"/>
+        {/* Center glow */}
+        <circle cx="60" cy="22" r="5" fill={A} opacity=".25"/>
+        {/* Node dots at connections */}
+        <circle cx="25" cy="42" r="2.5" fill={A} opacity=".5"/>
+        <circle cx="60" cy="42" r="3" fill={A} opacity=".6"/>
+        <circle cx="95" cy="42" r="2.5" fill={T} opacity=".5"/>
+        {/* + add indicator */}
+        <circle cx="60" cy="72" r="9" stroke="white" strokeWidth="1.2" strokeOpacity=".2" fill="white" fillOpacity=".04"/>
+        <line x1="60" y1="68" x2="60" y2="76" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeOpacity=".4"/>
+        <line x1="56" y1="72" x2="64" y2="72" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeOpacity=".4"/>
+      </svg>
+    ),
+    /* ── Campaigns: geometric megaphone + broadcast arcs ── */
+    campaigns:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-ml" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor={O}/><stop offset="100%" stopColor={P}/></linearGradient>
+        </defs>
+        {/* Megaphone body (trapezoid) */}
+        <polygon points="18,32 18,52 72,62 72,22" stroke={O} strokeWidth="1.5" fill={O} fillOpacity=".07" strokeLinejoin="round"/>
+        {/* Handle */}
+        <rect x="8" y="34" width="14" height="16" rx="3" stroke={O} strokeWidth="1.3" fill={O} fillOpacity=".1"/>
+        {/* Bell/cone end */}
+        <ellipse cx="72" cy="42" rx="4" ry="20" stroke={O} strokeWidth="1.3" fill={O} fillOpacity=".05"/>
+        {/* Sound arcs */}
+        <path d="M78,30 Q92,42 78,54" stroke="url(#esg-ml)" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        <path d="M84,24 Q104,42 84,60" stroke="url(#esg-ml)" strokeWidth="1.3" fill="none" strokeLinecap="round" strokeOpacity=".65"/>
+        <path d="M90,18 Q116,42 90,66" stroke="url(#esg-ml)" strokeWidth="1.1" fill="none" strokeLinecap="round" strokeOpacity=".35"/>
+        {/* Particles */}
+        <circle cx="100" cy="32" r="2" fill={P} opacity=".5"/>
+        <circle cx="110" cy="42" r="1.5" fill={O} opacity=".45"/>
+        <circle cx="104" cy="54" r="2" fill={P} opacity=".4"/>
+        <line x1="96" y1="26" x2="99" y2="29" stroke={P} strokeWidth="1" strokeLinecap="round" opacity=".5"/>
+      </svg>
+    ),
+    /* ── Content Library: layered frames + play ── */
+    content:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-fl" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={A}/><stop offset="100%" stopColor={G}/></linearGradient>
+        </defs>
+        {/* Back frame */}
+        <rect x="30" y="8" width="72" height="48" rx="6" stroke={P} strokeWidth="1.2" fill={P} fillOpacity=".05"
+          transform="rotate(-4 66 32)"/>
+        {/* Mid frame */}
+        <rect x="26" y="12" width="72" height="48" rx="6" stroke={A} strokeWidth="1.3" fill={A} fillOpacity=".05"
+          transform="rotate(-1.5 62 36)"/>
+        {/* Front frame */}
+        <rect x="14" y="16" width="74" height="50" rx="6" stroke="url(#esg-fl)" strokeWidth="1.6" fill="white" fillOpacity=".04"/>
+        {/* Play button */}
+        <circle cx="51" cy="41" r="14" stroke="url(#esg-fl)" strokeWidth="1.3" fill={A} fillOpacity=".08"/>
+        <polygon points="47,34 47,48 61,41" fill={A} fillOpacity=".7" stroke={A} strokeWidth=".5"/>
+        {/* Film perforations */}
+        {[22,38,54,70].map((x,i)=>(
+          <rect key={i} x={x} y="62" width="6" height="9" rx="1.5" stroke="white" strokeWidth=".9" strokeOpacity=".15"/>
+        ))}
+        {/* Duration indicator */}
+        <rect x="76" y="52" width="8" height="10" rx="2" stroke={G} strokeWidth="1" fill={G} fillOpacity=".1" opacity=".7"/>
+      </svg>
+    ),
+    /* ── Messages: two geometric chat bubbles ── */
+    messages:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-ms" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={A}/><stop offset="100%" stopColor={G}/></linearGradient>
+        </defs>
+        {/* Right bubble (brand) */}
+        <rect x="40" y="8" width="68" height="38" rx="12" stroke={A} strokeWidth="1.4" fill={A} fillOpacity=".07"/>
+        <polygon points="78,46 72,56 88,46" fill={A} fillOpacity=".07" stroke={A} strokeWidth="1.4" strokeLinejoin="round"/>
+        {/* Dots in right bubble */}
+        <circle cx="62" cy="27" r="3.5" fill={A} opacity=".5"/>
+        <circle cx="74" cy="27" r="3.5" fill={A} opacity=".5"/>
+        <circle cx="86" cy="27" r="3.5" fill={A} opacity=".5"/>
+        {/* Left bubble (creator) */}
+        <rect x="12" y="40" width="66" height="36" rx="12" stroke="url(#esg-ms)" strokeWidth="1.4" fill={G} fillOpacity=".06"/>
+        <polygon points="38,40 24,40 38,52" fill={G} fillOpacity=".06" stroke={G} strokeWidth="1.3" strokeLinejoin="round"/>
+        {/* Dots in left bubble */}
+        <circle cx="33" cy="58" r="3" fill={G} opacity=".5"/>
+        <circle cx="44" cy="58" r="3" fill={G} opacity=".5"/>
+        <circle cx="55" cy="58" r="3" fill={G} opacity=".5"/>
+        {/* Glow between bubbles */}
+        <circle cx="60" cy="44" r="10" fill={A} fillOpacity=".06"/>
+      </svg>
+    ),
+    /* ── Team: network node graph ── */
+    team:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="esg-tg" cx="50%" cy="55%" r="50%"><stop offset="0%" stopColor={T} stopOpacity=".3"/><stop offset="100%" stopColor={T} stopOpacity="0"/></radialGradient>
+        </defs>
+        <circle cx="60" cy="46" r="22" fill="url(#esg-tg)"/>
+        {/* Connection lines */}
+        <line x1="60" y1="46" x2="22" y2="22" stroke={T} strokeWidth="1.1" strokeOpacity=".35" strokeDasharray="3,3"/>
+        <line x1="60" y1="46" x2="98" y2="22" stroke={T} strokeWidth="1.1" strokeOpacity=".35" strokeDasharray="3,3"/>
+        <line x1="60" y1="46" x2="20" y2="66" stroke={T} strokeWidth="1.1" strokeOpacity=".35" strokeDasharray="3,3"/>
+        <line x1="60" y1="46" x2="100" y2="66" stroke={T} strokeWidth="1.1" strokeOpacity=".35" strokeDasharray="3,3"/>
+        <line x1="60" y1="46" x2="60" y2="14" stroke={T} strokeWidth="1.1" strokeOpacity=".35" strokeDasharray="3,3"/>
+        {/* Satellite nodes */}
+        {[[22,22,A],[98,22,P],[20,66,G],[100,66,O],[60,14,Y]].map(([cx,cy,c],i)=>(
+          <g key={i}>
+            <circle cx={cx} cy={cy} r="9" stroke={c} strokeWidth="1.3" fill={c} fillOpacity=".09"/>
+            <circle cx={cx} cy={cy-2} r="3.5" fill={c} fillOpacity=".5"/>
+            <path d={`M${cx-6},${cy+5} Q${cx},${cy-1} ${cx+6},${cy+5}`} stroke={c} strokeWidth="1" fill={c} fillOpacity=".15" strokeOpacity=".4" strokeLinecap="round"/>
+          </g>
+        ))}
+        {/* Center node */}
+        <circle cx="60" cy="46" r="13" stroke={T} strokeWidth="1.6" fill={T} fillOpacity=".12"/>
+        <circle cx="60" cy="42" r="5" fill={T} fillOpacity=".6"/>
+        <path d="M50,54 Q60,46 70,54" stroke={T} strokeWidth="1.3" fill={T} fillOpacity=".2" strokeLinecap="round"/>
+      </svg>
+    ),
+    /* ── Scorecards: geometric star + score arc ── */
+    scorecards:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-sl" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={Y}/><stop offset="100%" stopColor={O}/></linearGradient>
+        </defs>
+        {/* Score arc track */}
+        <path d="M20,70 A42,42 0 0,1 100,70" stroke="white" strokeWidth="5" strokeOpacity=".07" strokeLinecap="round"/>
+        {/* Score fill arc (~80%) */}
+        <path d="M20,70 A42,42 0 0,1 96,54" stroke="url(#esg-sl)" strokeWidth="5" strokeLinecap="round" fill="none"/>
+        {/* Arc tick marks */}
+        {[0,.2,.4,.6,.8,1].map((t,i)=>{
+          const a=Math.PI*(1-t);const cx=60+42*Math.cos(a);const cy=70-42*Math.sin(a);
+          return <circle key={i} cx={cx} cy={cy} r="1.8" fill="white" opacity={t<=.8?.5:.2}/>;
+        })}
+        {/* Central star */}
+        <polygon points="60,10 64,22 76,22 67,30 70,42 60,35 50,42 53,30 44,22 56,22"
+          fill="url(#esg-sl)" fillOpacity=".7" stroke={Y} strokeWidth="1" strokeOpacity=".9" strokeLinejoin="round"/>
+        {/* Inner star glow */}
+        <circle cx="60" cy="26" r="7" fill={Y} fillOpacity=".1"/>
+        {/* Score value area */}
+        <circle cx="60" cy="70" r="10" fill={Y} fillOpacity=".1" stroke={Y} strokeWidth="1" strokeOpacity=".3"/>
+      </svg>
+    ),
+    /* ── Shortlists: bookmark shape + star accent ── */
+    shortlists:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-bl" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor={P}/><stop offset="100%" stopColor={A}/></linearGradient>
+        </defs>
+        {/* Shadow bookmark */}
+        <polygon points="42,8 80,8 80,72 61,60 42,72" stroke={P} strokeWidth="1" fill={P} fillOpacity=".04"
+          strokeOpacity=".25" transform="translate(8,0)"/>
+        {/* Main bookmark */}
+        <polygon points="28,8 76,8 76,76 52,62 28,76" stroke="url(#esg-bl)" strokeWidth="1.6" fill={P} fillOpacity=".07" strokeLinejoin="round"/>
+        {/* Horizontal list lines */}
+        <line x1="37" y1="24" x2="67" y2="24" stroke="white" strokeWidth="1.4" strokeOpacity=".2" strokeLinecap="round"/>
+        <line x1="37" y1="34" x2="63" y2="34" stroke="white" strokeWidth="1.4" strokeOpacity=".16" strokeLinecap="round"/>
+        <line x1="37" y1="44" x2="56" y2="44" stroke="white" strokeWidth="1.4" strokeOpacity=".12" strokeLinecap="round"/>
+        {/* Small star */}
+        <polygon points="52,14 53.5,18.5 58,18.5 54.5,21.5 55.5,26 52,23.5 48.5,26 49.5,21.5 46,18.5 50.5,18.5"
+          fill={Y} fillOpacity=".7" stroke={Y} strokeWidth=".7"/>
+        {/* Dot cluster right */}
+        <circle cx="92" cy="22" r="4" fill={A} fillOpacity=".25" stroke={A} strokeWidth="1" strokeOpacity=".4"/>
+        <circle cx="100" cy="36" r="3" fill={P} fillOpacity=".2" stroke={P} strokeWidth=".9" strokeOpacity=".4"/>
+        <circle cx="94" cy="48" r="2.5" fill={A} fillOpacity=".18" stroke={A} strokeWidth=".9" strokeOpacity=".3"/>
+        <line x1="92" y1="22" x2="100" y2="36" stroke={P} strokeWidth=".8" strokeOpacity=".2" strokeDasharray="2,2"/>
+        <line x1="100" y1="36" x2="94" y2="48" stroke={A} strokeWidth=".8" strokeOpacity=".2" strokeDasharray="2,2"/>
+      </svg>
+    ),
+    /* ── Affiliate: interlocking chain links ── */
+    affiliate:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-afl" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor={O}/><stop offset="100%" stopColor={A}/></linearGradient>
+        </defs>
+        {/* Left link */}
+        <rect x="8" y="28" width="48" height="28" rx="14" stroke={O} strokeWidth="1.8" fill={O} fillOpacity=".07"/>
+        {/* Right link */}
+        <rect x="64" y="28" width="48" height="28" rx="14" stroke={A} strokeWidth="1.8" fill={A} fillOpacity=".07"/>
+        {/* Overlap / interlocking area */}
+        <rect x="56" y="34" width="20" height="16" rx="4" fill="url(#esg-afl)" fillOpacity=".15"/>
+        <line x1="56" y1="34" x2="56" y2="50" stroke="url(#esg-afl)" strokeWidth="1" strokeOpacity=".4"/>
+        <line x1="76" y1="34" x2="76" y2="50" stroke="url(#esg-afl)" strokeWidth="1" strokeOpacity=".4"/>
+        {/* Left link inner hole */}
+        <rect x="16" y="34" width="32" height="16" rx="8" stroke={O} strokeWidth="1" strokeOpacity=".4" fill={O} fillOpacity=".03"/>
+        {/* Right link inner hole */}
+        <rect x="72" y="34" width="32" height="16" rx="8" stroke={A} strokeWidth="1" strokeOpacity=".4" fill={A} fillOpacity=".03"/>
+        {/* Traffic dots + arrow */}
+        {[0,1,2].map(i=>(
+          <circle key={i} cx={24+i*24} cy="16" r="3" fill={i===2?A:O} fillOpacity={.3+i*.2}/>
+        ))}
+        <polyline points="64,13 68,16 64,19" stroke={A} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".6"/>
+        <line x1="24" y1="16" x2="66" y2="16" stroke="url(#esg-afl)" strokeWidth="1" strokeOpacity=".3" strokeDasharray="4,3"/>
+        {/* Click dots below */}
+        {[28,52,76,100].map((x,i)=>(
+          <circle key={i} cx={x} cy="72" r="2.5" fill={i%2===0?O:A} fillOpacity=".3"/>
+        ))}
+      </svg>
+    ),
+    /* ── Brand active deals (dashboard) ── */
+    branddeals:(
+      <svg viewBox="0 0 120 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="esg-bd" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor={O}/><stop offset="100%" stopColor={P}/></linearGradient>
+          <radialGradient id="esg-br" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor={O} stopOpacity=".3"/><stop offset="100%" stopColor={O} stopOpacity="0"/></radialGradient>
+        </defs>
+        <circle cx="60" cy="42" r="18" fill="url(#esg-br)"/>
+        <polygon points="6,42 17,27 32,22 44,31 46,42 44,53 32,62 17,57" stroke={O} strokeWidth="1.4" fill={O} fillOpacity=".06" strokeLinejoin="round"/>
+        <line x1="46" y1="35" x2="57" y2="31" stroke={O} strokeWidth="1.3" strokeLinecap="round"/>
+        <line x1="46" y1="42" x2="59" y2="42" stroke="url(#esg-bd)" strokeWidth="1.6" strokeLinecap="round"/>
+        <line x1="46" y1="49" x2="57" y2="53" stroke={O} strokeWidth="1.3" strokeLinecap="round"/>
+        <polygon points="114,42 103,27 88,22 76,31 74,42 76,53 88,62 103,57" stroke={P} strokeWidth="1.4" fill={P} fillOpacity=".06" strokeLinejoin="round"/>
+        <line x1="74" y1="35" x2="63" y2="31" stroke={P} strokeWidth="1.3" strokeLinecap="round"/>
+        <line x1="74" y1="42" x2="61" y2="42" stroke="url(#esg-bd)" strokeWidth="1.6" strokeLinecap="round"/>
+        <line x1="74" y1="49" x2="63" y2="53" stroke={P} strokeWidth="1.3" strokeLinecap="round"/>
+        <circle cx="60" cy="42" r="5" fill={O} opacity=".65"/>
+        <circle cx="60" cy="42" r="2.2" fill="white" opacity=".5"/>
+        <line x1="60" y1="20" x2="60" y2="14" stroke={O} strokeWidth="1.1" strokeLinecap="round" opacity=".45"/>
+        <line x1="72" y1="24" x2="76" y2="19" stroke={P} strokeWidth="1.1" strokeLinecap="round" opacity=".45"/>
+        <line x1="48" y1="24" x2="44" y2="19" stroke={O} strokeWidth="1.1" strokeLinecap="round" opacity=".45"/>
+        <circle cx="60" cy="12" r="1.5" fill={O} opacity=".4"/>
+      </svg>
+    ),
+  };
+  return (
+    <div style={{width:size,margin:"0 auto 18px",opacity:.9}}>
+      {svgs[type]||null}
     </div>
   );
 }
@@ -651,7 +937,7 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle,darkMode,setDa
       <div className="nav-hamburger" onClick={onMenuToggle} aria-label="Open menu">
         <span/><span/><span/>
       </div>
-      <span className="nav-logo" onClick={()=>setPage("dashboard")}>Bridgn</span>
+      <span className="nav-logo" onClick={()=>setPage("dashboard")}>bridgn</span>
       <div style={{marginRight:"auto",marginLeft:16}}>
         <span style={{padding:"5px 14px",borderRadius:99,fontSize:12,fontWeight:700,background:role==="creator"?"rgba(91,138,245,.15)":role==="agency"?"rgba(167,139,250,.15)":"rgba(240,160,80,.15)",color:role==="creator"?"var(--accent)":role==="agency"?"var(--purple)":"var(--accent2)",border:"1px solid "+(role==="creator"?"rgba(91,138,245,.3)":role==="agency"?"rgba(167,139,250,.3)":"rgba(240,160,80,.3)")}}>
           {role==="creator"?"✨ Creator":role==="agency"?"💼 Agency":"📋 Brand"}
@@ -738,7 +1024,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
   return (
     <aside className={"sidebar"+(mobOpen?" mob-open":"")}>
       <div className="sidebar-mob-header" style={{alignItems:"center",justifyContent:"space-between",padding:"16px 14px 8px",borderBottom:"1px solid var(--border)",marginBottom:4}}>
-        <span style={{fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,letterSpacing:"-.4px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>Bridgn</span>
+        <span style={{fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,letterSpacing:"-.4px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>bridgn</span>
         <button onClick={onClose} style={{background:"none",border:"none",color:"var(--text3)",fontSize:20,cursor:"pointer",lineHeight:1,padding:"2px 4px"}}>✕</button>
       </div>
       {nav.map((n,i)=>n.section?(
@@ -1198,6 +1484,95 @@ const ONBOARDING_STEPS = [
   {key:"deal",      label:"Create your first deal", desc:"Bring a brand partnership into Bridgn to manage it",  page:"new-deal",         icon:"🤝", color:"var(--green)"},
 ];
 
+// ─── ACTIVITY FEED ────────────────────────────────────────────────────────────
+function ActivityFeed() {
+  const EVENTS = [
+    {type:"message",  icon:"💬", bg:"rgba(91,138,245,.15)",  col:"var(--accent)",  msgs:["sent you a new message","replied to your brief question","updated the campaign details"]},
+    {type:"deal",     icon:"📋", bg:"rgba(167,139,250,.15)", col:"var(--purple)",  msgs:["moved your deal to Review","accepted your content submission","requested a revision"]},
+    {type:"payment",  icon:"💸", bg:"rgba(52,211,153,.15)",  col:"var(--green)",   msgs:["released payment of ${amt}","marked invoice #{num} as paid","funded escrow for your deal"]},
+    {type:"view",     icon:"👁️", bg:"rgba(251,191,36,.15)",  col:"var(--yellow)",  msgs:["viewed your profile","added you to a shortlist","saved your media kit"]},
+    {type:"approved", icon:"✅", bg:"rgba(52,211,153,.12)",  col:"var(--green)",   msgs:["approved your content","gave your post a 5-star rating","signed the contract"]},
+    {type:"offer",    icon:"🎯", bg:"rgba(240,160,80,.15)",  col:"var(--accent2)", msgs:["sent you a partnership offer","invited you to their campaign","wants to discuss a collab"]},
+  ];
+  const BRANDS = ["NovaTech","Luxara Skincare","Halo Health","Pulse Co.","StellarBev","Glow Labs","Vibe Wear","Modera"];
+  const AMTS   = [500,800,1200,1500,2000,2500,3000];
+
+  const mkItem = (secsAgo) => {
+    const ev   = EVENTS[Math.floor(Math.random()*EVENTS.length)];
+    const brand = BRANDS[Math.floor(Math.random()*BRANDS.length)];
+    const msg   = ev.msgs[Math.floor(Math.random()*ev.msgs.length)]
+      .replace("{amt}", "$"+AMTS[Math.floor(Math.random()*AMTS.length)].toLocaleString())
+      .replace("#{num}", "#"+(Math.floor(Math.random()*900)+100));
+    return { id:Date.now()+Math.random(), ev, brand, msg, ts:Date.now()-(secsAgo*1000) };
+  };
+
+  const [items,  setItems]  = useState(()=>Array.from({length:5},(_,i)=>mkItem(60+i*i*90+Math.random()*120)));
+  const [newest, setNewest] = useState(null);
+  const [tick,   setTick]   = useState(0);
+
+  // Tick timestamps every 30s
+  useEffect(()=>{
+    const id = setInterval(()=>setTick(t=>t+1), 30000);
+    return ()=>clearInterval(id);
+  },[]);
+
+  // Schedule next event with random delay (8–18s)
+  useEffect(()=>{
+    const delay = 8000 + Math.random()*10000;
+    const id = setTimeout(()=>{
+      const item = mkItem(0);
+      setNewest(item.id);
+      setItems(prev=>[item,...prev].slice(0,12));
+      setTimeout(()=>setNewest(null), 700);
+    }, delay);
+    return ()=>clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[items.length]);
+
+  const fmtTs = ts => {
+    const s = Math.floor((Date.now()-ts)/1000);
+    if(s < 5)    return "just now";
+    if(s < 60)   return `${s}s ago`;
+    if(s < 3600) return `${Math.floor(s/60)}m ago`;
+    return `${Math.floor(s/3600)}h ago`;
+  };
+
+  return (
+    <div className="section">
+      <div className="section-hdr" style={{alignItems:"center"}}>
+        <span className="section-title">Activity</span>
+        <span style={{display:"flex",alignItems:"center",gap:5,fontSize:"11px",color:"var(--green)",fontWeight:600}}>
+          <span style={{width:6,height:6,borderRadius:"50%",background:"var(--green)",display:"inline-block",animation:"liveDot 2.2s ease-in-out infinite"}}/>
+          LIVE
+        </span>
+      </div>
+      <div className="card-lg" style={{padding:0,overflow:"hidden"}}>
+        {items.map((item,i)=>(
+          <div key={item.id}
+            style={{
+              padding:"11px 14px",
+              borderBottom:i<items.length-1?"1px solid var(--border)":"none",
+              display:"flex",gap:10,alignItems:"flex-start",
+              animation:item.id===newest?"feedSlideIn 380ms cubic-bezier(.16,1,.3,1) both":"none",
+              background:item.id===newest?"rgba(91,138,245,.04)":"transparent",
+              transition:"background .8s ease",
+            }}>
+            <div style={{width:32,height:32,borderRadius:"50%",background:item.ev.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",flexShrink:0,marginTop:1}}>
+              {item.ev.icon}
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:"12px",lineHeight:1.5,color:"var(--text)"}}>
+                <span style={{fontWeight:700,color:item.ev.col}}>{item.brand}</span>{" "}{item.msg}
+              </div>
+              <div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>{fmtTs(item.ts)}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,userName,socialLinks={},onboarding={},updateOnboarding}) {
   const loading = useSkeleton();
   const [showModal,setShowModal] = useState(!onboarding.seen);
@@ -1310,8 +1685,8 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
           </div>
           <div className="section">
             <div className="section-hdr"><span className="section-title">Incoming Offers</span></div>
-            <div className="card" style={{padding:"24px 20px",textAlign:"center"}}>
-              <div style={{fontSize:"26px",marginBottom:10}}>✨</div>
+            <div className="card" style={{padding:"28px 20px",textAlign:"center"}}>
+              <EmptySVG type="offers" size={120}/>
               <div style={{fontSize:"14px",fontWeight:600,marginBottom:6}}>No offers yet</div>
               <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.65}}>When brands send you direct partnership offers they will show up here. Make sure your profile is complete so brands can find you.</div>
               <button className="btn btn-outline btn-sm" style={{marginTop:14}} onClick={()=>setPage("public-profile")}>Complete My Profile</button>
@@ -1324,9 +1699,9 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
             <div className="card">
               {active.length===0?(
                 <div style={{padding:"28px 20px",textAlign:"center"}}>
-                  <div style={{fontSize:"28px",marginBottom:10}}>🤝</div>
+                  <EmptySVG type="deals" size={120}/>
                   <div style={{fontSize:"14px",fontWeight:600,marginBottom:6}}>No active deals yet</div>
-                  <div style={{fontSize:"12px",color:"var(--text2)",marginBottom:16,lineHeight:1.65}}>Create your first deal to get started. You can add deals from Bridgn or import ones you negotiated elsewhere.</div>
+                  <div style={{fontSize:"12px",color:"var(--text2)",marginBottom:16,lineHeight:1.65}}>Create your first deal to get started. You can add deals from bridgn or import ones you negotiated elsewhere.</div>
                   <button className="btn btn-primary btn-sm" onClick={()=>setPage("new-deal")}>+ Create First Deal</button>
                 </div>
               ):active.map((d,i)=>(
@@ -1342,6 +1717,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
               ))}
             </div>
           </div>
+          <ActivityFeed/>
           <div className="section">
             <div className="section-hdr"><span className="section-title">Quick Actions</span></div>
             <div style={{display:"flex",flexDirection:"column",gap:7}}>
@@ -2708,7 +3084,7 @@ function InvoicesPage({role}) {
           <thead><tr><th>Invoice</th><th>{isBrand?"Creator":"Client"}</th><th>Campaign</th><th>Amount</th><th>Date</th><th>Status</th><th></th></tr></thead>
           <tbody>
             {rows.length===0?(
-              <tr><td colSpan={7} style={{textAlign:"center",padding:"28px",color:"var(--text3)",fontSize:"13px"}}>No invoices yet</td></tr>
+              <tr><td colSpan={7} style={{textAlign:"center",padding:"40px 20px"}}><EmptySVG type="affiliate" size={100}/><div style={{fontSize:"13px",fontWeight:600,color:"var(--text2)",marginTop:4}}>No invoices yet</div></td></tr>
             ):rows.map(inv=>(
               <tr key={inv.id}>
                 <td style={{fontWeight:600,color:"var(--accent)"}}>{inv.id}</td>
@@ -2890,8 +3266,9 @@ function EarningsPage() {
 
   const earningsMonthly = EARNINGS_MONTHLY;
   const earningsByBrand = EARNINGS_BY_BRAND;
-  const currentMonth = earningsMonthly[earningsMonthly.length-1];
-  const current = currentMonth.amount;
+  const hasEarnings = earningsMonthly.length > 0;
+  const currentMonth = hasEarnings ? earningsMonthly[earningsMonthly.length-1] : null;
+  const current = currentMonth ? currentMonth.amount : 0;
   const pct = goal>0 ? current/goal : 0;
   const done = pct>=1;
 
@@ -2915,10 +3292,10 @@ function EarningsPage() {
     setGoalInput("");
   };
 
-  const maxAmt = Math.max(...earningsMonthly.map(e=>e.amount));
+  const maxAmt = earningsMonthly.length ? Math.max(...earningsMonthly.map(e=>e.amount)) : 0;
   const ytd = earningsMonthly.reduce((s,e)=>s+e.amount,0);
-  const avg = Math.round(ytd/earningsMonthly.length);
-  const best = earningsByBrand.reduce((a,b)=>a.amount>b.amount?a:b);
+  const avg = earningsMonthly.length ? Math.round(ytd/earningsMonthly.length) : 0;
+  const best = earningsByBrand.length ? earningsByBrand.reduce((a,b)=>a.amount>b.amount?a:b) : {brand:"—",amount:0};
 
   // SVG ring geometry
   const R=54, CX=64, circ=2*Math.PI*R;
@@ -2935,7 +3312,7 @@ function EarningsPage() {
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22}}>
           <div>
             <div style={{fontSize:"14px",fontWeight:700,color:"var(--text)"}}>Monthly Goal</div>
-            <div style={{fontSize:"12px",color:"var(--text2)",marginTop:2}}>{currentMonth.month} earnings tracking</div>
+            <div style={{fontSize:"12px",color:"var(--text2)",marginTop:2}}>{currentMonth?currentMonth.month+" earnings tracking":"Track your monthly income target"}</div>
           </div>
           {!editGoal&&(
             <button className="btn btn-secondary btn-sm" onClick={()=>{setEditGoal(true);setGoalInput(goal?String(goal):"");}}>
@@ -3044,8 +3421,15 @@ function EarningsPage() {
       </div>
 
       {/* ── Page header + stats ─────────────────────────────── */}
-      <div className="ph-row"><div><div className="page-title">Earnings & P&L</div><div className="page-subtitle">Your income, brand performance, and business health at a glance.</div></div><button className="btn btn-secondary">Export CSV</button></div>
-      <div className="g4 section" style={{gap:12}}>
+      <div className="ph-row"><div><div className="page-title">Earnings & P&L</div><div className="page-subtitle">Your income, brand performance, and business health at a glance.</div></div>{hasEarnings&&<button className="btn btn-secondary">Export CSV</button>}</div>
+      {!hasEarnings&&(
+        <div className="card" style={{padding:"48px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
+          <EmptySVG type="earnings" size={136}/>
+          <div style={{fontSize:"16px",fontWeight:600,marginBottom:8}}>No earnings yet</div>
+          <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7}}>Once you complete deals and receive payments, your income breakdown, charts, and P&L will appear here.</div>
+        </div>
+      )}
+      {hasEarnings&&<><div className="g4 section" style={{gap:12}}>
         {[
           {l:"YTD Earnings",v:"$"+ytd.toLocaleString(),spk:earningsMonthly.map(m=>m.amount),sc:"#34d399"},
           {l:"Monthly Avg",v:"$"+avg.toLocaleString(),spk:earningsMonthly.map(m=>m.amount)},
@@ -3112,7 +3496,7 @@ function EarningsPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div></>}
     </div>
   );
 }
@@ -3139,7 +3523,7 @@ function ContractVaultPage() {
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
         {list.length===0?(
-          <div className="card" style={{padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:"32px",marginBottom:12}}>📂</div><div style={{fontSize:"15px",fontWeight:600,marginBottom:6}}>No contracts yet</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65}}>Signed agreements will appear here once you complete your first deal.</div></div>
+          <div className="card" style={{padding:"40px 20px",textAlign:"center"}}><EmptySVG type="contracts" size={124}/><div style={{fontSize:"15px",fontWeight:600,marginBottom:6}}>No contracts yet</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65}}>Signed agreements will appear here once you complete your first deal.</div></div>
         ):list.map(c=>(
           <div key={c.id} className="card card-hover" style={{padding:"15px 18px",borderLeft:"3px solid "+statusColor[c.status]}} onClick={()=>setSelected(c)}>
             <div style={{display:"flex",gap:12,alignItems:"center"}}>
@@ -3291,7 +3675,7 @@ function ExpensesPage() {
               <thead><tr><th>Description</th><th>Category</th><th>Amount</th><th>Date</th><th>Deductible</th></tr></thead>
               <tbody>
                 {expenses.length===0?(
-                  <tr><td colSpan={5} style={{textAlign:"center",padding:"28px",color:"var(--text3)",fontSize:"13px"}}>No expenses yet — add your first one above.</td></tr>
+                  <tr><td colSpan={5} style={{textAlign:"center",padding:"40px 20px"}}><EmptySVG type="earnings" size={100}/><div style={{fontSize:"13px",fontWeight:600,color:"var(--text2)",marginTop:4}}>No expenses yet — add your first one above.</div></td></tr>
                 ):expenses.map(e=>(
                   <tr key={e.id}>
                     <td style={{fontWeight:500}}>{e.desc}</td>
@@ -3375,7 +3759,7 @@ function BrandDashboard({setPage,setSelected}) {
           <div className="section">
             <div className="section-hdr"><span className="section-title">Active Deals</span><button className="section-link" onClick={()=>setPage("deals")}>View all</button></div>
             <div className="card" style={{padding:"32px 20px",textAlign:"center"}}>
-              <div style={{fontSize:"28px",marginBottom:10}}>🤝</div>
+              <EmptySVG type="branddeals" size={116}/>
               <div style={{fontSize:"14px",fontWeight:600,marginBottom:5}}>No active deals</div>
               <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.65}}>Launch a campaign and invite creators to get started.</div>
             </div>
@@ -3423,7 +3807,7 @@ function BrowseCreatorsPage({setPage}) {
         <button className="btn btn-primary" onClick={()=>setInviteModal(true)}>+ Invite a Creator</button>
       </div>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"80px 20px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
-        <div style={{width:72,height:72,borderRadius:22,background:"linear-gradient(135deg,rgba(91,138,245,.12),rgba(167,139,250,.08))",border:"1.5px solid rgba(91,138,245,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"30px",marginBottom:22}}>🔍</div>
+        <EmptySVG type="creators" size={140}/>
         <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,letterSpacing:"-.3px",marginBottom:10}}>No creators have joined yet</div>
         <div style={{fontSize:"14px",color:"var(--text2)",lineHeight:1.75,marginBottom:28}}>As creators sign up for Bridgn they will appear here. Invite your first creators to get started.</div>
         <button className="btn btn-primary btn-lg" onClick={()=>setInviteModal(true)}>Invite a Creator</button>
@@ -3451,6 +3835,126 @@ function BrowseCreatorsPage({setPage}) {
   );
 }
 
+// ─── BRIDGN SCORE ────────────────────────────────────────────────────────────
+function calcBridgnScore(c) {
+  // 1. Profile completeness (0–25): analytics uploaded + location + multi-platform
+  let completeness = 0;
+  if(c.analyticsUpdated) completeness += 15;
+  if(c.loc)              completeness += 5;
+  if(c.platforms && c.platforms.length > 1) completeness += 5;
+
+  // 2. Analytics freshness (0–25): recency of last analytics upload
+  let freshness = 0;
+  const age = c.analyticsAge;
+  if(age != null){
+    if(age <= 7)       freshness = 25;
+    else if(age <= 14) freshness = 22;
+    else if(age <= 30) freshness = 18;
+    else if(age <= 60) freshness = 12;
+    else if(age <= 90) freshness = 6;
+    else               freshness = 2;
+  }
+
+  // 3. Deal volume (0–25): completed partnerships
+  const d = c.totalDeals || 0;
+  const dealScore = d>=15?25 : d>=11?22 : d>=6?18 : d>=3?12 : d>=1?5 : 0;
+
+  // 4. Brand rating (0–25): average star rating scaled
+  const ratingScore = Math.round((parseFloat(c.rating)||0)/5*25);
+
+  const total = Math.min(100, completeness+freshness+dealScore+ratingScore);
+  return {
+    total,
+    breakdown:[
+      {label:"Profile completeness", score:completeness, max:25, desc:c.analyticsUpdated?"Analytics on file":"No analytics uploaded"},
+      {label:"Analytics freshness",  score:freshness,    max:25, desc:age==null?"Never uploaded":age+"d since last upload"},
+      {label:"Completed deals",      score:dealScore,    max:25, desc:d+" deal"+(d===1?"":"s")+" completed"},
+      {label:"Brand rating",         score:ratingScore,  max:25, desc:(c.rating||"—")+"★ average rating"},
+    ]
+  };
+}
+
+function BridgnScoreBadge({score, breakdown}) {
+  const [showTip,setShowTip] = useState(false);
+  const [tipPos,setTipPos]   = useState({top:0,left:0});
+  const ref = useRef(null);
+
+  const DIM=80, R=31, SW=7.5;
+  const circ = 2*Math.PI*R;
+  const offset = circ*(1-score/100);
+
+  const col = (() => {
+    if(score<=50){
+      const t=score/50;
+      return `rgb(${Math.round(248+(251-248)*t)},${Math.round(113+(191-113)*t)},${Math.round(113+(36-113)*t)})`;
+    }
+    const t=(score-50)/50;
+    return `rgb(${Math.round(251+(52-251)*t)},${Math.round(191+(211-191)*t)},${Math.round(36+(153-36)*t)})`;
+  })();
+
+  const onEnter = () => {
+    if(ref.current){
+      const rect = ref.current.getBoundingClientRect();
+      setTipPos({top:rect.bottom+10, left:Math.max(8, rect.right-240)});
+    }
+    setShowTip(true);
+  };
+
+  const tipContent = (
+    <div style={{position:"fixed",top:tipPos.top,left:tipPos.left,width:240,background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"16px",boxShadow:"var(--shadow-lg)",zIndex:9000,animation:"fadeIn .15s ease both"}}>
+      <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:13}}>
+        <span style={{fontSize:"13px",fontWeight:800,fontFamily:"Syne,sans-serif",color:"var(--text)"}}>Bridgn Score</span>
+        <span style={{fontSize:"22px",fontWeight:800,fontFamily:"Syne,sans-serif",color:col,marginLeft:"auto",lineHeight:1}}>{score}</span>
+        <span style={{fontSize:"11px",color:"var(--text3)"}}>/ 100</span>
+      </div>
+      {breakdown.map((b,i)=>{
+        const pct = b.score/b.max;
+        const bCol = pct>=.8?"var(--green)":pct>=.4?"var(--accent2)":"var(--red)";
+        return (
+          <div key={i} style={{marginBottom:i<breakdown.length-1?11:0}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:4}}>
+              <div>
+                <div style={{fontSize:"11px",fontWeight:600,color:"var(--text)",lineHeight:1.2}}>{b.label}</div>
+                <div style={{fontSize:"10px",color:"var(--text3)",marginTop:1}}>{b.desc}</div>
+              </div>
+              <span style={{fontSize:"12px",fontWeight:700,color:bCol,marginLeft:8,flexShrink:0}}>{b.score}<span style={{fontWeight:400,color:"var(--text3)"}}>/{b.max}</span></span>
+            </div>
+            <div style={{height:3,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}>
+              <div style={{height:"100%",width:(pct*100)+"%",background:bCol,borderRadius:99,transition:"width .5s cubic-bezier(.16,1,.3,1)"}}/>
+            </div>
+          </div>
+        );
+      })}
+      <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid var(--border)",fontSize:"10px",color:"var(--text3)",lineHeight:1.6}}>
+        Composite of profile completeness, analytics freshness, deal history, and brand ratings. Encourages creators to stay active.
+      </div>
+    </div>
+  );
+
+  return (
+    <div ref={ref} style={{display:"inline-flex",flexDirection:"column",alignItems:"center",cursor:"default"}} onMouseEnter={onEnter} onMouseLeave={()=>setShowTip(false)}>
+      <div style={{position:"relative",width:DIM,height:DIM,background:"rgba(0,0,0,.38)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderRadius:"50%",border:"1px solid rgba(255,255,255,.12)",boxShadow:"0 4px 16px rgba(0,0,0,.35)"}}>
+        <svg width={DIM} height={DIM} style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
+          <defs>
+            <filter id="sGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.5" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <circle cx={DIM/2} cy={DIM/2} r={R} fill="none" stroke="rgba(255,255,255,.1)" strokeWidth={SW}/>
+          <circle cx={DIM/2} cy={DIM/2} r={R} fill="none" stroke={col} strokeWidth={SW} strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} filter="url(#sGlow)" style={{transition:"stroke-dashoffset .7s cubic-bezier(.16,1,.3,1),stroke .4s ease"}}/>
+        </svg>
+        <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
+          <div style={{fontSize:"20px",fontWeight:800,fontFamily:"Syne,sans-serif",lineHeight:1,color:col}}>{score}</div>
+          <div style={{fontSize:"7.5px",fontWeight:800,color:"rgba(255,255,255,.45)",letterSpacing:".12em",marginTop:2}}>SCORE</div>
+        </div>
+      </div>
+      <div style={{fontSize:"9px",fontWeight:700,color:"rgba(255,255,255,.55)",marginTop:5,letterSpacing:".04em",whiteSpace:"nowrap"}}>Bridgn Score ⓘ</div>
+      {showTip && ReactDOM.createPortal(tipContent, document.body)}
+    </div>
+  );
+}
+
 // ─── CREATOR PROFILE (BRAND VIEW) ────────────────────────────────────────────
 function CreatorProfilePage({creator,setPage}) {
   const loading = useSkeleton();
@@ -3459,12 +3963,17 @@ function CreatorProfilePage({creator,setPage}) {
   if(!creator) return null;const c=creator;const g=bg(c.ci);
   const sc=SCORECARD_DATA.find(s=>s.ci===c.ci);
   const hasTrust=c.paidOnTime&&c.totalDeals>=3&&(c.paidOnTime/c.totalDeals)>=0.9;
+  const bScore = calcBridgnScore(c);
   return (
     <div className="fade-in">
       <button className="btn btn-secondary btn-sm" style={{marginBottom:18}} onClick={()=>setPage("browse")}>Back to Browse</button>
       <div className="card-lg" style={{overflow:"hidden",marginBottom:18}}>
-        <div style={{height:170,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",position:"relative"}}>
+        <div style={{height:190,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",position:"relative"}}>
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(0,0,0,.6),transparent)"}}></div>
+          {/* Bridgn Score badge — top right of banner */}
+          <div style={{position:"absolute",top:16,right:20,zIndex:2}}>
+            <BridgnScoreBadge score={bScore.total} breakdown={bScore.breakdown}/>
+          </div>
           <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"22px 26px",display:"flex",gap:16,alignItems:"flex-end"}}>
             <div style={{width:72,height:72,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2.5px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"24px",fontWeight:800,color:"white",flexShrink:0}}>{c.init}</div>
             <div style={{flex:1}}>
@@ -3666,7 +4175,7 @@ function BrandCampaignsPage({setPage,setSelected,campaignQuestions={},setCampaig
 
       {campaigns.length===0?(
         <div className="card" style={{padding:"56px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
-          <div style={{fontSize:"40px",marginBottom:16}}>📋</div>
+          <EmptySVG type="campaigns" size={136}/>
           <div style={{fontSize:"16px",fontWeight:700,marginBottom:10}}>No campaigns yet</div>
           <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.75,marginBottom:28}}>Launch your first campaign to start finding and working with creators.</div>
           <button className="btn btn-primary" onClick={()=>{setModal(true);setStep(1);setCreated(false);}}>+ New Campaign</button>
@@ -3829,43 +4338,189 @@ function CampaignCalendarPage() {
 // ─── BRAND DEALS ──────────────────────────────────────────────────────────────
 function BrandDealsPage({setPage,setSelected}) {
   const loading = useSkeleton();
-  const [deals] = useState([]);
+  const [view,setView] = useState("table");
   const [f,setF] = useState("All");
-  const list=f==="All"?deals:deals.filter(d=>d.status===f);
+  const [deals,setDeals] = useState([]);
+  const statusToCol = s => s==="Pending"?"invited":s==="Active"?"inProgress":s==="Completed"?"completed":"invited";
+  const [colMap,setColMap] = useState({});
+  const [dragging,setDragging] = useState(null);
+  const [dragOver,setDragOver] = useState(null);
+  const [dropAnim,setDropAnim] = useState(null);
+
+  const COLS = [
+    {key:"invited",    label:"Invited",     color:"#a78bfa", bg:"rgba(167,139,250,.09)"},
+    {key:"inProgress", label:"In Progress", color:"#5b8af5", bg:"rgba(91,138,245,.09)"},
+    {key:"inReview",   label:"In Review",   color:"#f0a050", bg:"rgba(240,160,80,.09)"},
+    {key:"completed",  label:"Completed",   color:"#34d399", bg:"rgba(52,211,153,.09)"},
+  ];
+
+  const handleDrop = colKey => {
+    if(!dragging) return;
+    setColMap(m=>({...m,[dragging]:colKey}));
+    setDropAnim(dragging);
+    setTimeout(()=>setDropAnim(null),450);
+    setDragging(null);
+    setDragOver(null);
+  };
+
+  const list = f==="All"?deals:deals.filter(d=>d.status===f);
   if(loading) return <SkeletonPage layout="list"/>;
+
   return (
     <div className="fade-in">
-      <div className="ph-row"><div><div className="page-title">Deals Manager</div><div className="page-subtitle">All active and past creator partnerships.</div></div></div>
-      <div style={{display:"flex",gap:8,marginBottom:18}}>
-        {["All","Active","Pending","Completed"].map(x=><button key={x} className={"filter-btn"+(f===x?" active":"")} onClick={()=>setF(x)}>{x}</button>)}
+      <div className="ph-row">
+        <div><div className="page-title">Deals Manager</div><div className="page-subtitle">All active and past creator partnerships.</div></div>
+        <div style={{display:"flex",gap:7}}>
+          {[["table","≡ Table"],["kanban","⊞ Kanban"]].map(([v,l])=>(
+            <button key={v} className={"filter-btn"+(view===v?" active":"")} onClick={()=>setView(v)}>{l}</button>
+          ))}
+        </div>
       </div>
-      <div className="card-lg" style={{overflow:"hidden"}}>
-        <table className="tbl">
-          <thead><tr><th>Creator</th><th>Campaign</th><th>Platform</th><th>Amount</th><th>Source</th><th>Escrow</th><th>Status</th><th></th></tr></thead>
-          <tbody>
-            {list.length===0?(
-              <tr><td colSpan={8} style={{textAlign:"center",padding:"40px 20px",color:"var(--text2)",fontSize:"13px"}}>No deals yet. Launch a campaign and invite creators to get started.</td></tr>
-            ):list.map(d=>(
-              <tr key={d.id} style={{cursor:"pointer"}} onClick={()=>setPage("deal-room")}>
-                <td><div style={{display:"flex",gap:9,alignItems:"center"}}><div style={{width:28,height:28,borderRadius:"50%",background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",fontWeight:700,color:"white",flexShrink:0}}>{d.ci2}</div><span style={{fontWeight:500}}>{d.creator}</span></div></td>
-                <td style={{color:"var(--text2)"}}>{d.campaign}</td>
-                <td><PlatformBadge p={d.platform}/></td>
-                <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</td>
-                <td>{d.source==="external"?<ExtBadge/>:<span className="badge badge-blue" style={{fontSize:"11px"}}>Bridgn</span>}</td>
-                <td>{d.escrow?<EscrowBadge released={false}/>:<span style={{fontSize:"11px",color:"var(--text3)"}}>—</span>}</td>
-                <td><StatusBadge s={d.status}/></td>
-                <td>
-                  {d.status==="Active"?(
-                    <div style={{display:"flex",gap:5}}>
-                      <button onClick={e=>{e.stopPropagation();setPage("deal-room");}} className="btn btn-primary btn-sm">Deal Room</button>
-                    </div>
-                  ):<button onClick={e=>{e.stopPropagation();}} className="btn btn-secondary btn-sm">View</button>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+      {view==="table"&&(
+        <>
+          <div style={{display:"flex",gap:8,marginBottom:18}}>
+            {["All","Active","Pending","Completed"].map(x=><button key={x} className={"filter-btn"+(f===x?" active":"")} onClick={()=>setF(x)}>{x}</button>)}
+          </div>
+          <div className="card-lg" style={{overflow:"hidden"}}>
+            <table className="tbl">
+              <thead><tr><th>Creator</th><th>Campaign</th><th>Platform</th><th>Amount</th><th>Source</th><th>Escrow</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                {list.length===0?(
+                  <tr><td colSpan={8} style={{textAlign:"center",padding:"40px 20px"}}><EmptySVG type="branddeals" size={110}/><div style={{fontSize:"13px",fontWeight:600,color:"var(--text2)",marginTop:4}}>No deals yet — launch a campaign and invite creators to get started.</div></td></tr>
+                ):list.map(d=>(
+                  <tr key={d.id} style={{cursor:"pointer"}} onClick={()=>setPage("deal-room")}>
+                    <td><div style={{display:"flex",gap:9,alignItems:"center"}}><div style={{width:28,height:28,borderRadius:"50%",background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",fontWeight:700,color:"white",flexShrink:0}}>{d.ci2}</div><span style={{fontWeight:500}}>{d.creator}</span></div></td>
+                    <td style={{color:"var(--text2)"}}>{d.campaign}</td>
+                    <td><PlatformBadge p={d.platform}/></td>
+                    <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</td>
+                    <td>{d.source==="external"?<ExtBadge/>:<span className="badge badge-blue" style={{fontSize:"11px"}}>Bridgn</span>}</td>
+                    <td>{d.escrow?<EscrowBadge released={false}/>:<span style={{fontSize:"11px",color:"var(--text3)"}}>—</span>}</td>
+                    <td><StatusBadge s={d.status}/></td>
+                    <td>
+                      {d.status==="Active"?(
+                        <button onClick={e=>{e.stopPropagation();setPage("deal-room");}} className="btn btn-primary btn-sm">Deal Room</button>
+                      ):<button onClick={e=>{e.stopPropagation();}} className="btn btn-secondary btn-sm">View</button>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {view==="kanban"&&(
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,alignItems:"start"}}>
+          {COLS.map(col=>{
+            const colDeals = deals.filter(d=>colMap[d.id]===col.key);
+            const isOver = dragOver===col.key;
+            const isDraggingHere = isOver && dragging && !colDeals.find(d=>d.id===dragging);
+            return (
+              <div
+                key={col.key}
+                onDragOver={e=>{e.preventDefault();setDragOver(col.key);}}
+                onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget))setDragOver(null);}}
+                onDrop={()=>handleDrop(col.key)}
+                style={{
+                  background:isOver?col.bg:"var(--surface)",
+                  border:"1px solid "+(isOver?col.color+"55":"var(--border)"),
+                  borderRadius:"var(--radius-lg)",
+                  padding:"14px 11px 16px",
+                  minHeight:300,
+                  transition:"background 180ms,border-color 180ms,box-shadow 180ms",
+                  boxShadow:isOver?"0 0 0 2px "+col.color+"28,var(--shadow)":"none",
+                }}
+              >
+                {/* Column header */}
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:13,padding:"0 3px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{width:7,height:7,borderRadius:"50%",background:col.color,boxShadow:"0 0 7px "+col.color+"99",flexShrink:0}}/>
+                    <span style={{fontSize:"12px",fontWeight:700,letterSpacing:".01em"}}>{col.label}</span>
+                  </div>
+                  <span style={{fontSize:"11px",fontWeight:700,color:col.color,background:col.bg,border:"1px solid "+col.color+"33",borderRadius:99,padding:"1px 9px"}}>{colDeals.length}</span>
+                </div>
+
+                {/* Drop target placeholder */}
+                {isDraggingHere&&(
+                  <div style={{height:68,border:"2px dashed "+col.color+"55",borderRadius:"var(--radius-sm)",marginBottom:9,display:"flex",alignItems:"center",justifyContent:"center",background:col.bg,transition:"all 150ms"}}>
+                    <span style={{fontSize:"11px",color:col.color,fontWeight:600,opacity:.75}}>Drop here</span>
+                  </div>
+                )}
+
+                {/* Cards */}
+                <div style={{display:"flex",flexDirection:"column",gap:9}}>
+                  {colDeals.map(d=>{
+                    const isBeingDragged = dragging===d.id;
+                    const isDropping = dropAnim===d.id;
+                    return (
+                      <div
+                        key={d.id}
+                        draggable
+                        onDragStart={e=>{setDragging(d.id);e.dataTransfer.effectAllowed="move";}}
+                        onDragEnd={()=>{setDragging(null);setDragOver(null);}}
+                        onClick={()=>!dragging&&setPage("deal-room")}
+                        style={{
+                          background:"var(--surface2)",
+                          border:"1px solid "+(isBeingDragged?col.color+"66":"var(--border)"),
+                          borderRadius:"var(--radius)",
+                          padding:"13px 13px 11px",
+                          cursor:isBeingDragged?"grabbing":"grab",
+                          opacity:isBeingDragged?0.35:1,
+                          transform:isBeingDragged?"rotate(1.8deg) scale(1.03)":"none",
+                          transition:"opacity 160ms,transform 160ms,box-shadow 180ms,border-color 160ms",
+                          boxShadow:isBeingDragged?"var(--shadow-lg)":"var(--shadow-sm)",
+                          animation:isDropping?"cardDrop 420ms cubic-bezier(.16,1,.3,1) both":"none",
+                          userSelect:"none",
+                          position:"relative",
+                        }}
+                      >
+                        {/* 2×2 drag-handle dots */}
+                        <div style={{position:"absolute",top:9,right:10,display:"flex",flexDirection:"column",gap:2.5,opacity:.2,pointerEvents:"none"}}>
+                          {[0,1].map(r=>(
+                            <div key={r} style={{display:"flex",gap:2.5}}>
+                              {[0,1].map(c=><div key={c} style={{width:3,height:3,borderRadius:"50%",background:"var(--text)"}}/>)}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Creator row */}
+                        <div style={{display:"flex",gap:9,alignItems:"center",marginBottom:10}}>
+                          <div style={{width:32,height:32,borderRadius:"50%",background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",fontWeight:700,color:"white",flexShrink:0}}>{d.ci2}</div>
+                          <div style={{minWidth:0,flex:1}}>
+                            <div style={{fontSize:"13px",fontWeight:700,lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.creator}</div>
+                            <div style={{fontSize:"11px",color:"var(--text3)",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.campaign}</div>
+                          </div>
+                        </div>
+
+                        {/* Amount + platform */}
+                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                          <span style={{fontSize:"16px",fontWeight:800,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</span>
+                          <PlatformBadge p={d.platform}/>
+                        </div>
+
+                        {/* Badges */}
+                        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                          {d.escrow&&<EscrowBadge released={false}/>}
+                          {d.source==="external"?<ExtBadge/>:<span className="badge badge-blue" style={{fontSize:"10px"}}>Bridgn</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Empty column state */}
+                {colDeals.length===0&&!isDraggingHere&&(
+                  <div style={{height:90,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,opacity:.28}}>
+                    <div style={{fontSize:18,letterSpacing:6}}>· · ·</div>
+                    <div style={{fontSize:"11px",fontWeight:500,color:"var(--text3)"}}>Empty</div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -3893,7 +4548,7 @@ function ContentLibraryPage() {
       </div>
       {list.length===0?(
         <div className="card" style={{padding:"56px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
-          <div style={{fontSize:"40px",marginBottom:16}}>🎬</div>
+          <EmptySVG type="content" size={136}/>
           <div style={{fontSize:"16px",fontWeight:700,marginBottom:10}}>No content yet</div>
           <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.75}}>Delivered content from creators will appear here once deals are completed.</div>
         </div>
@@ -3991,7 +4646,7 @@ function AffiliateManagerPage() {
           <thead><tr><th>Creator</th><th>Campaign</th><th>Code / Link</th><th>Clicks</th><th>Conversions</th><th>Revenue</th><th>Commission</th><th>Rate</th><th></th></tr></thead>
           <tbody>
             {links.length===0?(
-              <tr><td colSpan={9} style={{textAlign:"center",padding:"40px 20px",color:"var(--text2)",fontSize:"13px"}}>No affiliate links yet. Create one to start tracking conversions.</td></tr>
+              <tr><td colSpan={9} style={{textAlign:"center",padding:"40px 20px"}}><EmptySVG type="affiliate" size={110}/><div style={{fontSize:"13px",fontWeight:600,color:"var(--text2)",marginTop:4}}>No affiliate links yet — create one to start tracking conversions.</div></td></tr>
             ):links.map(a=>(
               <tr key={a.id}>
                 <td><div style={{display:"flex",gap:8,alignItems:"center"}}><div style={{width:26,height:26,borderRadius:"50%",background:bc(a.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"9px",fontWeight:700,color:"white",flexShrink:0}}>{a.creator.split(" ").map(n=>n[0]).join("")}</div><span style={{fontWeight:500}}>{a.creator}</span></div></td>
@@ -4116,7 +4771,7 @@ function CreatorScorecardsPage() {
       <div className="ph-row"><div><div className="page-title">Creator Scorecards</div><div className="page-subtitle">Rate creators after each campaign. Build your own private track record.</div></div><button className="btn btn-primary" onClick={()=>{setModal(true);setSubmitted(false);}}>+ Rate a Creator</button></div>
       {cards.length===0&&(
         <div className="card" style={{padding:"48px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
-          <div style={{fontSize:"36px",marginBottom:14}}>🏅</div>
+          <EmptySVG type="scorecards" size={132}/>
           <div style={{fontSize:"16px",fontWeight:600,marginBottom:8}}>No scorecards yet</div>
           <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7}}>After completing a deal, rate your creator partners here to build your private track record.</div>
         </div>
@@ -4190,7 +4845,7 @@ function TeamManagementPage() {
       <div className="ph-row"><div><div className="page-title">Team</div><div className="page-subtitle">Manage who on your team has access to Bridgn.</div></div><button className="btn btn-primary" onClick={()=>{setModal(true);setSent(false);}}>+ Invite Member</button></div>
       {members.length===0&&(
         <div className="card" style={{padding:"40px 20px",textAlign:"center",marginBottom:16}}>
-          <div style={{fontSize:"32px",marginBottom:12}}>👥</div>
+          <EmptySVG type="team" size={128}/>
           <div style={{fontSize:"15px",fontWeight:600,marginBottom:6}}>No team members yet</div>
           <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65}}>Invite colleagues to collaborate on campaigns and deals.</div>
         </div>
@@ -4376,7 +5031,7 @@ function ShortlistsPage({setPage,setSelected}) {
       <div className="ph-row"><div><div className="page-title">Shortlists</div><div className="page-subtitle">Save creators to curated lists for each campaign or brief.</div></div><button className="btn btn-primary" onClick={()=>setModal(true)}>+ New List</button></div>
       {lists.length===0&&(
         <div className="card" style={{padding:"48px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
-          <div style={{fontSize:"36px",marginBottom:14}}>⭐</div>
+          <EmptySVG type="shortlists" size={132}/>
           <div style={{fontSize:"16px",fontWeight:600,marginBottom:8}}>No shortlists yet</div>
           <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:24}}>Create a list to save and organize creators for each campaign or brief.</div>
           <button className="btn btn-primary" onClick={()=>setModal(true)}>+ New List</button>
@@ -4428,7 +5083,7 @@ function MessagesPage({setPage}) {
         </div>
       </div>
       <div className="card" style={{padding:"56px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
-        <div style={{fontSize:"40px",marginBottom:16}}>💬</div>
+        <EmptySVG type="messages" size={136}/>
         <div style={{fontSize:"16px",fontWeight:700,marginBottom:10}}>No messages yet</div>
         <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.75,marginBottom:28}}>
           Messages are tied to active deals. Once you have a live deal, all communication with your partner happens directly inside the Deal Room — keeping everything in one place.
@@ -4789,6 +5444,92 @@ function AuthScreen({onAuth}) {
   );
 }
 
+// ─── MOBILE BOTTOM NAV ───────────────────────────────────────────────────────
+function MobBottomNav({role, page, setPage}) {
+  const IC = ({d,d2,filled,active}) => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+      style={{transition:"transform .2s cubic-bezier(.34,1.56,.64,1)",transform:active?"scale(1.08)":"scale(1)"}}>
+      <path d={d} stroke={active?"var(--accent)":"var(--text3)"} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
+        fill={filled&&active?"rgba(91,138,245,.18)":"none"} style={{transition:"stroke .2s,fill .2s"}}/>
+      {d2&&<path d={d2} stroke={active?"var(--accent)":"var(--text3)"} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{transition:"stroke .2s"}}/>}
+    </svg>
+  );
+
+  const creatorTabs = [
+    {key:"dashboard", label:"Home",
+      icon:(a)=><IC active={a} filled d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H15v-6H9v6H4a1 1 0 0 1-1-1z"/>},
+    {key:"deals", label:"Deals",
+      icon:(a)=><IC active={a} filled
+        d="M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"
+        d2="M8 7V5a2 2 0 0 1 4 0v2M16 7V5a2 2 0 0 0-4 0v2M9 12h6"/>},
+    {key:"messages", label:"Messages",
+      icon:(a)=><IC active={a} filled d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H7l-4 3V5a1 1 0 0 1 1-1z"/>},
+    {key:"calendar", label:"Calendar",
+      icon:(a)=><IC active={a} filled
+        d="M4 5h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"
+        d2="M8 3v4M16 3v4M3 10h18"/>},
+    {key:"public-profile", label:"Profile",
+      icon:(a)=><IC active={a} filled
+        d="M20 21v-1a7 7 0 0 0-7-7H11a7 7 0 0 0-7 7v1"
+        d2="M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>},
+  ];
+
+  const brandTabs = [
+    {key:"dashboard", label:"Home",
+      icon:(a)=><IC active={a} filled d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H15v-6H9v6H4a1 1 0 0 1-1-1z"/>},
+    {key:"browse", label:"Browse",
+      icon:(a)=><IC active={a} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>},
+    {key:"messages", label:"Messages",
+      icon:(a)=><IC active={a} filled d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H7l-4 3V5a1 1 0 0 1 1-1z"/>},
+    {key:"campaigns", label:"Campaigns",
+      icon:(a)=><IC active={a} filled
+        d="M3 8h18M3 12h18M3 16h12"
+        d2="M19 14l3 2-3 2v-4z"/>},
+    {key:"deals", label:"Deals",
+      icon:(a)=><IC active={a} filled
+        d="M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"
+        d2="M8 7V5a2 2 0 0 1 4 0v2M16 7V5a2 2 0 0-4 0v2M9 12h6"/>},
+  ];
+
+  const tabs = role==="creator" ? creatorTabs : brandTabs;
+
+  return (
+    <nav className="mob-bottom-nav" style={{alignItems:"stretch"}}>
+      {tabs.map(tab=>{
+        const active = page===tab.key ||
+          (tab.key==="dashboard" && page==="dashboard");
+        return (
+          <button key={tab.key} onClick={()=>setPage(tab.key)}
+            style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",
+                    justifyContent:"center",gap:3,border:"none",background:"none",
+                    cursor:"pointer",padding:"4px 0 6px",position:"relative",
+                    WebkitTapHighlightColor:"transparent"}}>
+            {/* Glowing indicator pill */}
+            {active&&(
+              <span style={{
+                position:"absolute",top:0,left:"50%",
+                width:32,height:3,borderRadius:99,
+                background:"var(--accent)",
+                boxShadow:"0 0 6px var(--accent),0 0 14px rgba(91,138,245,.55),0 0 28px rgba(91,138,245,.25)",
+                animation:"tabIndicator .28s cubic-bezier(.16,1,.3,1) both",
+              }}/>
+            )}
+            <span key={active?"on":"off"} style={{animation:active?"tabIconPop .3s cubic-bezier(.34,1.56,.64,1) both":"none"}}>
+              {tab.icon(active)}
+            </span>
+            <span style={{
+              fontSize:"9.5px",fontWeight:active?700:500,
+              letterSpacing:".04em",textTransform:"uppercase",
+              color:active?"var(--accent)":"var(--text3)",
+              transition:"color .2s",lineHeight:1,
+            }}>{tab.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
 // ─── APP ──────────────────────────────────────────────────────────────────────
 function App() {
   const [authUser,setAuthUser] = useState(null);
@@ -4796,7 +5537,7 @@ function App() {
   const [role,setRole] = useState("creator");
   const [page,setPage] = useState("dashboard");
   const [selected,setSelected] = useState(null);
-  const [deals,setDeals] = useState(CREATOR_DEALS_INIT);
+  const [deals,setDeals] = useState([]);
   const [availStatus,setAvailStatus] = useState("open");
   const [mobSidebar,setMobSidebar] = useState(false);
   const [socialLinks,setSocialLinks] = useState({ig:"",tt:"",yt:"",tw:"",web:"",bio:"",location:""});
@@ -4929,6 +5670,7 @@ function App() {
           </div>
         </main>
       </div>
+      <MobBottomNav role={role} page={page} setPage={setPage}/>
     </div>
   );
 }
