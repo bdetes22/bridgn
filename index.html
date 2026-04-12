@@ -366,6 +366,14 @@ const CAL_EVENTS = [
   {day:30,label:"All — Monthly reporting due",color:"#f0a050",creator:"All creators",campaign:"All"},
 ];
 
+const SOCIALS = [
+  {key:"ig",  label:"Instagram",        icon:"📸", color:"#e1306c", placeholder:"@yourhandle"},
+  {key:"tt",  label:"TikTok",           icon:"♪",  color:"#69c9d0", placeholder:"@yourhandle"},
+  {key:"yt",  label:"YouTube Channel",  icon:"▶",  color:"#ff0000", placeholder:"youtube.com/c/yourchannel"},
+  {key:"tw",  label:"Twitter / X",      icon:"𝕏",  color:"#94a3b8", placeholder:"@yourhandle"},
+  {key:"web", label:"Personal Website", icon:"🌐", color:"#6366f1", placeholder:"https://yoursite.com"},
+];
+
 // ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
 function PlatformBadge({p}) {
   const map = {Instagram:["pb pb-ig","📸"],YouTube:["pb pb-yt","▶"],TikTok:["pb pb-tt","♪"],Twitter:["pb pb-tw","𝕏"]};
@@ -542,6 +550,7 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle}) {
               <div style={{fontSize:13,fontWeight:600,marginTop:3}}>{userInitials}</div>
               <div style={{fontSize:11,color:"var(--text3)",marginTop:2,textTransform:"capitalize"}}>{role} Account</div>
             </div>
+            <button onClick={()=>{setShowMenu(false);setPage("profile-settings");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>⚙️ Profile Settings</button>
             <button onClick={()=>{setShowMenu(false);setPage("public-profile");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>👤 My Profile</button>
             <button onClick={()=>{setShowMenu(false);setPage("notifications");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>🔔 Notifications</button>
             <div style={{height:1,background:"var(--border)"}}></div>
@@ -2048,10 +2057,11 @@ function RateCardPage() {
 }
 
 // ─── MEDIA KIT ────────────────────────────────────────────────────────────────
-function MediaKitPage({userName,userInitials}) {
+function MediaKitPage({userName,userInitials,socialLinks={}}) {
   const loading = useSkeleton();
-  const [preview,setPreview] = useState(false);const [bio,setBio] = useState("");const [tagline,setTagline] = useState("");
+  const [preview,setPreview] = useState(false);const [tagline,setTagline] = useState("");
   const g=bg(0);const handle=(userName||"you").toLowerCase().replace(/\s+/g,"");
+  const bio=socialLinks.bio||"";
   if(loading) return <SkeletonPage layout="profile"/>;
   if(preview) return (
     <div className="fade-in">
@@ -2059,17 +2069,32 @@ function MediaKitPage({userName,userInitials}) {
       <div style={{background:"var(--surface)",borderRadius:"var(--radius-lg)",overflow:"hidden",boxShadow:"var(--shadow-lg)",maxWidth:720,margin:"0 auto"}}>
         <div style={{height:170,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",position:"relative",display:"flex",alignItems:"flex-end",padding:"22px 28px",gap:18}}>
           <div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>
-          <div style={{flex:1}}><div style={{fontFamily:"Syne,sans-serif",fontSize:"24px",color:"white",fontWeight:700}}>{userName}</div></div>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"24px",color:"white",fontWeight:700}}>{userName}</div>
+            {socialLinks.location&&<div style={{fontSize:"11px",color:"rgba(255,255,255,.65)",marginTop:3}}>📍 {socialLinks.location}</div>}
+          </div>
           <div style={{textAlign:"right"}}><div style={{fontSize:"11px",fontWeight:700,color:"rgba(255,255,255,.6)",textTransform:"uppercase",letterSpacing:".08em"}}>bridgn.com/{handle}</div></div>
         </div>
         <div style={{padding:"24px 28px"}}>
-          <div style={{fontStyle:"italic",fontSize:"14px",color:"var(--text2)",lineHeight:1.75,borderLeft:"3px solid var(--accent)",paddingLeft:14,marginBottom:22}}>{tagline}</div>
+          {tagline&&<div style={{fontStyle:"italic",fontSize:"14px",color:"var(--text2)",lineHeight:1.75,borderLeft:"3px solid var(--accent)",paddingLeft:14,marginBottom:22}}>{tagline}</div>}
           <div className="det-stats" style={{gridTemplateColumns:"repeat(4,1fr)",marginBottom:22}}>
             {[["—","Followers"],["—","Engagement"],["—","Authenticity"],["—","Rating"]].map(([v,l],i)=>(
               <div key={i} className="det-stat"><div className="det-stat-v" style={{color:"var(--accent)"}}>{v}</div><div className="det-stat-l">{l}</div></div>
             ))}
           </div>
-          <div style={{marginBottom:20}}><div className="det-sec-title" style={{marginBottom:8}}>About</div><p style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.75}}>{bio}</p></div>
+          {bio&&<div style={{marginBottom:20}}><div className="det-sec-title" style={{marginBottom:8}}>About</div><p style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.75,margin:0}}>{bio}</p></div>}
+          {SOCIALS.filter(s=>socialLinks[s.key]?.trim()).length>0&&(
+            <div style={{marginBottom:20}}>
+              <div className="det-sec-title" style={{marginBottom:8}}>Find me on</div>
+              <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+                {SOCIALS.filter(s=>socialLinks[s.key]?.trim()).map(s=>(
+                  <div key={s.key} style={{display:"flex",alignItems:"center",gap:5,padding:"4px 10px",borderRadius:99,background:s.color+"18",border:`1px solid ${s.color}33`,fontSize:"11px",fontWeight:600,color:s.color}}>
+                    <span>{s.icon}</span><span>{socialLinks[s.key]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="g2">
             <div><div className="det-sec-title" style={{marginBottom:8}}>Services</div>{[["IG Feed Post","$1,200–$2,500"],["IG Reel","$1,500–$3,200"],["TikTok","$800–$1,800"],["UGC","$500–$1,000"]].map(([s,r],i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid var(--border)",fontSize:"12px"}}><span style={{color:"var(--text2)"}}>{s}</span><span style={{fontWeight:600,color:"var(--accent)"}}>{r}</span></div>)}</div>
             <div><div className="det-sec-title" style={{marginBottom:8}}>Audience</div><div style={{fontSize:"12px",color:"var(--text2)",lineHeight:2}}>🇺🇸 68% United States<br/>👩 58% Female<br/>📊 Ages 25–34 primary</div></div>
@@ -2083,9 +2108,16 @@ function MediaKitPage({userName,userInitials}) {
       <div className="ph-row"><div><div className="page-title">Media Kit Builder</div><div className="page-subtitle">Create a shareable one-pager brands can view or download.</div></div><button className="btn btn-primary" onClick={()=>setPreview(true)}>Preview Kit</button></div>
       <div className="g2" style={{gap:22}}>
         <div className="card-lg" style={{padding:24}}>
-          <div className="fg"><label className="fl">Tagline</label><input className="fi" value={tagline} onChange={e=>setTagline(e.target.value)}/></div>
-          <div className="fg"><label className="fl">About You</label><textarea className="fta" value={bio} onChange={e=>setBio(e.target.value)}></textarea></div>
-          <div style={{padding:"12px 14px",background:"var(--surface2)",borderRadius:"var(--radius)",border:"1px solid var(--border)",fontSize:"12px",color:"var(--text2)"}}>📊 Your verified analytics and stats are pulled automatically from your profile.</div>
+          <div className="fg"><label className="fl">Tagline</label><input className="fi" value={tagline} onChange={e=>setTagline(e.target.value)} placeholder="e.g. Lifestyle creator with 200K+ audience"/></div>
+          <div style={{padding:"12px 14px",background:"var(--surface2)",borderRadius:"var(--radius)",border:"1px solid var(--border)",fontSize:"12px",color:"var(--text2)",marginBottom:14}}>📊 Your verified analytics and stats are pulled automatically from your profile.</div>
+          <div style={{padding:"12px 14px",background:bio?"rgba(52,211,153,.06)":"var(--surface2)",borderRadius:"var(--radius)",border:"1px solid "+(bio?"rgba(52,211,153,.25)":"var(--border)"),fontSize:"12px",color:"var(--text2)"}}>
+            {bio?<><span style={{color:"var(--green)",fontWeight:700}}>✓</span> Bio pulled from Profile Settings: <em>"{bio.slice(0,60)}{bio.length>60?"…":""}"</em></>:<>✏️ Add a bio in <strong>Profile Settings</strong> — it will appear here automatically.</>}
+          </div>
+          {SOCIALS.filter(s=>socialLinks[s.key]?.trim()).length>0&&(
+            <div style={{padding:"12px 14px",background:"rgba(52,211,153,.06)",borderRadius:"var(--radius)",border:"1px solid rgba(52,211,153,.25)",fontSize:"12px",color:"var(--text2)",marginTop:10}}>
+              <span style={{color:"var(--green)",fontWeight:700}}>✓</span> {SOCIALS.filter(s=>socialLinks[s.key]?.trim()).length} social profile{SOCIALS.filter(s=>socialLinks[s.key]?.trim()).length>1?"s":""} linked from Profile Settings.
+            </div>
+          )}
         </div>
         <div>
           <div className="card-lg" style={{padding:"16px 20px",marginBottom:12}}>
@@ -2168,11 +2200,84 @@ function InvoicesPage({role}) {
   );
 }
 
+// ─── PROFILE SETTINGS ─────────────────────────────────────────────────────────
+function ProfileSettingsPage({socialLinks,setSocialLinks,userName,userInitials}) {
+  const loading = useSkeleton();
+  const [local,setLocal] = useState(socialLinks);
+  const [verified,setVerified] = useState({ig:false,tt:false,yt:false,tw:false,web:false});
+  const [toast,setToast] = useState(null);
+  const up=(k,v)=>{setLocal(l=>({...l,[k]:v}));if(verified[k])setVerified(p=>({...p,[k]:false}));};
+  const verify=(k)=>{if(local[k].trim())setVerified(p=>({...p,[k]:true}));};
+  const save=()=>{setSocialLinks(local);setToast({m:"Profile saved",e:"✓"});};
+  const g=bg(0);
+  if(loading) return <SkeletonPage layout="form"/>;
+  return (
+    <div className="fade-in">
+      <div className="ph-row"><div><div className="page-title">Profile Settings</div><div className="page-subtitle">Manage your public profile, social links, and bio.</div></div></div>
+
+      {/* Avatar + name preview */}
+      <div className="card-lg" style={{padding:20,marginBottom:20,display:"flex",alignItems:"center",gap:16}}>
+        <div style={{width:60,height:60,borderRadius:16,background:`linear-gradient(135deg,${g[0]},${g[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"22px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>
+        <div>
+          <div style={{fontSize:"16px",fontWeight:700}}>{userName}</div>
+          <div style={{fontSize:"12px",color:"var(--text3)",marginTop:3}}>bridgn.com/{(userName||"you").toLowerCase().replace(/\s+/g,"")}</div>
+        </div>
+      </div>
+
+      {/* Social Profiles */}
+      <div className="card-lg" style={{padding:24,marginBottom:20}}>
+        <div style={{fontSize:"14px",fontWeight:700,marginBottom:4}}>Your Social Profiles</div>
+        <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:18}}>Add your handles and URLs. Click Verify to confirm each link is saved.</div>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {SOCIALS.map(s=>(
+            <div key={s.key} style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{width:34,height:34,borderRadius:9,background:s.color+"22",border:`1px solid ${s.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"16px",flexShrink:0}}>{s.icon}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:"11px",fontWeight:600,color:"var(--text3)",marginBottom:4,textTransform:"uppercase",letterSpacing:".05em"}}>{s.label}</div>
+                <input
+                  className="fi"
+                  style={{margin:0}}
+                  value={local[s.key]}
+                  onChange={e=>up(s.key,e.target.value)}
+                  placeholder={s.placeholder}
+                />
+              </div>
+              {verified[s.key]?(
+                <div style={{width:70,height:34,borderRadius:"var(--radius-sm)",background:"rgba(52,211,153,.12)",border:"1px solid rgba(52,211,153,.3)",display:"flex",alignItems:"center",justifyContent:"center",gap:5,flexShrink:0}}>
+                  <span style={{color:"var(--green)",fontWeight:700,fontSize:13}}>✓ Saved</span>
+                </div>
+              ):(
+                <button
+                  onClick={()=>verify(s.key)}
+                  disabled={!local[s.key].trim()}
+                  className="btn btn-secondary btn-sm"
+                  style={{flexShrink:0,width:70,opacity:local[s.key].trim()?1:.45}}
+                >Verify</button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bio + Location */}
+      <div className="card-lg" style={{padding:24,marginBottom:24}}>
+        <div style={{fontSize:"14px",fontWeight:700,marginBottom:16}}>About You</div>
+        <div className="fg"><label className="fl">Bio</label><textarea className="fta" value={local.bio} onChange={e=>up("bio",e.target.value)} placeholder="Tell brands what you do, your niche, your audience, and what makes you unique..." style={{minHeight:100}}/></div>
+        <div className="fg" style={{marginBottom:0}}><label className="fl">Location</label><input className="fi" value={local.location} onChange={e=>up("location",e.target.value)} placeholder="e.g. Los Angeles, CA"/></div>
+      </div>
+
+      <button onClick={save} className="btn btn-primary btn-lg" style={{width:"100%"}}>Save Profile</button>
+      {toast&&<Toast msg={toast.m} emoji={toast.e} onDone={()=>setToast(null)}/>}
+    </div>
+  );
+}
+
 // ─── PUBLIC PROFILE ───────────────────────────────────────────────────────────
-function PublicProfilePage({setPage,userName,userInitials}) {
+function PublicProfilePage({setPage,userName,userInitials,socialLinks={}}) {
   const loading = useSkeleton();
   const [copied,setCopied] = useState(false);const [bookingModal,setBookingModal] = useState(false);const [bookForm,setBookForm] = useState({name:"",email:"",budget:"",platform:"Instagram",description:""});const [bookSent,setBookSent] = useState(false);
   const g=bg(0);const handle=(userName||"you").toLowerCase().replace(/\s+/g,"");const copy=()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);};
+  const activeSocials=SOCIALS.filter(s=>socialLinks[s.key]?.trim());
   if(loading) return <SkeletonPage layout="profile"/>;
   return (
     <div className="fade-in">
@@ -2185,7 +2290,10 @@ function PublicProfilePage({setPage,userName,userInitials}) {
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(0,0,0,.6),transparent)"}}></div>
           <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"22px 26px",display:"flex",gap:16,alignItems:"flex-end"}}>
             <div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2.5px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>
-            <div style={{flex:1}}><div style={{fontSize:"22px",fontWeight:700,color:"white",fontFamily:"Syne,sans-serif"}}>{userName}</div></div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:"22px",fontWeight:700,color:"white",fontFamily:"Syne,sans-serif"}}>{userName}</div>
+              {socialLinks.location&&<div style={{fontSize:"12px",color:"rgba(255,255,255,.7)",marginTop:3}}>📍 {socialLinks.location}</div>}
+            </div>
             <button onClick={()=>setBookingModal(true)} className="btn btn-primary btn-lg" style={{flexShrink:0}}>Work With Me</button>
           </div>
         </div>
@@ -2195,6 +2303,17 @@ function PublicProfilePage({setPage,userName,userInitials}) {
               <div key={i} className="det-stat"><div className="det-stat-v">{v}</div><div className="det-stat-l">{l}</div></div>
             ))}
           </div>
+          {socialLinks.bio&&<p style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.75,marginTop:18,marginBottom:0,paddingTop:18,borderTop:"1px solid var(--border)"}}>{socialLinks.bio}</p>}
+          {activeSocials.length>0&&(
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:18,paddingTop:18,borderTop:"1px solid var(--border)"}}>
+              {activeSocials.map(s=>(
+                <div key={s.key} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 12px",borderRadius:99,background:s.color+"18",border:`1px solid ${s.color}33`,fontSize:"12px",fontWeight:600,color:s.color}}>
+                  <span style={{fontSize:"13px"}}>{s.icon}</span>
+                  <span>{socialLinks[s.key]}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       {bookingModal&&(
@@ -3914,6 +4033,7 @@ function App() {
   const [deals,setDeals] = useState([]);
   const [availStatus,setAvailStatus] = useState("open");
   const [mobSidebar,setMobSidebar] = useState(false);
+  const [socialLinks,setSocialLinks] = useState({ig:"",tt:"",yt:"",tw:"",web:"",bio:"",location:""});
 
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
@@ -3969,9 +4089,10 @@ function App() {
         case "analytics":    return React.createElement(CreatorAnalyticsPage,{});
         case "calendar":     return React.createElement(ContentCalendarPage,{deals});
         case "rate-card":    return React.createElement(RateCardPage,{});
-        case "media-kit":    return React.createElement(MediaKitPage,{userName,userInitials});
+        case "media-kit":    return React.createElement(MediaKitPage,{userName,userInitials,socialLinks});
         case "invoices":     return React.createElement(InvoicesPage,{role});
-        case "public-profile": return React.createElement(PublicProfilePage,{setPage,userName,userInitials});
+        case "public-profile": return React.createElement(PublicProfilePage,{setPage,userName,userInitials,socialLinks});
+        case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks,userName,userInitials});
         case "earnings":     return React.createElement(EarningsPage,{});
         case "contracts":    return React.createElement(ContractVaultPage,{});
         case "availability": return React.createElement(AvailabilityPage,{});
@@ -4000,6 +4121,7 @@ function App() {
         case "invoices":      return React.createElement(InvoicesPage,{role});
         case "messages":      return React.createElement(MessagesPage,{setPage});
         case "notifications": return React.createElement(NotificationsPage,{setPage});
+        case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks,userName,userInitials});
         default:              return React.createElement(BrandDashboard,{setPage,setSelected});
       }
     }
