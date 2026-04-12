@@ -201,6 +201,7 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes slideIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes modalIn{from{opacity:0;transform:scale(.93) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes amberGlow{0%,100%{box-shadow:0 0 0 0 rgba(240,160,80,0)}50%{box-shadow:0 0 18px rgba(240,160,80,.18)}}
 .fade-in{animation:fadeInScale .3s cubic-bezier(.16,1,.3,1)}
 .page-enter{animation:pageEnter .25s ease-out both}
@@ -764,6 +765,94 @@ function Skel({w="100%",h=14,r=6,style}){
   return <div className="skel" style={{width:w,height:h,borderRadius:r,flexShrink:0,...style}}/>;
 }
 
+// ── CONFETTI SYSTEM ───────────────────────────────────────────────────────────
+function useConfetti() {
+  const [firing,setFiring] = useState(false);
+  const timerRef = useRef(null);
+  const fire = () => {
+    setFiring(true);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(()=>setFiring(false), 2700);
+  };
+  useEffect(()=>()=>clearTimeout(timerRef.current),[]);
+  return [fire, firing];
+}
+
+function ConfettiCanvas({active}) {
+  const canvasRef = useRef(null);
+  const rafRef = useRef(null);
+
+  useEffect(()=>{
+    const canvas = canvasRef.current;
+    if(!canvas) return;
+    if(!active){
+      cancelAnimationFrame(rafRef.current);
+      canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+      return;
+    }
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
+
+    const COLORS = ['#5b8af5','#a78bfa','#f0a050','#34d399','#0891b2','#c084fc','#fbbf24','#60a5fa','#f472b6','#34d399'];
+
+    const mkP = (ox,oy,spread,speedMult=1) => ({
+      x: ox+(Math.random()-.5)*spread, y: oy,
+      vx: (Math.random()-.5)*15*speedMult,
+      vy: -(Math.random()*13+4)*speedMult,
+      color: COLORS[Math.floor(Math.random()*COLORS.length)],
+      w: Math.random()*9+4, h: Math.random()*5+2,
+      angle: Math.random()*Math.PI*2,
+      spin: (Math.random()-.5)*.28,
+      gravity: .27+Math.random()*.12,
+      drag: .992,
+      shape: Math.random()>.3?'rect':'dot',
+    });
+
+    let particles = [];
+    const cx=canvas.width*.5, cy=canvas.height*.26;
+
+    // Wave 1 — center burst
+    for(let i=0;i<90;i++) particles.push(mkP(cx,cy,60));
+
+    // Wave 2 — side cannons (220ms later)
+    const t2=setTimeout(()=>{
+      for(let i=0;i<55;i++) particles.push(mkP(canvas.width*.1,canvas.height*.35,30,1.1));
+      for(let i=0;i<55;i++) particles.push(mkP(canvas.width*.9,canvas.height*.35,30,1.1));
+    },220);
+
+    const start=Date.now(), duration=2500;
+
+    const draw=()=>{
+      const elapsed=Date.now()-start;
+      if(elapsed>duration){ ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const fadeAt=duration-700;
+      const gA=elapsed>fadeAt?1-(elapsed-fadeAt)/700:1;
+      particles.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy; p.vy+=p.gravity; p.vx*=p.drag; p.angle+=p.spin;
+        if(p.y>canvas.height+30||p.x<-30||p.x>canvas.width+30) return;
+        ctx.save();
+        ctx.globalAlpha=gA;
+        ctx.fillStyle=p.color;
+        ctx.translate(p.x,p.y);
+        ctx.rotate(p.angle);
+        if(p.shape==='rect'){
+          ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+        } else {
+          ctx.beginPath(); ctx.arc(0,0,p.w/2.5,0,Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+      });
+      rafRef.current=requestAnimationFrame(draw);
+    };
+    rafRef.current=requestAnimationFrame(draw);
+    return()=>{ clearTimeout(t2); cancelAnimationFrame(rafRef.current); };
+  },[active]);
+
+  return <canvas ref={canvasRef} style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:9999,display:active?'block':'none'}}/>;
+}
+
 function SkeletonPage({layout="list"}){
   const Hdr=()=>(
     <div className="ph-row" style={{marginBottom:24}}>
@@ -984,18 +1073,79 @@ function SkeletonPage({layout="list"}){
 }
 
 // ─── CREATOR DASHBOARD ────────────────────────────────────────────────────────
-function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,userName}) {
+const ONBOARDING_STEPS = [
+  {key:"profile",   label:"Complete your profile",  desc:"Add your bio and location so brands know who you are", page:"profile-settings", icon:"👤", color:"var(--accent)"},
+  {key:"social",    label:"Add your social links",  desc:"Connect Instagram, TikTok, YouTube and more",         page:"profile-settings", icon:"🔗", color:"var(--purple)"},
+  {key:"analytics", label:"Upload your analytics",  desc:"Share verified stats to build instant brand trust",    page:"analytics",        icon:"📊", color:"var(--accent2)"},
+  {key:"deal",      label:"Create your first deal", desc:"Bring a brand partnership into Bridgn to manage it",  page:"new-deal",         icon:"🤝", color:"var(--green)"},
+];
+
+function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,userName,socialLinks={},onboarding={},updateOnboarding}) {
   const loading = useSkeleton();
+  const [showModal,setShowModal] = useState(!onboarding.seen);
+
+  // Compute step completion from real state
+  const stepDone = {
+    profile:   !!(socialLinks.bio?.trim()||socialLinks.location?.trim()),
+    social:    SOCIALS.some(s=>socialLinks[s.key]?.trim()),
+    analytics: !!onboarding.steps?.analytics,
+    deal:      deals.length > 0,
+  };
+  const doneCount = Object.values(stepDone).filter(Boolean).length;
+  const allDone = doneCount === 4;
+
+  const handleStep = step => {
+    if(step.key==="analytics") updateOnboarding&&updateOnboarding({steps:{analytics:true}});
+    setShowModal(false);
+    updateOnboarding&&updateOnboarding({seen:true});
+    setPage(step.page);
+  };
+  const handleLetsGo = () => {
+    setShowModal(false);
+    updateOnboarding&&updateOnboarding({seen:true});
+    setPage("profile-settings");
+  };
+  const handleDismiss = () => {
+    setShowModal(false);
+    updateOnboarding&&updateOnboarding({seen:true});
+  };
+
   if(loading) return <SkeletonPage layout="dashboard"/>;
   const active = deals.filter(d=>d.status==="Active");
   const external = deals.filter(d=>d.source==="external");
   const pendingEscrow = deals.filter(d=>d.escrow&&!d.escrowReleased&&d.status!=="Completed");
   const escrowTotal = pendingEscrow.reduce((s,d)=>s+d.amount,0);
+  const firstName = (userName||"there").split(" ")[0];
   return (
     <div className="fade-in">
       <AvailabilityBanner status={availStatus||"open"} setStatus={setAvailStatus}/>
+
+      {/* Onboarding progress bar */}
+      {!allDone&&(
+        <div style={{marginBottom:20,padding:"14px 18px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",display:"flex",gap:16,alignItems:"center"}}>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+              <span style={{fontSize:"13px",fontWeight:700}}>Getting started</span>
+              <span style={{fontSize:"12px",color:"var(--text3)",fontWeight:600}}>{doneCount} of 4 complete</span>
+            </div>
+            <div style={{height:5,background:"var(--surface2)",borderRadius:99,overflow:"hidden",position:"relative"}}>
+              <div style={{position:"absolute",inset:"0 auto 0 0",width:(doneCount/4*100)+"%",background:"linear-gradient(90deg,var(--accent),#c084fc,var(--accent2))",borderRadius:99,transition:"width .5s cubic-bezier(.16,1,.3,1)"}}/>
+            </div>
+            <div style={{display:"flex",gap:6,marginTop:9}}>
+              {ONBOARDING_STEPS.map(s=>(
+                <div key={s.key} style={{display:"flex",alignItems:"center",gap:4,fontSize:"11px",color:stepDone[s.key]?"var(--green)":"var(--text3)",fontWeight:stepDone[s.key]?700:400}}>
+                  <span>{stepDone[s.key]?"✓":""}</span><span style={{textDecoration:stepDone[s.key]?"line-through":"none"}}>{s.label.split(" ").slice(0,2).join(" ")}</span>
+                  {ONBOARDING_STEPS.indexOf(s)<3&&<span style={{color:"var(--border)",marginLeft:2}}>·</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+          <button onClick={()=>setShowModal(true)} className="btn btn-secondary btn-sm" style={{flexShrink:0}}>View checklist</button>
+        </div>
+      )}
+
       <div className="ph-row">
-        <div><div className="page-title">Good morning, {(userName||"there").split(" ")[0]}</div><div className="page-subtitle">Here is your creator overview for today.</div></div>
+        <div><div className="page-title">Good morning, {firstName}</div><div className="page-subtitle">Here is your creator overview for today.</div></div>
         <button className="btn btn-primary" onClick={()=>setPage("new-deal")}>+ New Deal</button>
       </div>
       <div className="g4 section">
@@ -1086,6 +1236,66 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
           </div>
         </div>
       </div>
+
+      {/* Welcome modal */}
+      {showModal&&(
+        <div style={{position:"fixed",inset:0,zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px",background:"rgba(4,6,15,.85)",backdropFilter:"blur(10px)"}}>
+          <div style={{width:"100%",maxWidth:500,background:"var(--surface)",borderRadius:24,overflow:"hidden",boxShadow:"0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06)",animation:"modalIn .4s cubic-bezier(.16,1,.3,1) both"}}>
+
+            {/* Header */}
+            <div style={{padding:"36px 32px 28px",background:"linear-gradient(135deg,#080e24 0%,#13082e 50%,#080e24 100%)",position:"relative",overflow:"hidden"}}>
+              {/* Glow blobs */}
+              <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(ellipse at 20% 50%,rgba(91,138,245,.3) 0%,transparent 55%),radial-gradient(ellipse at 80% 30%,rgba(167,139,250,.25) 0%,transparent 55%),radial-gradient(ellipse at 55% 90%,rgba(240,160,80,.12) 0%,transparent 50%)",pointerEvents:"none"}}/>
+              {/* Grid texture */}
+              <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(255,255,255,.025) 27px,rgba(255,255,255,.025) 28px),repeating-linear-gradient(90deg,transparent,transparent 27px,rgba(255,255,255,.025) 27px,rgba(255,255,255,.025) 28px)",pointerEvents:"none"}}/>
+              <div style={{position:"relative",zIndex:1}}>
+                <div style={{fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,letterSpacing:"-1px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",marginBottom:20,display:"inline-block"}}>Bridgn</div>
+                <div style={{fontSize:28,fontWeight:800,color:"white",fontFamily:"Syne,sans-serif",letterSpacing:"-.5px",lineHeight:1.15,marginBottom:10}}>Welcome, {firstName}! 🎉</div>
+                <div style={{fontSize:14,color:"rgba(255,255,255,.55)",lineHeight:1.65}}>You're {4-doneCount} step{4-doneCount!==1?"s":""} away from your first brand deal.<br/>Let's get your profile ready to go.</div>
+                {/* Mini progress dots */}
+                <div style={{display:"flex",gap:6,marginTop:20}}>
+                  {ONBOARDING_STEPS.map((s,i)=>(
+                    <div key={i} style={{height:4,flex:1,borderRadius:99,background:stepDone[s.key]?"linear-gradient(90deg,var(--accent),#c084fc)":"rgba(255,255,255,.12)",transition:"background .3s"}}/>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Checklist */}
+            <div style={{padding:"8px 0"}}>
+              {ONBOARDING_STEPS.map((s,i)=>{
+                const done = stepDone[s.key];
+                return (
+                  <div key={s.key} onClick={()=>handleStep(s)} style={{display:"flex",alignItems:"center",gap:14,padding:"13px 28px",cursor:"pointer",borderBottom:i<3?"1px solid var(--border)":"none",transition:"background .1s"}}
+                    onMouseEnter={e=>e.currentTarget.style.background="var(--surface2)"}
+                    onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                    {/* Step icon + checkbox */}
+                    <div style={{position:"relative",flexShrink:0}}>
+                      <div style={{width:40,height:40,borderRadius:12,background:done?s.color+"22":"var(--surface2)",border:"1.5px solid "+(done?s.color+"55":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px",transition:"all .2s"}}>{s.icon}</div>
+                      {done&&<div style={{position:"absolute",top:-4,right:-4,width:16,height:16,borderRadius:8,background:s.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"9px",fontWeight:800,color:"white",boxShadow:"0 0 0 2px var(--surface)"}}>✓</div>}
+                    </div>
+                    {/* Text */}
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:"14px",fontWeight:600,color:done?"var(--text3)":"var(--text)",textDecoration:done?"line-through":"none",marginBottom:2}}>{s.label}</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.4}}>{s.desc}</div>
+                    </div>
+                    {/* Arrow */}
+                    <span style={{color:"var(--text3)",fontSize:"18px",flexShrink:0,fontWeight:300}}>›</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer */}
+            <div style={{padding:"20px 28px 28px",display:"flex",gap:10,borderTop:"1px solid var(--border)"}}>
+              <button onClick={handleLetsGo} className="btn btn-primary btn-lg" style={{flex:1,background:"linear-gradient(135deg,var(--accent),#7c3aed)",border:"none"}}>
+                Let's go →
+              </button>
+              <button onClick={handleDismiss} className="btn btn-secondary btn-lg">Dismiss</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1454,6 +1664,7 @@ function CreatorDealsPage({setPage,setSelected,deals}) {
 // ─── DEAL ROOM ────────────────────────────────────────────────────────────────
 function DealRoomPage({setPage,setSelected,deals}) {
   const loading = useSkeleton();
+  const [fireConfetti,confettiFiring] = useConfetti();
   const [activeDeal,setActiveDeal] = useState(deals.find(d=>d.status==="Active")||deals[0]);
   const [msgInput,setMsgInput] = useState("");
   const [msgs,setMsgs] = useState([
@@ -1525,7 +1736,7 @@ function DealRoomPage({setPage,setSelected,deals}) {
             <div style={{fontSize:"14px",fontWeight:700,marginBottom:14}}>Deliverables</div>
             {DELIVERABLES.map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:i<DELIVERABLES.length-1?"1px solid var(--border)":"none"}}>
-                <div style={{width:22,height:22,borderRadius:6,background:approved[i]?"var(--green-bg)":"var(--surface2)",border:"1px solid "+(approved[i]?"rgba(52,211,153,.4)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",flexShrink:0,cursor:"pointer"}} onClick={()=>{const a=[...approved];a[i]=!a[i];setApproved(a);}}>{approved[i]?"✓":""}</div>
+                <div style={{width:22,height:22,borderRadius:6,background:approved[i]?"var(--green-bg)":"var(--surface2)",border:"1px solid "+(approved[i]?"rgba(52,211,153,.4)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",flexShrink:0,cursor:"pointer",transition:"all .15s"}} onClick={()=>{const a=[...approved];a[i]=!a[i];setApproved(a);if(a[i]) fireConfetti();}}>{approved[i]?"✓":""}</div>
                 <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:500}}>{d}</div></div>
                 {approved[i]&&<span className="badge badge-green" style={{fontSize:"10px"}}>Done</span>}
               </div>
@@ -1605,6 +1816,7 @@ function DealRoomPage({setPage,setSelected,deals}) {
           </div>
         </div>
       </div>
+      <ConfettiCanvas active={confettiFiring}/>
     </div>
   );
 }
@@ -1612,6 +1824,7 @@ function DealRoomPage({setPage,setSelected,deals}) {
 // ─── ACTIVE DEAL ──────────────────────────────────────────────────────────────
 function ActiveDealPage({deal:initDeal,setPage}) {
   const loading = useSkeleton();
+  const [fireConfetti,confettiFiring] = useConfetti();
   const [deal] = useState(initDeal);
   const [modal,setModal] = useState(null);
   const [signed,setSigned] = useState(false);
@@ -1732,10 +1945,10 @@ function ActiveDealPage({deal:initDeal,setPage}) {
                 <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Submit Content</div>
                 {!submitted?(
                   <>
-                    <div onClick={()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setSubmitted(true);},1400);}} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"28px",textAlign:"center",marginBottom:14,cursor:"pointer",background:"var(--bg)"}}>
+                    <div onClick={()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setSubmitted(true);fireConfetti();},1400);}} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"28px",textAlign:"center",marginBottom:14,cursor:"pointer",background:"var(--bg)"}}>
                       {submitting?<><div style={{fontSize:"20px",animation:"spin .9s linear infinite",display:"inline-block"}}>⟳</div><div style={{marginTop:6,fontSize:"13px"}}>Uploading...</div></>:<><div style={{fontSize:"24px",marginBottom:6}}>📁</div><div style={{fontSize:"13px",fontWeight:600}}>Drop files or click to upload</div><div style={{fontSize:"11px",color:"var(--text3)"}}>MP4, MOV, JPG, PNG</div></>}
                     </div>
-                    <button onClick={()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setSubmitted(true);},1400);}} disabled={submitting} className="btn btn-primary" style={{width:"100%"}}>Submit for Review</button>
+                    <button onClick={()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setSubmitted(true);fireConfetti();},1400);}} disabled={submitting} className="btn btn-primary" style={{width:"100%"}}>Submit for Review</button>
                   </>
                 ):(
                   <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:"40px",marginBottom:10}}>🎉</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:6}}>Content Submitted!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>{deal.brand} will review within 48 hours.</div><button onClick={()=>setModal(null)} className="btn btn-primary">Close</button></div>
@@ -1745,6 +1958,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
           </div>
         </Modal>
       )}
+      <ConfettiCanvas active={confettiFiring}/>
     </div>
   );
 }
@@ -1912,6 +2126,7 @@ function DisputePage({deal,setPage}) {
 function OfferPage({offer,setPage}) {
   const loading = useSkeleton();
   const [res,setRes] = useState(null);
+  const [fireConfetti,confettiFiring] = useConfetti();
   if(loading) return <SkeletonPage layout="detail"/>;
   if(!offer) return null;
   const o=offer;
@@ -1935,7 +2150,7 @@ function OfferPage({offer,setPage}) {
         </div>
         {res===null?(
           <div style={{display:"flex",gap:9}}>
-            <button className="btn btn-success btn-lg" style={{flex:1}} onClick={()=>setRes("accepted")}>Accept Offer</button>
+            <button className="btn btn-success btn-lg" style={{flex:1}} onClick={()=>{setRes("accepted");fireConfetti();}}>Accept Offer</button>
             <button className="btn btn-danger btn-lg" style={{flex:1}} onClick={()=>setRes("declined")}>Decline</button>
             <button className="btn btn-secondary btn-lg" onClick={()=>setPage("messages")}>Message</button>
           </div>
@@ -1947,6 +2162,7 @@ function OfferPage({offer,setPage}) {
           </div>
         )}
       </div>
+      <ConfettiCanvas active={confettiFiring}/>
     </div>
   );
 }
@@ -4318,6 +4534,24 @@ function App() {
   const [mobSidebar,setMobSidebar] = useState(false);
   const [socialLinks,setSocialLinks] = useState({ig:"",tt:"",yt:"",tw:"",web:"",bio:"",location:""});
   const [campaignQuestions,setCampaignQuestions] = useState({});
+  const [onboarding,setOnboarding] = useState({seen:false,steps:{analytics:false}});
+
+  // Load/save onboarding state from localStorage once user is known
+  useEffect(()=>{
+    if(!authUser) return;
+    try {
+      const raw = localStorage.getItem("bridgn_ob_"+authUser.id);
+      if(raw) setOnboarding(JSON.parse(raw));
+    } catch {}
+  },[authUser]);
+
+  const updateOnboarding = upd => {
+    setOnboarding(prev => {
+      const next = {...prev,...upd,steps:{...prev.steps,...(upd.steps||{})}};
+      try { localStorage.setItem("bridgn_ob_"+(authUser?.id||"guest"), JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
 
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
@@ -4361,7 +4595,7 @@ function App() {
   const render = () => {
     if(role==="creator") {
       switch(page) {
-        case "dashboard":    return React.createElement(CreatorDashboard,{setPage,setSelected,deals,availStatus,setAvailStatus,userName});
+        case "dashboard":    return React.createElement(CreatorDashboard,{setPage,setSelected,deals,availStatus,setAvailStatus,userName,socialLinks,onboarding,updateOnboarding});
         case "campaigns":    return React.createElement(CampaignsPage,{setPage,setSelected,campaignQuestions,setCampaignQuestions,userName});
         case "campaign-detail": return React.createElement(CampaignDetail,{campaign:selected,setPage});
         case "deals":        return React.createElement(CreatorDealsPage,{setPage,setSelected,deals});
