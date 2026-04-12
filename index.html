@@ -92,6 +92,12 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 .badge-blue{background:var(--accent-light);color:var(--accent);border:1px solid rgba(91,138,245,.18)}
 .badge-gray{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
 .badge-orange{background:var(--accent2-light);color:var(--accent2);border:1px solid rgba(240,160,80,.2)}
+.live-dot{position:relative;display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-right:5px}
+.live-dot::after{content:"";position:absolute;inset:0;border-radius:50%;animation:livePulse 2s ease-out infinite}
+.live-dot-green{background:var(--green);box-shadow:0 0 5px rgba(52,211,153,.6)}
+.live-dot-green::after{background:var(--green)}
+.live-dot-amber{background:var(--yellow);box-shadow:0 0 5px rgba(251,191,36,.5)}
+.live-dot-amber::after{background:var(--yellow)}
 .badge-purple{background:var(--purple-bg);color:var(--purple);border:1px solid rgba(167,139,250,.18)}
 .badge-teal{background:var(--teal-bg);color:var(--teal);border:1px solid rgba(8,145,178,.18)}
 .pb{display:inline-flex;align-items:center;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700}
@@ -166,6 +172,7 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 .divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:20px 0}
 .star-btn{background:none;border:none;cursor:pointer;font-size:21px;padding:2px;transition:transform .15s,filter .15s}
 .star-btn:hover{transform:scale(1.25);filter:drop-shadow(0 0 5px rgba(240,160,80,.45))}
+@keyframes livePulse{0%{transform:scale(1);opacity:.85}65%{transform:scale(1.45);opacity:0}100%{transform:scale(1.45);opacity:0}}
 @keyframes nebulaA{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(4%,3%) scale(1.06)}50%{transform:translate(-2%,6%) scale(.97)}75%{transform:translate(-5%,-2%) scale(1.04)}}
 @keyframes nebulaB{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-5%,-4%) scale(1.09)}66%{transform:translate(4%,-6%) scale(.94)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -356,7 +363,13 @@ function PlatformBadge({p}) {
 
 function StatusBadge({s}) {
   const cls = {Active:"badge badge-green",Pending:"badge badge-yellow",Completed:"badge badge-gray",Declined:"badge badge-red",Invited:"badge badge-blue",Expiring:"badge badge-orange",Expired:"badge badge-red",Draft:"badge badge-gray"};
-  return React.createElement("span",{className:cls[s]||"badge badge-gray"},s);
+  const dot = s==="Active"?"live-dot live-dot-green":s==="Pending"?"live-dot live-dot-amber":null;
+  return (
+    <span className={cls[s]||"badge badge-gray"}>
+      {dot&&<span className={dot}/>}
+      {s}
+    </span>
+  );
 }
 
 function Modal({onClose,children,maxWidth=520}) {
