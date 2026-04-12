@@ -525,8 +525,8 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle}) {
       </div>
       <span className="nav-logo" onClick={()=>setPage("dashboard")}>Bridgn</span>
       <div style={{marginRight:"auto",marginLeft:16}}>
-        <span style={{padding:"5px 14px",borderRadius:99,fontSize:12,fontWeight:700,background:role==="creator"?"rgba(91,138,245,.15)":"rgba(240,160,80,.15)",color:role==="creator"?"var(--accent)":"var(--accent2)",border:"1px solid "+(role==="creator"?"rgba(91,138,245,.3)":"rgba(240,160,80,.3)")}}>
-          {role==="creator"?"✨ Creator":"📋 Brand"}
+        <span style={{padding:"5px 14px",borderRadius:99,fontSize:12,fontWeight:700,background:role==="creator"?"rgba(91,138,245,.15)":role==="agency"?"rgba(167,139,250,.15)":"rgba(240,160,80,.15)",color:role==="creator"?"var(--accent)":role==="agency"?"var(--purple)":"var(--accent2)",border:"1px solid "+(role==="creator"?"rgba(91,138,245,.3)":role==="agency"?"rgba(167,139,250,.3)":"rgba(240,160,80,.3)")}}>
+          {role==="creator"?"✨ Creator":role==="agency"?"💼 Agency":"📋 Brand"}
         </span>
       </div>
       <NavClock/>
@@ -596,7 +596,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
     {k:"invoices",l:"Payments",i:"💳"},
     {k:"team",l:"Team",i:"👥"},
   ];
-  const nav = role==="creator"?cNav:bNav;
+  const nav = role==="creator"?cNav:bNav; // agency uses bNav
   return (
     <aside className={"sidebar"+(mobOpen?" mob-open":"")}>
       <div className="sidebar-mob-header" style={{alignItems:"center",justifyContent:"space-between",padding:"16px 14px 8px",borderBottom:"1px solid var(--border)",marginBottom:4}}>
@@ -620,7 +620,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
           <div className="nav-avatar" style={{flexShrink:0}}>{userInitials||"?"}</div>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontSize:"13px",fontWeight:600}}>{userName||"My Account"}</div>
-            <div style={{fontSize:"11px",color:"var(--text3)",marginTop:1}}>{role==="creator"?"Creator Account":"Brand Account"}</div>
+            <div style={{fontSize:"11px",color:"var(--text3)",marginTop:1}}>{role==="creator"?"Creator Account":role==="agency"?"Agency Account":"Brand Account"}</div>
           </div>
         </div>
       </div>
@@ -3662,7 +3662,7 @@ function CursorGlow() {
 
 function AuthScreen({onAuth}) {
   const [mode,setMode] = useState("login");
-  const [form,setForm] = useState({email:"",password:"",name:"",role:"creator"});
+  const [form,setForm] = useState({email:"",password:"",name:"",role:"creator",brands:""});
   const [loading,setLoading] = useState(false);
   const [error,setError] = useState("");
   const [success,setSuccess] = useState("");
@@ -3678,12 +3678,12 @@ function AuthScreen({onAuth}) {
 
   const handleSignup=async()=>{
     setError("");setSuccess("");
-    if(!form.name.trim()){setError(form.role==="brand"?"Please enter your company name.":"Please enter your name.");return;}
+    if(!form.name.trim()){setError(form.role==="brand"?"Please enter your company name.":form.role==="agency"?"Please enter your agency name.":"Please enter your name.");return;}
     if(form.password.length<6){setError("Password must be at least 6 characters.");return;}
     setLoading(true);
     const {data,error:e}=await supabase.auth.signUp({
       email:form.email,password:form.password,
-      options:{data:form.role==="brand"?{company_name:form.name,role:"brand"}:{full_name:form.name,role:"creator"}}
+      options:{data:form.role==="brand"?{company_name:form.name,role:"brand"}:form.role==="agency"?{company_name:form.name,role:"agency",...(form.brands.trim()?{brands_managed:form.brands.trim()}:{})}:{full_name:form.name,role:"creator"}}
     });
     setLoading(false);
     if(e){setError(e.message);return;}
@@ -3733,16 +3733,23 @@ function AuthScreen({onAuth}) {
               <div style={{fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Create your account</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Join Bridgn free — no credit card needed</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
-              <div className="fg"><label className="fl">{form.role==="brand"?"Company Name":"Full Name"}</label><input className="fi" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Halo Health, Acme Corp":"Your full name"}/></div>
+              <div className="fg"><label className="fl">{form.role==="brand"?"Company Name":form.role==="agency"?"Agency Name":"Full Name"}</label><input className="fi" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Halo Health, Acme Corp":form.role==="agency"?"e.g. Viral Nation, Whalar, Open Influence":"Your full name"}/></div>
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com"/></div>
               <div className="fg"><label className="fl">Password</label><input className="fi" type="password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="At least 6 characters"/></div>
               <div className="fg">
                 <label className="fl">I am joining as a...</label>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9,marginTop:4}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9,marginTop:4}}>
                   <button onClick={()=>up("role","creator")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="creator"?"var(--accent)":"var(--border)"),background:form.role==="creator"?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500,color:form.role==="creator"?"var(--accent)":"var(--text2)",transition:"all .12s"}}>✨ Creator</button>
                   <button onClick={()=>up("role","brand")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="brand"?"var(--accent2)":"var(--border)"),background:form.role==="brand"?"var(--accent2-light)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500,color:form.role==="brand"?"var(--accent2)":"var(--text2)",transition:"all .12s"}}>📋 Brand</button>
+                  <button onClick={()=>up("role","agency")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="agency"?"var(--purple)":"var(--border)"),background:form.role==="agency"?"rgba(167,139,250,.12)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500,color:form.role==="agency"?"var(--purple)":"var(--text2)",transition:"all .12s"}}>💼 Agency</button>
                 </div>
               </div>
+              {form.role==="agency"&&(
+                <div className="fg" style={{marginTop:2}}>
+                  <label className="fl">Brands you manage <span style={{color:"var(--text3)",fontWeight:400}}>(optional)</span></label>
+                  <input className="fi" value={form.brands} onChange={e=>up("brands",e.target.value)} placeholder="e.g. Nike, Adidas, Halo Health"/>
+                </div>
+              )}
               <button onClick={handleSignup} disabled={loading||!form.email||!form.password||!form.name} className="btn btn-primary btn-lg" style={{width:"100%",marginTop:8,opacity:loading||!form.email||!form.password||!form.name?.6:1}}>
                 {loading?<span style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>Creating account...</span>:"Create Account"}
               </button>
