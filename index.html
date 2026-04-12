@@ -3044,9 +3044,9 @@ function BriefBuilderPage() {
           <div style={{fontSize:"14px",color:"var(--text2)",marginBottom:18}}>Choose a template to get started.</div>
           <div className="g2">
             {BRIEF_TEMPLATES.map(t=>(
-              <button key={t.id} onClick={()=>setTemplate(t.id)} className="card card-hover" style={{padding:"20px 22px",display:"flex",gap:14,alignItems:"flex-start",border:"1px solid var(--border)",cursor:"pointer",textAlign:"left",background:"var(--surface)"}}>
+              <button key={t.id} onClick={()=>setTemplate(t.id)} className="card card-hover" style={{padding:"20px 22px",display:"flex",gap:14,alignItems:"flex-start",border:"1px solid var(--border)",cursor:"pointer",textAlign:"left",background:"var(--surface)",color:"var(--text)"}}>
                 <span style={{fontSize:"30px",flexShrink:0}}>{t.icon}</span>
-                <div style={{flex:1}}><div style={{fontSize:"16px",fontWeight:700,marginBottom:6}}>{t.label}</div><div style={{display:"flex",flexDirection:"column",gap:3}}>{t.fields.slice(0,3).map((f,i)=><div key={i} style={{fontSize:"12px",color:"var(--text3)",display:"flex",gap:5}}><span style={{color:"var(--accent)"}}>→</span>{f}</div>)}</div></div>
+                <div style={{flex:1}}><div style={{fontSize:"16px",fontWeight:700,marginBottom:6,color:"var(--text)"}}>{t.label}</div><div style={{display:"flex",flexDirection:"column",gap:3}}>{t.fields.slice(0,3).map((f,i)=><div key={i} style={{fontSize:"12px",color:"var(--text3)",display:"flex",gap:5}}><span style={{color:"var(--accent)"}}>→</span>{f}</div>)}</div></div>
               </button>
             ))}
           </div>
@@ -3057,7 +3057,7 @@ function BriefBuilderPage() {
             <div className="card-lg" style={{padding:"18px 22px",marginBottom:14}}>
               <div style={{display:"flex",gap:10,marginBottom:16,alignItems:"center"}}>
                 <span style={{fontSize:"24px"}}>{t.icon}</span>
-                <div style={{flex:1}}><div style={{fontSize:"15px",fontWeight:700}}>{t.label} Brief</div></div>
+                <div style={{flex:1}}><div style={{fontSize:"15px",fontWeight:700,color:"var(--text)"}}>{t.label} Brief</div></div>
                 <button onClick={()=>{setTemplate(null);setFields({});}} style={{fontSize:"12px",color:"var(--text3)",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif"}}>Change template</button>
               </div>
               <div className="fg"><label className="fl">Send to Creator</label><select className="fsel" value={creator} onChange={e=>setCreator(e.target.value)}><option value="">Select creator...</option>{CREATORS.map(c=><option key={c.id} value={c.name}>{c.name}</option>)}</select></div>
@@ -3072,7 +3072,7 @@ function BriefBuilderPage() {
           </div>
           <div className="card-lg" style={{padding:"18px 22px",background:"rgba(8,145,178,.04)",border:"1.5px solid rgba(8,145,178,.25)"}}>
             <div style={{fontSize:"12px",fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:"var(--teal)",marginBottom:14}}>Creator will see this</div>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"16px",marginBottom:10}}>{t.label} Brief</div>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"16px",marginBottom:10,color:"var(--text)"}}>{t.label} Brief</div>
             {t.fields.map((f,i)=>(
               <div key={i} style={{marginBottom:12}}>
                 <div style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:"var(--text3)",marginBottom:4}}>{f}</div>
