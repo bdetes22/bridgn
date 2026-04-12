@@ -200,6 +200,7 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 .no-scrollbar::-webkit-scrollbar{display:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes slideIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes amberGlow{0%,100%{box-shadow:0 0 0 0 rgba(240,160,80,0)}50%{box-shadow:0 0 18px rgba(240,160,80,.18)}}
 .fade-in{animation:fadeInScale .3s cubic-bezier(.16,1,.3,1)}
 .page-enter{animation:pageEnter .25s ease-out both}
@@ -1090,7 +1091,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
 }
 
 // ─── CAMPAIGN FEED ────────────────────────────────────────────────────────────
-function CampaignsPage({setPage,setSelected}) {
+function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQuestions,userName}) {
   const loading = useSkeleton();
   const [liked,setLiked] = useState({});
   const [saved,setSaved] = useState({});
@@ -1098,7 +1099,19 @@ function CampaignsPage({setPage,setSelected}) {
   const [animating,setAnimating] = useState({});
   const [activeStory,setActiveStory] = useState(null);
   const [filterOpen,setFilterOpen] = useState(false);
+  const [commentOpen,setCommentOpen] = useState(null); // campaign id or null
+  const [questionText,setQuestionText] = useState("");
+  const questionListRef = useRef(null);
   const lastTap = useRef({});
+
+  const sendQuestion = () => {
+    const text = questionText.trim();
+    if (!text || !commentOpen) return;
+    const q = {id: Date.now(), text, creatorName: userName||"You", ts: new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}), reply: null};
+    setCampaignQuestions(prev => ({...prev, [commentOpen]: [...(prev[commentOpen]||[]), q]}));
+    setQuestionText("");
+    setTimeout(() => { if(questionListRef.current) questionListRef.current.scrollTop = questionListRef.current.scrollHeight; }, 80);
+  };
 
   const STORY_BRANDS = [
     {bi:"HH",ci:0,brand:"Halo Health",active:true},
@@ -1242,9 +1255,9 @@ function CampaignsPage({setPage,setSelected}) {
                   </div>
 
                   {/* Comment */}
-                  <button style={{background:"none",border:"none",cursor:"pointer",padding:"6px 8px",display:"flex",alignItems:"center",gap:5,borderRadius:8}}>
+                  <button onClick={()=>setCommentOpen(c.id)} style={{background:"none",border:"none",cursor:"pointer",padding:"6px 8px",display:"flex",alignItems:"center",gap:5,borderRadius:8}}>
                     <span style={{fontSize:"21px",lineHeight:1}}>💬</span>
-                    <span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{commentCount}</span>
+                    <span style={{fontSize:"13px",color:(campaignQuestions[c.id]||[]).length>0?"var(--accent)":"var(--text2)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{(campaignQuestions[c.id]||[]).length||commentCount}</span>
                   </button>
 
                   <div style={{flex:1}}/>
@@ -1283,6 +1296,81 @@ function CampaignsPage({setPage,setSelected}) {
         })}
         <div style={{textAlign:"center",padding:"10px 0 30px",fontSize:"12px",color:"var(--text3)"}}>You're all caught up · <button onClick={()=>setPage("public-profile")} style={{background:"none",border:"none",cursor:"pointer",color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif",fontSize:"12px",fontWeight:600}}>Update your profile to get more matches</button></div>
       </div>
+
+      {/* Comment panel */}
+      {commentOpen!==null&&(()=>{
+        const campaign = CAMPAIGNS.find(c=>c.id===commentOpen);
+        const questions = campaignQuestions[commentOpen]||[];
+        return (
+          <>
+            <div onClick={()=>{setCommentOpen(null);setQuestionText("");}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",zIndex:400,backdropFilter:"blur(3px)"}}/>
+            <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:401,display:"flex",flexDirection:"column",maxHeight:"72vh",animation:"slideUp .32s cubic-bezier(.16,1,.3,1) both",background:"var(--surface)",borderTop:"1px solid var(--border)",borderRadius:"18px 18px 0 0",boxShadow:"0 -8px 40px rgba(0,0,0,.4)"}}>
+              {/* Drag handle */}
+              <div style={{flexShrink:0,padding:"10px 0 2px",display:"flex",justifyContent:"center"}}>
+                <div style={{width:36,height:4,borderRadius:2,background:"var(--border)"}}/>
+              </div>
+              {/* Header */}
+              <div style={{flexShrink:0,padding:"10px 18px 12px",borderBottom:"1px solid var(--border)"}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                  <div style={{flex:1,fontSize:"15px",fontWeight:700,fontFamily:"Syne,sans-serif"}}>{campaign?.title}</div>
+                  <button onClick={()=>{setCommentOpen(null);setQuestionText("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:"18px",color:"var(--text3)",lineHeight:1,padding:"2px 4px"}}>✕</button>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(91,138,245,.07)",border:"1px solid rgba(91,138,245,.18)",borderRadius:"var(--radius-sm)"}}>
+                  <span style={{fontSize:"13px"}}>🔒</span>
+                  <span style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.45}}>Questions are <strong>private</strong> — only the brand can see these.</span>
+                </div>
+              </div>
+              {/* Questions list */}
+              <div ref={questionListRef} style={{flex:1,overflowY:"auto",padding:"14px 18px",display:"flex",flexDirection:"column",gap:14}}>
+                {questions.length===0?(
+                  <div style={{textAlign:"center",padding:"28px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:10}}>
+                    <div style={{fontSize:"32px"}}>💬</div>
+                    <div style={{fontSize:"14px",fontWeight:600}}>No questions yet</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",maxWidth:260,lineHeight:1.6}}>Ask the brand anything about deliverables, payment, timeline, or creative direction.</div>
+                  </div>
+                ):questions.map(q=>(
+                  <div key={q.id} style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {/* Creator bubble — right aligned */}
+                    <div style={{display:"flex",justifyContent:"flex-end"}}>
+                      <div style={{maxWidth:"78%"}}>
+                        <div style={{padding:"10px 14px",borderRadius:"18px 18px 4px 18px",background:"var(--accent)",color:"white",fontSize:"13px",lineHeight:1.55}}>{q.text}</div>
+                        <div style={{fontSize:"10px",color:"var(--text3)",marginTop:4,textAlign:"right"}}>{q.ts}</div>
+                      </div>
+                    </div>
+                    {/* Brand reply — left aligned */}
+                    {q.reply&&(
+                      <div style={{display:"flex",justifyContent:"flex-start"}}>
+                        <div style={{maxWidth:"78%"}}>
+                          <div style={{fontSize:"10px",color:"var(--text3)",marginBottom:3,fontWeight:600}}>{campaign?.brand} replied</div>
+                          <div style={{padding:"10px 14px",borderRadius:"18px 18px 18px 4px",background:"var(--surface2)",border:"1px solid var(--border)",fontSize:"13px",color:"var(--text)",lineHeight:1.55}}>{q.reply}</div>
+                        </div>
+                      </div>
+                    )}
+                    {!q.reply&&<div style={{fontSize:"10px",color:"var(--text3)",textAlign:"right",marginTop:-4}}>Awaiting reply</div>}
+                  </div>
+                ))}
+              </div>
+              {/* Input */}
+              <div style={{flexShrink:0,padding:"10px 14px 16px",borderTop:"1px solid var(--border)",display:"flex",gap:9,alignItems:"flex-end",background:"var(--surface)"}}>
+                <textarea
+                  className="fta"
+                  style={{flex:1,margin:0,minHeight:42,maxHeight:110,resize:"none",fontSize:"13px",padding:"10px 13px",lineHeight:1.5}}
+                  value={questionText}
+                  onChange={e=>setQuestionText(e.target.value)}
+                  placeholder="Ask the brand a question..."
+                  onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendQuestion();}}}
+                />
+                <button
+                  onClick={sendQuestion}
+                  disabled={!questionText.trim()}
+                  className="btn btn-primary"
+                  style={{flexShrink:0,height:42,opacity:questionText.trim()?1:.45,transition:"opacity .12s"}}
+                >Send</button>
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }
@@ -3008,15 +3096,91 @@ function CreatorProfilePage({creator,setPage}) {
 }
 
 // ─── BRAND CAMPAIGNS ─────────────────────────────────────────────────────────
-function BrandCampaignsPage({setPage,setSelected}) {
+function BrandCampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQuestions}) {
   const loading = useSkeleton();
   const [campaigns,setCampaigns] = useState([]);
   const [modal,setModal] = useState(false);const [step,setStep] = useState(1);const [form,setForm] = useState({title:"",platform:"Instagram",budget:"",type:"Paid",deadline:"",desc:"",deliverables:"",requirements:"",brief:""});const [briefTemplate,setBriefTemplate] = useState(null);const [created,setCreated] = useState(false);
+  const [replyText,setReplyText] = useState({});  // keyed by question id
+  const [replyOpen,setReplyOpen] = useState({});  // keyed by question id
+  const [qExpanded,setQExpanded] = useState({});  // keyed by campaign id
   const up=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  // Flatten all questions across all campaigns for the brand inbox
+  const allQuestions = Object.entries(campaignQuestions).flatMap(([cid,qs])=>
+    qs.map(q=>({...q, campaignId: Number(cid), campaignTitle: CAMPAIGNS.find(c=>c.id===Number(cid))?.title||"Campaign #"+cid}))
+  ).sort((a,b)=>b.id-a.id);
+
+  const sendReply = (q) => {
+    const text = (replyText[q.id]||"").trim();
+    if(!text) return;
+    setCampaignQuestions(prev => ({
+      ...prev,
+      [q.campaignId]: (prev[q.campaignId]||[]).map(item => item.id===q.id ? {...item, reply:text} : item)
+    }));
+    setReplyText(r=>({...r,[q.id]:""}));
+    setReplyOpen(r=>({...r,[q.id]:false}));
+  };
   if(loading) return <SkeletonPage layout="grid"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Campaigns</div><div className="page-subtitle">Manage and launch your influencer campaigns.</div></div><button className="btn btn-primary" onClick={()=>{setModal(true);setStep(1);setCreated(false);}}>+ New Campaign</button></div>
+      {/* Creator Questions Inbox */}
+      {allQuestions.length>0&&(
+        <div className="card-lg" style={{padding:0,overflow:"hidden",marginBottom:20}}>
+          <div style={{padding:"14px 20px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:"18px"}}>💬</span>
+            <span style={{fontSize:"14px",fontWeight:700,flex:1}}>Creator Questions</span>
+            <span style={{fontSize:"11px",fontWeight:700,padding:"2px 9px",borderRadius:99,background:"rgba(91,138,245,.12)",color:"var(--accent)",border:"1px solid rgba(91,138,245,.2)"}}>{allQuestions.filter(q=>!q.reply).length} awaiting reply</span>
+          </div>
+          <div style={{display:"flex",flexDirection:"column"}}>
+            {allQuestions.map((q,i)=>(
+              <div key={q.id} style={{padding:"14px 20px",borderBottom:i<allQuestions.length-1?"1px solid var(--border)":"none"}}>
+                <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+                  <div style={{width:34,height:34,borderRadius:10,background:"linear-gradient(135deg,var(--accent),var(--accent2))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",fontWeight:800,color:"white",flexShrink:0}}>
+                    {(q.creatorName||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4,flexWrap:"wrap"}}>
+                      <span style={{fontSize:"13px",fontWeight:600}}>{q.creatorName}</span>
+                      <span style={{fontSize:"11px",padding:"1px 7px",borderRadius:99,background:"var(--surface2)",color:"var(--text3)",border:"1px solid var(--border)"}}>{q.campaignTitle}</span>
+                      <span style={{fontSize:"10px",color:"var(--text3)",marginLeft:"auto"}}>{q.ts}</span>
+                    </div>
+                    <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.55,marginBottom:8}}>{q.text}</div>
+                    {q.reply?(
+                      <div style={{padding:"8px 12px",background:"rgba(52,211,153,.06)",border:"1px solid rgba(52,211,153,.2)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--text2)",lineHeight:1.5}}>
+                        <span style={{fontWeight:700,color:"var(--green)"}}>✓ Replied: </span>{q.reply}
+                      </div>
+                    ):(
+                      replyOpen[q.id]?(
+                        <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
+                          <textarea
+                            className="fta"
+                            style={{flex:1,margin:0,minHeight:38,maxHeight:90,resize:"none",fontSize:"12px",padding:"8px 11px"}}
+                            value={replyText[q.id]||""}
+                            onChange={e=>setReplyText(r=>({...r,[q.id]:e.target.value}))}
+                            placeholder="Type your reply..."
+                            autoFocus
+                            onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendReply(q);}}}
+                          />
+                          <div style={{display:"flex",gap:6,flexShrink:0}}>
+                            <button onClick={()=>sendReply(q)} disabled={!(replyText[q.id]||"").trim()} className="btn btn-primary btn-sm" style={{opacity:(replyText[q.id]||"").trim()?1:.45}}>Send</button>
+                            <button onClick={()=>setReplyOpen(r=>({...r,[q.id]:false}))} className="btn btn-secondary btn-sm">Cancel</button>
+                          </div>
+                        </div>
+                      ):(
+                        <button onClick={()=>setReplyOpen(r=>({...r,[q.id]:true}))} className="btn btn-secondary btn-sm" style={{display:"flex",alignItems:"center",gap:5}}>
+                          <span>↩</span> Reply
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {campaigns.length===0?(
         <div className="card" style={{padding:"56px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
           <div style={{fontSize:"40px",marginBottom:16}}>📋</div>
@@ -4153,6 +4317,7 @@ function App() {
   const [availStatus,setAvailStatus] = useState("open");
   const [mobSidebar,setMobSidebar] = useState(false);
   const [socialLinks,setSocialLinks] = useState({ig:"",tt:"",yt:"",tw:"",web:"",bio:"",location:""});
+  const [campaignQuestions,setCampaignQuestions] = useState({});
 
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
@@ -4197,7 +4362,7 @@ function App() {
     if(role==="creator") {
       switch(page) {
         case "dashboard":    return React.createElement(CreatorDashboard,{setPage,setSelected,deals,availStatus,setAvailStatus,userName});
-        case "campaigns":    return React.createElement(CampaignsPage,{setPage,setSelected});
+        case "campaigns":    return React.createElement(CampaignsPage,{setPage,setSelected,campaignQuestions,setCampaignQuestions,userName});
         case "campaign-detail": return React.createElement(CampaignDetail,{campaign:selected,setPage});
         case "deals":        return React.createElement(CreatorDealsPage,{setPage,setSelected,deals});
         case "deal-room":    return React.createElement(DealRoomPage,{setPage,setSelected,deals});
@@ -4225,7 +4390,7 @@ function App() {
         case "dashboard":     return React.createElement(BrandDashboard,{setPage,setSelected});
         case "browse":        return React.createElement(BrowseCreatorsPage,{setPage});
         case "creator-profile": return React.createElement(CreatorProfilePage,{creator:selected,setPage});
-        case "campaigns":     return React.createElement(BrandCampaignsPage,{setPage,setSelected});
+        case "campaigns":     return React.createElement(BrandCampaignsPage,{setPage,setSelected,campaignQuestions,setCampaignQuestions});
         case "campaign-calendar": return React.createElement(CampaignCalendarPage,{});
         case "deals":         return React.createElement(BrandDealsPage,{setPage,setSelected});
         case "deal-room":     return React.createElement(DealRoomPage,{setPage,setSelected,deals});
