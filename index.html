@@ -191,6 +191,13 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 @keyframes escrowShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
 .escrow-amount-shimmer{display:inline-block;background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:escrowShimmer 2.8s linear infinite}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes heartPop{0%{transform:scale(1)}15%{transform:scale(1.35)}45%{transform:scale(0.9)}65%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes heartFlash{0%{opacity:1;transform:scale(.4)}30%{opacity:1;transform:scale(1.15)}70%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.05)}}
+@keyframes particlePop{0%{opacity:1;transform:translate(0,0) scale(1.4)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
+@keyframes storyPulse{0%,100%{opacity:1}50%{opacity:.6}}
+.heart-anim{animation:heartPop .5s cubic-bezier(.36,.07,.19,.97) both}
+.no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}
+.no-scrollbar::-webkit-scrollbar{display:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes slideIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes amberGlow{0%,100%{box-shadow:0 0 0 0 rgba(240,160,80,0)}50%{box-shadow:0 0 18px rgba(240,160,80,.18)}}
@@ -1082,87 +1089,199 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
   );
 }
 
-// ─── CAMPAIGNS BROWSE ─────────────────────────────────────────────────────────
-// ─── CAMPAIGNS — COMING SOON ─────────────────────────────────────────────────
-// FUTURE VISION: Feed-style layout, Instagram/Twitter hybrid. Brands craft
-// creative posts with images, video, tone — not just form fields. Creators
-// scroll a feed, save, apply, pass with swipe-style interactions. Brands
-// compete to look good to creators, not the other way around.
-// Build this when we have critical mass of both sides on the platform.
-function CampaignsPage({setPage}) {
+// ─── CAMPAIGN FEED ────────────────────────────────────────────────────────────
+function CampaignsPage({setPage,setSelected}) {
   const loading = useSkeleton();
-  const [notified,setNotified] = useState(false);
-  const [email,setEmail] = useState("");
-  const PREVIEW_POSTS = [
-    {bi:"HH",ci:0,brand:"Halo Health",budget:"$2,500",platform:"Instagram",teaser:"Spring wellness campaign — authentic lifestyle content...",color:"#5b8af5"},
-    {bi:"NT",ci:1,brand:"NovaTech",budget:"$5,000",platform:"YouTube",teaser:"Flagship earbuds launch — honest in-depth review..."},
-    {bi:"VS",ci:2,brand:"Vestir",budget:"$1,200",platform:"TikTok",teaser:"Summer collection — trend-forward outfit content..."},
-    {bi:"CU",ci:3,brand:"Culine",budget:"$3,000",platform:"Instagram",teaser:"Home chef challenge — 3-recipe cookware showcase..."},
+  const [liked,setLiked] = useState({});
+  const [saved,setSaved] = useState({});
+  const [expanded,setExpanded] = useState({});
+  const [animating,setAnimating] = useState({});
+  const [activeStory,setActiveStory] = useState(null);
+  const [filterOpen,setFilterOpen] = useState(false);
+  const lastTap = useRef({});
+
+  const STORY_BRANDS = [
+    {bi:"HH",ci:0,brand:"Halo Health",active:true},
+    {bi:"NT",ci:1,brand:"NovaTech",active:true},
+    {bi:"VS",ci:2,brand:"Vestir",active:false},
+    {bi:"CU",ci:3,brand:"Culine",active:true},
+    {bi:"TC",ci:4,brand:"TrailCo",active:false},
+    {bi:"LX",ci:5,brand:"Luxara",active:true},
+    {bi:"GF",ci:0,brand:"GlowFit",active:false},
+    {bi:"AP",ci:1,brand:"Apex",active:true},
   ];
-  if(loading) return <SkeletonPage layout="simple"/>;
+  const TIMES=["2h","4h","7h","12h","1d"];
+  const PARTICLE_DIRS=[
+    {tx:"-30px",ty:"-28px"},{tx:"0px",ty:"-38px"},{tx:"30px",ty:"-28px"},
+    {tx:"38px",ty:"0px"},{tx:"30px",ty:"28px"},{tx:"0px",ty:"38px"},
+    {tx:"-30px",ty:"28px"},{tx:"-38px",ty:"0px"},
+  ];
+  const PCOLORS=["#f87171","#fb923c","#facc15","#4ade80","#60a5fa","#c084fc","#f472b6","#34d399"];
+
+  const triggerLike=(id,force=false)=>{
+    const willLike=force?true:!liked[id];
+    setLiked(l=>({...l,[id]:willLike}));
+    if(willLike){
+      setAnimating(a=>({...a,[id]:true}));
+      setTimeout(()=>setAnimating(a=>({...a,[id]:false})),750);
+    }
+  };
+  const handleImageTap=id=>{
+    const now=Date.now();
+    if(now-(lastTap.current[id]||0)<320) triggerLike(id,true);
+    lastTap.current[id]=now;
+  };
+
+  if(loading) return <SkeletonPage layout="grid"/>;
   return (
     <div className="fade-in">
-      <div style={{maxWidth:580,margin:"0 auto",padding:"20px 0 40px",textAlign:"center"}}>
-        <div style={{width:72,height:72,borderRadius:22,background:"linear-gradient(135deg,rgba(91,138,245,.2),rgba(167,139,250,.15))",border:"1.5px solid rgba(91,138,245,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"32px",margin:"0 auto 22px"}}>🚀</div>
-        <div style={{display:"inline-block",padding:"4px 14px",background:"rgba(91,138,245,.12)",border:"1px solid rgba(91,138,245,.25)",borderRadius:99,fontSize:"11px",fontWeight:700,color:"var(--accent)",letterSpacing:".08em",textTransform:"uppercase",marginBottom:16}}>Coming Soon</div>
-        <div className="page-title" style={{marginBottom:12}}>Campaign Feed</div>
-        <div style={{fontSize:"15px",color:"var(--text2)",lineHeight:1.8,marginBottom:28}}>A scrollable feed where brands post creative campaigns — not just forms. Think Instagram meets a job board. Browse opportunities that match your style, save what looks interesting, and apply in seconds.</div>
-        <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:32,textAlign:"left"}}>
-          {[["🎨","Brands post like social — with images, video, and real creative direction","Creative posts, not boring forms"],["💫","Swipe through campaigns that match your niche and audience","Curated for your profile"],["💬","Apply, save, or pass — and message brands directly from the feed","Built-in conversation"],["🔒","Every deal goes straight into Bridgn escrow the moment you accept","Protected from day one"]].map(([icon,desc,label],i)=>(
-            <div key={i} style={{display:"flex",gap:12,padding:"13px 16px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",alignItems:"flex-start"}}>
-              <span style={{fontSize:"20px",flexShrink:0,marginTop:1}}>{icon}</span>
-              <div>
-                <div style={{fontSize:"13px",fontWeight:600,marginBottom:2}}>{label}</div>
-                <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.55}}>{desc}</div>
-              </div>
-            </div>
-          ))}
+      <div className="ph-row">
+        <div><div className="page-title">Campaign Feed</div><div className="page-subtitle">Opportunities matched to your profile.</div></div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>setFilterOpen(f=>!f)} className="btn btn-secondary btn-sm" style={{display:"flex",alignItems:"center",gap:5}}>🎛 Filter</button>
         </div>
-        {!notified?(
-          <div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",padding:"22px 24px"}}>
-            <div style={{fontSize:"14px",fontWeight:600,marginBottom:4}}>Get notified when campaigns launch</div>
-            <div style={{fontSize:"12px",color:"var(--text2)",marginBottom:16}}>You will be the first to know when the feed goes live.</div>
-            <div style={{display:"flex",gap:8}}>
-              <input className="fi" style={{flex:1}} value={email} onChange={e=>setEmail(e.target.value)} placeholder="your@email.com"/>
-              <button onClick={()=>{if(email.trim())setNotified(true);}} className="btn btn-primary">Notify Me</button>
-            </div>
-          </div>
-        ):(
-          <div style={{background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-lg)",padding:"22px 24px"}}>
-            <div style={{fontSize:"22px",marginBottom:8}}>🎉</div>
-            <div style={{fontSize:"14px",fontWeight:600,color:"var(--green)",marginBottom:4}}>You are on the list!</div>
-            <div style={{fontSize:"12px",color:"var(--green)",opacity:.8}}>We will email you at {email} when the campaign feed launches.</div>
-          </div>
-        )}
-        <div style={{marginTop:28,fontSize:"13px",color:"var(--text3)"}}>In the meantime, brands can still reach you directly —<button onClick={()=>setPage("public-profile")} style={{background:"none",border:"none",cursor:"pointer",color:"var(--accent)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif",fontSize:"13px",marginLeft:4}}>make sure your profile is ready.</button></div>
       </div>
-      <div style={{marginTop:8}}>
-        <div style={{fontSize:"12px",fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:"var(--text3)",marginBottom:14,textAlign:"center"}}>A sneak peek at what is coming</div>
-        <div style={{display:"flex",flexDirection:"column",gap:10,filter:"blur(3px)",opacity:.45,pointerEvents:"none",userSelect:"none"}}>
-          {PREVIEW_POSTS.map((p,i)=>{
-            const g=bg(p.ci);
-            return (
-              <div key={i} className="card-lg" style={{overflow:"hidden"}}>
-                <div style={{height:3,background:"linear-gradient(90deg,"+g[0]+","+g[1]+")"}}></div>
-                <div style={{padding:"16px 20px",display:"flex",gap:12,alignItems:"flex-start"}}>
-                  <div style={{width:42,height:42,borderRadius:12,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px",fontWeight:800,color:"white",flexShrink:0}}>{p.bi}</div>
-                  <div style={{flex:1}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                      <span style={{fontSize:"14px",fontWeight:700}}>{p.brand}</span>
-                      <PlatformBadge p={p.platform}/>
+
+      {/* Stories row */}
+      <div className="no-scrollbar" style={{display:"flex",gap:14,overflowX:"auto",padding:"4px 2px 18px",marginBottom:2}}>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,flexShrink:0,cursor:"pointer"}} onClick={()=>setActiveStory(null)}>
+          <div style={{width:58,height:58,borderRadius:99,background:"var(--surface2)",border:"2px dashed var(--border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"20px",flexShrink:0}}>✦</div>
+          <span style={{fontSize:"10px",color:"var(--text3)",whiteSpace:"nowrap"}}>For You</span>
+        </div>
+        {STORY_BRANDS.map((b,i)=>{
+          const g=bg(b.ci);
+          const isAct=activeStory===b.bi;
+          return (
+            <div key={i} onClick={()=>setActiveStory(s=>s===b.bi?null:b.bi)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5,flexShrink:0,cursor:"pointer"}}>
+              <div style={{width:60,height:60,borderRadius:99,padding:2,background:b.active?"linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)":"var(--border)",transition:"transform .15s",transform:isAct?"scale(1.08)":"scale(1)"}}>
+                <div style={{width:"100%",height:"100%",borderRadius:99,background:`linear-gradient(135deg,${g[0]},${g[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",fontWeight:800,color:"white",border:"2.5px solid var(--bg)"}}>{b.bi}</div>
+              </div>
+              <span style={{fontSize:"10px",color:b.active?"var(--text)":"var(--text3)",maxWidth:62,textAlign:"center",lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontWeight:b.active?600:400}}>{b.brand}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Feed */}
+      <div style={{display:"flex",flexDirection:"column",gap:0,maxWidth:620,margin:"0 auto"}}>
+        {CAMPAIGNS.map((c,idx)=>{
+          const g=bg(c.ci);
+          const isLiked=!!liked[c.id];
+          const isSaved=!!saved[c.id];
+          const isExpanded=!!expanded[c.id];
+          const isAnim=!!animating[c.id];
+          const likeBase=12+c.id*7;
+          const commentCount=3+c.id;
+          return (
+            <div key={c.id} style={{background:"var(--surface)",borderRadius:"var(--radius-lg)",overflow:"hidden",marginBottom:20,border:"1px solid var(--border)",boxShadow:"0 2px 16px rgba(0,0,0,.18)"}}>
+
+              {/* Image area */}
+              <div onClick={()=>handleImageTap(c.id)} style={{height:210,background:`linear-gradient(135deg,${g[0]} 0%,${g[1]} 100%)`,position:"relative",cursor:"pointer",userSelect:"none",WebkitUserSelect:"none"}}>
+                {/* Depth overlays */}
+                <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,rgba(0,0,0,.52) 0%,transparent 42%,rgba(0,0,0,.45) 100%)"}}/>
+                <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(ellipse at 25% 25%,rgba(255,255,255,.09) 0%,transparent 55%),radial-gradient(ellipse at 75% 75%,rgba(0,0,0,.15) 0%,transparent 50%)"}}/>
+                {/* Grid texture */}
+                <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.03) 39px,rgba(255,255,255,.03) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.03) 39px,rgba(255,255,255,.03) 40px)"}}/>
+
+                {/* Brand header */}
+                <div style={{position:"absolute",top:0,left:0,right:0,padding:"13px 14px",display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{width:40,height:40,borderRadius:99,padding:2,background:c.verified?"linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366)":"rgba(255,255,255,.25)",flexShrink:0}}>
+                    <div style={{width:"100%",height:"100%",borderRadius:99,background:`linear-gradient(135deg,${g[0]},${g[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",fontWeight:800,color:"white",border:"2px solid var(--bg)"}}>{c.bi}</div>
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",alignItems:"center",gap:5}}>
+                      <span style={{fontSize:"13px",fontWeight:700,color:"white",textShadow:"0 1px 4px rgba(0,0,0,.4)"}}>{c.brand}</span>
+                      {c.verified&&<span style={{fontSize:"12px",color:"#60a5fa",lineHeight:1,textShadow:"0 1px 4px rgba(0,0,0,.5)"}}>✓</span>}
                     </div>
-                    <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:10,lineHeight:1.55}}>{p.teaser}</div>
-                    <div style={{display:"flex",gap:7}}>
-                      <div style={{padding:"5px 12px",background:"var(--surface2)",borderRadius:6,fontSize:"12px",fontWeight:600,color:"var(--accent)"}}>{p.budget}</div>
-                      <div style={{width:34,height:28,borderRadius:7,background:"var(--surface2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px"}}>🔖</div>
-                      <div style={{padding:"5px 14px",borderRadius:6,fontSize:"12px",fontWeight:600,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",color:"white"}}>Apply</div>
-                    </div>
+                    <div style={{fontSize:"10px",color:"rgba(255,255,255,.62)",marginTop:1}}>{TIMES[idx%TIMES.length]} ago · Sponsored</div>
+                  </div>
+                  <button onClick={e=>{e.stopPropagation();setSelected&&setSelected(c);setPage("campaign-detail");}} style={{padding:"5px 16px",borderRadius:99,background:c.applied?"rgba(52,211,153,.25)":"rgba(255,255,255,.15)",border:"1px solid "+(c.applied?"rgba(52,211,153,.5)":"rgba(255,255,255,.3)"),color:c.applied?"#34d399":"white",fontSize:"12px",fontWeight:700,cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",backdropFilter:"blur(8px)",flexShrink:0,transition:"all .12s"}}>
+                    {c.applied?"Applied ✓":"Apply"}
+                  </button>
+                </div>
+
+                {/* Budget badge bottom-left */}
+                <div style={{position:"absolute",bottom:13,left:14}}>
+                  <div style={{display:"inline-flex",alignItems:"baseline",gap:5,padding:"5px 13px",borderRadius:99,background:"rgba(0,0,0,.45)",backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,.14)"}}>
+                    <span style={{fontSize:"10px",color:"rgba(255,255,255,.6)",fontWeight:600,textTransform:"uppercase",letterSpacing:".05em"}}>Budget</span>
+                    <span style={{fontSize:"17px",fontWeight:800,color:"white",fontFamily:"Syne,sans-serif",lineHeight:1}}>${c.budget.toLocaleString()}</span>
                   </div>
                 </div>
+
+                {/* Deadline badge bottom-right */}
+                <div style={{position:"absolute",bottom:13,right:14}}>
+                  <div style={{display:"inline-flex",alignItems:"center",gap:4,padding:"5px 11px",borderRadius:99,background:"rgba(0,0,0,.45)",backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,.14)"}}>
+                    <span style={{fontSize:"10px"}}>⏰</span>
+                    <span style={{fontSize:"11px",fontWeight:600,color:"rgba(255,255,255,.85)"}}>{c.deadline}</span>
+                  </div>
+                </div>
+
+                {/* Double-tap heart flash */}
+                {isAnim&&(
+                  <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
+                    <div style={{fontSize:"90px",animation:"heartFlash .65s cubic-bezier(.36,.07,.19,.97) both",filter:"drop-shadow(0 0 24px rgba(248,113,113,.9)) drop-shadow(0 0 8px rgba(248,113,113,1))"}}>❤️</div>
+                  </div>
+                )}
               </div>
-            );
-          })}
-        </div>
+
+              {/* Body */}
+              <div style={{padding:"12px 16px 6px"}}>
+
+                {/* Action row */}
+                <div style={{display:"flex",alignItems:"center",gap:0,marginBottom:10}}>
+                  {/* Heart */}
+                  <div style={{position:"relative"}}>
+                    <button onClick={()=>triggerLike(c.id)} style={{background:"none",border:"none",cursor:"pointer",padding:"6px 8px 6px 4px",display:"flex",alignItems:"center",gap:5,borderRadius:8}}>
+                      <span className={isAnim?"heart-anim":""} style={{fontSize:"24px",display:"inline-block",lineHeight:1}}>{isLiked?"❤️":"🤍"}</span>
+                      <span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{likeBase+(isLiked?1:0)}</span>
+                    </button>
+                    {/* Particle burst */}
+                    {isAnim&&PARTICLE_DIRS.map((d,i)=>(
+                      <div key={i} style={{position:"absolute",top:"50%",left:18,width:7,height:7,borderRadius:99,background:PCOLORS[i],pointerEvents:"none",animation:`particlePop .65s cubic-bezier(.2,.8,.2,1) ${i*25}ms both`,"--tx":d.tx,"--ty":d.ty}}/>
+                    ))}
+                  </div>
+
+                  {/* Comment */}
+                  <button style={{background:"none",border:"none",cursor:"pointer",padding:"6px 8px",display:"flex",alignItems:"center",gap:5,borderRadius:8}}>
+                    <span style={{fontSize:"21px",lineHeight:1}}>💬</span>
+                    <span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{commentCount}</span>
+                  </button>
+
+                  <div style={{flex:1}}/>
+
+                  {/* Bookmark */}
+                  <button onClick={()=>setSaved(s=>({...s,[c.id]:!s[c.id]}))} style={{background:"none",border:"none",cursor:"pointer",padding:"6px 8px",borderRadius:8,transition:"transform .12s",transform:isSaved?"scale(1.1)":"scale(1)"}}>
+                    <span style={{fontSize:"21px",lineHeight:1}}>{isSaved?"🔖":"🏷️"}</span>
+                  </button>
+                </div>
+
+                {/* Title */}
+                <div style={{fontFamily:"Syne,sans-serif",fontSize:"17px",fontWeight:800,letterSpacing:"-.25px",marginBottom:5,lineHeight:1.25}}>{c.title}</div>
+
+                {/* Description with see more */}
+                <div style={{marginBottom:10}}>
+                  <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,...(!isExpanded?{display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"}:{})}}>{c.desc}</div>
+                  {!isExpanded&&c.desc.length>100&&(
+                    <button onClick={()=>setExpanded(e=>({...e,[c.id]:true}))} style={{background:"none",border:"none",cursor:"pointer",fontSize:"13px",color:"var(--text3)",fontFamily:"Space Grotesk,sans-serif",padding:0,marginTop:1}}>see more</button>
+                  )}
+                </div>
+
+                {/* Badges */}
+                <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap",marginBottom:12}}>
+                  <PlatformBadge p={c.platform}/>
+                  <span style={{fontSize:"11px",padding:"3px 9px",borderRadius:99,background:"var(--surface2)",color:"var(--text3)",border:"1px solid var(--border)",fontWeight:500}}>{c.category}</span>
+                  <span style={{fontSize:"11px",padding:"3px 9px",borderRadius:99,background:"var(--surface2)",color:"var(--text3)",border:"1px solid var(--border)",fontWeight:500}}>{c.payment}</span>
+                </div>
+
+                {/* Requirements footer */}
+                <div style={{fontSize:"11px",color:"var(--text3)",borderTop:"1px solid var(--border)",paddingTop:10,paddingBottom:10,lineHeight:1.6}}>
+                  <span style={{fontWeight:600,color:"var(--text2)"}}>Requirements: </span>{c.requirements}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div style={{textAlign:"center",padding:"10px 0 30px",fontSize:"12px",color:"var(--text3)"}}>You're all caught up · <button onClick={()=>setPage("public-profile")} style={{background:"none",border:"none",cursor:"pointer",color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif",fontSize:"12px",fontWeight:600}}>Update your profile to get more matches</button></div>
       </div>
     </div>
   );
