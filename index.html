@@ -1532,7 +1532,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
 }
 
 // ─── NEW DEAL ─────────────────────────────────────────────────────────────────
-function NewDealPage({setPage,onDealCreated}) {
+function NewDealPage({setPage,onDealCreated,userName}) {
   const loading = useSkeleton();
   const [step,setStep] = useState(1);
   const [form,setForm] = useState({brandName:"",brandEmail:"",amount:"",platform:"Instagram",deadline:"",deliverables:"",notes:""});
@@ -1616,10 +1616,10 @@ function NewDealPage({setPage,onDealCreated}) {
             <>
               <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>We will send an email to <strong>{form.brandEmail||"the brand"}</strong> with a secure link to join this deal on Bridgn.</div>
               <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"16px 18px",marginBottom:18,fontSize:"13px",color:"var(--text)",lineHeight:1.75}}>
-                <strong>Subject:</strong> Jordan Davis has invited you to manage a deal on Bridgn
+                <strong>Subject:</strong> {userName||"Your creator"} has invited you to manage a deal on Bridgn
                 <div className="divider"></div>
                 Hi there,<br/><br/>
-                <strong>Jordan Davis</strong> has set up your partnership deal on Bridgn.<br/><br/>
+                <strong>{userName||"Your creator"}</strong> has set up your partnership deal on Bridgn.<br/><br/>
                 <strong>Deal summary:</strong><br/>
                 Deliverables: {form.deliverables||"TBD"}<br/>
                 Value: ${parseInt(form.amount||0).toLocaleString()} on {form.platform}<br/>
@@ -3828,7 +3828,7 @@ function App() {
         case "deals":        return React.createElement(CreatorDealsPage,{setPage,setSelected,deals});
         case "deal-room":    return React.createElement(DealRoomPage,{setPage,setSelected,deals});
         case "active-deal":  return React.createElement(ActiveDealPage,{deal:selected,setPage});
-        case "new-deal":     return React.createElement(NewDealPage,{setPage,onDealCreated:addDeal});
+        case "new-deal":     return React.createElement(NewDealPage,{setPage,onDealCreated:addDeal,userName});
         case "dispute":      return React.createElement(DisputePage,{deal:selected,setPage});
         case "offer":        return React.createElement(OfferPage,{offer:selected,setPage});
         case "analytics":    return React.createElement(CreatorAnalyticsPage,{});
