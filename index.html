@@ -1872,51 +1872,177 @@ function ContentCalendarPage({deals}) {
 // ─── RATE CARD ────────────────────────────────────────────────────────────────
 function RateCardPage() {
   const loading = useSkeleton();
-  const [followers,setFollowers] = useState("");
-  const [eng,setEng] = useState("");
   const [niche,setNiche] = useState("Lifestyle");
-  const f=parseInt(followers)||0;const e=parseFloat(eng)||0;
-  const hasData=f>0&&e>0;
-  const mult={Tech:1.4,Finance:1.4,Fashion:1.2,Beauty:1.15,Wellness:1.1,Gaming:0.9}[niche]||1.0;
-  const base=(f/1000)*0.01*e*mult;
-  const rates=[["Instagram Feed Post","📸",0.8,1.2],["Instagram Reel","🎬",1.0,1.6],["Instagram Stories (3x)","📱",0.4,0.7],["TikTok Video","♪",0.6,1.1],["YouTube Integration","▶",2.0,3.5],["UGC Package (no post)","🎨",0.3,0.6],["Brand Ambassador (mo.)","🌟",4.0,8.0]].map(([type,icon,lo,hi])=>({type,icon,low:Math.round(base*lo*100)*10,high:Math.round(base*hi*100)*10}));
-  const tier=f<10000?"Nano":f<50000?"Micro":f<250000?"Mid-tier":f<1000000?"Macro":"Mega";
-  const tierColor=f<10000?"var(--text3)":f<50000?"var(--green)":f<250000?"var(--accent)":f<1000000?"var(--accent2)":"#f87171";
-  if(loading) return <SkeletonPage layout="form"/>;
-  return (
-    <div className="fade-in">
-      <div className="ph-row"><div><div className="page-title">Rate Card Generator</div><div className="page-subtitle">Get fair market rate suggestions based on your stats.</div></div></div>
-      <div className="g2" style={{gap:22,alignItems:"start"}}>
-        <div className="card-lg" style={{padding:24}}>
-          <div className="fg"><label className="fl">Total Followers</label><input className="fi" value={followers} onChange={e=>setFollowers(e.target.value)} placeholder="280000"/></div>
-          <div className="fg"><label className="fl">Avg Engagement Rate (%)</label><input className="fi" value={eng} onChange={e=>setEng(e.target.value)} placeholder="6.2"/></div>
-          <div className="fg"><label className="fl">Primary Niche</label><select className="fsel" value={niche} onChange={e=>setNiche(e.target.value)}>{["Lifestyle","Wellness","Fashion","Beauty","Food","Tech","Finance","Gaming","Travel","Fitness","Education"].map(n=><option key={n}>{n}</option>)}</select></div>
-          {hasData&&<div style={{padding:"13px 15px",background:"var(--surface2)",borderRadius:"var(--radius)",border:"1px solid var(--border)"}}>
-            <div className="det-sec-title" style={{marginBottom:5}}>Your Tier</div>
-            <div style={{fontSize:"20px",fontWeight:700,color:tierColor,fontFamily:"Syne,sans-serif"}}>{tier} Creator</div>
-            <div style={{fontSize:"12px",color:"var(--text2)",marginTop:3}}>{f.toLocaleString()} followers · {eng}% engagement</div>
-          </div>}
+  const [ig,setIg] = useState({followers:"",eng:""});
+  const [tt,setTt] = useState({followers:"",eng:""});
+  const [yt,setYt] = useState({subscribers:"",views:""});
+  const [hideInactive,setHideInactive] = useState(false);
+
+  const nicheMult={Tech:1.4,Finance:1.4,Fashion:1.2,Beauty:1.15,Wellness:1.1,Gaming:0.9}[niche]||1.0;
+
+  // per-platform rate calc
+  const calcIG=()=>{
+    const f=parseInt(ig.followers)||0, e=parseFloat(ig.eng)||0;
+    if(!f||!e) return null;
+    const b=(f/1000)*0.01*e*nicheMult;
+    const tier=f<10000?"Nano":f<50000?"Micro":f<250000?"Mid-tier":f<1000000?"Macro":"Mega";
+    return {
+      active:true, tier,
+      f, e,
+      rates:[
+        {type:"Feed Post",icon:"📸",low:Math.round(b*0.8*100)*10,high:Math.round(b*1.2*100)*10},
+        {type:"Reel",icon:"🎬",low:Math.round(b*1.0*100)*10,high:Math.round(b*1.6*100)*10},
+        {type:"Stories (3×)",icon:"📱",low:Math.round(b*0.4*100)*10,high:Math.round(b*0.7*100)*10},
+      ]
+    };
+  };
+  const calcTT=()=>{
+    const f=parseInt(tt.followers)||0, e=parseFloat(tt.eng)||0;
+    if(!f||!e) return null;
+    const b=(f/1000)*0.01*e*nicheMult*0.85; // TikTok CPM slightly lower
+    const tier=f<10000?"Nano":f<50000?"Micro":f<250000?"Mid-tier":f<1000000?"Macro":"Mega";
+    return {
+      active:true, tier,
+      f, e,
+      rates:[
+        {type:"Video",icon:"♪",low:Math.round(b*0.6*100)*10,high:Math.round(b*1.1*100)*10},
+        {type:"Live Integration",icon:"🔴",low:Math.round(b*0.4*100)*10,high:Math.round(b*0.8*100)*10},
+        {type:"Duet / Stitch",icon:"🔀",low:Math.round(b*0.35*100)*10,high:Math.round(b*0.65*100)*10},
+      ]
+    };
+  };
+  const calcYT=()=>{
+    const s=parseInt(yt.subscribers)||0, v=parseInt(yt.views)||0;
+    if(!s||!v) return null;
+    const b=(v/1000)*nicheMult*2.2; // YouTube CPM premium
+    const tier=s<10000?"Nano":s<50000?"Micro":s<250000?"Mid-tier":s<1000000?"Macro":"Mega";
+    return {
+      active:true, tier,
+      f:s, extra:`${v.toLocaleString()} avg views`,
+      rates:[
+        {type:"Dedicated Video",icon:"🎥",low:Math.round(b*1.8*100)*10,high:Math.round(b*3.2*100)*10},
+        {type:"Mid-Roll Integration",icon:"▶",low:Math.round(b*0.9*100)*10,high:Math.round(b*1.6*100)*10},
+        {type:"Shorts",icon:"⚡",low:Math.round(b*0.3*100)*10,high:Math.round(b*0.6*100)*10},
+      ]
+    };
+  };
+
+  const igData=calcIG(), ttData=calcTT(), ytData=calcYT();
+  const anyActive=igData||ttData||ytData;
+
+  const tierColor=tier=>tier==="Nano"?"var(--text3)":tier==="Micro"?"var(--green)":tier==="Mid-tier"?"var(--accent)":tier==="Macro"?"var(--accent2)":"#f87171";
+
+  const PlatformCard=({name,color,icon,data,inputs})=>{
+    const isActive=!!data;
+    if(hideInactive&&!isActive) return null;
+    return (
+      <div className="card-lg" style={{padding:0,overflow:"hidden",opacity:isActive?1:0.55}}>
+        <div style={{padding:"14px 20px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10,background:isActive?`linear-gradient(90deg,${color}18,transparent)`:"transparent"}}>
+          <span style={{fontSize:"20px"}}>{icon}</span>
+          <span style={{fontFamily:"Syne,sans-serif",fontSize:"15px",fontWeight:800,color:isActive?color:"var(--text2)"}}>{name}</span>
+          {isActive&&<span style={{marginLeft:"auto",fontSize:"11px",fontWeight:700,padding:"2px 9px",borderRadius:99,background:color+"22",color,border:`1px solid ${color}44`}}>{data.tier}</span>}
+          {!isActive&&<span style={{marginLeft:"auto",fontSize:"11px",color:"var(--text3)"}}>No data</span>}
         </div>
-        <div>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-            <span style={{fontSize:"14px",fontWeight:700}}>Suggested Rates</span>
-            {hasData&&<button className="btn btn-secondary btn-sm">Download PDF</button>}
-          </div>
-          {hasData?(
-            <div style={{display:"flex",flexDirection:"column",gap:9}}>
-              {rates.map((r,i)=>(
-                <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}>
-                  <span style={{fontSize:"20px",flexShrink:0}}>{r.icon}</span>
-                  <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600}}>{r.type}</div><div style={{height:3,background:"var(--surface2)",borderRadius:99,overflow:"hidden",width:140,marginTop:7}}><div style={{height:"100%",borderRadius:99,background:"linear-gradient(90deg,var(--accent),var(--accent2))",width:((i+1)/rates.length*80+20)+"%"}}></div></div></div>
-                  <div style={{textAlign:"right"}}><div style={{fontSize:"15px",fontWeight:700,fontFamily:"Syne,sans-serif",color:"var(--accent)"}}>${r.low.toLocaleString()} – ${r.high.toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>per deliverable</div></div>
+        <div style={{padding:"16px 20px"}}>
+          <div className="frow" style={{marginBottom:isActive?14:0}}>{inputs}</div>
+          {isActive&&(
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              {data.rates.map((r,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}>
+                  <span style={{fontSize:"16px",flexShrink:0}}>{r.icon}</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:"12px",fontWeight:600,color:"var(--text2)"}}>{r.type}</div>
+                    <div style={{height:2,background:"var(--border)",borderRadius:99,overflow:"hidden",marginTop:5}}><div style={{height:"100%",borderRadius:99,background:`linear-gradient(90deg,${color},${color}88)`,width:((i+1)/data.rates.length*60+30)+"%"}}/></div>
+                  </div>
+                  <div style={{textAlign:"right",flexShrink:0}}>
+                    <div style={{fontSize:"14px",fontWeight:700,fontFamily:"Syne,sans-serif",color}}>${r.low.toLocaleString()} – ${r.high.toLocaleString()}</div>
+                    <div style={{fontSize:"10px",color:"var(--text3)"}}>per deliverable</div>
+                  </div>
                 </div>
               ))}
             </div>
-          ):(
-            <div className="card" style={{padding:"28px 20px",textAlign:"center"}}><div style={{fontSize:"28px",marginBottom:10}}>💲</div><div style={{fontSize:"14px",fontWeight:600,marginBottom:6}}>Enter your stats to see rates</div><div style={{fontSize:"12px",color:"var(--text2)"}}>Add your follower count and engagement rate on the left to generate suggested rates.</div></div>
           )}
         </div>
       </div>
+    );
+  };
+
+  if(loading) return <SkeletonPage layout="form"/>;
+  return (
+    <div className="fade-in">
+      <div className="ph-row">
+        <div><div className="page-title">Rate Card Generator</div><div className="page-subtitle">Per-platform suggested rates based on your real stats.</div></div>
+        {anyActive&&<button className="btn btn-secondary btn-sm">Download PDF</button>}
+      </div>
+
+      {/* Global controls */}
+      <div className="card-lg" style={{padding:"16px 20px",marginBottom:20,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:200}}>
+          <label className="fl" style={{margin:0,whiteSpace:"nowrap"}}>Primary Niche</label>
+          <select className="fsel" value={niche} onChange={e=>setNiche(e.target.value)} style={{margin:0}}>
+            {["Lifestyle","Wellness","Fashion","Beauty","Food","Tech","Finance","Gaming","Travel","Fitness","Education"].map(n=><option key={n}>{n}</option>)}
+          </select>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:9,flexShrink:0}}>
+          <span style={{fontSize:"12px",color:"var(--text2)"}}>Hide inactive platforms</span>
+          <button onClick={()=>setHideInactive(h=>!h)} style={{width:40,height:22,borderRadius:11,border:"none",cursor:"pointer",background:hideInactive?"var(--accent)":"var(--surface2)",position:"relative",transition:"background .15s",flexShrink:0}}>
+            <span style={{position:"absolute",top:3,left:hideInactive?20:3,width:16,height:16,borderRadius:8,background:"white",transition:"left .15s",boxShadow:"0 1px 3px rgba(0,0,0,.3)"}}/>
+          </button>
+        </div>
+        <div style={{fontSize:"11px",color:"var(--text3)",flexShrink:0}}>Niche multiplier: <strong style={{color:"var(--text2)"}}>{nicheMult}×</strong></div>
+      </div>
+
+      <div style={{display:"flex",flexDirection:"column",gap:16}}>
+        <PlatformCard
+          name="Instagram" icon="📸" color="#e1306c" data={igData}
+          inputs={<>
+            <div className="fg" style={{margin:0}}><label className="fl">Followers</label><input className="fi" value={ig.followers} onChange={e=>setIg(p=>({...p,followers:e.target.value}))} placeholder="280,000"/></div>
+            <div className="fg" style={{margin:0}}><label className="fl">Engagement Rate (%)</label><input className="fi" value={ig.eng} onChange={e=>setIg(p=>({...p,eng:e.target.value}))} placeholder="6.2"/></div>
+          </>}
+        />
+        <PlatformCard
+          name="TikTok" icon="♪" color="#69c9d0" data={ttData}
+          inputs={<>
+            <div className="fg" style={{margin:0}}><label className="fl">Followers</label><input className="fi" value={tt.followers} onChange={e=>setTt(p=>({...p,followers:e.target.value}))} placeholder="150,000"/></div>
+            <div className="fg" style={{margin:0}}><label className="fl">Engagement Rate (%)</label><input className="fi" value={tt.eng} onChange={e=>setTt(p=>({...p,eng:e.target.value}))} placeholder="8.4"/></div>
+          </>}
+        />
+        <PlatformCard
+          name="YouTube" icon="▶" color="#ff0000" data={ytData}
+          inputs={<>
+            <div className="fg" style={{margin:0}}><label className="fl">Subscribers</label><input className="fi" value={yt.subscribers} onChange={e=>setYt(p=>({...p,subscribers:e.target.value}))} placeholder="95,000"/></div>
+            <div className="fg" style={{margin:0}}><label className="fl">Avg Views per Video</label><input className="fi" value={yt.views} onChange={e=>setYt(p=>({...p,views:e.target.value}))} placeholder="42,000"/></div>
+          </>}
+        />
+      </div>
+
+      {!anyActive&&(
+        <div className="card" style={{padding:"32px 20px",textAlign:"center",marginTop:16}}>
+          <div style={{fontSize:"30px",marginBottom:10}}>💲</div>
+          <div style={{fontSize:"14px",fontWeight:600,marginBottom:6}}>Enter your stats above</div>
+          <div style={{fontSize:"12px",color:"var(--text2)"}}>Fill in at least one platform to generate suggested rates. You can add all three for a full picture.</div>
+        </div>
+      )}
+
+      {anyActive&&(
+        <div className="card-lg" style={{padding:"14px 20px",marginTop:16,display:"flex",gap:20,flexWrap:"wrap"}}>
+          <div style={{fontSize:"12px",color:"var(--text3)",fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",alignSelf:"center"}}>Cross-platform UGC</div>
+          {[["UGC Package (no post)","🎨",0.3,0.6],["Brand Ambassador (mo.)","🌟",4.0,8.0]].map(([type,icon,lo,hi])=>{
+            const bestBase=Math.max(
+              igData?(parseInt(ig.followers)||0)/1000*0.01*(parseFloat(ig.eng)||0)*nicheMult:0,
+              ttData?(parseInt(tt.followers)||0)/1000*0.01*(parseFloat(tt.eng)||0)*nicheMult*0.85:0,
+              ytData?(parseInt(yt.views)||0)/1000*nicheMult*2.2:0
+            );
+            return (
+              <div key={type} style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:220,padding:"9px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}>
+                <span style={{fontSize:"16px"}}>{icon}</span>
+                <div style={{flex:1,fontSize:"12px",fontWeight:600,color:"var(--text2)"}}>{type}</div>
+                <div style={{fontSize:"14px",fontWeight:700,fontFamily:"Syne,sans-serif",color:"var(--accent)"}}>${Math.round(bestBase*lo*100)*10 .toLocaleString()} – ${Math.round(bestBase*hi*100)*10 .toLocaleString()}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
