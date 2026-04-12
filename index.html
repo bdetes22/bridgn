@@ -220,6 +220,7 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 @keyframes pageEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes skelShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
 @keyframes iconSpin{from{transform:rotate(-40deg) scale(.55);opacity:0}to{transform:rotate(0deg) scale(1);opacity:1}}
+@keyframes deadlinePulse{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}55%{box-shadow:0 0 0 5px rgba(251,191,36,.1),0 0 18px rgba(251,191,36,.07)}}
 .skel{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);background-size:800px 100%;animation:skelShimmer 1.5s ease-in-out infinite;border-radius:6px;flex-shrink:0}
 @keyframes drawLine{from{stroke-dashoffset:var(--line-len,34)}to{stroke-dashoffset:0}}
 @keyframes escrowShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
@@ -302,10 +303,10 @@ const CREATORS = [
 ];
 
 const CREATOR_DEALS_INIT = [
-  {id:1,brand:"Halo Health",bi:"HH",ci:0,amount:2500,platform:"Instagram",status:"Active",deadline:"Apr 15",deliverables:"3x Posts, 2x Stories, 1x Reel",progress:2,source:"platform",campaignTitle:"Spring Wellness Launch",escrow:true,escrowReleased:false},
+  {id:1,brand:"Halo Health",bi:"HH",ci:0,amount:2500,platform:"Instagram",status:"Active",deadline:"Apr 14",deliverables:"3x Posts, 2x Stories, 1x Reel",progress:2,source:"platform",campaignTitle:"Spring Wellness Launch",escrow:true,escrowReleased:false},
   {id:2,brand:"NovaTech",bi:"NT",ci:1,amount:5000,platform:"YouTube",status:"Pending",deadline:"Apr 22",deliverables:"1x Review, 2x Shorts",progress:0,source:"platform",campaignTitle:"Tech Unboxing Series",escrow:false,escrowReleased:false},
   {id:3,brand:"GlowUp Co.",bi:"GU",ci:5,amount:1800,platform:"TikTok",status:"Completed",deadline:"Mar 10",deliverables:"5x TikToks",progress:6,source:"external",campaignTitle:"Custom Deal",escrow:true,escrowReleased:true},
-  {id:4,brand:"Luxe Threads",bi:"LT",ci:2,amount:3200,platform:"Instagram",status:"Active",deadline:"Apr 20",deliverables:"2x Feed Posts, 1x Reel",progress:1,source:"external",campaignTitle:"SS25 Collection Feature",escrow:true,escrowReleased:false},
+  {id:4,brand:"Luxe Threads",bi:"LT",ci:2,amount:3200,platform:"Instagram",status:"Active",deadline:"Apr 10",deliverables:"2x Feed Posts, 1x Reel",progress:1,source:"external",campaignTitle:"SS25 Collection Feature",escrow:true,escrowReleased:false},
 ];
 
 const OFFERS = [
@@ -416,6 +417,80 @@ const SOCIALS = [
   {key:"tw",  label:"Twitter / X",      icon:"𝕏",  color:"#94a3b8", placeholder:"@yourhandle"},
   {key:"web", label:"Personal Website", icon:"🌐", color:"#6366f1", placeholder:"https://yoursite.com"},
 ];
+
+// ─── DEADLINE ALERT BANNER ───────────────────────────────────────────────────
+function DeadlineAlertBanner({deals}) {
+  const [now,setNow] = useState(()=>Date.now());
+  useEffect(()=>{
+    const id = setInterval(()=>setNow(Date.now()),1000);
+    return ()=>clearInterval(id);
+  },[]);
+
+  const MONTHS={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  const parseDeadline = str => {
+    if(!str) return null;
+    const [m,d] = str.trim().split(" ");
+    if(!(m in MONTHS)||!d) return null;
+    return new Date(new Date().getFullYear(), MONTHS[m], parseInt(d), 23, 59, 59, 999);
+  };
+
+  const fmtCountdown = ms => {
+    if(ms<=0) return null;
+    const totalSec = Math.floor(ms/1000);
+    const h = Math.floor(totalSec/3600);
+    const m = Math.floor((totalSec%3600)/60);
+    const s = totalSec%60;
+    if(h>=24){
+      const days=Math.floor(h/24), rh=h%24;
+      return `${days}d ${rh}h ${String(m).padStart(2,"0")}m`;
+    }
+    return `${String(h).padStart(2,"0")}h ${String(m).padStart(2,"0")}m ${String(s).padStart(2,"0")}s`;
+  };
+
+  const alerts = (deals||[])
+    .filter(d=>d.status!=="Completed")
+    .map(d=>{
+      const dt = parseDeadline(d.deadline);
+      if(!dt) return null;
+      return {...d, ms: dt.getTime()-now};
+    })
+    .filter(Boolean)
+    .filter(d=>d.ms <= 72*60*60*1000)
+    .sort((a,b)=>a.ms-b.ms);
+
+  if(!alerts.length) return null;
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
+      {alerts.map(al=>{
+        const over = al.ms<=0;
+        const col = over?"var(--red)":"var(--yellow)";
+        const bg  = over?"rgba(248,113,113,.07)":"rgba(251,191,36,.06)";
+        const bdr = over?"rgba(248,113,113,.22)":"rgba(251,191,36,.22)";
+        const pill= over?"rgba(248,113,113,.12)":"rgba(251,191,36,.12)";
+        const countdown = fmtCountdown(al.ms);
+        return (
+          <div key={al.id} style={{display:"flex",alignItems:"center",gap:13,padding:"11px 16px",background:bg,border:"1px solid "+bdr,borderLeft:"3px solid "+col,borderRadius:"var(--radius)",animation:over?"none":"deadlinePulse 2.6s ease-in-out infinite"}}>
+            <span style={{fontSize:16,flexShrink:0,lineHeight:1}}>{over?"🔴":"⚠️"}</span>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:"13px",fontWeight:700,lineHeight:1.35}}>
+                <span style={{color:col}}>{over?"Overdue — ":"Due soon — "}</span>
+                <span style={{color:"var(--text)"}}>{al.brand}</span>
+                {al.campaignTitle&&al.campaignTitle!=="Custom Deal"&&(
+                  <span style={{color:"var(--text2)",fontWeight:500}}> · {al.campaignTitle}</span>
+                )}
+              </div>
+              <div style={{fontSize:"11px",color:"var(--text3)",marginTop:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{al.deliverables}</div>
+            </div>
+            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:700,color:col,background:pill,border:"1px solid "+bdr,borderRadius:7,padding:"5px 12px",flexShrink:0,letterSpacing:".03em",whiteSpace:"nowrap"}}>
+              {over?"OVERDUE":countdown}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
 function PlatformBadge({p}) {
@@ -1162,6 +1237,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
   return (
     <div className="fade-in">
       <AvailabilityBanner status={availStatus||"open"} setStatus={setAvailStatus}/>
+      <DeadlineAlertBanner deals={deals}/>
 
       {/* Onboarding progress bar */}
       {!allDone&&(
@@ -2288,6 +2364,7 @@ function ContentCalendarPage({deals}) {
   if(loading) return <SkeletonPage layout="calendar"/>;
   return (
     <div className="fade-in">
+      <DeadlineAlertBanner deals={deals}/>
       <div className="ph-row">
         <div><div className="page-title">Content Calendar</div><div className="page-subtitle">All your deal deadlines in one view.</div></div>
         <div style={{display:"flex",gap:7}}>{["month","list"].map(v=><button key={v} onClick={()=>setView(v)} className={"filter-btn"+(view===v?" active":"")}>{v==="month"?"Month":"List"}</button>)}</div>
@@ -2805,21 +2882,168 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={}}) {
 // ─── EARNINGS & P&L ──────────────────────────────────────────────────────────
 function EarningsPage() {
   const loading = useSkeleton();
+  const [goal,setGoal] = useState(()=>{try{const g=parseInt(localStorage.getItem("bridgn_earnings_goal"));return g>0?g:0;}catch{return 0;}});
+  const [editGoal,setEditGoal] = useState(false);
+  const [goalInput,setGoalInput] = useState("");
+  const [fireConfetti,confettiFiring] = useConfetti();
+  const firedRef = useRef(false);
+
+  const earningsMonthly = EARNINGS_MONTHLY;
+  const earningsByBrand = EARNINGS_BY_BRAND;
+  const currentMonth = earningsMonthly[earningsMonthly.length-1];
+  const current = currentMonth.amount;
+  const pct = goal>0 ? current/goal : 0;
+  const done = pct>=1;
+
+  useEffect(()=>{
+    if(goal>0 && done && !firedRef.current){
+      firedRef.current = true;
+      fireConfetti();
+    }
+  },[goal,done]);
+
   if(loading) return <SkeletonPage layout="analytics"/>;
-  const earningsMonthly = [];
-  const earningsByBrand = [];
-  if(!earningsMonthly.length) return (
-    <div className="fade-in">
-      <div className="ph-row"><div><div className="page-title">Earnings & P&L</div><div className="page-subtitle">Your income, brand performance, and business health at a glance.</div></div></div>
-      <div className="card" style={{padding:"48px 20px",textAlign:"center"}}><div style={{fontSize:"36px",marginBottom:14}}>📈</div><div style={{fontSize:"16px",fontWeight:600,marginBottom:8}}>No earnings yet</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,maxWidth:340,margin:"0 auto"}}>Once you complete deals and receive payments, your income, P&L, and brand breakdown will appear here.</div></div>
-    </div>
-  );
+
+  const saveGoal = () => {
+    const v = parseInt((goalInput||"").replace(/[^0-9]/g,""))||0;
+    if(v>0){
+      setGoal(v);
+      try{localStorage.setItem("bridgn_earnings_goal",String(v));}catch{}
+      firedRef.current = false;
+    }
+    setEditGoal(false);
+    setGoalInput("");
+  };
+
   const maxAmt = Math.max(...earningsMonthly.map(e=>e.amount));
   const ytd = earningsMonthly.reduce((s,e)=>s+e.amount,0);
   const avg = Math.round(ytd/earningsMonthly.length);
   const best = earningsByBrand.reduce((a,b)=>a.amount>b.amount?a:b);
+
+  // SVG ring geometry
+  const R=54, CX=64, circ=2*Math.PI*R;
+  const dashOffset = circ*(1-Math.min(pct,1));
+
   return (
     <div className="fade-in">
+      <ConfettiCanvas active={confettiFiring}/>
+
+      {/* ── Monthly Goal Card ───────────────────────────────── */}
+      <div className="card-lg" style={{padding:"26px 28px",marginBottom:26,position:"relative",overflow:"hidden"}}>
+        {/* subtle background glow */}
+        {done&&<div style={{position:"absolute",top:-40,right:-40,width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle,rgba(52,211,153,.12),transparent 70%)",pointerEvents:"none"}}/>}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22}}>
+          <div>
+            <div style={{fontSize:"14px",fontWeight:700,color:"var(--text)"}}>Monthly Goal</div>
+            <div style={{fontSize:"12px",color:"var(--text2)",marginTop:2}}>{currentMonth.month} earnings tracking</div>
+          </div>
+          {!editGoal&&(
+            <button className="btn btn-secondary btn-sm" onClick={()=>{setEditGoal(true);setGoalInput(goal?String(goal):"");}}>
+              {goal?"Edit Goal":"Set Goal"}
+            </button>
+          )}
+        </div>
+
+        <div style={{display:"flex",gap:36,alignItems:"center",flexWrap:"wrap"}}>
+          {/* Progress ring */}
+          <div style={{position:"relative",width:148,height:148,flexShrink:0}}>
+            <svg width={148} height={148} style={{transform:"rotate(-90deg)"}}>
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#5b8af5"/>
+                  <stop offset="55%" stopColor="#a78bfa"/>
+                  <stop offset="100%" stopColor="#c084fc"/>
+                </linearGradient>
+                <filter id="ringGlow">
+                  <feGaussianBlur stdDeviation="3" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              {/* Track */}
+              <circle cx={CX+10} cy={CX+10} r={R} fill="none" stroke="var(--surface2)" strokeWidth={11}/>
+              {/* Progress arc */}
+              {goal>0&&(
+                <circle
+                  cx={CX+10} cy={CX+10} r={R}
+                  fill="none"
+                  stroke={done?"#34d399":"url(#ringGrad)"}
+                  strokeWidth={11}
+                  strokeLinecap="round"
+                  strokeDasharray={circ}
+                  strokeDashoffset={dashOffset}
+                  filter={done?"url(#ringGlow)":undefined}
+                  style={{transition:"stroke-dashoffset .75s cubic-bezier(.16,1,.3,1),stroke .4s ease"}}
+                />
+              )}
+            </svg>
+            {/* Center label */}
+            <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
+              {goal>0 ? (
+                <>
+                  <div style={{fontSize:done?"20px":"26px",fontWeight:800,fontFamily:"Syne,sans-serif",lineHeight:1,color:done?"var(--green)":"var(--text)",transition:"color .4s"}}>
+                    {done?"🎉":Math.round(Math.min(pct,1)*100)+"%"}
+                  </div>
+                  {!done&&<div style={{fontSize:"10px",color:"var(--text3)",marginTop:4,fontWeight:600,letterSpacing:".04em"}}>OF GOAL</div>}
+                </>
+              ):(
+                <div style={{fontSize:"11px",color:"var(--text3)",textAlign:"center",padding:"0 16px",lineHeight:1.45}}>No goal set</div>
+              )}
+            </div>
+          </div>
+
+          {/* Right panel */}
+          <div style={{flex:1,minWidth:200}}>
+            {editGoal ? (
+              <div>
+                <div style={{fontSize:"12px",fontWeight:600,color:"var(--text2)",marginBottom:10}}>Set your target for {currentMonth.month}</div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <div style={{position:"relative",flex:1}}>
+                    <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--text2)",fontWeight:700,fontSize:15,pointerEvents:"none"}}>$</span>
+                    <input className="fi" style={{paddingLeft:24}} type="number" placeholder="e.g. 15000" value={goalInput} onChange={e=>setGoalInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveGoal()} autoFocus/>
+                  </div>
+                  <button className="btn btn-primary btn-sm" onClick={saveGoal}>Save</button>
+                  <button className="btn btn-secondary btn-sm" onClick={()=>setEditGoal(false)}>Cancel</button>
+                </div>
+                {goal>0&&<div style={{fontSize:"11px",color:"var(--text3)",marginTop:8}}>Current goal: ${goal.toLocaleString()}</div>}
+              </div>
+            ) : goal>0 ? (
+              <div style={{display:"flex",flexDirection:"column",gap:16}}>
+                <div style={{display:"flex",gap:28,flexWrap:"wrap"}}>
+                  <div>
+                    <div style={{fontSize:"10px",fontWeight:800,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:5}}>Earned ({currentMonth.month})</div>
+                    <div style={{fontSize:"30px",fontWeight:800,fontFamily:"Syne,sans-serif",color:"var(--accent)",lineHeight:1}}>${current.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div style={{fontSize:"10px",fontWeight:800,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:5}}>Target</div>
+                    <div style={{fontSize:"30px",fontWeight:800,fontFamily:"Syne,sans-serif",color:"var(--text)",lineHeight:1}}>${goal.toLocaleString()}</div>
+                  </div>
+                </div>
+                {done ? (
+                  <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"10px 16px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.25)",borderRadius:"var(--radius-sm)"}}>
+                    <span style={{fontSize:16}}>🎉</span>
+                    <span style={{fontSize:"13px",fontWeight:700,color:"var(--green)"}}>Goal reached! You crushed it this month.</span>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{fontSize:"10px",fontWeight:800,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:5}}>Still needed</div>
+                    <div style={{fontSize:"22px",fontWeight:700,fontFamily:"Syne,sans-serif",color:"var(--accent2)"}}>${(goal-current).toLocaleString()}</div>
+                    <div style={{marginTop:10,height:5,background:"var(--surface2)",borderRadius:99,overflow:"hidden",maxWidth:280}}>
+                      <div style={{height:"100%",width:(Math.min(pct,1)*100)+"%",background:"linear-gradient(90deg,var(--accent),#a78bfa)",borderRadius:99,transition:"width .75s cubic-bezier(.16,1,.3,1)"}}/>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:14}}>Set a monthly income target and watch your progress fill up in real time. Hit your goal and we'll celebrate with you. 🎉</div>
+                <button className="btn btn-primary btn-sm" onClick={()=>{setEditGoal(true);setGoalInput("");}}>Set a goal →</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Page header + stats ─────────────────────────────── */}
       <div className="ph-row"><div><div className="page-title">Earnings & P&L</div><div className="page-subtitle">Your income, brand performance, and business health at a glance.</div></div><button className="btn btn-secondary">Export CSV</button></div>
       <div className="g4 section" style={{gap:12}}>
         {[
@@ -4572,7 +4796,7 @@ function App() {
   const [role,setRole] = useState("creator");
   const [page,setPage] = useState("dashboard");
   const [selected,setSelected] = useState(null);
-  const [deals,setDeals] = useState([]);
+  const [deals,setDeals] = useState(CREATOR_DEALS_INIT);
   const [availStatus,setAvailStatus] = useState("open");
   const [mobSidebar,setMobSidebar] = useState(false);
   const [socialLinks,setSocialLinks] = useState({ig:"",tt:"",yt:"",tw:"",web:"",bio:"",location:""});
