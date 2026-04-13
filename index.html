@@ -237,6 +237,7 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 .no-scrollbar{scrollbar-width:none;-ms-overflow-style:none}
 .no-scrollbar::-webkit-scrollbar{display:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
 @keyframes slideIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes modalIn{from{opacity:0;transform:scale(.93) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
@@ -966,6 +967,7 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle,darkMode,setDa
             <button onClick={()=>{setShowMenu(false);setPage("profile-settings");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>⚙️ Profile Settings</button>
             <button onClick={()=>{setShowMenu(false);setPage("public-profile");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>👤 My Profile</button>
             <button onClick={()=>{setShowMenu(false);setPage("notifications");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>🔔 Notifications</button>
+            <button onClick={()=>{setShowMenu(false);setPage("settings");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>🛠️ Settings</button>
             <div style={{height:1,background:"var(--border)"}}></div>
             <button onClick={()=>{setShowMenu(false);onSignOut&&onSignOut();}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--red)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>🚪 Sign Out</button>
           </div>
@@ -5198,23 +5200,220 @@ function ShortlistsPage({setPage,setSelected}) {
 // ─── MESSAGES ─────────────────────────────────────────────────────────────────
 function MessagesPage({setPage}) {
   const loading = useSkeleton();
+  const [threads,setThreads] = useState([]);
+  const [activeId,setActiveId] = useState(null);
+  const [msgInput,setMsgInput] = useState("");
+  const [newModal,setNewModal] = useState(false);
+  const [newTarget,setNewTarget] = useState("");
+  const [tick,setTick] = useState(0);
+  const msgsEndRef = useRef(null);
+
+  // Refresh relative timestamps every 30s
+  useEffect(()=>{
+    const id = setInterval(()=>setTick(t=>t+1),30000);
+    return ()=>clearInterval(id);
+  },[]);
+
+  // Scroll to bottom when active thread's messages change
+  useEffect(()=>{
+    msgsEndRef.current?.scrollIntoView({behavior:"smooth"});
+  },[activeId, threads.find(t=>t.id===activeId)?.msgs.length]);
+
+  const relTime = ts => {
+    const diff = Date.now()-ts;
+    const s = Math.floor(diff/1000);
+    const m = Math.floor(s/60);
+    const h = Math.floor(m/60);
+    const d = Math.floor(h/24);
+    if(s<10) return "Just now";
+    if(s<60) return s+"s ago";
+    if(m<2) return "1 minute ago";
+    if(m<60) return m+" minutes ago";
+    if(h<2) return "1 hour ago";
+    if(h<24) return h+" hours ago";
+    if(d===1) return "Yesterday";
+    if(d<7) return d+" days ago";
+    return new Date(ts).toLocaleDateString("en-US",{month:"short",day:"numeric"});
+  };
+
+  const activeThread = threads.find(t=>t.id===activeId);
+
+  const startConversation = () => {
+    const name = newTarget.trim();
+    if(!name) return;
+    const isEmail = name.includes("@");
+    const initials = isEmail
+      ? name.split("@")[0].slice(0,2).toUpperCase()
+      : name.split(" ").filter(Boolean).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+    const id = Date.now();
+    const thread = {id,name,initials,ci:threads.length%6,lastMsg:"",ts:Date.now(),msgs:[],unread:0};
+    setThreads(t=>[thread,...t]);
+    setActiveId(id);
+    setNewTarget("");
+    setNewModal(false);
+  };
+
+  const sendMsg = () => {
+    const text = msgInput.trim();
+    if(!text||!activeId) return;
+    const msg = {id:Date.now(),from:"me",text,ts:Date.now()};
+    setThreads(t=>t.map(th=>th.id===activeId
+      ?{...th,msgs:[...th.msgs,msg],lastMsg:text,ts:Date.now()}
+      :th
+    ));
+    setMsgInput("");
+  };
+
   if(loading) return <SkeletonPage layout="simple"/>;
   return (
     <div className="fade-in">
       <div className="ph-row">
         <div>
           <div className="page-title">Messages</div>
-          <div className="page-subtitle">All deal communication happens inside the Deal Room.</div>
+          <div className="page-subtitle">Direct conversations with brands and partners.</div>
         </div>
+        <button className="btn btn-primary" onClick={()=>setNewModal(true)}>+ New Conversation</button>
       </div>
-      <div className="card" style={{padding:"56px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
-        <EmptySVG type="messages" size={136}/>
-        <div style={{fontSize:"16px",fontWeight:700,marginBottom:10}}>No messages yet</div>
-        <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.75,marginBottom:28}}>
-          Messages are tied to active deals. Once you have a live deal, all communication with your partner happens directly inside the Deal Room — keeping everything in one place.
+
+      {threads.length===0?(
+        <div className="card" style={{padding:"56px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
+          <EmptySVG type="messages" size={136}/>
+          <div style={{fontSize:"16px",fontWeight:700,marginBottom:10}}>No conversations yet</div>
+          <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.75,marginBottom:24}}>
+            Start a direct conversation with a brand or partner. Messages from the Deal Room will also appear here.
+          </div>
+          <button className="btn btn-primary" onClick={()=>setNewModal(true)}>+ New Conversation</button>
         </div>
-        <button className="btn btn-primary" onClick={()=>setPage("deals")}>View My Deals</button>
-      </div>
+      ):(
+        <div style={{display:"grid",gridTemplateColumns:"290px 1fr",height:"calc(100vh - 196px)",minHeight:440,background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",overflow:"hidden"}}>
+
+          {/* ── Thread list ── */}
+          <div style={{borderRight:"1px solid var(--border)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{padding:"10px 12px",borderBottom:"1px solid var(--border)",flexShrink:0}}>
+              <input placeholder="Search conversations…" style={{width:"100%",boxSizing:"border-box",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",padding:"7px 11px",fontSize:"12px",color:"var(--text)",outline:"none",fontFamily:"Space Grotesk,sans-serif"}}/>
+            </div>
+            <div style={{flex:1,overflowY:"auto"}}>
+              {threads.map(t=>{
+                const isAct = t.id===activeId;
+                return (
+                  <div key={t.id} onClick={()=>setActiveId(t.id)}
+                    style={{padding:"11px 13px",display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer",borderBottom:"1px solid var(--border)",background:isAct?"var(--accent-light)":"transparent",transition:"background .1s",position:"relative"}}
+                    onMouseEnter={e=>{if(!isAct)e.currentTarget.style.background="var(--surface2)";}}
+                    onMouseLeave={e=>{if(!isAct)e.currentTarget.style.background="transparent";}}>
+                    {isAct&&<div style={{position:"absolute",left:0,top:0,bottom:0,width:3,background:"var(--accent)",borderRadius:"0 2px 2px 0"}}/>}
+                    <div style={{width:38,height:38,borderRadius:11,background:bc(t.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px",fontWeight:700,color:"white",flexShrink:0}}>{t.initials}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:2}}>
+                        <span style={{fontSize:"13px",fontWeight:600,color:"var(--text)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:130}}>{t.name}</span>
+                        <span style={{fontSize:"10px",color:"var(--text3)",flexShrink:0,marginLeft:6}}>{relTime(t.ts)}</span>
+                      </div>
+                      <div style={{fontSize:"11px",color:"var(--text3)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.lastMsg||"No messages yet"}</div>
+                    </div>
+                    {t.unread>0&&<div style={{width:18,height:18,borderRadius:"50%",background:"var(--accent)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",fontWeight:700,color:"white",flexShrink:0,marginTop:2}}>{t.unread}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Conversation ── */}
+          {activeThread?(
+            <div style={{display:"flex",flexDirection:"column",overflow:"hidden"}}>
+              {/* Header */}
+              <div style={{padding:"12px 18px",borderBottom:"1px solid var(--border)",display:"flex",gap:11,alignItems:"center",flexShrink:0}}>
+                <div style={{width:36,height:36,borderRadius:10,background:bc(activeThread.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",fontWeight:700,color:"white",flexShrink:0}}>{activeThread.initials}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:"14px",fontWeight:700,lineHeight:1.2}}>{activeThread.name}</div>
+                  <div style={{fontSize:"11px",color:"var(--text3)",marginTop:1}}>Direct message</div>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div style={{flex:1,overflowY:"auto",padding:"18px 18px 10px",display:"flex",flexDirection:"column",gap:10}}>
+                {activeThread.msgs.length===0&&(
+                  <div style={{margin:"auto",textAlign:"center",color:"var(--text3)",fontSize:"13px",lineHeight:1.7}}>
+                    <div style={{fontSize:"30px",marginBottom:8}}>👋</div>
+                    <div style={{fontWeight:600,color:"var(--text2)",marginBottom:4}}>Start the conversation</div>
+                    <div>This is the beginning of your thread with<br/><strong style={{color:"var(--text)"}}>{activeThread.name}</strong></div>
+                  </div>
+                )}
+                {activeThread.msgs.map((m,i,arr)=>{
+                  const isMe = m.from==="me";
+                  // Show timestamp after last message or after a gap > 2 min
+                  const showTime = i===arr.length-1||(arr[i+1]?.ts-m.ts)>120000;
+                  return (
+                    <div key={m.id} style={{display:"flex",flexDirection:"column",alignItems:isMe?"flex-end":"flex-start",gap:2}}>
+                      <div style={{
+                        maxWidth:"72%",padding:"9px 14px",
+                        borderRadius:isMe?"16px 16px 4px 16px":"16px 16px 16px 4px",
+                        background:isMe?"linear-gradient(135deg,var(--accent),#7c3aed)":"var(--surface2)",
+                        border:isMe?"none":"1px solid var(--border)",
+                        fontSize:"13px",lineHeight:1.55,color:isMe?"white":"var(--text)",
+                        wordBreak:"break-word",
+                        boxShadow:isMe?"0 2px 10px rgba(91,138,245,.3)":"none",
+                      }}>{m.text}</div>
+                      {showTime&&<span style={{fontSize:"10px",color:"var(--text3)"}}>{relTime(m.ts)}</span>}
+                    </div>
+                  );
+                })}
+                {/* Typing indicator — visible while composing */}
+                {msgInput.length>0&&(
+                  <div style={{display:"flex",alignItems:"center",gap:4,padding:"9px 13px",borderRadius:"16px 16px 16px 4px",background:"var(--surface2)",border:"1px solid var(--border)",width:"fit-content",minWidth:52}}>
+                    {[0,1,2].map(i=>(
+                      <div key={i} style={{width:6,height:6,borderRadius:"50%",background:"var(--text3)",animation:`typingBounce .9s ease-in-out ${i*0.18}s infinite`}}/>
+                    ))}
+                  </div>
+                )}
+                <div ref={msgsEndRef}/>
+              </div>
+
+              {/* Input */}
+              <div style={{padding:"10px 14px 12px",borderTop:"1px solid var(--border)",display:"flex",gap:9,alignItems:"flex-end",flexShrink:0}}>
+                <textarea
+                  value={msgInput}
+                  onChange={e=>setMsgInput(e.target.value)}
+                  onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}}}
+                  placeholder={`Message ${activeThread.name}…`}
+                  rows={1}
+                  style={{flex:1,background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:12,padding:"9px 13px",fontSize:"13px",color:"var(--text)",resize:"none",outline:"none",fontFamily:"Space Grotesk,sans-serif",lineHeight:1.55,maxHeight:112,overflowY:"auto",transition:"border-color .15s"}}
+                  onFocus={e=>e.target.style.borderColor="var(--accent)"}
+                  onBlur={e=>e.target.style.borderColor="var(--border)"}
+                />
+                <button onClick={sendMsg} disabled={!msgInput.trim()}
+                  style={{width:38,height:38,borderRadius:11,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",cursor:msgInput.trim()?"pointer":"default",border:"none",background:msgInput.trim()?"linear-gradient(135deg,var(--accent),#7c3aed)":"var(--surface2)",transition:"all .15s",outline:"none"}}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z" stroke={msgInput.trim()?"white":"var(--text3)"} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ):(
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8,color:"var(--text3)"}}>
+              <div style={{fontSize:"32px"}}>💬</div>
+              <div style={{fontSize:"13px",fontWeight:600,color:"var(--text2)"}}>Select a conversation</div>
+              <div style={{fontSize:"12px"}}>or start a new one</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── New Conversation modal ── */}
+      {newModal&&(
+        <div style={{position:"fixed",inset:0,zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:20,background:"rgba(4,6,15,.82)",backdropFilter:"blur(10px)"}} onClick={()=>setNewModal(false)}>
+          <div style={{background:"var(--surface)",borderRadius:20,padding:"28px 28px 22px",width:"100%",maxWidth:400,boxShadow:"0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06)",animation:"modalIn .3s cubic-bezier(.16,1,.3,1) both"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"19px",fontWeight:800,letterSpacing:"-.2px",marginBottom:4}}>New Conversation</div>
+            <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:20}}>Enter a brand name or email address to start a new thread.</div>
+            <div className="fg" style={{marginBottom:18}}>
+              <label className="fl">Brand name or email</label>
+              <input className="fi" autoFocus value={newTarget} onChange={e=>setNewTarget(e.target.value)} onKeyDown={e=>e.key==="Enter"&&startConversation()} placeholder="e.g. Nike or contact@nike.com"/>
+            </div>
+            <div style={{display:"flex",gap:9}}>
+              <button onClick={startConversation} disabled={!newTarget.trim()} className="btn btn-primary btn-lg" style={{flex:1,opacity:newTarget.trim()?1:.45}}>Start Conversation</button>
+              <button onClick={()=>{setNewModal(false);setNewTarget("");}} className="btn btn-secondary btn-lg">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -5262,6 +5461,266 @@ function NotificationsPage({setPage}) {
           </div>
         ))}
       </div>
+      )}
+    </div>
+  );
+}
+
+// ─── SETTINGS PAGE ───────────────────────────────────────────────────────────
+function Toggle({checked,onChange,label}) {
+  return (
+    <label style={{display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",userSelect:"none"}}>
+      <span style={{fontSize:13,color:"var(--text)",fontWeight:500}}>{label}</span>
+      <div
+        onClick={()=>onChange(!checked)}
+        style={{
+          width:44,height:24,borderRadius:12,
+          background:checked?"var(--accent)":"var(--border)",
+          position:"relative",
+          transition:"background .2s",
+          flexShrink:0,
+          cursor:"pointer",
+        }}
+      >
+        <div style={{
+          position:"absolute",
+          top:3,left:checked?23:3,
+          width:18,height:18,borderRadius:"50%",
+          background:"#fff",
+          boxShadow:"0 1px 4px rgba(0,0,0,.25)",
+          transition:"left .18s cubic-bezier(.4,0,.2,1)",
+        }}/>
+      </div>
+    </label>
+  );
+}
+
+function SettingsPage({authUser,darkMode,setDarkMode,onSignOut}) {
+  const loading = useSkeleton();
+
+  // Notification prefs
+  const [notifPrefs,setNotifPrefs] = useState(()=>{
+    try {
+      const raw = localStorage.getItem("bridgn_notif_"+(authUser?.id||"guest"));
+      if(raw) return JSON.parse(raw);
+    } catch {}
+    return {newOffers:true,dealUpdates:true,paymentReceived:true,brandMessages:true,weeklyEarnings:true};
+  });
+
+  // Privacy prefs
+  const [privacyPrefs,setPrivacyPrefs] = useState(()=>{
+    try {
+      const raw = localStorage.getItem("bridgn_privacy_"+(authUser?.id||"guest"));
+      if(raw) return JSON.parse(raw);
+    } catch {}
+    return {showInDiscovery:true,showAvailability:true,showEarnings:false};
+  });
+
+  // Account section state
+  const [showPwForm,setShowPwForm] = useState(false);
+  const [pwNew,setPwNew] = useState("");
+  const [pwConfirm,setPwConfirm] = useState("");
+  const [pwLoading,setPwLoading] = useState(false);
+  const [showDeleteModal,setShowDeleteModal] = useState(false);
+  const [deleteConfirm,setDeleteConfirm] = useState("");
+
+  // Toast
+  const [toast,setToast] = useState(null);
+  const showToast = (msg,type="success") => {
+    setToast({msg,type});
+    setTimeout(()=>setToast(null),3000);
+  };
+
+  const saveNotif = () => {
+    try { localStorage.setItem("bridgn_notif_"+(authUser?.id||"guest"), JSON.stringify(notifPrefs)); } catch {}
+    showToast("Notification preferences saved.");
+  };
+
+  const savePrivacy = () => {
+    try { localStorage.setItem("bridgn_privacy_"+(authUser?.id||"guest"), JSON.stringify(privacyPrefs)); } catch {}
+    showToast("Privacy settings saved.");
+  };
+
+  const handleChangePassword = async () => {
+    if(!pwNew.trim()) return showToast("Please enter a new password.","error");
+    if(pwNew !== pwConfirm) return showToast("Passwords do not match.","error");
+    if(pwNew.length < 8) return showToast("Password must be at least 8 characters.","error");
+    setPwLoading(true);
+    try {
+      const {error} = await supabase.auth.updateUser({password: pwNew});
+      if(error) throw error;
+      showToast("Password updated successfully.");
+      setPwNew(""); setPwConfirm(""); setShowPwForm(false);
+    } catch(e) {
+      showToast(e.message||"Failed to update password.","error");
+    }
+    setPwLoading(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    if(deleteConfirm.toLowerCase() !== "delete") return showToast('Type "delete" to confirm.','error');
+    showToast("Account deletion is not available in this preview.","error");
+    setShowDeleteModal(false);
+    setDeleteConfirm("");
+  };
+
+  if(loading) return <SkeletonPage layout="list"/>;
+
+  const sectionCard = (children, extraStyle={}) => (
+    <div className="card" style={{padding:"22px 24px",marginBottom:18,...extraStyle}}>{children}</div>
+  );
+
+  const sectionTitle = (t) => (
+    <div style={{fontSize:15,fontWeight:700,marginBottom:16,color:"var(--text)"}}>{t}</div>
+  );
+
+  const divider = () => <div style={{height:1,background:"var(--border)",margin:"12px 0"}}/>;
+
+  return (
+    <div className="fade-in" style={{maxWidth:640}}>
+      <div className="ph-row" style={{marginBottom:24}}>
+        <div>
+          <div className="page-title">Settings</div>
+          <div className="page-subtitle">Manage your account, notifications, and preferences.</div>
+        </div>
+      </div>
+
+      {/* Account */}
+      {sectionCard(<>
+        {sectionTitle("Account")}
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:11,fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:5}}>Email Address</div>
+          <div style={{fontSize:13,padding:"10px 14px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",color:"var(--text2)"}}>{authUser?.email||"—"}</div>
+        </div>
+        {divider()}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom: showPwForm?14:0}}>
+          <div>
+            <div style={{fontSize:13,fontWeight:600}}>Password</div>
+            <div style={{fontSize:12,color:"var(--text3)",marginTop:2}}>Change your login password</div>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={()=>setShowPwForm(v=>!v)}>
+            {showPwForm?"Cancel":"Change Password"}
+          </button>
+        </div>
+        {showPwForm&&(
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginTop:4}}>
+            <input
+              type="password" placeholder="New password" value={pwNew}
+              onChange={e=>setPwNew(e.target.value)}
+              style={{padding:"9px 13px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",color:"var(--text)",fontSize:13,fontFamily:"inherit",outline:"none"}}
+            />
+            <input
+              type="password" placeholder="Confirm new password" value={pwConfirm}
+              onChange={e=>setPwConfirm(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&handleChangePassword()}
+              style={{padding:"9px 13px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",color:"var(--text)",fontSize:13,fontFamily:"inherit",outline:"none"}}
+            />
+            <button className="btn btn-primary btn-sm" onClick={handleChangePassword} disabled={pwLoading} style={{alignSelf:"flex-start"}}>
+              {pwLoading?"Saving…":"Save New Password"}
+            </button>
+          </div>
+        )}
+        {divider()}
+        <div style={{marginTop:4}}>
+          <button
+            onClick={()=>setShowDeleteModal(true)}
+            style={{background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",fontSize:13,fontWeight:600,color:"var(--red)",padding:0,display:"flex",alignItems:"center",gap:6}}
+          >
+            🗑️ Delete Account
+          </button>
+          <div style={{fontSize:11,color:"var(--text3)",marginTop:3}}>Permanently remove your account and all associated data.</div>
+        </div>
+      </>)}
+
+      {/* Notifications */}
+      {sectionCard(<>
+        {sectionTitle("Notifications")}
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {[
+            {key:"newOffers",       label:"New offers from brands"},
+            {key:"dealUpdates",     label:"Deal status updates"},
+            {key:"paymentReceived", label:"Payment received"},
+            {key:"brandMessages",   label:"Brand messages"},
+            {key:"weeklyEarnings",  label:"Weekly earnings summary"},
+          ].map(({key,label})=>(
+            <Toggle
+              key={key}
+              checked={notifPrefs[key]}
+              label={label}
+              onChange={v=>setNotifPrefs(p=>({...p,[key]:v}))}
+            />
+          ))}
+        </div>
+        <div style={{marginTop:18,display:"flex",justifyContent:"flex-end"}}>
+          <button className="btn btn-primary btn-sm" onClick={saveNotif}>Save Notifications</button>
+        </div>
+      </>)}
+
+      {/* Privacy */}
+      {sectionCard(<>
+        {sectionTitle("Privacy")}
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {[
+            {key:"showInDiscovery", label:"Show profile in brand discovery"},
+            {key:"showAvailability",label:"Show availability to brands"},
+            {key:"showEarnings",    label:"Show earnings on public profile"},
+          ].map(({key,label})=>(
+            <Toggle
+              key={key}
+              checked={privacyPrefs[key]}
+              label={label}
+              onChange={v=>setPrivacyPrefs(p=>({...p,[key]:v}))}
+            />
+          ))}
+        </div>
+        <div style={{marginTop:18,display:"flex",justifyContent:"flex-end"}}>
+          <button className="btn btn-primary btn-sm" onClick={savePrivacy}>Save Privacy</button>
+        </div>
+      </>)}
+
+      {/* Appearance */}
+      {sectionCard(<>
+        {sectionTitle("Appearance")}
+        <Toggle
+          checked={darkMode}
+          label="Dark mode"
+          onChange={v=>setDarkMode(v)}
+        />
+        <div style={{fontSize:12,color:"var(--text3)",marginTop:10}}>
+          Switching modes applies instantly — no save needed.
+        </div>
+      </>)}
+
+      {/* Delete Account Modal */}
+      {showDeleteModal&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}} onClick={()=>setShowDeleteModal(false)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:28,width:"100%",maxWidth:400,boxShadow:"var(--shadow-lg)"}}>
+            <div style={{fontSize:16,fontWeight:700,marginBottom:8,color:"var(--red)"}}>Delete Account</div>
+            <div style={{fontSize:13,color:"var(--text2)",marginBottom:18,lineHeight:1.6}}>This action is permanent and cannot be undone. All your data, deals, and earnings history will be removed. Type <strong>delete</strong> below to confirm.</div>
+            <input
+              autoFocus
+              value={deleteConfirm}
+              onChange={e=>setDeleteConfirm(e.target.value)}
+              placeholder='Type "delete" to confirm'
+              style={{width:"100%",boxSizing:"border-box",padding:"9px 13px",borderRadius:"var(--radius-sm)",border:"1px solid var(--red)",background:"var(--surface2)",color:"var(--text)",fontSize:13,fontFamily:"inherit",outline:"none",marginBottom:14}}
+            />
+            <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+              <button className="btn btn-secondary btn-sm" onClick={()=>{setShowDeleteModal(false);setDeleteConfirm("");}}>Cancel</button>
+              <button onClick={handleDeleteAccount} style={{padding:"8px 16px",borderRadius:"var(--radius-sm)",background:"var(--red)",color:"#fff",border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:13}}>Delete My Account</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast&&(
+        <div style={{
+          position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",
+          background:toast.type==="error"?"var(--red)":"var(--green)",
+          color:"#fff",padding:"10px 20px",borderRadius:99,fontSize:13,fontWeight:600,
+          boxShadow:"0 4px 20px rgba(0,0,0,.25)",zIndex:3000,whiteSpace:"nowrap",
+          animation:"slideUp .25s ease",
+        }}>{toast.msg}</div>
       )}
     </div>
   );
@@ -5988,6 +6447,7 @@ function App() {
         case "expenses":     return React.createElement(ExpensesPage,{});
         case "messages":     return React.createElement(MessagesPage,{setPage});
         case "notifications":return React.createElement(NotificationsPage,{setPage});
+        case "settings":     return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut});
         default:             return React.createElement(CreatorDashboard,{setPage,setSelected,deals,availStatus,setAvailStatus,userName,profileFlags});
       }
     } else {
@@ -6011,6 +6471,7 @@ function App() {
         case "messages":      return React.createElement(MessagesPage,{setPage});
         case "notifications": return React.createElement(NotificationsPage,{setPage});
         case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials});
+        case "settings":      return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut});
         default:              return React.createElement(BrandDashboard,{setPage,setSelected});
       }
     }
