@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Bridgn – Creator & Brand Platform</title>
+<title>bridgn – Creator & Brand Platform</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
@@ -981,7 +981,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
     {k:"dashboard",l:"Dashboard",i:"⊞"},
     {k:"messages",l:"Messages",i:"💬"},
     {section:"Campaigns"},
-    {k:"campaigns",l:"Browse Campaigns",i:"🔍",soon:true},
+    {k:"campaigns",l:"Browse Campaigns",i:"🔍"},
     {k:"deals",l:"My Deals",i:"🤝"},
     {k:"new-deal",l:"New Deal",i:"➕"},
     {k:"deal-room",l:"Deal Room",i:"🏠"},
@@ -1481,7 +1481,7 @@ const ONBOARDING_STEPS = [
   {key:"profile",   label:"Complete your profile",  desc:"Add your bio and location so brands know who you are", page:"profile-settings", icon:"👤", color:"var(--accent)"},
   {key:"social",    label:"Add your social links",  desc:"Connect Instagram, TikTok, YouTube and more",         page:"profile-settings", icon:"🔗", color:"var(--purple)"},
   {key:"analytics", label:"Upload your analytics",  desc:"Share verified stats to build instant brand trust",    page:"analytics",        icon:"📊", color:"var(--accent2)"},
-  {key:"deal",      label:"Create your first deal", desc:"Bring a brand partnership into Bridgn to manage it",  page:"new-deal",         icon:"🤝", color:"var(--green)"},
+  {key:"deal",      label:"Create your first deal", desc:"Bring a brand partnership into bridgn to manage it",  page:"new-deal",         icon:"🤝", color:"var(--green)"},
 ];
 
 // ─── ACTIVITY FEED ────────────────────────────────────────────────────────────
@@ -1494,7 +1494,7 @@ function ActivityFeed() {
     {type:"approved", icon:"✅", bg:"rgba(52,211,153,.12)",  col:"var(--green)",   msgs:["approved your content","gave your post a 5-star rating","signed the contract"]},
     {type:"offer",    icon:"🎯", bg:"rgba(240,160,80,.15)",  col:"var(--accent2)", msgs:["sent you a partnership offer","invited you to their campaign","wants to discuss a collab"]},
   ];
-  const BRANDS = ["NovaTech","Luxara Skincare","Halo Health","Pulse Co.","StellarBev","Glow Labs","Vibe Wear","Modera"];
+  const BRANDS = [];
   const AMTS   = [500,800,1200,1500,2000,2500,3000];
 
   const mkItem = (secsAgo) => {
@@ -1506,7 +1506,7 @@ function ActivityFeed() {
     return { id:Date.now()+Math.random(), ev, brand, msg, ts:Date.now()-(secsAgo*1000) };
   };
 
-  const [items,  setItems]  = useState(()=>Array.from({length:5},(_,i)=>mkItem(60+i*i*90+Math.random()*120)));
+  const [items,  setItems]  = useState(()=>[]);
   const [newest, setNewest] = useState(null);
   const [tick,   setTick]   = useState(0);
 
@@ -1518,6 +1518,7 @@ function ActivityFeed() {
 
   // Schedule next event with random delay (8–18s)
   useEffect(()=>{
+    if(!BRANDS.length) return;
     const delay = 8000 + Math.random()*10000;
     const id = setTimeout(()=>{
       const item = mkItem(0);
@@ -1657,7 +1658,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
           <span style={{fontSize:"22px"}}>🔒</span>
           <div style={{flex:1}}>
             <div style={{fontSize:"14px",fontWeight:600,color:"var(--teal)",marginBottom:2}}>${escrowTotal.toLocaleString()} held in escrow across {pendingEscrow.length} deals</div>
-            <div style={{fontSize:"12px",color:"var(--text3)"}}>Funds are secured by Bridgn and release automatically upon brand approval.</div>
+            <div style={{fontSize:"12px",color:"var(--text3)"}}>Funds are secured by bridgn and release automatically upon brand approval.</div>
           </div>
           <button className="btn btn-teal btn-sm" onClick={()=>setPage("deals")}>View Deals</button>
         </div>
@@ -1667,7 +1668,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
           <span style={{fontSize:"22px"}}>🔗</span>
           <div style={{flex:1}}>
             <div style={{fontSize:"14px",fontWeight:600,color:"var(--accent)",marginBottom:2}}>You have {external.length} external deal{external.length>1?"s":""} managed here</div>
-            <div style={{fontSize:"12px",color:"var(--text3)"}}>Deals negotiated outside Bridgn — tracked and managed from one place.</div>
+            <div style={{fontSize:"12px",color:"var(--text3)"}}>Deals negotiated outside bridgn — tracked and managed from one place.</div>
           </div>
           <button className="btn btn-outline btn-sm" onClick={()=>setPage("deals")}>View All</button>
         </div>
@@ -1679,7 +1680,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
             <div className="card" style={{padding:"20px 18px",textAlign:"center"}}>
               <div style={{fontSize:"28px",marginBottom:10}}>🚀</div>
               <div style={{fontSize:"14px",fontWeight:600,marginBottom:6}}>Brand campaigns are on their way</div>
-              <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.65,marginBottom:14}}>A scrollable feed where brands post creative campaigns. Browse, save, and apply — all from Bridgn.</div>
+              <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.65,marginBottom:14}}>A scrollable feed where brands post creative campaigns. Browse, save, and apply — all from bridgn.</div>
               <button className="btn btn-outline btn-sm" onClick={()=>setPage("campaigns")}>Get notified when it launches</button>
             </div>
           </div>
@@ -1744,7 +1745,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
               {/* Grid texture */}
               <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(255,255,255,.025) 27px,rgba(255,255,255,.025) 28px),repeating-linear-gradient(90deg,transparent,transparent 27px,rgba(255,255,255,.025) 27px,rgba(255,255,255,.025) 28px)",pointerEvents:"none"}}/>
               <div style={{position:"relative",zIndex:1}}>
-                <div style={{fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,letterSpacing:"-1px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",marginBottom:20,display:"inline-block"}}>Bridgn</div>
+                <div style={{fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,letterSpacing:"-1px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",marginBottom:20,display:"inline-block"}}>bridgn</div>
                 <div style={{fontSize:28,fontWeight:800,color:"white",fontFamily:"Syne,sans-serif",letterSpacing:"-.5px",lineHeight:1.15,marginBottom:10}}>Welcome, {firstName}! 🎉</div>
                 <div style={{fontSize:14,color:"rgba(255,255,255,.55)",lineHeight:1.65}}>You're {4-doneCount} step{4-doneCount!==1?"s":""} away from your first brand deal.<br/>Let's get your profile ready to go.</div>
                 {/* Mini progress dots */}
@@ -1818,16 +1819,7 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
     setTimeout(() => { if(questionListRef.current) questionListRef.current.scrollTop = questionListRef.current.scrollHeight; }, 80);
   };
 
-  const STORY_BRANDS = [
-    {bi:"HH",ci:0,brand:"Halo Health",active:true},
-    {bi:"NT",ci:1,brand:"NovaTech",active:true},
-    {bi:"VS",ci:2,brand:"Vestir",active:false},
-    {bi:"CU",ci:3,brand:"Culine",active:true},
-    {bi:"TC",ci:4,brand:"TrailCo",active:false},
-    {bi:"LX",ci:5,brand:"Luxara",active:true},
-    {bi:"GF",ci:0,brand:"GlowFit",active:false},
-    {bi:"AP",ci:1,brand:"Apex",active:true},
-  ];
+  const STORY_BRANDS = [];
   const TIMES=["2h","4h","7h","12h","1d"];
   const PARTICLE_DIRS=[
     {tx:"-30px",ty:"-28px"},{tx:"0px",ty:"-38px"},{tx:"30px",ty:"-28px"},
@@ -2220,7 +2212,7 @@ function DealRoomPage({setPage,setSelected,deals}) {
               <strong style={{color:"var(--text)"}}>Tone:</strong> Authentic, lifestyle-forward. Natural lighting preferred.<br/>
               <strong style={{color:"var(--text)"}}>Key message:</strong> Show the product as part of a real daily routine — not staged.<br/>
               <strong style={{color:"var(--text)"}}>Do not:</strong> Overly promotional language, competitor mentions, filter-heavy edits.<br/>
-              <strong style={{color:"var(--text)"}}>Hashtags:</strong> #BridgnPartner #Ad #Sponsored<br/>
+              <strong style={{color:"var(--text)"}}>Hashtags:</strong> #bridgnPartner #Ad #Sponsored<br/>
               <strong style={{color:"var(--text)"}}>Deadline:</strong> {activeDeal.deadline}
             </div>
             {!briefAcknowledged&&(
@@ -2392,7 +2384,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
           {deal.escrow&&(
             <div style={{background:deal.escrowReleased?"var(--green-bg)":"rgba(8,145,178,.08)",border:"1.5px solid "+(deal.escrowReleased?"rgba(52,211,153,.3)":"rgba(8,145,178,.3)"),borderRadius:"var(--radius)",padding:"14px 16px",display:"flex",gap:10,alignItems:"flex-start"}}>
               <span style={{fontSize:"20px"}}>🔒</span>
-              <div><div style={{fontSize:"13px",fontWeight:700,color:deal.escrowReleased?"var(--green)":"var(--teal)",marginBottom:3}}>Escrow: ${deal.amount.toLocaleString()}</div><div style={{fontSize:"12px",color:"var(--text3)"}}>{deal.escrowReleased?"Payment released.":"Secured by Bridgn. Releases on content approval."}</div></div>
+              <div><div style={{fontSize:"13px",fontWeight:700,color:deal.escrowReleased?"var(--green)":"var(--teal)",marginBottom:3}}>Escrow: ${deal.amount.toLocaleString()}</div><div style={{fontSize:"12px",color:"var(--text3)"}}>{deal.escrowReleased?"Payment released.":"Secured by bridgn. Releases on content approval."}</div></div>
             </div>
           )}
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -2430,7 +2422,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
                   <strong style={{color:"var(--text)"}}>Tone:</strong> Authentic, lifestyle-forward<br/>
                   <strong style={{color:"var(--text)"}}>Key message:</strong> Natural product use in daily life<br/>
                   <strong style={{color:"var(--text)"}}>Do:</strong> Natural lighting, real usage, tag brand<br/>
-                  <strong style={{color:"var(--text)"}}>Hashtags:</strong> #BridgnPartner #Ad
+                  <strong style={{color:"var(--text)"}}>Hashtags:</strong> #bridgnPartner #Ad
                 </div>
                 <button onClick={()=>setModal(null)} className="btn btn-primary" style={{width:"100%"}}>Got it — Start Creating</button>
               </>
@@ -2475,7 +2467,7 @@ function NewDealPage({setPage,onDealCreated,userName}) {
       <div style={{fontSize:"14px",color:"var(--text2)",lineHeight:1.7,marginBottom:20}}>Your deal with <strong>{form.brandName}</strong> is live. An invitation has been sent to <strong>{form.brandEmail}</strong>.</div>
       <div style={{background:"var(--surface2)",borderRadius:"var(--radius)",padding:"14px 18px",fontSize:"13px",color:"var(--text2)",marginBottom:22,border:"1px solid var(--border)",textAlign:"left"}}>
         <div style={{fontWeight:600,color:"var(--text)",marginBottom:8}}>What happens next:</div>
-        {["Brand receives invite email with a secure link","They join Bridgn and see the Deal Room","Manage deliverables, messaging, and payment from here","Funds protected in escrow until content is approved"].map((t,i)=>(
+        {["Brand receives invite email with a secure link","They join bridgn and see the Deal Room","Manage deliverables, messaging, and payment from here","Funds protected in escrow until content is approved"].map((t,i)=>(
           <div key={i} style={{display:"flex",gap:8,marginTop:6}}><span style={{color:"var(--green)",fontWeight:700,flexShrink:0}}>✓</span><span>{t}</span></div>
         ))}
       </div>
@@ -2496,7 +2488,7 @@ function NewDealPage({setPage,onDealCreated,userName}) {
   return (
     <div className="fade-in">
       <button className="btn btn-secondary btn-sm" style={{marginBottom:18}} onClick={()=>step>1?setStep(s=>s-1):setPage("deals")}>Back</button>
-      <div className="ph-row"><div><div className="page-title">Create External Deal</div><div className="page-subtitle">Manage any brand deal you negotiated outside Bridgn.</div></div></div>
+      <div className="ph-row"><div><div className="page-title">Create External Deal</div><div className="page-subtitle">Manage any brand deal you negotiated outside bridgn.</div></div></div>
       <div style={{display:"flex",alignItems:"center",gap:0,marginBottom:28,maxWidth:480}}>
         {[["Deal Details","📋"],["Contract Type","📝"],["Invite Brand","✉️"]].map(([label,icon],i)=>{
           const sn=i+1;const isDone=step>sn;const isAct=step===sn;
@@ -2541,12 +2533,12 @@ function NewDealPage({setPage,onDealCreated,userName}) {
           )}
           {step===3&&(
             <>
-              <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>We will send an email to <strong>{form.brandEmail||"the brand"}</strong> with a secure link to join this deal on Bridgn.</div>
+              <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>We will send an email to <strong>{form.brandEmail||"the brand"}</strong> with a secure link to join this deal on bridgn.</div>
               <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"16px 18px",marginBottom:18,fontSize:"13px",color:"var(--text)",lineHeight:1.75}}>
-                <strong>Subject:</strong> {userName||"Your creator"} has invited you to manage a deal on Bridgn
+                <strong>Subject:</strong> {userName||"Your creator"} has invited you to manage a deal on bridgn
                 <div className="divider"></div>
                 Hi there,<br/><br/>
-                <strong>{userName||"Your creator"}</strong> has set up your partnership deal on Bridgn.<br/><br/>
+                <strong>{userName||"Your creator"}</strong> has set up your partnership deal on bridgn.<br/><br/>
                 <strong>Deal summary:</strong><br/>
                 Deliverables: {form.deliverables||"TBD"}<br/>
                 Value: ${parseInt(form.amount||0).toLocaleString()} on {form.platform}<br/>
@@ -2609,7 +2601,7 @@ function DisputePage({deal,setPage}) {
             ))}
           </div>
           <div className="fg"><label className="fl">Describe the issue</label><textarea className="fta" style={{minHeight:100}} value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Provide as much detail as possible including dates and evidence..."></textarea></div>
-          <div style={{padding:"11px 14px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",fontSize:"12px",color:"var(--text3)",marginBottom:16,display:"flex",gap:7}}>🛡️ Bridgn holds any pending escrow payments during a dispute. Resolution typically takes 3-5 business days.</div>
+          <div style={{padding:"11px 14px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",fontSize:"12px",color:"var(--text3)",marginBottom:16,display:"flex",gap:7}}>🛡️ bridgn holds any pending escrow payments during a dispute. Resolution typically takes 3-5 business days.</div>
           <button disabled={!type||!desc.trim()} onClick={()=>setSubmitted(true)} className="btn btn-danger btn-lg" style={{opacity:!type||!desc.trim()?.5:1}}>Submit Dispute</button>
         </div>
       </div>
@@ -3071,7 +3063,7 @@ function InvoicesPage({role}) {
   return (
     <div className="fade-in">
       <div className="ph-row">
-        <div><div className="page-title">{isBrand?"Payments":"Invoices"}</div><div className="page-subtitle">{isBrand?"Track and release payments to creators.":"Create and send invoices. Get paid through Bridgn."}</div></div>
+        <div><div className="page-title">{isBrand?"Payments":"Invoices"}</div><div className="page-subtitle">{isBrand?"Track and release payments to creators.":"Create and send invoices. Get paid through bridgn."}</div></div>
         {!isBrand&&<button className="btn btn-primary" onClick={()=>setModal("create")}>+ New Invoice</button>}
       </div>
       <div className="g3 section" style={{gap:12}}>
@@ -3107,7 +3099,7 @@ function InvoicesPage({role}) {
               <div className="fg"><label className="fl">Bill To</label><input className="fi" value={form.to} onChange={e=>up("to",e.target.value)} placeholder="Brand name"/></div>
               <div className="frow"><div className="fg"><label className="fl">Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="2500"/></div><div className="fg"><label className="fl">Due Date</label><input className="fi" type="date" value={form.dueDate} onChange={e=>up("dueDate",e.target.value)}/></div></div>
               <div className="fg"><label className="fl">Line Items / Notes</label><textarea className="fta" style={{minHeight:70}} value={form.notes} onChange={e=>up("notes",e.target.value)} placeholder="e.g. 2x Feed Posts, 1x Reel as per agreement..."></textarea></div>
-              <div style={{padding:"10px 13px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--text3)",marginBottom:16,display:"flex",gap:6,border:"1px solid var(--border)"}}>💡 Bridgn charges a 2.9% processing fee on payments collected through the platform.</div>
+              <div style={{padding:"10px 13px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--text3)",marginBottom:16,display:"flex",gap:6,border:"1px solid var(--border)"}}>💡 bridgn charges a 2.9% processing fee on payments collected through the platform.</div>
               <div style={{display:"flex",gap:9}}><button onClick={()=>setSent(true)} className="btn btn-primary btn-lg" style={{flex:1}}>Send Invoice</button><button onClick={()=>setModal(null)} className="btn btn-secondary btn-lg">Cancel</button></div>
             </div>
           ):(
@@ -3475,13 +3467,7 @@ function EarningsPage() {
           <div className="section">
             <div className="section-hdr"><span className="section-title">Best Performing Deals</span></div>
             <div style={{display:"flex",flexDirection:"column",gap:9}}>
-              {[["NovaTech","YouTube","$5,000","Best single deal — tech niche premium",1],["Luxe Threads","Instagram","$3,200","Consistent partnership, 2 deals",2],["Halo Health","Instagram","$2,500","3 campaigns, most reliable payer",0]].map(([brand,plat,val,note,ci],i)=>(
-                <div key={i} className="card" style={{padding:"13px 16px",display:"flex",gap:12,alignItems:"flex-start"}}>
-                  <div style={{width:30,height:30,borderRadius:"50%",background:bc(ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",fontWeight:700,color:"white",flexShrink:0}}>{brand.slice(0,2)}</div>
-                  <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600}}>{brand} · <PlatformBadge p={plat}/></div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>{note}</div></div>
-                  <div style={{fontSize:"15px",fontWeight:700,fontFamily:"Syne,sans-serif",color:"var(--accent)"}}>{val}</div>
-                </div>
-              ))}
+              {CREATOR_DEALS_INIT.length===0&&<div style={{padding:"18px 16px",textAlign:"center",color:"var(--text3)",fontSize:"13px"}}>No deals yet — complete your first brand deal to see top performers here.</div>}
             </div>
           </div>
           <div className="section">
@@ -3636,7 +3622,7 @@ function AvailabilityPage() {
           {[0,1,2,3,4].map(i=><div key={"f"+i} style={{minHeight:66,border:"1px solid var(--border)",background:"var(--surface)",opacity:.4}}></div>)}
         </div>
       </div>
-      <div style={{background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.3)",borderRadius:"var(--radius)",padding:"12px 16px",fontSize:"12px",color:"var(--accent)"}}>💡 Brands viewing your profile can see your open availability. Booked days show a deal from Bridgn is confirmed — blocked days show you marked yourself unavailable.</div>
+      <div style={{background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.3)",borderRadius:"var(--radius)",padding:"12px 16px",fontSize:"12px",color:"var(--accent)"}}>💡 Brands viewing your profile can see your open availability. Booked days show a deal from bridgn is confirmed — blocked days show you marked yourself unavailable.</div>
     </div>
   );
 }
@@ -3809,7 +3795,7 @@ function BrowseCreatorsPage({setPage}) {
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"80px 20px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
         <EmptySVG type="creators" size={140}/>
         <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,letterSpacing:"-.3px",marginBottom:10}}>No creators have joined yet</div>
-        <div style={{fontSize:"14px",color:"var(--text2)",lineHeight:1.75,marginBottom:28}}>As creators sign up for Bridgn they will appear here. Invite your first creators to get started.</div>
+        <div style={{fontSize:"14px",color:"var(--text2)",lineHeight:1.75,marginBottom:28}}>As creators sign up for bridgn they will appear here. Invite your first creators to get started.</div>
         <button className="btn btn-primary btn-lg" onClick={()=>setInviteModal(true)}>Invite a Creator</button>
       </div>
       {inviteModal&&(
@@ -3823,7 +3809,7 @@ function BrowseCreatorsPage({setPage}) {
             </div>
           ):(
             <div>
-              <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}>Enter the creator's email address and we'll send them a personalised invite to join Bridgn and connect with your brand.</div>
+              <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}>Enter the creator's email address and we'll send them a personalised invite to join bridgn and connect with your brand.</div>
               <div className="fg"><label className="fl">Creator's Email Address</label><input className="fi" type="email" value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendInvite()} placeholder="creator@example.com" autoFocus/></div>
               <button className="btn btn-primary" style={{width:"100%",marginTop:8}} disabled={!inviteEmail.trim()} onClick={sendInvite}>Send Invite</button>
             </div>
@@ -3903,7 +3889,7 @@ function BridgnScoreBadge({score, breakdown}) {
   const tipContent = (
     <div style={{position:"fixed",top:tipPos.top,left:tipPos.left,width:240,background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"16px",boxShadow:"var(--shadow-lg)",zIndex:9000,animation:"fadeIn .15s ease both"}}>
       <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:13}}>
-        <span style={{fontSize:"13px",fontWeight:800,fontFamily:"Syne,sans-serif",color:"var(--text)"}}>Bridgn Score</span>
+        <span style={{fontSize:"13px",fontWeight:800,fontFamily:"Syne,sans-serif",color:"var(--text)"}}>bridgn Score</span>
         <span style={{fontSize:"22px",fontWeight:800,fontFamily:"Syne,sans-serif",color:col,marginLeft:"auto",lineHeight:1}}>{score}</span>
         <span style={{fontSize:"11px",color:"var(--text3)"}}>/ 100</span>
       </div>
@@ -3949,7 +3935,7 @@ function BridgnScoreBadge({score, breakdown}) {
           <div style={{fontSize:"7.5px",fontWeight:800,color:"rgba(255,255,255,.45)",letterSpacing:".12em",marginTop:2}}>SCORE</div>
         </div>
       </div>
-      <div style={{fontSize:"9px",fontWeight:700,color:"rgba(255,255,255,.55)",marginTop:5,letterSpacing:".04em",whiteSpace:"nowrap"}}>Bridgn Score ⓘ</div>
+      <div style={{fontSize:"9px",fontWeight:700,color:"rgba(255,255,255,.55)",marginTop:5,letterSpacing:".04em",whiteSpace:"nowrap"}}>bridgn Score ⓘ</div>
       {showTip && ReactDOM.createPortal(tipContent, document.body)}
     </div>
   );
@@ -3970,7 +3956,7 @@ function CreatorProfilePage({creator,setPage}) {
       <div className="card-lg" style={{overflow:"hidden",marginBottom:18}}>
         <div style={{height:190,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",position:"relative"}}>
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(0,0,0,.6),transparent)"}}></div>
-          {/* Bridgn Score badge — top right of banner */}
+          {/* bridgn Score badge — top right of banner */}
           <div style={{position:"absolute",top:16,right:20,zIndex:2}}>
             <BridgnScoreBadge score={bScore.total} breakdown={bScore.breakdown}/>
           </div>
@@ -4039,7 +4025,7 @@ function CreatorProfilePage({creator,setPage}) {
                       </div>
                     ))}
                   </div>
-                  <div style={{padding:"10px 13px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--accent)",display:"flex",gap:7}}>🔒 Bridgn timestamps every upload so you know the data was not edited.</div>
+                  <div style={{padding:"10px 13px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--accent)",display:"flex",gap:7}}>🔒 bridgn timestamps every upload so you know the data was not edited.</div>
                 </>
               ):(
                 <div style={{padding:"30px",textAlign:"center",color:"var(--text3)"}}>No analytics uploaded yet.</div>
@@ -4078,7 +4064,7 @@ function CreatorProfilePage({creator,setPage}) {
               <div style={{display:"flex",gap:9}}><button onClick={()=>setSent(true)} disabled={!inviteForm.campaign} className="btn btn-primary btn-lg" style={{flex:1,opacity:inviteForm.campaign?1:.5}}>Send Invite</button><button onClick={()=>setInviteModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>✉️</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{c.name}</strong> will receive your campaign invite and can respond from their Bridgn dashboard.</div><button onClick={()=>{setInviteModal(false);setSent(false);}} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>✉️</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{c.name}</strong> will receive your campaign invite and can respond from their bridgn dashboard.</div><button onClick={()=>{setInviteModal(false);setSent(false);}} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -4394,7 +4380,7 @@ function BrandDealsPage({setPage,setSelected}) {
                     <td style={{color:"var(--text2)"}}>{d.campaign}</td>
                     <td><PlatformBadge p={d.platform}/></td>
                     <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</td>
-                    <td>{d.source==="external"?<ExtBadge/>:<span className="badge badge-blue" style={{fontSize:"11px"}}>Bridgn</span>}</td>
+                    <td>{d.source==="external"?<ExtBadge/>:<span className="badge badge-blue" style={{fontSize:"11px"}}>bridgn</span>}</td>
                     <td>{d.escrow?<EscrowBadge released={false}/>:<span style={{fontSize:"11px",color:"var(--text3)"}}>—</span>}</td>
                     <td><StatusBadge s={d.status}/></td>
                     <td>
@@ -4502,7 +4488,7 @@ function BrandDealsPage({setPage,setSelected}) {
                         {/* Badges */}
                         <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                           {d.escrow&&<EscrowBadge released={false}/>}
-                          {d.source==="external"?<ExtBadge/>:<span className="badge badge-blue" style={{fontSize:"10px"}}>Bridgn</span>}
+                          {d.source==="external"?<ExtBadge/>:<span className="badge badge-blue" style={{fontSize:"10px"}}>bridgn</span>}
                         </div>
                       </div>
                     );
@@ -4822,7 +4808,7 @@ function CreatorScorecardsPage() {
               <button onClick={submit} disabled={form.ci<0||!form.campaign||form.communication===0} className="btn btn-primary btn-lg" style={{width:"100%",opacity:form.ci>=0&&form.campaign&&form.communication>0?1:.5}}>Submit Scorecard</button>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🏅</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Scorecard Saved!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>This is private to your brand. It helps inform future hiring decisions on Bridgn.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🏅</div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Scorecard Saved!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>This is private to your brand. It helps inform future hiring decisions on bridgn.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -4842,7 +4828,7 @@ function TeamManagementPage() {
   if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
-      <div className="ph-row"><div><div className="page-title">Team</div><div className="page-subtitle">Manage who on your team has access to Bridgn.</div></div><button className="btn btn-primary" onClick={()=>{setModal(true);setSent(false);}}>+ Invite Member</button></div>
+      <div className="ph-row"><div><div className="page-title">Team</div><div className="page-subtitle">Manage who on your team has access to bridgn.</div></div><button className="btn btn-primary" onClick={()=>{setModal(true);setSent(false);}}>+ Invite Member</button></div>
       {members.length===0&&(
         <div className="card" style={{padding:"40px 20px",textAlign:"center",marginBottom:16}}>
           <EmptySVG type="team" size={128}/>
@@ -5377,14 +5363,14 @@ function AuthScreen({onAuth}) {
       <div style={{position:"fixed",width:350,height:350,borderRadius:"50%",background:"radial-gradient(circle,rgba(167,139,250,.06),transparent 68%)",top:"40%",left:"30%",pointerEvents:"none"}}></div>
       <div style={{width:"100%",maxWidth:440,position:"relative",zIndex:1,animation:"fadeIn .4s cubic-bezier(.16,1,.3,1)"}}>
         <div style={{textAlign:"center",marginBottom:40}}>
-          <div style={{fontFamily:"Syne,sans-serif",fontSize:52,fontWeight:800,background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",marginBottom:10,letterSpacing:"-1px"}}>Bridgn</div>
+          <div style={{fontFamily:"Syne,sans-serif",fontSize:52,fontWeight:800,background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",marginBottom:10,letterSpacing:"-1px"}}>bridgn</div>
           <div style={{fontSize:14,color:"var(--text2)",letterSpacing:".01em"}}>The creator &amp; brand partnership platform</div>
         </div>
         <div className="card-lg" style={{padding:36,boxShadow:"0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.07)"}}>
           {mode==="login"&&(
             <>
               <div style={{fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Welcome back</div>
-              <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Sign in to your Bridgn account</div>
+              <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Sign in to your bridgn account</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
@@ -5399,7 +5385,7 @@ function AuthScreen({onAuth}) {
           {mode==="signup"&&(
             <>
               <div style={{fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Create your account</div>
-              <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Join Bridgn free — no credit card needed</div>
+              <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Join bridgn free — no credit card needed</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               <div className="fg"><label className="fl">{form.role==="brand"?"Company Name":form.role==="agency"?"Agency Name":"Full Name"}</label><input className="fi" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Halo Health, Acme Corp":form.role==="agency"?"e.g. Viral Nation, Whalar, Open Influence":"Your full name"}/></div>
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com"/></div>
@@ -5438,7 +5424,7 @@ function AuthScreen({onAuth}) {
             </>
           )}
         </div>
-        <div style={{textAlign:"center",marginTop:20,fontSize:12,color:"var(--text3)"}}>By signing up you agree to the Bridgn Terms of Service and Privacy Policy.</div>
+        <div style={{textAlign:"center",marginTop:20,fontSize:12,color:"var(--text3)"}}>By signing up you agree to the bridgn Terms of Service and Privacy Policy.</div>
       </div>
     </div>
   );
@@ -5595,7 +5581,7 @@ function App() {
 
   if(authLoading) return (
     <div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <div style={{fontFamily:"Syne,sans-serif",fontSize:40,fontWeight:800,letterSpacing:"-1px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>Bridgn</div>
+      <div style={{fontFamily:"Syne,sans-serif",fontSize:40,fontWeight:800,letterSpacing:"-1px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>bridgn</div>
       <div style={{width:28,height:28,border:"2.5px solid var(--border)",borderTop:"2.5px solid var(--accent)",borderRadius:"50%",animation:"spin .8s linear infinite"}}></div>
     </div>
   );
