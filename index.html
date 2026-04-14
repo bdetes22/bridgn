@@ -2369,6 +2369,27 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const [contractSent,setContractSent] = useState(!!activeDeal?.contractSent);
   const [contractSigned,setContractSigned] = useState(!!activeDeal?.contractSigned);
   const [contractSignedAt,setContractSignedAt] = useState(activeDeal?.contractSignedAt||null);
+  const [signedFile,setSignedFile] = useState(activeDeal?.signedFile||null);
+  const [signedFileUploading,setSignedFileUploading] = useState(false);
+  const signedFileInputRef = React.useRef(null);
+
+  const handleSignedFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if(!file || !activeDeal) return;
+    setSignedFileUploading(true);
+    try {
+      const path = `deals/${activeDeal.id}/signed/${Date.now()}_${file.name}`;
+      const {error} = await supabase.storage.from("deal-files").upload(path, file, {upsert:true});
+      if(error) throw error;
+      const {data:urlData} = supabase.storage.from("deal-files").getPublicUrl(path);
+      const sf = {name:file.name, size:file.size, dataUrl:urlData.publicUrl};
+      setSignedFile(sf);
+      syncDealFields({signed_file_name:sf.name, signed_file_data:sf.dataUrl});
+    } catch(err) {
+      console.error("[signedFileUpload]", err);
+    }
+    setSignedFileUploading(false);
+  };
 
   const [contractUploading,setContractUploading] = useState(false);
   const handleContractFileChange = async (e) => {
@@ -2423,6 +2444,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     setContractSent(!!deal.contractSent);
     setContractSigned(!!deal.contractSigned);
     setContractSignedAt(deal.contractSignedAt||null);
+    setSignedFile(deal.signedFile||null);
   };
 
   // Re-sync when activeDeal changes (switching deals or initial load)
@@ -2818,9 +2840,18 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     </div>
                   )}
                   {contractSigned?(
-                    <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",display:"flex",gap:8,alignItems:"center"}}>
-                      <span>✅</span>
-                      <div><div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>Creator signed the contract</div>{contractSignedAt&&<div style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>{dealRelTime(contractSignedAt)}</div>}</div>
+                    <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)"}}>
+                      <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                        <span>✅</span>
+                        <div><div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>Creator signed the contract</div>{contractSignedAt&&<div style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>{dealRelTime(contractSignedAt)}</div>}</div>
+                      </div>
+                      {signedFile&&(
+                        <div style={{display:"flex",gap:8,alignItems:"center",marginTop:8,paddingTop:8,borderTop:"1px solid rgba(52,211,153,.2)"}}>
+                          <span style={{fontSize:"14px"}}>📄</span>
+                          <div style={{fontSize:"12px",color:"var(--green)",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{signedFile.name}</div>
+                          <button onClick={()=>{fetch(signedFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=signedFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{fontSize:"11px",flexShrink:0}}>Download Signed Copy</button>
+                        </div>
+                      )}
                     </div>
                   ):(
                     <div style={{padding:"8px 12px",background:"rgba(240,160,80,.08)",border:"1px solid rgba(240,160,80,.25)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--accent2)"}}>Waiting for the creator to review and sign.</div>
@@ -2862,16 +2893,45 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
               /* ── Creator: view and sign contract ── */
               contractSent ? (
                 <div>
-                  {contractFile&&(
-                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
-                      <span style={{fontSize:"20px"}}>📑</span>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contractFile.name}</div>
-                        <div style={{fontSize:"11px",color:"var(--text3)"}}>{(contractFile.size/1024).toFixed(0)} KB</div>
+                  {/* Brand sent a document — download, sign offline, upload back */}
+                  {contractFile&&!contractLink&&(
+                    <>
+                      <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:10,lineHeight:1.5}}>
+                        {!contractSigned
+                          ? "Download the contract, sign it, then upload the signed copy below."
+                          : "Signed contract submitted."}
                       </div>
-                      <button onClick={()=>{fetch(contractFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=contractFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{flexShrink:0}}>Download</button>
-                    </div>
+                      <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                        <span style={{fontSize:"20px"}}>📑</span>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contractFile.name}</div>
+                          <div style={{fontSize:"11px",color:"var(--text3)"}}>Original from brand</div>
+                        </div>
+                        <button onClick={()=>{fetch(contractFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=contractFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{flexShrink:0}}>Download</button>
+                      </div>
+                      {/* Upload signed copy */}
+                      {!contractSigned&&(
+                        <>
+                          <input ref={signedFileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.pages" onChange={handleSignedFileUpload} style={{display:"none"}}/>
+                          {signedFile?(
+                            <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                              <span style={{fontSize:"20px"}}>✅</span>
+                              <div style={{flex:1,minWidth:0}}>
+                                <div style={{fontSize:"13px",fontWeight:600,color:"var(--green)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{signedFile.name}</div>
+                                <div style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>Signed copy ready</div>
+                              </div>
+                              <button onClick={()=>{setSignedFile(null);syncDealFields({signed_file_name:null,signed_file_data:null});}} style={{background:"none",border:"none",cursor:"pointer",fontSize:"14px",color:"var(--text3)",padding:"2px 6px"}}>✕</button>
+                            </div>
+                          ):(
+                            <div onClick={()=>!signedFileUploading&&signedFileInputRef.current?.click()} style={{border:"2px dashed "+(signedFileUploading?"var(--accent)":"var(--border)"),borderRadius:"var(--radius)",padding:"14px",textAlign:"center",cursor:signedFileUploading?"default":"pointer",marginBottom:10,transition:"border-color .15s",opacity:signedFileUploading?.6:1}} onMouseEnter={e=>{if(!signedFileUploading)e.currentTarget.style.borderColor="var(--green)";}} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+                              {signedFileUploading?<><div style={{fontSize:"16px",animation:"spin .9s linear infinite",display:"inline-block"}}>⟳</div><div style={{fontSize:"12px",marginTop:4}}>Uploading...</div></>:<><div style={{fontSize:"18px",marginBottom:3}}>📤</div><div style={{fontSize:"12px",fontWeight:600}}>Upload Signed Contract</div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>PDF, DOC, DOCX</div></>}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </>
                   )}
+                  {/* Brand sent a signing link — open and sign online */}
                   {contractLink&&(
                     <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"rgba(167,139,250,.08)",border:"1px solid rgba(167,139,250,.25)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
                       <span style={{fontSize:"18px"}}>✍️</span>
@@ -2882,6 +2942,17 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                       <a href={contractLink} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm" style={{flexShrink:0,textDecoration:"none"}}>Open & Sign</a>
                     </div>
                   )}
+                  {/* Brand also sent a file alongside the link — show download */}
+                  {contractFile&&contractLink&&(
+                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"10px 14px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                      <span style={{fontSize:"16px"}}>📄</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:"12px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contractFile.name}</div>
+                        <div style={{fontSize:"11px",color:"var(--text3)"}}>Reference copy</div>
+                      </div>
+                      <button onClick={()=>{fetch(contractFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=contractFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px"}}>Download</button>
+                    </div>
+                  )}
                   {contractNotes&&(
                     <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"14px 16px",fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:10,whiteSpace:"pre-wrap"}}>
                       <div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}}>Brand Notes</div>
@@ -2889,11 +2960,28 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     </div>
                   )}
                   {!contractSigned?(
-                    <button onClick={()=>{const now=new Date().toISOString();setContractSigned(true);setContractSignedAt(now);syncDealFields({contract_signed:true,contract_signed_at:now});}} className="btn btn-primary" style={{width:"100%"}}>I have signed this contract</button>
+                    <button onClick={()=>{
+                      // If brand sent a file (no link), require signed copy upload first
+                      if(contractFile&&!contractLink&&!signedFile) return;
+                      const now=new Date().toISOString();setContractSigned(true);setContractSignedAt(now);syncDealFields({contract_signed:true,contract_signed_at:now});
+                    }} className="btn btn-primary" style={{width:"100%",opacity:(contractFile&&!contractLink&&!signedFile)?.5:1}} disabled={contractFile&&!contractLink&&!signedFile}>
+                      {contractFile&&!contractLink
+                        ? (signedFile ? "Submit Signed Contract" : "Upload signed copy first")
+                        : "I have signed this contract"}
+                    </button>
                   ):(
-                    <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",display:"flex",gap:8,alignItems:"center"}}>
-                      <span>✅</span>
-                      <div><div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>You signed this contract</div>{contractSignedAt&&<div style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>{dealRelTime(contractSignedAt)}</div>}</div>
+                    <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)"}}>
+                      <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                        <span>✅</span>
+                        <div><div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>You signed this contract</div>{contractSignedAt&&<div style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>{dealRelTime(contractSignedAt)}</div>}</div>
+                      </div>
+                      {signedFile&&(
+                        <div style={{display:"flex",gap:8,alignItems:"center",marginTop:8,paddingTop:8,borderTop:"1px solid rgba(52,211,153,.2)"}}>
+                          <span style={{fontSize:"14px"}}>📄</span>
+                          <div style={{fontSize:"12px",color:"var(--green)",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{signedFile.name}</div>
+                          <span style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>Sent to brand</span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
