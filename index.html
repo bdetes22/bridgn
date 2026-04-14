@@ -2269,14 +2269,14 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   },[deals]);
 
   const [msgInput,setMsgInput] = useState("");
-  const [msgs,setMsgs] = useState([
-    {from:"brand",text:"Brief is uploaded. Please review before creating content.",time:"Apr 4, 9:00 AM"},
-    {from:"me",text:"Got it! I will review and confirm by end of day.",time:"Apr 4, 10:15 AM"},
-    {from:"brand",text:"Looks great. Looking forward to seeing the first draft.",time:"Apr 4, 11:30 AM"},
-  ]);
-  const [briefAcknowledged,setBriefAcknowledged] = useState(false);
+  const [msgs,setMsgs] = useState([]);
+  const [briefText,setBriefText] = useState(""); // brand types brief here
+  const [briefSubmitted,setBriefSubmitted] = useState(false); // brand has submitted brief
+  const [briefAcknowledged,setBriefAcknowledged] = useState(false); // creator acknowledged
   const [contentUploaded,setContentUploaded] = useState(false);
   const [uploadingContent,setUploadingContent] = useState(false);
+  const [scriptUrl,setScriptUrl] = useState(""); // creator pastes script/draft link
+  const [scriptSubmitted,setScriptSubmitted] = useState(false);
 
   // ── ACH Payment + Escrow state ──────────────────────────────────────────────
   const [achPhase,setAchPhase] = useState("idle"); // idle | creating | collecting | confirming | done | error
@@ -2288,7 +2288,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const [escrowToast,setEscrowToast] = useState(null);
 
   const isBrand = role === "brand";
-  const escrowReleaseDays = activeDeal.escrowReleaseDays || 14;
+  const escrowReleaseDays = activeDeal?.escrowReleaseDays || 14;
 
   const showEscrowToast = (msg,type="success") => {
     setEscrowToast({msg,type});
@@ -2436,7 +2436,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
             <div className="page-title">Deal Room</div>
             <div style={{padding:"4px 12px",borderRadius:99,background:"linear-gradient(135deg,"+g[0]+"22,"+g[1]+"15)",border:"1px solid "+g[0]+"40",fontSize:"12px",fontWeight:700,color:g[0]}}>Live</div>
           </div>
-          <div className="page-subtitle">Shared workspace — you and the brand see this in real time.</div>
+          <div className="page-subtitle">Shared workspace — {isBrand?"you and the creator":"you and the brand"} see this in real time.</div>
         </div>
         <div style={{display:"flex",gap:8}}>
           <select className="fsel" style={{width:"auto",padding:"8px 12px",fontSize:"13px"}} value={activeDeal.id} onChange={e=>{const d=deals.find(x=>x.id===parseInt(e.target.value));if(d)setActiveDeal(d);}}>
@@ -2464,40 +2464,124 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
           <div className="card-lg" style={{padding:"18px 22px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
               <div style={{fontSize:"14px",fontWeight:700}}>Creative Brief</div>
-              {briefAcknowledged?<span className="badge badge-green">Acknowledged</span>:<span className="badge badge-yellow">Needs review</span>}
+              {briefSubmitted?(briefAcknowledged?<span className="badge badge-green">Acknowledged</span>:<span className="badge badge-yellow">Awaiting creator</span>):<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Not submitted</span>}
             </div>
-            <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"16px",fontSize:"13px",color:"var(--text2)",lineHeight:1.8,marginBottom:14}}>
-              <strong style={{color:"var(--text)"}}>Campaign:</strong> {activeDeal.campaignTitle}<br/>
-              <strong style={{color:"var(--text)"}}>Tone:</strong> Authentic, lifestyle-forward. Natural lighting preferred.<br/>
-              <strong style={{color:"var(--text)"}}>Key message:</strong> Show the product as part of a real daily routine — not staged.<br/>
-              <strong style={{color:"var(--text)"}}>Do not:</strong> Overly promotional language, competitor mentions, filter-heavy edits.<br/>
-              <strong style={{color:"var(--text)"}}>Hashtags:</strong> #bridgnPartner #Ad #Sponsored<br/>
-              <strong style={{color:"var(--text)"}}>Deadline:</strong> {activeDeal.deadline}
-            </div>
-            {!briefAcknowledged&&(
-              <button onClick={()=>setBriefAcknowledged(true)} className="btn btn-primary" style={{width:"100%"}}>I have read and understood the brief</button>
+            {isBrand ? (
+              /* ── Brand side: write and submit the brief ── */
+              briefSubmitted ? (
+                <div>
+                  <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"16px",fontSize:"13px",color:"var(--text2)",lineHeight:1.8,marginBottom:14,whiteSpace:"pre-wrap"}}>{briefText}</div>
+                  {briefAcknowledged&&<div style={{padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--green)",fontWeight:600}}>✓ Creator has acknowledged the brief</div>}
+                  <button onClick={()=>setBriefSubmitted(false)} className="btn btn-secondary btn-sm" style={{marginTop:10}}>Edit Brief</button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:10,lineHeight:1.5}}>Describe the campaign goals, tone, key messages, hashtags, and anything the creator should know. They will see this exactly as written.</div>
+                  <textarea
+                    value={briefText}
+                    onChange={e=>setBriefText(e.target.value)}
+                    placeholder={"Campaign: "+activeDeal.campaignTitle+"\nTone: \nKey message: \nDo not: \nHashtags: \nDeadline: "+activeDeal.deadline}
+                    rows={8}
+                    style={{width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",color:"var(--text)",fontSize:"13px",fontFamily:"inherit",lineHeight:1.7,outline:"none",resize:"vertical",marginBottom:12}}
+                  />
+                  <button onClick={()=>{if(briefText.trim())setBriefSubmitted(true);}} className="btn btn-primary" style={{width:"100%"}} disabled={!briefText.trim()}>Submit Brief to Creator</button>
+                </div>
+              )
+            ) : (
+              /* ── Creator side: view the brief (read-only) ── */
+              briefSubmitted ? (
+                <div>
+                  <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"16px",fontSize:"13px",color:"var(--text2)",lineHeight:1.8,marginBottom:14,whiteSpace:"pre-wrap"}}>{briefText}</div>
+                  {!briefAcknowledged&&(
+                    <button onClick={()=>setBriefAcknowledged(true)} className="btn btn-primary" style={{width:"100%"}}>I have read and understood the brief</button>
+                  )}
+                  {briefAcknowledged&&<div style={{padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--green)",fontWeight:600}}>✓ You acknowledged this brief</div>}
+                </div>
+              ) : (
+                <div style={{padding:"20px",textAlign:"center"}}>
+                  <div style={{fontSize:"22px",marginBottom:8}}>📋</div>
+                  <div style={{fontSize:"13px",fontWeight:600,marginBottom:4}}>Waiting for brief</div>
+                  <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>The brand hasn't submitted the creative brief yet. You'll be able to review it here once they do.</div>
+                </div>
+              )
             )}
           </div>
           <div className="card-lg" style={{padding:"18px 22px"}}>
-            <div style={{fontSize:"14px",fontWeight:700,marginBottom:14}}>Deliverables</div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div style={{fontSize:"14px",fontWeight:700}}>Deliverables</div>
+              {contentUploaded?<span className="badge badge-green">Submitted</span>:isBrand?<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Awaiting creator</span>:null}
+            </div>
             {DELIVERABLES.map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:i<DELIVERABLES.length-1?"1px solid var(--border)":"none"}}>
-                <div style={{width:22,height:22,borderRadius:6,background:approved[i]?"var(--green-bg)":"var(--surface2)",border:"1px solid "+(approved[i]?"rgba(52,211,153,.4)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",flexShrink:0,cursor:"pointer",transition:"all .15s"}} onClick={()=>{const a=[...approved];a[i]=!a[i];setApproved(a);if(a[i]) fireConfetti();}}>{approved[i]?"✓":""}</div>
+                <div style={{width:22,height:22,borderRadius:6,background:approved[i]?"var(--green-bg)":"var(--surface2)",border:"1px solid "+(approved[i]?"rgba(52,211,153,.4)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",flexShrink:0,cursor:isBrand?"pointer":"default",transition:"all .15s"}} onClick={()=>{if(!isBrand)return;const a=[...approved];a[i]=!a[i];setApproved(a);if(a[i])fireConfetti();}}>{approved[i]?"✓":""}</div>
                 <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:500}}>{d}</div></div>
-                {approved[i]&&<span className="badge badge-green" style={{fontSize:"10px"}}>Done</span>}
+                {approved[i]&&<span className="badge badge-green" style={{fontSize:"10px"}}>Approved</span>}
               </div>
             ))}
-            <div style={{marginTop:14}}>
-              {!contentUploaded?(
-                <div onClick={()=>{setUploadingContent(true);setTimeout(()=>{setUploadingContent(false);setContentUploaded(true);const upd={...activeDeal,status:"content_delivered"};setActiveDeal(upd);updateDeal&&updateDeal(activeDeal.id,{status:"content_delivered"});},1500);}} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"20px",textAlign:"center",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.borderColor=g[0]} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
-                  {uploadingContent?<><div style={{fontSize:"18px",animation:"spin .9s linear infinite",display:"inline-block"}}>⟳</div><div style={{fontSize:"13px",marginTop:6}}>Uploading...</div></>:<><div style={{fontSize:"22px",marginBottom:6}}>📤</div><div style={{fontSize:"13px",fontWeight:600}}>Upload Content for Review</div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>MP4, MOV, JPG, PNG</div></>}
-                </div>
-              ):(
-                <div style={{padding:"12px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",display:"flex",gap:10,alignItems:"center"}}>
-                  <span>✅</span><div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600,color:"var(--green)"}}>Content submitted for review</div><div style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>Brand will approve within 48 hours</div></div>
-                </div>
-              )}
-            </div>
+            {DELIVERABLES.length===0&&(
+              <div style={{fontSize:"12px",color:"var(--text3)",padding:"8px 0"}}>No deliverables specified for this deal.</div>
+            )}
+
+            {/* ── Creator: upload content + paste script URL ── */}
+            {!isBrand&&(
+              <div style={{marginTop:14,display:"flex",flexDirection:"column",gap:10}}>
+                {!scriptSubmitted?(
+                  <div>
+                    <div style={{fontSize:"12px",fontWeight:600,marginBottom:6}}>Share script or draft</div>
+                    <div style={{display:"flex",gap:7}}>
+                      <input className="fi" style={{flex:1,padding:"8px 11px",fontSize:"12px"}} value={scriptUrl} onChange={e=>setScriptUrl(e.target.value)} placeholder="Paste Google Doc, Notion, or draft URL…" onKeyDown={e=>e.key==="Enter"&&scriptUrl.trim()&&setScriptSubmitted(true)}/>
+                      <button className="btn btn-secondary btn-sm" onClick={()=>{if(scriptUrl.trim())setScriptSubmitted(true);}} disabled={!scriptUrl.trim()}>Send</button>
+                    </div>
+                  </div>
+                ):(
+                  <div style={{padding:"10px 14px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.25)",borderRadius:"var(--radius-sm)",display:"flex",gap:8,alignItems:"center"}}>
+                    <span>📎</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:"12px",fontWeight:600,color:"var(--accent)"}}>Script shared with brand</div>
+                      <div style={{fontSize:"11px",color:"var(--text3)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{scriptUrl}</div>
+                    </div>
+                  </div>
+                )}
+                {!contentUploaded?(
+                  <div onClick={()=>{setUploadingContent(true);setTimeout(()=>{setUploadingContent(false);setContentUploaded(true);const upd={...activeDeal,status:"content_delivered"};setActiveDeal(upd);updateDeal&&updateDeal(activeDeal.id,{status:"content_delivered"});},1500);}} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"20px",textAlign:"center",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.borderColor=g[0]} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+                    {uploadingContent?<><div style={{fontSize:"18px",animation:"spin .9s linear infinite",display:"inline-block"}}>⟳</div><div style={{fontSize:"13px",marginTop:6}}>Uploading...</div></>:<><div style={{fontSize:"22px",marginBottom:6}}>📤</div><div style={{fontSize:"13px",fontWeight:600}}>Upload Final Content</div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>MP4, MOV, JPG, PNG — this goes to the brand for review</div></>}
+                  </div>
+                ):(
+                  <div style={{padding:"12px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",display:"flex",gap:10,alignItems:"center"}}>
+                    <span>✅</span><div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600,color:"var(--green)"}}>Content submitted for review</div><div style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>Waiting for brand approval</div></div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Brand: review content ── */}
+            {isBrand&&(
+              <div style={{marginTop:14}}>
+                {scriptSubmitted&&(
+                  <div style={{padding:"10px 14px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.25)",borderRadius:"var(--radius-sm)",display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
+                    <span>📎</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:"12px",fontWeight:600,color:"var(--accent)"}}>Creator shared a script</div>
+                      <a href={scriptUrl} target="_blank" rel="noopener noreferrer" style={{fontSize:"11px",color:"var(--accent)",textDecoration:"underline",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{scriptUrl}</a>
+                    </div>
+                  </div>
+                )}
+                {contentUploaded?(
+                  <div style={{padding:"14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)"}}>
+                    <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
+                      <span>🎬</span>
+                      <div style={{fontSize:"13px",fontWeight:600,color:"var(--green)"}}>Creator has submitted content for review</div>
+                    </div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5,marginBottom:10}}>Review the content above. If it meets the brief, approve each deliverable with the checkboxes and release payment.</div>
+                  </div>
+                ):(
+                  <div style={{padding:"16px",textAlign:"center",border:"1px solid var(--border)",borderRadius:"var(--radius)",background:"var(--surface2)"}}>
+                    <div style={{fontSize:"18px",marginBottom:6}}>⏳</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>The creator hasn't uploaded content yet. You'll be able to review it here once they do.</div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           {activeDeal.escrow&&(
             <div style={{background:activeDeal.escrowReleased?"var(--green-bg)":"rgba(8,145,178,.08)",border:"1.5px solid "+(activeDeal.escrowReleased?"rgba(52,211,153,.3)":"rgba(8,145,178,.3)"),borderRadius:"var(--radius-lg)",padding:"18px 22px",display:"flex",gap:14,alignItems:"center"}}>
@@ -2517,7 +2601,12 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
               <div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>All messages are tied to this deal</div>
             </div>
             <div style={{flex:1,overflowY:"auto",padding:"14px",display:"flex",flexDirection:"column",gap:10,maxHeight:320}}>
-              {msgs.map((m,i)=>(
+              {msgs.length===0?(
+                <div style={{textAlign:"center",padding:"20px 10px"}}>
+                  <div style={{fontSize:"18px",marginBottom:6}}>💬</div>
+                  <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>No messages yet. Start a conversation about this deal.</div>
+                </div>
+              ):msgs.map((m,i)=>(
                 <div key={i} style={{display:"flex",justifyContent:m.from==="me"?"flex-end":"flex-start"}}>
                   <div style={{maxWidth:"82%",padding:"8px 12px",borderRadius:m.from==="me"?"12px 12px 3px 12px":"12px 12px 12px 3px",background:m.from==="me"?"var(--accent)":"var(--surface2)",fontSize:"13px",lineHeight:1.5}}>
                     <TypewriterText text={m.text} animate={!!m.animate} speed={30}/>
@@ -2527,7 +2616,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
               ))}
             </div>
             <div style={{padding:"10px 12px",borderTop:"1px solid var(--border)",display:"flex",gap:7}}>
-              <input className="fi" style={{flex:1,padding:"7px 11px",fontSize:"13px"}} value={msgInput} onChange={e=>setMsgInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()} placeholder="Message brand..."/>
+              <input className="fi" style={{flex:1,padding:"7px 11px",fontSize:"13px"}} value={msgInput} onChange={e=>setMsgInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()} placeholder={isBrand?"Message creator...":"Message brand..."}/>
               <button onClick={sendMsg} disabled={!msgInput.trim()} className="btn btn-primary btn-sm" style={{opacity:msgInput.trim()?1:.5}}>Send</button>
             </div>
           </div>
