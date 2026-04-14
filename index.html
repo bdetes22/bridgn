@@ -2973,7 +2973,8 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)"}}>
                       <div style={{display:"flex",gap:8,alignItems:"center"}}>
                         <span>✅</span>
-                        <div><div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>You signed this contract</div>{contractSignedAt&&<div style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>{dealRelTime(contractSignedAt)}</div>}</div>
+                        <div style={{flex:1}}><div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>You signed this contract</div>{contractSignedAt&&<div style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>{dealRelTime(contractSignedAt)}</div>}</div>
+                        <button onClick={()=>{setContractSigned(false);setContractSignedAt(null);setSignedFile(null);syncDealFields({contract_signed:false,contract_signed_at:null,signed_file_name:null,signed_file_data:null});}} style={{background:"none",border:"none",cursor:"pointer",fontSize:"11px",color:"var(--text3)",textDecoration:"underline",flexShrink:0}}>Undo</button>
                       </div>
                       {signedFile&&(
                         <div style={{display:"flex",gap:8,alignItems:"center",marginTop:8,paddingTop:8,borderTop:"1px solid rgba(52,211,153,.2)"}}>
