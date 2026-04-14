@@ -2340,12 +2340,25 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const [briefSubmitted,setBriefSubmitted] = useState(!!activeDeal?.briefSubmitted);
   const [briefAcknowledged,setBriefAcknowledged] = useState(!!activeDeal?.briefAcknowledged);
 
-  const handleBriefFileChange = (e) => {
+  const [briefUploading,setBriefUploading] = useState(false);
+  const handleBriefFileChange = async (e) => {
     const file = e.target.files?.[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setBriefFile({name:file.name, size:file.size, dataUrl:reader.result});
-    reader.readAsDataURL(file);
+    if(!file || !activeDeal) return;
+    setBriefUploading(true);
+    try {
+      const path = `deals/${activeDeal.id}/brief/${Date.now()}_${file.name}`;
+      const {data,error} = await supabase.storage.from("deal-files").upload(path, file, {upsert:true});
+      if(error) throw error;
+      const {data:urlData} = supabase.storage.from("deal-files").getPublicUrl(path);
+      setBriefFile({name:file.name, size:file.size, dataUrl:urlData.publicUrl});
+    } catch(err) {
+      console.error("[briefUpload]", err);
+      // Fallback to dataUrl for small files
+      const reader = new FileReader();
+      reader.onload = () => setBriefFile({name:file.name, size:file.size, dataUrl:reader.result});
+      reader.readAsDataURL(file);
+    }
+    setBriefUploading(false);
   };
   const briefFileInputRef = React.useRef(null);
 
@@ -2357,12 +2370,24 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const [contractSigned,setContractSigned] = useState(!!activeDeal?.contractSigned);
   const [contractSignedAt,setContractSignedAt] = useState(activeDeal?.contractSignedAt||null);
 
-  const handleContractFileChange = (e) => {
+  const [contractUploading,setContractUploading] = useState(false);
+  const handleContractFileChange = async (e) => {
     const file = e.target.files?.[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setContractFile({name:file.name, size:file.size, dataUrl:reader.result});
-    reader.readAsDataURL(file);
+    if(!file || !activeDeal) return;
+    setContractUploading(true);
+    try {
+      const path = `deals/${activeDeal.id}/contract/${Date.now()}_${file.name}`;
+      const {data,error} = await supabase.storage.from("deal-files").upload(path, file, {upsert:true});
+      if(error) throw error;
+      const {data:urlData} = supabase.storage.from("deal-files").getPublicUrl(path);
+      setContractFile({name:file.name, size:file.size, dataUrl:urlData.publicUrl});
+    } catch(err) {
+      console.error("[contractUpload]", err);
+      const reader = new FileReader();
+      reader.onload = () => setContractFile({name:file.name, size:file.size, dataUrl:reader.result});
+      reader.readAsDataURL(file);
+    }
+    setContractUploading(false);
   };
   const contractFileInputRef = React.useRef(null);
 
@@ -2687,10 +2712,8 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                       <button onClick={()=>setBriefFile(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"14px",color:"var(--text3)",padding:"2px 6px"}}>✕</button>
                     </div>
                   ):(
-                    <div onClick={()=>briefFileInputRef.current?.click()} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"16px",textAlign:"center",cursor:"pointer",marginBottom:10,transition:"border-color .15s"}} onMouseEnter={e=>e.currentTarget.style.borderColor="var(--accent)"} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
-                      <div style={{fontSize:"20px",marginBottom:4}}>📎</div>
-                      <div style={{fontSize:"13px",fontWeight:600}}>Upload Brief Document</div>
-                      <div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>PDF, DOC, DOCX, TXT, PPT</div>
+                    <div onClick={()=>!briefUploading&&briefFileInputRef.current?.click()} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"16px",textAlign:"center",cursor:briefUploading?"default":"pointer",marginBottom:10,transition:"border-color .15s",opacity:briefUploading?.6:1}} onMouseEnter={e=>{if(!briefUploading)e.currentTarget.style.borderColor="var(--accent)";}} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+                      {briefUploading?<><div style={{fontSize:"18px",animation:"spin .9s linear infinite",display:"inline-block"}}>⟳</div><div style={{fontSize:"13px",marginTop:4}}>Uploading...</div></>:<><div style={{fontSize:"20px",marginBottom:4}}>📎</div><div style={{fontSize:"13px",fontWeight:600}}>Upload Brief Document</div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>PDF, DOC, DOCX, TXT, PPT</div></>}
                     </div>
                   )}
 

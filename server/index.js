@@ -36,7 +36,8 @@ app.use(
 );
 
 // All other routes get the standard JSON parser.
-app.use(express.json());
+// Limit raised to 50MB to support base64-encoded file uploads in deal briefs/contracts.
+app.use(express.json({ limit: "50mb" }));
 
 // ─── API routes ───────────────────────────────────────────────────────────────
 
