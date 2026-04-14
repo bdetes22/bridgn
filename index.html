@@ -1752,7 +1752,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
           <button
             className="btn btn-primary btn-sm"
             style={{flexShrink:0,whiteSpace:"nowrap"}}
-            onClick={()=>{ window.location.href = `/api/stripe/onboard?userId=${authUser?.id||""}&email=${encodeURIComponent(authUser?.email||"")}`; }}
+            onClick={()=>{ window.location.href = `${BRIDGN_API_URL}/api/stripe/onboard?userId=${authUser?.id||""}&email=${encodeURIComponent(authUser?.email||"")}`; }}
           >
             Connect Bank
           </button>
@@ -2291,7 +2291,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     setAchPhase("creating");
     setAchError(null);
     try {
-      const resp = await fetch("/api/stripe/create-deal-payment", {
+      const resp = await fetch(`${BRIDGN_API_URL}/api/stripe/create-deal-payment`, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({
@@ -2349,7 +2349,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     if(!activeDeal || !authUser) return;
     setReleaseLoading(true);
     try {
-      const resp = await fetch("/api/stripe/release-payment", {
+      const resp = await fetch(`${BRIDGN_API_URL}/api/stripe/release-payment`, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({ dealId: activeDeal.id, brandUserId: authUser.id }),
@@ -2370,7 +2370,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     if(!activeDeal || !authUser) return;
     setDisputeLoading(true);
     try {
-      const resp = await fetch("/api/stripe/dispute-deal", {
+      const resp = await fetch(`${BRIDGN_API_URL}/api/stripe/dispute-deal`, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({ dealId: activeDeal.id, brandUserId: authUser.id, reason: disputeReason }),
@@ -6086,6 +6086,12 @@ function SettingsPage({authUser,darkMode,setDarkMode,onSignOut}) {
 const SUPA_URL = "https://uyucrqodrhrtqcgsfuei.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5dWNycW9kcmhydHFjZ3NmdWVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NTgyNTcsImV4cCI6MjA5MTQzNDI1N30.qnlTg6HPB4LOcINmsbgFEvjFtR33Leu4m4Jbsf2aTLY";
 const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// API base URL — localhost in dev, deployed Express server in production.
+// Change BRIDGN_API_URL to your deployed server URL when you deploy the backend.
+const BRIDGN_API_URL = window.location.hostname === "localhost"
+  ? ""
+  : "https://bridgn-api.onrender.com";
 
 // ─── AUTH SCREENS ─────────────────────────────────────────────────────────────
 // ─── CARD TILT ────────────────────────────────────────────────────────────────
