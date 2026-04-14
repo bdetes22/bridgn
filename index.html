@@ -2341,6 +2341,24 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     reader.readAsDataURL(file);
   };
   const briefFileInputRef = React.useRef(null);
+
+  // Contract state
+  const [contractFile,setContractFile] = useState(null);   // {name, size, dataUrl}
+  const [contractLink,setContractLink] = useState("");      // signing URL
+  const [contractNotes,setContractNotes] = useState("");    // brand notes about the contract
+  const [contractSent,setContractSent] = useState(false);   // brand has sent contract
+  const [contractSigned,setContractSigned] = useState(false);
+  const [contractSignedAt,setContractSignedAt] = useState(null);
+
+  const handleContractFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setContractFile({name:file.name, size:file.size, dataUrl:reader.result});
+    reader.readAsDataURL(file);
+  };
+  const contractFileInputRef = React.useRef(null);
+
   const [contentUploaded,setContentUploaded] = useState(false);
   const [uploadingContent,setUploadingContent] = useState(false);
   const [scriptUrl,setScriptUrl] = useState(""); // creator pastes script/draft link
@@ -2670,6 +2688,129 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
               )
             )}
           </div>
+          {/* ── Contract ── */}
+          <div className="card-lg" style={{padding:"18px 22px"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div style={{fontSize:"14px",fontWeight:700}}>Contract</div>
+              {contractSigned?<span className="badge badge-green">Signed</span>:contractSent?<span className="badge badge-yellow">{isBrand?"Awaiting signature":"Needs your signature"}</span>:<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Not sent</span>}
+            </div>
+            {isBrand ? (
+              /* ── Brand: upload contract or paste signing link ── */
+              contractSent ? (
+                <div>
+                  {contractFile&&(
+                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                      <span style={{fontSize:"20px"}}>📑</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contractFile.name}</div>
+                        <div style={{fontSize:"11px",color:"var(--text3)"}}>{(contractFile.size/1024).toFixed(0)} KB</div>
+                      </div>
+                    </div>
+                  )}
+                  {contractLink&&(
+                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"rgba(167,139,250,.08)",border:"1px solid rgba(167,139,250,.25)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                      <span style={{fontSize:"18px"}}>✍️</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:"11px",fontWeight:600,color:"var(--purple)",marginBottom:2}}>Signing link</div>
+                        <a href={contractLink} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--purple)",textDecoration:"underline",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{contractLink}</a>
+                      </div>
+                    </div>
+                  )}
+                  {contractNotes&&(
+                    <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"14px 16px",fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:10,whiteSpace:"pre-wrap"}}>
+                      <div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}}>Notes</div>
+                      {contractNotes}
+                    </div>
+                  )}
+                  {contractSigned?(
+                    <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",display:"flex",gap:8,alignItems:"center"}}>
+                      <span>✅</span>
+                      <div><div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>Creator signed the contract</div>{contractSignedAt&&<div style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>{dealRelTime(contractSignedAt)}</div>}</div>
+                    </div>
+                  ):(
+                    <div style={{padding:"8px 12px",background:"rgba(240,160,80,.08)",border:"1px solid rgba(240,160,80,.25)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--accent2)"}}>Waiting for the creator to review and sign.</div>
+                  )}
+                  <button onClick={()=>setContractSent(false)} className="btn btn-secondary btn-sm" style={{marginTop:10}}>Edit Contract</button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.5}}>Upload a contract for the creator to sign, or paste a link to a signing service like DocuSign, HelloSign, or PandaDoc.</div>
+                  <input ref={contractFileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.pages" onChange={handleContractFileChange} style={{display:"none"}}/>
+                  {contractFile?(
+                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"10px 14px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                      <span style={{fontSize:"18px"}}>📑</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contractFile.name}</div>
+                        <div style={{fontSize:"11px",color:"var(--text3)"}}>{(contractFile.size/1024).toFixed(0)} KB</div>
+                      </div>
+                      <button onClick={()=>setContractFile(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"14px",color:"var(--text3)",padding:"2px 6px"}}>✕</button>
+                    </div>
+                  ):(
+                    <div onClick={()=>contractFileInputRef.current?.click()} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"16px",textAlign:"center",cursor:"pointer",marginBottom:10,transition:"border-color .15s"}} onMouseEnter={e=>e.currentTarget.style.borderColor="var(--purple)"} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+                      <div style={{fontSize:"20px",marginBottom:4}}>📑</div>
+                      <div style={{fontSize:"13px",fontWeight:600}}>Upload Contract</div>
+                      <div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>PDF, DOC, DOCX</div>
+                    </div>
+                  )}
+                  <div style={{marginBottom:10}}>
+                    <label style={{fontSize:"12px",fontWeight:600,color:"var(--text3)",display:"block",marginBottom:4}}>Or paste a signing link</label>
+                    <input className="fi" value={contractLink} onChange={e=>setContractLink(e.target.value)} placeholder="DocuSign, HelloSign, PandaDoc link…" style={{width:"100%",boxSizing:"border-box",padding:"9px 12px",fontSize:"13px"}}/>
+                  </div>
+                  <div style={{marginBottom:14}}>
+                    <label style={{fontSize:"12px",fontWeight:600,color:"var(--text3)",display:"block",marginBottom:4}}>Notes for the creator</label>
+                    <textarea value={contractNotes} onChange={e=>setContractNotes(e.target.value)} placeholder="Payment terms, exclusivity clauses, anything they should pay attention to…" rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 12px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",color:"var(--text)",fontSize:"13px",fontFamily:"inherit",lineHeight:1.6,outline:"none",resize:"vertical"}}/>
+                  </div>
+                  <button onClick={()=>{if(contractFile||contractLink.trim())setContractSent(true);}} className="btn btn-primary" style={{width:"100%"}} disabled={!contractFile&&!contractLink.trim()}>Send Contract to Creator</button>
+                </div>
+              )
+            ) : (
+              /* ── Creator: view and sign contract ── */
+              contractSent ? (
+                <div>
+                  {contractFile&&(
+                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                      <span style={{fontSize:"20px"}}>📑</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contractFile.name}</div>
+                        <div style={{fontSize:"11px",color:"var(--text3)"}}>{(contractFile.size/1024).toFixed(0)} KB</div>
+                      </div>
+                      <a href={contractFile.dataUrl} download={contractFile.name} className="btn btn-secondary btn-sm" style={{flexShrink:0,textDecoration:"none"}}>Download</a>
+                    </div>
+                  )}
+                  {contractLink&&(
+                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"rgba(167,139,250,.08)",border:"1px solid rgba(167,139,250,.25)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                      <span style={{fontSize:"18px"}}>✍️</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:"11px",fontWeight:600,color:"var(--purple)",marginBottom:2}}>Sign this contract</div>
+                        <a href={contractLink} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--purple)",textDecoration:"underline",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{contractLink}</a>
+                      </div>
+                      <a href={contractLink} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm" style={{flexShrink:0,textDecoration:"none"}}>Open & Sign</a>
+                    </div>
+                  )}
+                  {contractNotes&&(
+                    <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"14px 16px",fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:10,whiteSpace:"pre-wrap"}}>
+                      <div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}}>Brand Notes</div>
+                      {contractNotes}
+                    </div>
+                  )}
+                  {!contractSigned?(
+                    <button onClick={()=>{setContractSigned(true);setContractSignedAt(new Date());}} className="btn btn-primary" style={{width:"100%"}}>I have signed this contract</button>
+                  ):(
+                    <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",display:"flex",gap:8,alignItems:"center"}}>
+                      <span>✅</span>
+                      <div><div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>You signed this contract</div>{contractSignedAt&&<div style={{fontSize:"11px",color:"var(--green)",opacity:.7}}>{dealRelTime(contractSignedAt)}</div>}</div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{padding:"20px",textAlign:"center"}}>
+                  <div style={{fontSize:"22px",marginBottom:8}}>📑</div>
+                  <div style={{fontSize:"13px",fontWeight:600,marginBottom:4}}>Waiting for contract</div>
+                  <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>The brand hasn't sent a contract yet. It will appear here for you to review and sign.</div>
+                </div>
+              )
+            )}
+          </div>
           <div className="card-lg" style={{padding:"18px 22px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
               <div style={{fontSize:"14px",fontWeight:700}}>Deliverables</div>
@@ -2806,7 +2947,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                   );
                 })}
               </svg>
-              {["Offer Accepted","Agreement Signed","Brief Received","Content Created","Brand Review","Completed"].map((step,i)=>(
+              {["Deal Created","Brief Sent","Contract Signed","Content Delivered","Brand Review","Payment Released"].map((step,i)=>(
                 <div key={i} style={{display:"flex",gap:10,alignItems:"center",padding:"7px 0",borderBottom:i<5?"1px solid var(--border)":"none",position:"relative",zIndex:1}}>
                   <div style={{width:20,height:20,borderRadius:"50%",background:activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--accent)":"var(--surface2)",border:"1.5px solid "+(activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--accent)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",flexShrink:0,color:"white",fontWeight:700,boxShadow:activeDeal.progress>i?"0 0 8px rgba(52,211,153,.45)":activeDeal.progress===i?"0 0 8px rgba(91,138,245,.45)":"none"}}>{activeDeal.progress>i?"✓":i+1}</div>
                   <span style={{fontSize:"12px",fontWeight:activeDeal.progress===i?600:400,color:activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--text)":"var(--text3)"}}>{step}</span>
