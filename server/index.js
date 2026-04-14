@@ -6,7 +6,8 @@ const path    = require("path");
 const express = require("express");
 const cors    = require("cors");
 
-const stripeRoutes = require("./routes/stripe");
+const stripeRoutes  = require("./routes/stripe");
+const webhookRouter = require("./routes/webhook");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -18,14 +19,18 @@ app.use(cors({
   credentials: true,
 }));
 
-// Raw body needed for Stripe webhook signature verification (added later)
-app.use((req, res, next) => {
-  if (req.originalUrl === "/api/stripe/webhook") {
-    next(); // stripe webhook route will call express.raw() itself
-  } else {
-    express.json()(req, res, next);
-  }
-});
+// Webhook must receive the raw request body for Stripe signature verification.
+// Mount with app.use() so the sub-router's POST "/" can match correctly.
+// express.raw() is applied only to this path — the global JSON parser below
+// handles everything else.
+app.use(
+  "/api/stripe/webhooks",
+  express.raw({ type: "application/json" }),
+  webhookRouter
+);
+
+// All other routes get the standard JSON parser.
+app.use(express.json());
 
 // ─── API routes ───────────────────────────────────────────────────────────────
 
@@ -40,7 +45,8 @@ app.get("/api/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
 app.use(express.static(path.join(__dirname, "..")));
 
-app.get("*", (req, res) => {
+// Express 5 requires named splat params — "*" is no longer valid.
+app.get("/{*splat}", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "index.html"));
 });
 

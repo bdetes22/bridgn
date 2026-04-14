@@ -2269,29 +2269,39 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const [contentUploaded,setContentUploaded] = useState(false);
   const [uploadingContent,setUploadingContent] = useState(false);
 
-  // ── ACH Payment state (brand-side only) ────────────────────────────────────
+  // ── ACH Payment + Escrow state ──────────────────────────────────────────────
   const [achPhase,setAchPhase] = useState("idle"); // idle | creating | collecting | confirming | done | error
   const [achError,setAchError] = useState(null);
+  const [releaseLoading,setReleaseLoading] = useState(false);
+  const [disputeLoading,setDisputeLoading] = useState(false);
+  const [showDisputeModal,setShowDisputeModal] = useState(false);
+  const [disputeReason,setDisputeReason] = useState("");
+  const [escrowToast,setEscrowToast] = useState(null);
 
   const isBrand = role === "brand";
+  const escrowReleaseDays = activeDeal.escrowReleaseDays || 14;
+
+  const showEscrowToast = (msg,type="success") => {
+    setEscrowToast({msg,type});
+    setTimeout(()=>setEscrowToast(null),4000);
+  };
 
   const handleFundDeal = async () => {
     if(!activeDeal || !authUser) return;
     setAchPhase("creating");
     setAchError(null);
     try {
-      // 1. Get publishable key + create PaymentIntent server-side
       const resp = await fetch("/api/stripe/create-deal-payment", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({
-          dealId:        activeDeal.id,
-          amount:        activeDeal.amount,
-          brandUserId:   authUser.id,
-          brandEmail:    authUser.email,
-          brandName:     authUser.user_metadata?.full_name || authUser.email,
-          // creatorUserId comes from the deal's metadata if set, else empty string
-          creatorUserId: activeDeal.creatorUserId || "",
+          dealId:             activeDeal.id,
+          amount:             activeDeal.amount,
+          brandUserId:        authUser.id,
+          brandEmail:         authUser.email,
+          brandName:          authUser.user_metadata?.full_name || authUser.email,
+          creatorUserId:      activeDeal.creatorUserId || "",
+          escrowReleaseDays:  escrowReleaseDays,
         }),
       });
       if(!resp.ok) {
@@ -2301,11 +2311,10 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
       const { clientSecret, publishableKey } = await resp.json();
 
       if(!window.Stripe) throw new Error("Stripe.js failed to load. Please refresh and try again.");
-      const stripe = window.Stripe(publishableKey);
+      const stripeJs = window.Stripe(publishableKey);
 
-      // 2. Collect bank account via Stripe Financial Connections
       setAchPhase("collecting");
-      const { paymentIntent: pi1, error: collectErr } = await stripe.collectBankAccountForPayment({
+      const { paymentIntent: pi1, error: collectErr } = await stripeJs.collectBankAccountForPayment({
         clientSecret,
         params: {
           payment_method_type: "us_bank_account",
@@ -2319,19 +2328,12 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
         expand: ["payment_method"],
       });
       if(collectErr) throw new Error(collectErr.message);
-      if(pi1.status === "requires_payment_method") {
-        // Brand closed the modal without selecting a bank
-        setAchPhase("idle");
-        return;
-      }
+      if(pi1.status === "requires_payment_method") { setAchPhase("idle"); return; }
 
-      // 3. Confirm the mandate + initiate ACH debit
       setAchPhase("confirming");
-      const { paymentIntent: pi2, error: confirmErr } = await stripe.confirmUsBankAccountPayment(clientSecret);
+      const { paymentIntent: pi2, error: confirmErr } = await stripeJs.confirmUsBankAccountPayment(clientSecret);
       if(confirmErr) throw new Error(confirmErr.message);
 
-      // payment_intent.status is "processing" for ACH — funds are not instant
-      // Update the deal status to reflect the 4-5 business day settlement window
       setAchPhase("done");
       const updated = {...activeDeal, status:"payment_processing", paymentIntentId: pi2?.id};
       setActiveDeal(updated);
@@ -2341,6 +2343,50 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
       setAchError(err.message);
       setAchPhase("error");
     }
+  };
+
+  const handleRelease = async () => {
+    if(!activeDeal || !authUser) return;
+    setReleaseLoading(true);
+    try {
+      const resp = await fetch("/api/stripe/release-payment", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ dealId: activeDeal.id, brandUserId: authUser.id }),
+      });
+      const json = await resp.json();
+      if(!resp.ok) throw new Error(json.error || "Server error");
+      const updated = {...activeDeal, status:"payment_released"};
+      setActiveDeal(updated);
+      updateDeal && updateDeal(activeDeal.id, {status:"payment_released"});
+      showEscrowToast("Payment released to the creator.");
+    } catch(err) {
+      showEscrowToast(err.message, "error");
+    }
+    setReleaseLoading(false);
+  };
+
+  const handleDisputeDeal = async () => {
+    if(!activeDeal || !authUser) return;
+    setDisputeLoading(true);
+    try {
+      const resp = await fetch("/api/stripe/dispute-deal", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ dealId: activeDeal.id, brandUserId: authUser.id, reason: disputeReason }),
+      });
+      const json = await resp.json();
+      if(!resp.ok) throw new Error(json.error || "Server error");
+      const updated = {...activeDeal, status:"payment_disputed"};
+      setActiveDeal(updated);
+      updateDeal && updateDeal(activeDeal.id, {status:"payment_disputed"});
+      setShowDisputeModal(false);
+      setDisputeReason("");
+      showEscrowToast("Deal flagged — payment is on hold for admin review.");
+    } catch(err) {
+      showEscrowToast(err.message, "error");
+    }
+    setDisputeLoading(false);
   };
 
   if(loading) return <SkeletonPage layout="deal-room"/>;
@@ -2478,60 +2524,219 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
               ))}
             </div>
           </div>
-          {/* ── ACH Payment Panel (brand-side only) ── */}
-          {isBrand&&(()=>{
-            const isProcessing = activeDeal.status==="payment_processing";
-            const isDone       = achPhase==="done" || isProcessing;
+          {/* ── Escrow / Payment Panel ── */}
+          {(()=>{
+            const st = activeDeal.status;
+            const feeDollars = Math.round(activeDeal.amount * 0.08);
+            const creatorNet = activeDeal.amount - feeDollars;
 
-            if(isDone) return (
+            // ── payment_released — green success, both sides ──
+            if(st==="payment_released") return (
               <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(34,197,94,.07),rgba(34,197,94,.03))",border:"1.5px solid rgba(34,197,94,.25)"}}>
                 <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-                  <span style={{fontSize:"22px",flexShrink:0}}>✅</span>
+                  <span style={{fontSize:"22px",flexShrink:0}}>💸</span>
                   <div>
-                    <div style={{fontSize:"13px",fontWeight:700,color:"var(--green)",marginBottom:3}}>ACH payment initiated</div>
-                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>Your payment of <strong>${activeDeal.amount.toLocaleString()}</strong> is being processed via ACH Direct Debit. Funds typically settle in <strong>4–5 business days</strong>. The creator will be notified once funds clear.</div>
-                    <div style={{marginTop:10,display:"flex",gap:6,alignItems:"center"}}>
-                      <div style={{width:8,height:8,borderRadius:"50%",background:"var(--green)",animation:"pulse 2s infinite"}}/>
-                      <span style={{fontSize:"11px",fontWeight:600,color:"var(--green)"}}>Payment processing</span>
+                    <div style={{fontSize:"13px",fontWeight:700,color:"var(--green)",marginBottom:3}}>Payment released</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>
+                      {isBrand
+                        ? <span><strong>${creatorNet.toLocaleString()}</strong> has been sent to the creator. This deal is complete.</span>
+                        : <span><strong>${creatorNet.toLocaleString()}</strong> is on its way to your bank account. Funds typically arrive in 2-3 business days.</span>}
                     </div>
                   </div>
                 </div>
               </div>
             );
 
-            const busy = achPhase==="creating"||achPhase==="collecting"||achPhase==="confirming";
-            const phaseLabel = {creating:"Creating payment…",collecting:"Connecting bank account…",confirming:"Authorizing payment…"};
-
-            return (
-              <div className="card-lg" style={{padding:"16px 18px"}}>
-                <div style={{fontSize:"13px",fontWeight:700,marginBottom:4}}>Fund This Deal</div>
-                <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>Pay <strong>${activeDeal.amount.toLocaleString()}</strong> via ACH Direct Debit. bridgn holds funds in escrow until the creator delivers. A <strong>8% platform fee</strong> (${Math.round(activeDeal.amount*0.08).toLocaleString()}) is deducted from your payment.</div>
-                {achPhase==="error"&&achError&&(
-                  <div style={{padding:"9px 12px",borderRadius:"var(--radius-sm)",background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",fontSize:"12px",color:"var(--red)",marginBottom:12,lineHeight:1.5}}>{achError}</div>
-                )}
-                <button
-                  className="btn btn-primary"
-                  style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,opacity:busy?.65:1,pointerEvents:busy?"none":"auto"}}
-                  onClick={handleFundDeal}
-                  disabled={busy}
-                >
-                  {busy?(
-                    <>{" "}<span style={{fontSize:"14px",animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>{" "}{phaseLabel[achPhase]||"Processing…"}</>
-                  ):(
-                    <><span>🏦</span> Connect Bank &amp; Pay ${activeDeal.amount.toLocaleString()}</>
-                  )}
-                </button>
-                <div style={{fontSize:"10px",color:"var(--text3)",marginTop:9,textAlign:"center",lineHeight:1.5}}>ACH payments are processed via Stripe. Your bank details are never stored on bridgn.</div>
+            // ── payment_disputed — red hold, both sides ──
+            if(st==="payment_disputed") return (
+              <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(239,68,68,.07),rgba(239,68,68,.03))",border:"1.5px solid rgba(239,68,68,.25)"}}>
+                <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                  <span style={{fontSize:"22px",flexShrink:0}}>⚠️</span>
+                  <div>
+                    <div style={{fontSize:"13px",fontWeight:700,color:"var(--red)",marginBottom:3}}>Payment on hold — under review</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>
+                      {isBrand
+                        ? <span>You flagged this deal for review. <strong>${activeDeal.amount.toLocaleString()}</strong> is held securely until a bridgn admin resolves the dispute.</span>
+                        : <span>The brand has raised a concern about this deal. <strong>${activeDeal.amount.toLocaleString()}</strong> is held securely until a bridgn admin resolves the dispute. You will be notified of the outcome.</span>}
+                    </div>
+                    <div style={{marginTop:10,display:"flex",gap:6,alignItems:"center"}}>
+                      <div style={{width:8,height:8,borderRadius:"50%",background:"var(--red)",animation:"pulse 2s infinite"}}/>
+                      <span style={{fontSize:"11px",fontWeight:600,color:"var(--red)"}}>Admin review pending</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             );
+
+            // ── payment_held or content_delivered — escrow active, actions available ──
+            if(st==="payment_held"||st==="content_delivered") {
+              const autoRelease = activeDeal.autoReleaseAt ? new Date(activeDeal.autoReleaseAt) : null;
+              const daysLeft = autoRelease ? Math.max(0, Math.ceil((autoRelease - Date.now()) / (1000*60*60*24))) : escrowReleaseDays;
+              return (<>
+                <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(8,145,178,.07),rgba(8,145,178,.03))",border:"1.5px solid rgba(8,145,178,.25)"}}>
+                  <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
+                    <span style={{fontSize:"22px",flexShrink:0}}>🔒</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:700,color:"var(--teal)",marginBottom:3}}>Escrow: ${activeDeal.amount.toLocaleString()} held</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>
+                        {isBrand
+                          ? <span>Funds are secured by bridgn. Release when you approve the creator's content, or they auto-release in <strong>{daysLeft} day{daysLeft!==1?"s":""}</strong>.</span>
+                          : <span>The brand's payment is held securely by bridgn. It will be released when they approve your content, or auto-releases in <strong>{daysLeft} day{daysLeft!==1?"s":""}</strong>.</span>}
+                      </div>
+                      {st==="content_delivered"&&(
+                        <div style={{marginTop:8,padding:"6px 10px",background:"rgba(34,197,94,.1)",border:"1px solid rgba(34,197,94,.25)",borderRadius:6,fontSize:"11px",fontWeight:600,color:"var(--green)",display:"inline-flex",alignItems:"center",gap:5}}>✅ Content delivered — awaiting brand approval</div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Mini breakdown */}
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,padding:"10px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",marginBottom:isBrand?14:0}}>
+                    {[["Brand paid","$"+activeDeal.amount.toLocaleString()],["Platform fee","$"+feeDollars.toLocaleString()],["Creator receives","$"+creatorNet.toLocaleString()]].map(([l,v],i)=>(
+                      <div key={i} style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700,color:i===2?"var(--green)":"var(--text)"}}>{v}</div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>{l}</div></div>
+                    ))}
+                  </div>
+                  {/* Brand actions */}
+                  {isBrand&&(
+                    <div style={{display:"flex",gap:8}}>
+                      <button
+                        className="btn btn-primary"
+                        style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,opacity:releaseLoading?.65:1}}
+                        onClick={handleRelease}
+                        disabled={releaseLoading}
+                      >
+                        {releaseLoading?<><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span> Releasing…</>:<>💸 Release Payment</>}
+                      </button>
+                      <button
+                        className="btn btn-danger btn-sm"
+                        style={{flexShrink:0}}
+                        onClick={()=>setShowDisputeModal(true)}
+                      >
+                        Dispute
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {/* Auto-release countdown bar */}
+                {(()=>{
+                  const total = escrowReleaseDays;
+                  const elapsed = total - daysLeft;
+                  const pctBar = Math.min(100, Math.round((elapsed / total) * 100));
+                  return (
+                    <div style={{padding:"8px 12px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                        <span style={{fontSize:"10px",fontWeight:600,color:"var(--text3)"}}>Auto-release countdown</span>
+                        <span style={{fontSize:"10px",fontWeight:700,color:daysLeft<=3?"var(--red)":"var(--teal)"}}>{daysLeft} day{daysLeft!==1?"s":""} left</span>
+                      </div>
+                      <div style={{height:4,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}>
+                        <div style={{height:"100%",borderRadius:99,background:daysLeft<=3?"var(--red)":"var(--teal)",width:pctBar+"%",transition:"width .5s"}}/>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </>);
+            }
+
+            // ── payment_processing — ACH in transit ──
+            if(st==="payment_processing" || achPhase==="done") return (
+              <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(91,138,245,.07),rgba(91,138,245,.03))",border:"1.5px solid rgba(91,138,245,.25)"}}>
+                <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                  <span style={{fontSize:"22px",flexShrink:0}}>⏳</span>
+                  <div>
+                    <div style={{fontSize:"13px",fontWeight:700,color:"var(--accent)",marginBottom:3}}>ACH payment processing</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>
+                      {isBrand
+                        ? <span>Your payment of <strong>${activeDeal.amount.toLocaleString()}</strong> is being processed via ACH Direct Debit. Funds typically settle in <strong>4–5 business days</strong>, then enter escrow until you release them.</span>
+                        : <span>The brand's payment of <strong>${activeDeal.amount.toLocaleString()}</strong> is being processed. Once settled, funds will be held in escrow until the brand approves your content.</span>}
+                    </div>
+                    <div style={{marginTop:10,display:"flex",gap:6,alignItems:"center"}}>
+                      <div style={{width:8,height:8,borderRadius:"50%",background:"var(--accent)",animation:"pulse 2s infinite"}}/>
+                      <span style={{fontSize:"11px",fontWeight:600,color:"var(--accent)"}}>Awaiting settlement</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+
+            // ── payment_failed ──
+            if(st==="payment_failed") return (
+              <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(239,68,68,.07),rgba(239,68,68,.03))",border:"1.5px solid rgba(239,68,68,.25)"}}>
+                <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                  <span style={{fontSize:"22px",flexShrink:0}}>❌</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:"13px",fontWeight:700,color:"var(--red)",marginBottom:3}}>Payment failed</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>The ACH payment was declined. {isBrand ? "Please try again with a different bank account." : "The brand has been notified to retry."}</div>
+                  </div>
+                </div>
+                {isBrand&&<button className="btn btn-primary" style={{width:"100%",marginTop:12}} onClick={()=>{setAchPhase("idle");const d={...activeDeal,status:"Active"};setActiveDeal(d);}}>Retry Payment</button>}
+              </div>
+            );
+
+            // ── Default: Fund This Deal (brand) or waiting (creator) ──
+            if(isBrand) {
+              const busy = achPhase==="creating"||achPhase==="collecting"||achPhase==="confirming";
+              const phaseLabel = {creating:"Creating payment…",collecting:"Connecting bank account…",confirming:"Authorizing payment…"};
+              return (
+                <div className="card-lg" style={{padding:"16px 18px"}}>
+                  <div style={{fontSize:"13px",fontWeight:700,marginBottom:4}}>Fund This Deal</div>
+                  <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>Pay <strong>${activeDeal.amount.toLocaleString()}</strong> via ACH Direct Debit. bridgn holds funds in escrow until you approve the content. An <strong>8% platform fee</strong> (${feeDollars.toLocaleString()}) is applied. Auto-releases in <strong>{escrowReleaseDays} days</strong> if not disputed.</div>
+                  {achPhase==="error"&&achError&&(
+                    <div style={{padding:"9px 12px",borderRadius:"var(--radius-sm)",background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",fontSize:"12px",color:"var(--red)",marginBottom:12,lineHeight:1.5}}>{achError}</div>
+                  )}
+                  <button
+                    className="btn btn-primary"
+                    style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,opacity:busy?.65:1,pointerEvents:busy?"none":"auto"}}
+                    onClick={handleFundDeal}
+                    disabled={busy}
+                  >
+                    {busy?(
+                      <><span style={{fontSize:"14px",animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>{" "}{phaseLabel[achPhase]||"Processing…"}</>
+                    ):(
+                      <><span>🏦</span> Connect Bank &amp; Pay ${activeDeal.amount.toLocaleString()}</>
+                    )}
+                  </button>
+                  <div style={{fontSize:"10px",color:"var(--text3)",marginTop:9,textAlign:"center",lineHeight:1.5}}>ACH payments are processed via Stripe. Your bank details are never stored on bridgn.</div>
+                </div>
+              );
+            }
+
+            return null; // creator sees nothing until brand funds
           })()}
 
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             <button className="btn btn-secondary btn-sm" style={{width:"100%"}} onClick={()=>setPage("invoices")}>View Invoice</button>
-            <button className="btn btn-danger btn-sm" style={{width:"100%"}} onClick={()=>setPage("dispute")}>File a Dispute</button>
           </div>
         </div>
       </div>
+      {/* Dispute modal */}
+      {showDisputeModal&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}} onClick={()=>setShowDisputeModal(false)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:28,width:"100%",maxWidth:420,boxShadow:"var(--shadow-lg)"}}>
+            <div style={{fontSize:16,fontWeight:700,marginBottom:8,color:"var(--red)"}}>Dispute This Deal</div>
+            <div style={{fontSize:13,color:"var(--text2)",marginBottom:14,lineHeight:1.6}}>Payment of <strong>${activeDeal.amount.toLocaleString()}</strong> will remain held while a bridgn admin reviews the dispute. This cannot be undone.</div>
+            <textarea
+              autoFocus
+              rows={3}
+              value={disputeReason}
+              onChange={e=>setDisputeReason(e.target.value)}
+              placeholder="Describe what went wrong…"
+              style={{width:"100%",boxSizing:"border-box",padding:"9px 13px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",color:"var(--text)",fontSize:13,fontFamily:"inherit",outline:"none",resize:"vertical",marginBottom:14}}
+            />
+            <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+              <button className="btn btn-secondary btn-sm" onClick={()=>{setShowDisputeModal(false);setDisputeReason("");}}>Cancel</button>
+              <button
+                onClick={handleDisputeDeal}
+                disabled={disputeLoading}
+                style={{padding:"8px 16px",borderRadius:"var(--radius-sm)",background:"var(--red)",color:"#fff",border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:13,opacity:disputeLoading?.65:1}}
+              >
+                {disputeLoading?"Submitting…":"Flag for Review"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Escrow toast */}
+      {escrowToast&&(
+        <div style={{position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:escrowToast.type==="error"?"var(--red)":"var(--green)",color:"#fff",padding:"10px 20px",borderRadius:99,fontSize:13,fontWeight:600,boxShadow:"0 4px 20px rgba(0,0,0,.25)",zIndex:3000,whiteSpace:"nowrap",animation:"slideUp .25s ease"}}>{escrowToast.msg}</div>
+      )}
       <ConfettiCanvas active={confettiFiring}/>
     </div>
   );
