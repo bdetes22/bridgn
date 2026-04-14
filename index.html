@@ -2256,6 +2256,15 @@ function CreatorDealsPage({setPage,setSelected,deals}) {
 }
 
 // ─── DEAL ROOM ────────────────────────────────────────────────────────────────
+function dealRelTime(ts) {
+  const now=Date.now(), d=ts instanceof Date?ts:new Date(ts), diff=now-d.getTime();
+  if(diff<60000) return "Just now";
+  if(diff<3600000) return Math.floor(diff/60000)+"m ago";
+  if(diff<86400000) return Math.floor(diff/3600000)+"h ago";
+  if(diff<172800000) return "Yesterday";
+  return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+}
+
 function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const loading = useSkeleton();
   const [fireConfetti,confettiFiring] = useConfetti();
@@ -2270,6 +2279,54 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
 
   const [msgInput,setMsgInput] = useState("");
   const [msgs,setMsgs] = useState([]);
+  const msgEndRef = React.useRef(null);
+
+  // Load existing messages + subscribe to new ones via Supabase Realtime
+  useEffect(()=>{
+    const dealId = activeDeal?.id;
+    if(!dealId) return;
+
+    // 1. Fetch existing messages
+    supabase
+      .from("deal_messages")
+      .select("*")
+      .eq("deal_id", String(dealId))
+      .order("created_at", {ascending:true})
+      .then(({data})=>{
+        if(data) setMsgs(data.map(r=>({
+          id:r.id, from:r.sender_id===authUser?.id?"me":"them",
+          senderName:r.sender_name||"", senderRole:r.sender_role,
+          text:r.body, time:dealRelTime(new Date(r.created_at)),
+        })));
+      });
+
+    // 2. Subscribe to INSERT events on this deal's messages
+    const channel = supabase
+      .channel("deal-msgs-"+dealId)
+      .on("postgres_changes",
+        {event:"INSERT", schema:"public", table:"deal_messages", filter:"deal_id=eq."+dealId},
+        (payload)=>{
+          const r = payload.new;
+          setMsgs(prev=>{
+            // Deduplicate — optimistic insert may already have it
+            if(prev.some(m=>m.id===r.id)) return prev;
+            return [...prev, {
+              id:r.id, from:r.sender_id===authUser?.id?"me":"them",
+              senderName:r.sender_name||"", senderRole:r.sender_role,
+              text:r.body, time:dealRelTime(new Date(r.created_at)), animate:r.sender_id!==authUser?.id,
+            }];
+          });
+        }
+      )
+      .subscribe();
+
+    return ()=>{ supabase.removeChannel(channel); };
+  },[activeDeal?.id, authUser?.id]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(()=>{
+    msgEndRef.current?.scrollIntoView({behavior:"smooth"});
+  },[msgs.length]);
   const [briefText,setBriefText] = useState(""); // brand types brief here
   const [briefSubmitted,setBriefSubmitted] = useState(false); // brand has submitted brief
   const [briefAcknowledged,setBriefAcknowledged] = useState(false); // creator acknowledged
@@ -2426,7 +2483,25 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     </div>
   );
   const g=bg(activeDeal.ci);
-  const sendMsg=()=>{if(!msgInput.trim())return;setMsgs(m=>[...m,{from:"me",text:msgInput,time:"Just now",animate:true}]);setMsgInput("");};
+  const sendMsg=()=>{
+    if(!msgInput.trim()||!activeDeal||!authUser) return;
+    const text=msgInput.trim();
+    const tempId="temp-"+Date.now();
+    const userName=authUser.user_metadata?.full_name||authUser.email?.split("@")[0]||"";
+    // Optimistic insert
+    setMsgs(m=>[...m,{id:tempId,from:"me",text,time:"Just now",animate:false,senderRole:role,senderName:userName}]);
+    setMsgInput("");
+    // Persist to Supabase — Realtime will deduplicate via the id check
+    supabase.from("deal_messages").insert({
+      deal_id:String(activeDeal.id),
+      sender_id:authUser.id,
+      sender_role:role,
+      sender_name:userName,
+      body:text,
+    }).then(({error})=>{
+      if(error) console.error("[sendMsg]",error.message);
+    });
+  };
   const pct = Math.round((activeDeal.progress/6)*100);
   return (
     <div className="fade-in">
@@ -2607,13 +2682,19 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                   <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>No messages yet. Start a conversation about this deal.</div>
                 </div>
               ):msgs.map((m,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:m.from==="me"?"flex-end":"flex-start"}}>
-                  <div style={{maxWidth:"82%",padding:"8px 12px",borderRadius:m.from==="me"?"12px 12px 3px 12px":"12px 12px 12px 3px",background:m.from==="me"?"var(--accent)":"var(--surface2)",fontSize:"13px",lineHeight:1.5}}>
-                    <TypewriterText text={m.text} animate={!!m.animate} speed={30}/>
-                    <div style={{fontSize:"10px",opacity:.55,marginTop:3,textAlign:m.from==="me"?"right":"left"}}>{m.time}</div>
+                <div key={m.id||i} style={{display:"flex",justifyContent:m.from==="me"?"flex-end":"flex-start"}}>
+                  <div style={{maxWidth:"82%"}}>
+                    {m.from!=="me"&&i===0||m.from!=="me"&&msgs[i-1]?.from==="me"?(
+                      <div style={{fontSize:"10px",fontWeight:600,color:m.senderRole==="brand"?"var(--accent2)":"var(--accent)",marginBottom:3,marginLeft:4}}>{m.senderName||m.senderRole}</div>
+                    ):null}
+                    <div style={{padding:"8px 12px",borderRadius:m.from==="me"?"12px 12px 3px 12px":"12px 12px 12px 3px",background:m.from==="me"?"var(--accent)":"var(--surface2)",fontSize:"13px",lineHeight:1.5}}>
+                      <TypewriterText text={m.text} animate={!!m.animate} speed={30}/>
+                      <div style={{fontSize:"10px",opacity:.55,marginTop:3,textAlign:m.from==="me"?"right":"left"}}>{m.time}</div>
+                    </div>
                   </div>
                 </div>
               ))}
+              <div ref={msgEndRef}/>
             </div>
             <div style={{padding:"10px 12px",borderTop:"1px solid var(--border)",display:"flex",gap:7}}>
               <input className="fi" style={{flex:1,padding:"7px 11px",fontSize:"13px"}} value={msgInput} onChange={e=>setMsgInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()} placeholder={isBrand?"Message creator...":"Message brand..."}/>
