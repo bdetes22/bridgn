@@ -2360,13 +2360,22 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   };
   const contractFileInputRef = React.useRef(null);
 
-  // Sync brief/contract state to Supabase
+  // Sync brief/contract state to Supabase and update App-level deals
   const syncDealFields = (fields) => {
     if(!activeDeal?.id) return;
     fetch(`${BRIDGN_API_URL}/api/deals/update`, {
       method:"PUT", headers:{"Content-Type":"application/json"},
       body:JSON.stringify({bridgnDealId:String(activeDeal.id), userId:authUser?.id, fields}),
-    }).catch(e=>console.error("[syncDealFields]",e));
+    })
+    .then(r=>r.ok?r.json():null)
+    .then(data=>{
+      if(data?.deal) {
+        // Update the App-level deals array so the data persists across navigation
+        updateDeal && updateDeal(activeDeal.id, data.deal);
+        setActiveDeal(prev=>({...prev, ...data.deal}));
+      }
+    })
+    .catch(e=>console.error("[syncDealFields]",e));
   };
 
   // Sync local brief/contract state from deal data
@@ -7282,8 +7291,8 @@ function App() {
     }
   };
 
-  // Load deals from Supabase when user authenticates
-  useEffect(()=>{
+  // Load deals from Supabase when user authenticates or navigates to a deal page
+  const loadDeals = React.useCallback(()=>{
     if(!authUser) return;
     fetch(`${BRIDGN_API_URL}/api/deals?userId=${authUser.id}`)
       .then(r=>r.ok?r.json():null)
@@ -7292,6 +7301,13 @@ function App() {
       })
       .catch(e=>console.error("[loadDeals] Failed:", e));
   },[authUser]);
+
+  useEffect(()=>{ loadDeals(); },[authUser]);
+
+  // Reload deals when navigating to deal-related pages so fresh data shows
+  useEffect(()=>{
+    if(page==="deal-room"||page==="deals") loadDeals();
+  },[page]);
 
   // Recover pending invite after email verification redirect.
   // The brand signed up on InviteWelcomeScreen, verified their email,
