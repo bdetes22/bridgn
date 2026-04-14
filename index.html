@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://js.stripe.com/v3/"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;transition:background-color 300ms ease,color 300ms ease,border-color 300ms ease,box-shadow 300ms ease}
@@ -2254,7 +2255,7 @@ function CreatorDealsPage({setPage,setSelected,deals}) {
 }
 
 // ─── DEAL ROOM ────────────────────────────────────────────────────────────────
-function DealRoomPage({setPage,setSelected,deals}) {
+function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const loading = useSkeleton();
   const [fireConfetti,confettiFiring] = useConfetti();
   const [activeDeal,setActiveDeal] = useState(deals.find(d=>d.status==="Active")||deals[0]);
@@ -2267,6 +2268,81 @@ function DealRoomPage({setPage,setSelected,deals}) {
   const [briefAcknowledged,setBriefAcknowledged] = useState(false);
   const [contentUploaded,setContentUploaded] = useState(false);
   const [uploadingContent,setUploadingContent] = useState(false);
+
+  // ── ACH Payment state (brand-side only) ────────────────────────────────────
+  const [achPhase,setAchPhase] = useState("idle"); // idle | creating | collecting | confirming | done | error
+  const [achError,setAchError] = useState(null);
+
+  const isBrand = role === "brand";
+
+  const handleFundDeal = async () => {
+    if(!activeDeal || !authUser) return;
+    setAchPhase("creating");
+    setAchError(null);
+    try {
+      // 1. Get publishable key + create PaymentIntent server-side
+      const resp = await fetch("/api/stripe/create-deal-payment", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          dealId:        activeDeal.id,
+          amount:        activeDeal.amount,
+          brandUserId:   authUser.id,
+          brandEmail:    authUser.email,
+          brandName:     authUser.user_metadata?.full_name || authUser.email,
+          // creatorUserId comes from the deal's metadata if set, else empty string
+          creatorUserId: activeDeal.creatorUserId || "",
+        }),
+      });
+      if(!resp.ok) {
+        const err = await resp.json().catch(()=>({error:"Network error"}));
+        throw new Error(err.error || "Server error");
+      }
+      const { clientSecret, publishableKey } = await resp.json();
+
+      if(!window.Stripe) throw new Error("Stripe.js failed to load. Please refresh and try again.");
+      const stripe = window.Stripe(publishableKey);
+
+      // 2. Collect bank account via Stripe Financial Connections
+      setAchPhase("collecting");
+      const { paymentIntent: pi1, error: collectErr } = await stripe.collectBankAccountForPayment({
+        clientSecret,
+        params: {
+          payment_method_type: "us_bank_account",
+          payment_method_data: {
+            billing_details: {
+              name:  authUser.user_metadata?.full_name || authUser.email,
+              email: authUser.email,
+            },
+          },
+        },
+        expand: ["payment_method"],
+      });
+      if(collectErr) throw new Error(collectErr.message);
+      if(pi1.status === "requires_payment_method") {
+        // Brand closed the modal without selecting a bank
+        setAchPhase("idle");
+        return;
+      }
+
+      // 3. Confirm the mandate + initiate ACH debit
+      setAchPhase("confirming");
+      const { paymentIntent: pi2, error: confirmErr } = await stripe.confirmUsBankAccountPayment(clientSecret);
+      if(confirmErr) throw new Error(confirmErr.message);
+
+      // payment_intent.status is "processing" for ACH — funds are not instant
+      // Update the deal status to reflect the 4-5 business day settlement window
+      setAchPhase("done");
+      const updated = {...activeDeal, status:"payment_processing", paymentIntentId: pi2?.id};
+      setActiveDeal(updated);
+      updateDeal && updateDeal(activeDeal.id, {status:"payment_processing", paymentIntentId: pi2?.id});
+    } catch(err) {
+      console.error("[ACH payment]", err);
+      setAchError(err.message);
+      setAchPhase("error");
+    }
+  };
+
   if(loading) return <SkeletonPage layout="deal-room"/>;
   if(!activeDeal) return null;
   const g=bg(activeDeal.ci);
@@ -2402,6 +2478,54 @@ function DealRoomPage({setPage,setSelected,deals}) {
               ))}
             </div>
           </div>
+          {/* ── ACH Payment Panel (brand-side only) ── */}
+          {isBrand&&(()=>{
+            const isProcessing = activeDeal.status==="payment_processing";
+            const isDone       = achPhase==="done" || isProcessing;
+
+            if(isDone) return (
+              <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(34,197,94,.07),rgba(34,197,94,.03))",border:"1.5px solid rgba(34,197,94,.25)"}}>
+                <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                  <span style={{fontSize:"22px",flexShrink:0}}>✅</span>
+                  <div>
+                    <div style={{fontSize:"13px",fontWeight:700,color:"var(--green)",marginBottom:3}}>ACH payment initiated</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>Your payment of <strong>${activeDeal.amount.toLocaleString()}</strong> is being processed via ACH Direct Debit. Funds typically settle in <strong>4–5 business days</strong>. The creator will be notified once funds clear.</div>
+                    <div style={{marginTop:10,display:"flex",gap:6,alignItems:"center"}}>
+                      <div style={{width:8,height:8,borderRadius:"50%",background:"var(--green)",animation:"pulse 2s infinite"}}/>
+                      <span style={{fontSize:"11px",fontWeight:600,color:"var(--green)"}}>Payment processing</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+
+            const busy = achPhase==="creating"||achPhase==="collecting"||achPhase==="confirming";
+            const phaseLabel = {creating:"Creating payment…",collecting:"Connecting bank account…",confirming:"Authorizing payment…"};
+
+            return (
+              <div className="card-lg" style={{padding:"16px 18px"}}>
+                <div style={{fontSize:"13px",fontWeight:700,marginBottom:4}}>Fund This Deal</div>
+                <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>Pay <strong>${activeDeal.amount.toLocaleString()}</strong> via ACH Direct Debit. bridgn holds funds in escrow until the creator delivers. A <strong>8% platform fee</strong> (${Math.round(activeDeal.amount*0.08).toLocaleString()}) is deducted from your payment.</div>
+                {achPhase==="error"&&achError&&(
+                  <div style={{padding:"9px 12px",borderRadius:"var(--radius-sm)",background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",fontSize:"12px",color:"var(--red)",marginBottom:12,lineHeight:1.5}}>{achError}</div>
+                )}
+                <button
+                  className="btn btn-primary"
+                  style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,opacity:busy?.65:1,pointerEvents:busy?"none":"auto"}}
+                  onClick={handleFundDeal}
+                  disabled={busy}
+                >
+                  {busy?(
+                    <>{" "}<span style={{fontSize:"14px",animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>{" "}{phaseLabel[achPhase]||"Processing…"}</>
+                  ):(
+                    <><span>🏦</span> Connect Bank &amp; Pay ${activeDeal.amount.toLocaleString()}</>
+                  )}
+                </button>
+                <div style={{fontSize:"10px",color:"var(--text3)",marginTop:9,textAlign:"center",lineHeight:1.5}}>ACH payments are processed via Stripe. Your bank details are never stored on bridgn.</div>
+              </div>
+            );
+          })()}
+
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             <button className="btn btn-secondary btn-sm" style={{width:"100%"}} onClick={()=>setPage("invoices")}>View Invoice</button>
             <button className="btn btn-danger btn-sm" style={{width:"100%"}} onClick={()=>setPage("dispute")}>File a Dispute</button>
@@ -6407,7 +6531,8 @@ function App() {
     setPage("dashboard");
   };
 
-  const addDeal = d => setDeals(x=>[...x,d]);
+  const addDeal    = d           => setDeals(x=>[...x,d]);
+  const updateDeal = (id,fields) => setDeals(x=>x.map(d=>d.id===id?{...d,...fields}:d));
 
   // Parse invite context from URL query string once on mount
   const [inviteCtx] = useState(()=>{
@@ -6471,7 +6596,7 @@ function App() {
         case "campaigns":    return React.createElement(CampaignsPage,{setPage,setSelected,campaignQuestions,setCampaignQuestions,userName});
         case "campaign-detail": return React.createElement(CampaignDetail,{campaign:selected,setPage});
         case "deals":        return React.createElement(CreatorDealsPage,{setPage,setSelected,deals});
-        case "deal-room":    return React.createElement(DealRoomPage,{setPage,setSelected,deals});
+        case "deal-room":    return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal});
         case "active-deal":  return React.createElement(ActiveDealPage,{deal:selected,setPage});
         case "new-deal":     return React.createElement(NewDealPage,{setPage,onDealCreated:addDeal,userName});
         case "dispute":      return React.createElement(DisputePage,{deal:selected,setPage});
@@ -6500,7 +6625,7 @@ function App() {
         case "campaigns":     return React.createElement(BrandCampaignsPage,{setPage,setSelected,campaignQuestions,setCampaignQuestions});
         case "campaign-calendar": return React.createElement(CampaignCalendarPage,{});
         case "deals":         return React.createElement(BrandDealsPage,{setPage,setSelected});
-        case "deal-room":     return React.createElement(DealRoomPage,{setPage,setSelected,deals});
+        case "deal-room":     return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal});
         case "content-library": return React.createElement(ContentLibraryPage,{});
         case "affiliate":     return React.createElement(AffiliateManagerPage,{});
         case "brief-builder": return React.createElement(BriefBuilderPage,{});

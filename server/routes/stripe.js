@@ -18,8 +18,11 @@
  */
 
 const express = require("express");
-const { stripe }                              = require("../../lib/stripe");
-const { getCreatorProfile, upsertCreatorProfile } = require("../../lib/db");
+const { stripe, PLATFORM_FEE_PERCENT }                    = require("../../lib/stripe");
+const {
+  getCreatorProfile, upsertCreatorProfile,
+  getBrandProfile,   upsertBrandProfile,
+} = require("../../lib/db");
 
 const router = express.Router();
 
@@ -172,6 +175,125 @@ router.get("/onboard/refresh", async (req, res) => {
   } catch (err) {
     console.error("[stripe/onboard/refresh]", err);
     res.redirect(`${CLIENT_URL}/?stripe=error&reason=server`);
+  }
+});
+
+/**
+ * GET /api/stripe/config
+ *
+ * Returns the Stripe publishable key so the frontend can initialise Stripe.js
+ * without baking the key into the static HTML at build time.
+ */
+router.get("/config", (_req, res) => {
+  const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
+  if (!publishableKey) {
+    return res.status(500).json({ error: "STRIPE_PUBLISHABLE_KEY is not configured." });
+  }
+  res.json({ publishableKey });
+});
+
+/**
+ * POST /api/stripe/create-deal-payment
+ *
+ * Body:
+ *   dealId        string  — bridgn deal identifier (stored in PaymentIntent metadata)
+ *   amount        number  — deal value in dollars (e.g. 2500 → $2,500)
+ *   brandUserId   string  — Supabase user id of the brand paying
+ *   brandEmail    string  — brand's email (used for Stripe customer creation)
+ *   brandName     string  — brand's display name
+ *   creatorUserId string  — Supabase user id of the creator receiving payment
+ *
+ * Returns: { clientSecret, paymentIntentId, publishableKey }
+ *
+ * NOTE: In production, verify the brandUserId by checking the Supabase JWT in
+ * the Authorization header to prevent one user from paying on behalf of another.
+ */
+router.post("/create-deal-payment", async (req, res) => {
+  const { dealId, amount, brandUserId, brandEmail, brandName, creatorUserId } = req.body;
+
+  // ── Validate inputs ────────────────────────────────────────────────────────
+  if (!dealId || !amount || !brandUserId || !creatorUserId) {
+    return res.status(400).json({
+      error: "dealId, amount, brandUserId, and creatorUserId are required.",
+    });
+  }
+
+  const amountDollars = Number(amount);
+  if (!Number.isFinite(amountDollars) || amountDollars <= 0) {
+    return res.status(400).json({ error: "amount must be a positive number." });
+  }
+
+  // Stripe works in cents — round to avoid floating-point drift
+  const amountCents       = Math.round(amountDollars * 100);
+  const applicationFeeCents = Math.round(amountCents * PLATFORM_FEE_PERCENT);
+
+  try {
+    // ── 1. Get or create the Stripe Customer for this brand ──────────────────
+    let brandProfile = await getBrandProfile(brandUserId);
+    let customerId   = brandProfile?.stripe_customer_id;
+
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email:    brandEmail || undefined,
+        name:     brandName  || undefined,
+        metadata: { bridgn_user_id: brandUserId },
+      });
+
+      customerId = customer.id;
+      brandProfile = await upsertBrandProfile(brandUserId, {
+        stripe_customer_id: customerId,
+      });
+    }
+
+    // ── 2. Get the creator's connected account ───────────────────────────────
+    const creatorProfile = await getCreatorProfile(creatorUserId);
+    if (!creatorProfile?.stripe_account_id) {
+      return res.status(422).json({
+        error: "Creator has not completed Stripe onboarding. They must connect a bank account first.",
+        code:  "creator_not_onboarded",
+      });
+    }
+
+    // ── 3. Create the PaymentIntent ──────────────────────────────────────────
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount:   amountCents,
+      currency: "usd",
+      customer: customerId,
+      payment_method_types: ["us_bank_account"],
+      // Mandate collection: Stripe presents the ACH authorisation text automatically
+      payment_method_options: {
+        us_bank_account: {
+          financial_connections: {
+            permissions: ["payment_method", "balances"],
+          },
+        },
+      },
+      // Split: net amount goes to the creator; bridgn keeps the application fee
+      transfer_data: {
+        destination: creatorProfile.stripe_account_id,
+      },
+      application_fee_amount: applicationFeeCents,
+      // Keep the PI open for 24 h — ACH confirmation happens client-side
+      capture_method: "automatic",
+      metadata: {
+        bridgn_deal_id:    String(dealId),
+        bridgn_brand_id:   brandUserId,
+        bridgn_creator_id: creatorUserId,
+        amount_dollars:    String(amountDollars),
+        platform_fee_pct:  String(PLATFORM_FEE_PERCENT),
+      },
+    });
+
+    res.json({
+      clientSecret:    paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+      publishableKey:  process.env.STRIPE_PUBLISHABLE_KEY,
+      amountCents,
+      applicationFeeCents,
+    });
+  } catch (err) {
+    console.error("[stripe/create-deal-payment]", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
