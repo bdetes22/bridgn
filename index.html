@@ -2412,9 +2412,14 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   };
   const contractFileInputRef = React.useRef(null);
 
+  // Pause polling briefly after a local write so the poll doesn't overwrite with stale data
+  const pollPaused = React.useRef(false);
+  const pausePoll = () => { pollPaused.current = true; setTimeout(()=>{ pollPaused.current = false; }, 8000); };
+
   // Sync brief/contract state to Supabase and update App-level deals
   const syncDealFields = (fields) => {
     if(!activeDeal?.id) return;
+    pausePoll();
     fetch(`${BRIDGN_API_URL}/api/deals/update`, {
       method:"PUT", headers:{"Content-Type":"application/json"},
       body:JSON.stringify({bridgnDealId:String(activeDeal.id), userId:authUser?.id, fields}),
@@ -2456,6 +2461,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     const dealId = activeDeal?.id;
     if(!dealId || !authUser) return;
     const poll = setInterval(()=>{
+      if(pollPaused.current) return;
       fetch(`${BRIDGN_API_URL}/api/deals?userId=${authUser.id}`)
         .then(r=>r.ok?r.json():null)
         .then(data=>{
