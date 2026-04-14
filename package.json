@@ -1,0 +1,17 @@
+{
+  "name": "bridgn",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dual-sided influencer marketplace — Stripe Connect backend",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "stripe": "^17.7.0"
+  }
+}
