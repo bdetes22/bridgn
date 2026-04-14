@@ -1014,6 +1014,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
     {k:"campaigns",l:"Campaigns",i:"📋"},
     {k:"campaign-calendar",l:"Campaign Calendar",i:"📅"},
     {k:"deals",l:"Deals Manager",i:"🤝"},
+    {k:"deal-room",l:"Deal Room",i:"🏠"},
     {k:"brief-builder",l:"Brief Builder",i:"📝"},
     {section:"Content & Analytics"},
     {k:"content-library",l:"Content Library",i:"🎬"},
@@ -2258,7 +2259,15 @@ function CreatorDealsPage({setPage,setSelected,deals}) {
 function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const loading = useSkeleton();
   const [fireConfetti,confettiFiring] = useConfetti();
-  const [activeDeal,setActiveDeal] = useState(deals.find(d=>d.status==="Active")||deals[0]);
+  const [activeDeal,setActiveDeal] = useState(deals.find(d=>d.status==="Active")||deals.find(d=>d.status!=="Completed")||deals[0]);
+
+  // Keep activeDeal in sync when deals array changes (e.g. loaded from DB after mount)
+  useEffect(()=>{
+    if(activeDeal) return; // already have one
+    const found = deals.find(d=>d.status==="Active")||deals.find(d=>d.status!=="Completed")||deals[0];
+    if(found) setActiveDeal(found);
+  },[deals]);
+
   const [msgInput,setMsgInput] = useState("");
   const [msgs,setMsgs] = useState([
     {from:"brand",text:"Brief is uploaded. Please review before creating content.",time:"Apr 4, 9:00 AM"},
@@ -2390,7 +2399,21 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   };
 
   if(loading) return <SkeletonPage layout="deal-room"/>;
-  if(!activeDeal) return null;
+  if(!activeDeal) return (
+    <div className="fade-in">
+      <div className="ph-row"><div><div className="page-title">Deal Room</div><div className="page-subtitle">Shared workspace for managing deals.</div></div></div>
+      <div className="card" style={{padding:"40px 20px",textAlign:"center"}}>
+        <div style={{fontSize:"32px",marginBottom:12}}>🏠</div>
+        <div style={{fontSize:"15px",fontWeight:600,marginBottom:6}}>No active deals</div>
+        <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:14}}>
+          {isBrand
+            ? "When a creator invites you to a deal, it will appear here."
+            : "Create a new deal to get started. Your shared workspace with the brand will appear here."}
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={()=>setPage(isBrand?"deals":"new-deal")}>{isBrand?"View Deals":"+ New Deal"}</button>
+      </div>
+    </div>
+  );
   const g=bg(activeDeal.ci);
   const DELIVERABLES = (activeDeal.deliverables||"").split(",").map(d=>d.trim()).filter(Boolean);
   const [approved,setApproved] = useState(DELIVERABLES.map(()=>false));
