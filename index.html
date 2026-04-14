@@ -2369,21 +2369,52 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     }).catch(e=>console.error("[syncDealFields]",e));
   };
 
-  // Re-sync local state when activeDeal changes (e.g. switching deals or data loaded from DB)
+  // Sync local brief/contract state from deal data
+  const syncFromDeal = (deal) => {
+    if(!deal) return;
+    setBriefFile(deal.briefFile||null);
+    setBriefLink(deal.briefLink||"");
+    setBriefComments(deal.briefComments||"");
+    setBriefSubmitted(!!deal.briefSubmitted);
+    setBriefAcknowledged(!!deal.briefAcknowledged);
+    setContractFile(deal.contractFile||null);
+    setContractLink(deal.contractLink||"");
+    setContractNotes(deal.contractNotes||"");
+    setContractSent(!!deal.contractSent);
+    setContractSigned(!!deal.contractSigned);
+    setContractSignedAt(deal.contractSignedAt||null);
+  };
+
+  // Re-sync when activeDeal changes (switching deals or initial load)
+  useEffect(()=>{ syncFromDeal(activeDeal); },[activeDeal?.id]);
+
+  // Poll for deal updates every 5 seconds so both sides see changes live
+  // (brief submitted, contract sent, acknowledged, signed, etc.)
   useEffect(()=>{
-    if(!activeDeal) return;
-    setBriefFile(activeDeal.briefFile||null);
-    setBriefLink(activeDeal.briefLink||"");
-    setBriefComments(activeDeal.briefComments||"");
-    setBriefSubmitted(!!activeDeal.briefSubmitted);
-    setBriefAcknowledged(!!activeDeal.briefAcknowledged);
-    setContractFile(activeDeal.contractFile||null);
-    setContractLink(activeDeal.contractLink||"");
-    setContractNotes(activeDeal.contractNotes||"");
-    setContractSent(!!activeDeal.contractSent);
-    setContractSigned(!!activeDeal.contractSigned);
-    setContractSignedAt(activeDeal.contractSignedAt||null);
-  },[activeDeal?.id]);
+    const dealId = activeDeal?.id;
+    if(!dealId || !authUser) return;
+    const poll = setInterval(()=>{
+      fetch(`${BRIDGN_API_URL}/api/deals?userId=${authUser.id}`)
+        .then(r=>r.ok?r.json():null)
+        .then(data=>{
+          const fresh = data?.deals?.find(d=>d.id===String(dealId));
+          if(!fresh) return;
+          // Update activeDeal + local state if something changed
+          setActiveDeal(prev=>{
+            if(!prev) return fresh;
+            if(prev.briefSubmitted!==fresh.briefSubmitted || prev.briefAcknowledged!==fresh.briefAcknowledged ||
+               prev.contractSent!==fresh.contractSent || prev.contractSigned!==fresh.contractSigned ||
+               prev.status!==fresh.status) {
+              syncFromDeal(fresh);
+              return fresh;
+            }
+            return prev;
+          });
+        })
+        .catch(()=>{});
+    }, 5000);
+    return ()=>clearInterval(poll);
+  },[activeDeal?.id, authUser?.id]);
 
   const [contentUploaded,setContentUploaded] = useState(false);
   const [uploadingContent,setUploadingContent] = useState(false);
