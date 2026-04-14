@@ -1015,7 +1015,6 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
     {k:"campaign-calendar",l:"Campaign Calendar",i:"📅"},
     {k:"deals",l:"Deals Manager",i:"🤝"},
     {k:"deal-room",l:"Deal Room",i:"🏠"},
-    {k:"brief-builder",l:"Brief Builder",i:"📝"},
     {section:"Content & Analytics"},
     {k:"content-library",l:"Content Library",i:"🎬"},
     {k:"affiliate",l:"Affiliate Manager",i:"🔗"},
@@ -2328,9 +2327,20 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   useEffect(()=>{
     msgEndRef.current?.scrollIntoView({behavior:"smooth"});
   },[msgs.length]);
-  const [briefText,setBriefText] = useState(""); // brand types brief here
-  const [briefSubmitted,setBriefSubmitted] = useState(false); // brand has submitted brief
-  const [briefAcknowledged,setBriefAcknowledged] = useState(false); // creator acknowledged
+  const [briefFile,setBriefFile] = useState(null);      // {name, size, dataUrl} — uploaded doc
+  const [briefLink,setBriefLink] = useState("");        // pasted URL
+  const [briefComments,setBriefComments] = useState(""); // brand notes
+  const [briefSubmitted,setBriefSubmitted] = useState(false);
+  const [briefAcknowledged,setBriefAcknowledged] = useState(false);
+
+  const handleBriefFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setBriefFile({name:file.name, size:file.size, dataUrl:reader.result});
+    reader.readAsDataURL(file);
+  };
+  const briefFileInputRef = React.useRef(null);
   const [contentUploaded,setContentUploaded] = useState(false);
   const [uploadingContent,setUploadingContent] = useState(false);
   const [scriptUrl,setScriptUrl] = useState(""); // creator pastes script/draft link
@@ -2543,35 +2553,113 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
               {briefSubmitted?(briefAcknowledged?<span className="badge badge-green">Acknowledged</span>:<span className="badge badge-yellow">Awaiting creator</span>):<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Not submitted</span>}
             </div>
             {isBrand ? (
-              /* ── Brand side: write and submit the brief ── */
+              /* ── Brand side: upload file or paste link + comments ── */
               briefSubmitted ? (
                 <div>
-                  <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"16px",fontSize:"13px",color:"var(--text2)",lineHeight:1.8,marginBottom:14,whiteSpace:"pre-wrap"}}>{briefText}</div>
-                  {briefAcknowledged&&<div style={{padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--green)",fontWeight:600}}>✓ Creator has acknowledged the brief</div>}
-                  <button onClick={()=>setBriefSubmitted(false)} className="btn btn-secondary btn-sm" style={{marginTop:10}}>Edit Brief</button>
+                  {/* Show what was submitted */}
+                  {briefFile&&(
+                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                      <span style={{fontSize:"20px"}}>📄</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{briefFile.name}</div>
+                        <div style={{fontSize:"11px",color:"var(--text3)"}}>{(briefFile.size/1024).toFixed(0)} KB</div>
+                      </div>
+                    </div>
+                  )}
+                  {briefLink&&(
+                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.25)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                      <span style={{fontSize:"18px"}}>🔗</span>
+                      <a href={briefLink} target="_blank" rel="noopener noreferrer" style={{flex:1,fontSize:"13px",color:"var(--accent)",textDecoration:"underline",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{briefLink}</a>
+                    </div>
+                  )}
+                  {briefComments&&(
+                    <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"14px 16px",fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:10,whiteSpace:"pre-wrap"}}>
+                      <div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}}>Notes</div>
+                      {briefComments}
+                    </div>
+                  )}
+                  {briefAcknowledged&&<div style={{padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--green)",fontWeight:600,marginBottom:10}}>✓ Creator has acknowledged the brief</div>}
+                  <button onClick={()=>setBriefSubmitted(false)} className="btn btn-secondary btn-sm">Edit Brief</button>
                 </div>
               ) : (
                 <div>
-                  <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:10,lineHeight:1.5}}>Describe the campaign goals, tone, key messages, hashtags, and anything the creator should know. They will see this exactly as written.</div>
-                  <textarea
-                    value={briefText}
-                    onChange={e=>setBriefText(e.target.value)}
-                    placeholder={"Campaign: "+activeDeal.campaignTitle+"\nTone: \nKey message: \nDo not: \nHashtags: \nDeadline: "+activeDeal.deadline}
-                    rows={8}
-                    style={{width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",color:"var(--text)",fontSize:"13px",fontFamily:"inherit",lineHeight:1.7,outline:"none",resize:"vertical",marginBottom:12}}
-                  />
-                  <button onClick={()=>{if(briefText.trim())setBriefSubmitted(true);}} className="btn btn-primary" style={{width:"100%"}} disabled={!briefText.trim()}>Submit Brief to Creator</button>
+                  <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.5}}>Upload a brief document, paste a link, or both. Add any notes the creator should know.</div>
+
+                  {/* File upload */}
+                  <input ref={briefFileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.rtf,.pages,.ppt,.pptx,.key" onChange={handleBriefFileChange} style={{display:"none"}}/>
+                  {briefFile?(
+                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"10px 14px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                      <span style={{fontSize:"18px"}}>📄</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{briefFile.name}</div>
+                        <div style={{fontSize:"11px",color:"var(--text3)"}}>{(briefFile.size/1024).toFixed(0)} KB</div>
+                      </div>
+                      <button onClick={()=>setBriefFile(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"14px",color:"var(--text3)",padding:"2px 6px"}}>✕</button>
+                    </div>
+                  ):(
+                    <div onClick={()=>briefFileInputRef.current?.click()} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"16px",textAlign:"center",cursor:"pointer",marginBottom:10,transition:"border-color .15s"}} onMouseEnter={e=>e.currentTarget.style.borderColor="var(--accent)"} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+                      <div style={{fontSize:"20px",marginBottom:4}}>📎</div>
+                      <div style={{fontSize:"13px",fontWeight:600}}>Upload Brief Document</div>
+                      <div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>PDF, DOC, DOCX, TXT, PPT</div>
+                    </div>
+                  )}
+
+                  {/* Link */}
+                  <div style={{marginBottom:10}}>
+                    <label style={{fontSize:"12px",fontWeight:600,color:"var(--text3)",display:"block",marginBottom:4}}>Or paste a link</label>
+                    <input className="fi" value={briefLink} onChange={e=>setBriefLink(e.target.value)} placeholder="Google Doc, Notion, Dropbox link…" style={{width:"100%",boxSizing:"border-box",padding:"9px 12px",fontSize:"13px"}}/>
+                  </div>
+
+                  {/* Comments */}
+                  <div style={{marginBottom:14}}>
+                    <label style={{fontSize:"12px",fontWeight:600,color:"var(--text3)",display:"block",marginBottom:4}}>Notes for the creator</label>
+                    <textarea
+                      value={briefComments}
+                      onChange={e=>setBriefComments(e.target.value)}
+                      placeholder="Key things to keep in mind, tone guidance, mandatory mentions, restrictions…"
+                      rows={4}
+                      style={{width:"100%",boxSizing:"border-box",padding:"10px 12px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",color:"var(--text)",fontSize:"13px",fontFamily:"inherit",lineHeight:1.6,outline:"none",resize:"vertical"}}
+                    />
+                  </div>
+
+                  <button onClick={()=>{if(briefFile||briefLink.trim()||briefComments.trim())setBriefSubmitted(true);}} className="btn btn-primary" style={{width:"100%"}} disabled={!briefFile&&!briefLink.trim()&&!briefComments.trim()}>Send Brief to Creator</button>
                 </div>
               )
             ) : (
-              /* ── Creator side: view the brief (read-only) ── */
+              /* ── Creator side: view/download brief ── */
               briefSubmitted ? (
                 <div>
-                  <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"16px",fontSize:"13px",color:"var(--text2)",lineHeight:1.8,marginBottom:14,whiteSpace:"pre-wrap"}}>{briefText}</div>
-                  {!briefAcknowledged&&(
-                    <button onClick={()=>setBriefAcknowledged(true)} className="btn btn-primary" style={{width:"100%"}}>I have read and understood the brief</button>
+                  {briefFile&&(
+                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                      <span style={{fontSize:"20px"}}>📄</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{briefFile.name}</div>
+                        <div style={{fontSize:"11px",color:"var(--text3)"}}>{(briefFile.size/1024).toFixed(0)} KB</div>
+                      </div>
+                      <a href={briefFile.dataUrl} download={briefFile.name} className="btn btn-secondary btn-sm" style={{flexShrink:0,textDecoration:"none"}}>Download</a>
+                    </div>
                   )}
-                  {briefAcknowledged&&<div style={{padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--green)",fontWeight:600}}>✓ You acknowledged this brief</div>}
+                  {briefLink&&(
+                    <div style={{display:"flex",gap:10,alignItems:"center",padding:"12px 14px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.25)",borderRadius:"var(--radius-sm)",marginBottom:10}}>
+                      <span style={{fontSize:"18px"}}>🔗</span>
+                      <a href={briefLink} target="_blank" rel="noopener noreferrer" style={{flex:1,fontSize:"13px",color:"var(--accent)",textDecoration:"underline",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{briefLink}</a>
+                      <span onClick={()=>{navigator.clipboard.writeText(briefLink).catch(()=>{});}} style={{cursor:"pointer",fontSize:"12px",color:"var(--text3)"}}>📋 Copy</span>
+                    </div>
+                  )}
+                  {briefComments&&(
+                    <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"14px 16px",fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:10,whiteSpace:"pre-wrap"}}>
+                      <div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}}>Brand Notes</div>
+                      {briefComments}
+                    </div>
+                  )}
+                  {!briefFile&&!briefLink&&!briefComments&&(
+                    <div style={{fontSize:"12px",color:"var(--text3)"}}>Brief submitted with no attachments or notes.</div>
+                  )}
+                  {!briefAcknowledged?(
+                    <button onClick={()=>setBriefAcknowledged(true)} className="btn btn-primary" style={{width:"100%",marginTop:4}}>I have read and understood the brief</button>
+                  ):(
+                    <div style={{padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--green)",fontWeight:600,marginTop:4}}>✓ You acknowledged this brief</div>
+                  )}
                 </div>
               ) : (
                 <div style={{padding:"20px",textAlign:"center"}}>
@@ -4461,7 +4549,6 @@ function BrandDashboard({setPage,setSelected}) {
       <div className="ph-row">
         <div><div className="page-title">Brand Dashboard</div><div className="page-subtitle">Your creator partnership command center.</div></div>
         <div style={{display:"flex",gap:8}}>
-          <button className="btn btn-secondary" onClick={()=>setPage("brief-builder")}>Build a Brief</button>
           <button className="btn btn-primary" onClick={()=>setPage("campaigns")}>Launch Campaign</button>
         </div>
       </div>
@@ -4498,7 +4585,7 @@ function BrandDashboard({setPage,setSelected}) {
           <div className="section">
             <div className="section-hdr"><span className="section-title">Quick Actions</span></div>
             <div style={{display:"flex",flexDirection:"column",gap:7}}>
-              {[["🔍","Browse Creators","Find your next perfect partner","browse"],["📝","Brief Builder","Create a structured creative brief","brief-builder"],["🎬","Content Library","View all delivered content","content-library"],["🔗","Affiliate Manager","Track links and conversions","affiliate"],["🏅","Creator Scorecards","Rate your past partners","scorecards"],["👥","Team Settings","Manage who has access","team"]].map(([icon,title,desc,p])=>(
+              {[["🔍","Browse Creators","Find your next perfect partner","browse"],["🎬","Content Library","View all delivered content","content-library"],["🔗","Affiliate Manager","Track links and conversions","affiliate"],["🏅","Creator Scorecards","Rate your past partners","scorecards"],["👥","Team Settings","Manage who has access","team"]].map(([icon,title,desc,p])=>(
                 <button key={p} className="card card-hover" style={{padding:"11px 14px",display:"flex",alignItems:"center",gap:10,width:"100%",border:"1px solid var(--border)",cursor:"pointer",textAlign:"left",background:"var(--surface)"}} onClick={()=>setPage(p)}>
                   <span style={{fontSize:"18px",flexShrink:0}}>{icon}</span>
                   <div><div style={{fontSize:"13px",fontWeight:600,color:"var(--text)"}}>{title}</div><div style={{fontSize:"11px",color:"var(--text2)",marginTop:1}}>{desc}</div></div>
