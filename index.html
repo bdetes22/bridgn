@@ -2307,13 +2307,14 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
         {event:"INSERT", schema:"public", table:"deal_messages", filter:"deal_id=eq."+dealId},
         (payload)=>{
           const r = payload.new;
+          // Skip messages from ourselves — the optimistic insert already shows them
+          if(r.sender_id === authUser?.id) return;
           setMsgs(prev=>{
-            // Deduplicate — optimistic insert may already have it
             if(prev.some(m=>m.id===r.id)) return prev;
             return [...prev, {
-              id:r.id, from:r.sender_id===authUser?.id?"me":"them",
+              id:r.id, from:"them",
               senderName:r.sender_name||"", senderRole:r.sender_role,
-              text:r.body, time:dealRelTime(new Date(r.created_at)), animate:r.sender_id!==authUser?.id,
+              text:r.body, time:dealRelTime(new Date(r.created_at)), animate:true,
             }];
           });
         }
