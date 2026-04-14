@@ -2327,11 +2327,12 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   useEffect(()=>{
     msgEndRef.current?.scrollIntoView({behavior:"smooth"});
   },[msgs.length]);
-  const [briefFile,setBriefFile] = useState(null);      // {name, size, dataUrl} — uploaded doc
-  const [briefLink,setBriefLink] = useState("");        // pasted URL
-  const [briefComments,setBriefComments] = useState(""); // brand notes
-  const [briefSubmitted,setBriefSubmitted] = useState(false);
-  const [briefAcknowledged,setBriefAcknowledged] = useState(false);
+  // Brief state — initialized from deal (loaded from DB)
+  const [briefFile,setBriefFile] = useState(activeDeal?.briefFile||null);
+  const [briefLink,setBriefLink] = useState(activeDeal?.briefLink||"");
+  const [briefComments,setBriefComments] = useState(activeDeal?.briefComments||"");
+  const [briefSubmitted,setBriefSubmitted] = useState(!!activeDeal?.briefSubmitted);
+  const [briefAcknowledged,setBriefAcknowledged] = useState(!!activeDeal?.briefAcknowledged);
 
   const handleBriefFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -2342,13 +2343,13 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   };
   const briefFileInputRef = React.useRef(null);
 
-  // Contract state
-  const [contractFile,setContractFile] = useState(null);   // {name, size, dataUrl}
-  const [contractLink,setContractLink] = useState("");      // signing URL
-  const [contractNotes,setContractNotes] = useState("");    // brand notes about the contract
-  const [contractSent,setContractSent] = useState(false);   // brand has sent contract
-  const [contractSigned,setContractSigned] = useState(false);
-  const [contractSignedAt,setContractSignedAt] = useState(null);
+  // Contract state — initialized from deal
+  const [contractFile,setContractFile] = useState(activeDeal?.contractFile||null);
+  const [contractLink,setContractLink] = useState(activeDeal?.contractLink||"");
+  const [contractNotes,setContractNotes] = useState(activeDeal?.contractNotes||"");
+  const [contractSent,setContractSent] = useState(!!activeDeal?.contractSent);
+  const [contractSigned,setContractSigned] = useState(!!activeDeal?.contractSigned);
+  const [contractSignedAt,setContractSignedAt] = useState(activeDeal?.contractSignedAt||null);
 
   const handleContractFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -2358,6 +2359,31 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     reader.readAsDataURL(file);
   };
   const contractFileInputRef = React.useRef(null);
+
+  // Sync brief/contract state to Supabase
+  const syncDealFields = (fields) => {
+    if(!activeDeal?.id) return;
+    fetch(`${BRIDGN_API_URL}/api/deals/update`, {
+      method:"PUT", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({bridgnDealId:String(activeDeal.id), userId:authUser?.id, fields}),
+    }).catch(e=>console.error("[syncDealFields]",e));
+  };
+
+  // Re-sync local state when activeDeal changes (e.g. switching deals or data loaded from DB)
+  useEffect(()=>{
+    if(!activeDeal) return;
+    setBriefFile(activeDeal.briefFile||null);
+    setBriefLink(activeDeal.briefLink||"");
+    setBriefComments(activeDeal.briefComments||"");
+    setBriefSubmitted(!!activeDeal.briefSubmitted);
+    setBriefAcknowledged(!!activeDeal.briefAcknowledged);
+    setContractFile(activeDeal.contractFile||null);
+    setContractLink(activeDeal.contractLink||"");
+    setContractNotes(activeDeal.contractNotes||"");
+    setContractSent(!!activeDeal.contractSent);
+    setContractSigned(!!activeDeal.contractSigned);
+    setContractSignedAt(activeDeal.contractSignedAt||null);
+  },[activeDeal?.id]);
 
   const [contentUploaded,setContentUploaded] = useState(false);
   const [uploadingContent,setUploadingContent] = useState(false);
@@ -2597,7 +2623,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     </div>
                   )}
                   {briefAcknowledged&&<div style={{padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--green)",fontWeight:600,marginBottom:10}}>✓ Creator has acknowledged the brief</div>}
-                  <button onClick={()=>setBriefSubmitted(false)} className="btn btn-secondary btn-sm">Edit Brief</button>
+                  <button onClick={()=>{setBriefSubmitted(false);syncDealFields({brief_submitted:false});}} className="btn btn-secondary btn-sm">Edit Brief</button>
                 </div>
               ) : (
                 <div>
@@ -2640,7 +2666,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     />
                   </div>
 
-                  <button onClick={()=>{if(briefFile||briefLink.trim()||briefComments.trim())setBriefSubmitted(true);}} className="btn btn-primary" style={{width:"100%"}} disabled={!briefFile&&!briefLink.trim()&&!briefComments.trim()}>Send Brief to Creator</button>
+                  <button onClick={()=>{if(briefFile||briefLink.trim()||briefComments.trim()){setBriefSubmitted(true);syncDealFields({brief_file_name:briefFile?.name||null,brief_file_data:briefFile?.dataUrl||null,brief_link:briefLink||null,brief_comments:briefComments||null,brief_submitted:true});}}} className="btn btn-primary" style={{width:"100%"}} disabled={!briefFile&&!briefLink.trim()&&!briefComments.trim()}>Send Brief to Creator</button>
                 </div>
               )
             ) : (
@@ -2674,7 +2700,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     <div style={{fontSize:"12px",color:"var(--text3)"}}>Brief submitted with no attachments or notes.</div>
                   )}
                   {!briefAcknowledged?(
-                    <button onClick={()=>setBriefAcknowledged(true)} className="btn btn-primary" style={{width:"100%",marginTop:4}}>I have read and understood the brief</button>
+                    <button onClick={()=>{setBriefAcknowledged(true);syncDealFields({brief_acknowledged:true});}} className="btn btn-primary" style={{width:"100%",marginTop:4}}>I have read and understood the brief</button>
                   ):(
                     <div style={{padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--green)",fontWeight:600,marginTop:4}}>✓ You acknowledged this brief</div>
                   )}
@@ -2730,7 +2756,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                   ):(
                     <div style={{padding:"8px 12px",background:"rgba(240,160,80,.08)",border:"1px solid rgba(240,160,80,.25)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--accent2)"}}>Waiting for the creator to review and sign.</div>
                   )}
-                  <button onClick={()=>setContractSent(false)} className="btn btn-secondary btn-sm" style={{marginTop:10}}>Edit Contract</button>
+                  <button onClick={()=>{setContractSent(false);syncDealFields({contract_sent:false});}} className="btn btn-secondary btn-sm" style={{marginTop:10}}>Edit Contract</button>
                 </div>
               ) : (
                 <div>
@@ -2760,7 +2786,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     <label style={{fontSize:"12px",fontWeight:600,color:"var(--text3)",display:"block",marginBottom:4}}>Notes for the creator</label>
                     <textarea value={contractNotes} onChange={e=>setContractNotes(e.target.value)} placeholder="Payment terms, exclusivity clauses, anything they should pay attention to…" rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 12px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",color:"var(--text)",fontSize:"13px",fontFamily:"inherit",lineHeight:1.6,outline:"none",resize:"vertical"}}/>
                   </div>
-                  <button onClick={()=>{if(contractFile||contractLink.trim())setContractSent(true);}} className="btn btn-primary" style={{width:"100%"}} disabled={!contractFile&&!contractLink.trim()}>Send Contract to Creator</button>
+                  <button onClick={()=>{if(contractFile||contractLink.trim()){setContractSent(true);syncDealFields({contract_file_name:contractFile?.name||null,contract_file_data:contractFile?.dataUrl||null,contract_link:contractLink||null,contract_notes:contractNotes||null,contract_sent:true});}}} className="btn btn-primary" style={{width:"100%"}} disabled={!contractFile&&!contractLink.trim()}>Send Contract to Creator</button>
                 </div>
               )
             ) : (
@@ -2794,7 +2820,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     </div>
                   )}
                   {!contractSigned?(
-                    <button onClick={()=>{setContractSigned(true);setContractSignedAt(new Date());}} className="btn btn-primary" style={{width:"100%"}}>I have signed this contract</button>
+                    <button onClick={()=>{const now=new Date().toISOString();setContractSigned(true);setContractSignedAt(now);syncDealFields({contract_signed:true,contract_signed_at:now});}} className="btn btn-primary" style={{width:"100%"}}>I have signed this contract</button>
                   ):(
                     <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",display:"flex",gap:8,alignItems:"center"}}>
                       <span>✅</span>

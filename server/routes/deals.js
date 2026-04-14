@@ -44,6 +44,19 @@ function dealToFrontend(row) {
     paymentIntentId: row.payment_intent_id,
     autoReleaseAt:   row.auto_release_at,
     escrowReleaseDays: row.auto_release_days || 14,
+    // Brief
+    briefFile:         row.brief_file_name ? { name: row.brief_file_name, size: 0, dataUrl: row.brief_file_data || "" } : null,
+    briefLink:         row.brief_link || "",
+    briefComments:     row.brief_comments || "",
+    briefSubmitted:    !!row.brief_submitted,
+    briefAcknowledged: !!row.brief_acknowledged,
+    // Contract
+    contractFile:      row.contract_file_name ? { name: row.contract_file_name, size: 0, dataUrl: row.contract_file_data || "" } : null,
+    contractLink:      row.contract_link || "",
+    contractNotes:     row.contract_notes || "",
+    contractSent:      !!row.contract_sent,
+    contractSigned:    !!row.contract_signed,
+    contractSignedAt:  row.contract_signed_at,
   };
 }
 
@@ -164,6 +177,50 @@ router.put("/status", async (req, res) => {
     res.json({ deal: dealToFrontend(updated) });
   } catch (err) {
     console.error("[deals/status]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── PUT /api/deals/update — update arbitrary deal fields ────────────────────
+// Used to persist brief, contract, and other deal state changes.
+
+const ALLOWED_FIELDS = [
+  "brief_file_name", "brief_file_data", "brief_link", "brief_comments",
+  "brief_submitted", "brief_acknowledged",
+  "contract_file_name", "contract_file_data", "contract_link", "contract_notes",
+  "contract_sent", "contract_signed", "contract_signed_at",
+  "status", "progress",
+];
+
+router.put("/update", async (req, res) => {
+  const { bridgnDealId, userId, fields } = req.body;
+
+  if (!bridgnDealId || !fields || typeof fields !== "object") {
+    return res.status(400).json({ error: "bridgnDealId and fields are required." });
+  }
+
+  try {
+    const deal = await getDealByBridgnDealId(bridgnDealId);
+    if (!deal) return res.status(404).json({ error: "Deal not found." });
+
+    if (userId && deal.creator_user_id !== userId && deal.brand_user_id !== userId) {
+      return res.status(403).json({ error: "Not authorized." });
+    }
+
+    // Only allow whitelisted columns
+    const safe = {};
+    for (const [k, v] of Object.entries(fields)) {
+      if (ALLOWED_FIELDS.includes(k)) safe[k] = v;
+    }
+
+    if (Object.keys(safe).length === 0) {
+      return res.status(400).json({ error: "No valid fields to update." });
+    }
+
+    const updated = await updateDealById(deal.id, safe);
+    res.json({ deal: dealToFrontend(updated) });
+  } catch (err) {
+    console.error("[deals/update]", err);
     res.status(500).json({ error: err.message });
   }
 });
