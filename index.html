@@ -2398,6 +2398,17 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     setDisputeLoading(false);
   };
 
+  // All hooks must be called before any conditional return (React Rules of Hooks).
+  const DELIVERABLES = activeDeal ? (activeDeal.deliverables||"").split(",").map(d=>d.trim()).filter(Boolean) : [];
+  const [approved,setApproved] = useState(DELIVERABLES.map(()=>false));
+
+  // Reset approved checkboxes when active deal changes
+  useEffect(()=>{
+    if(!activeDeal) return;
+    const dels = (activeDeal.deliverables||"").split(",").map(d=>d.trim()).filter(Boolean);
+    setApproved(dels.map(()=>false));
+  },[activeDeal?.id]);
+
   if(loading) return <SkeletonPage layout="deal-room"/>;
   if(!activeDeal) return (
     <div className="fade-in">
@@ -2415,8 +2426,6 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     </div>
   );
   const g=bg(activeDeal.ci);
-  const DELIVERABLES = (activeDeal.deliverables||"").split(",").map(d=>d.trim()).filter(Boolean);
-  const [approved,setApproved] = useState(DELIVERABLES.map(()=>false));
   const sendMsg=()=>{if(!msgInput.trim())return;setMsgs(m=>[...m,{from:"me",text:msgInput,time:"Just now",animate:true}]);setMsgInput("");};
   const pct = Math.round((activeDeal.progress/6)*100);
   return (
