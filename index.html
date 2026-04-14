@@ -2457,7 +2457,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
             ))}
             <div style={{marginTop:14}}>
               {!contentUploaded?(
-                <div onClick={()=>{setUploadingContent(true);setTimeout(()=>{setUploadingContent(false);setContentUploaded(true);},1500);}} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"20px",textAlign:"center",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.borderColor=g[0]} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+                <div onClick={()=>{setUploadingContent(true);setTimeout(()=>{setUploadingContent(false);setContentUploaded(true);const upd={...activeDeal,status:"content_delivered"};setActiveDeal(upd);updateDeal&&updateDeal(activeDeal.id,{status:"content_delivered"});},1500);}} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"20px",textAlign:"center",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.borderColor=g[0]} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
                   {uploadingContent?<><div style={{fontSize:"18px",animation:"spin .9s linear infinite",display:"inline-block"}}>⟳</div><div style={{fontSize:"13px",marginTop:6}}>Uploading...</div></>:<><div style={{fontSize:"22px",marginBottom:6}}>📤</div><div style={{fontSize:"13px",fontWeight:600}}>Upload Content for Review</div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>MP4, MOV, JPG, PNG</div></>}
                 </div>
               ):(
@@ -2885,20 +2885,22 @@ function ActiveDealPage({deal:initDeal,setPage}) {
 }
 
 // ─── NEW DEAL ─────────────────────────────────────────────────────────────────
-function NewDealPage({setPage,onDealCreated,userName}) {
+function NewDealPage({setPage,onDealCreated,userName,authUser}) {
   const loading = useSkeleton();
   const [step,setStep] = useState(1);
   const [form,setForm] = useState({brandName:"",brandEmail:"",amount:"",platform:"Instagram",deadline:"",deliverables:"",notes:""});
   const [contractTypes,setContractTypes] = useState(["flat"]);
   const [sending,setSending] = useState(false);
   const [done,setDone] = useState(false);
-  const [inviteCode] = useState(()=>Math.random().toString(36).slice(2,6)+Math.random().toString(36).slice(2,6));
+  const [dealId] = useState(()=>String(Date.now()));
   const [copied,setCopied] = useState(false);
   const buildInviteLink = () => {
     try {
       const payload = btoa(encodeURIComponent(JSON.stringify({
-        code: inviteCode,
+        code: dealId,
+        bridgnDealId: dealId,
         creatorName: userName,
+        creatorUserId: authUser?.id||"",
         brandName: form.brandName,
         brandEmail: form.brandEmail,
         amount: parseInt(form.amount)||0,
@@ -2908,7 +2910,7 @@ function NewDealPage({setPage,onDealCreated,userName}) {
         campaignTitle: "External Deal — "+(form.brandName||"Brand"),
       })));
       return `${window.location.origin}?inv=${payload}`;
-    } catch { return `${window.location.origin}?inv=${inviteCode}`; }
+    } catch { return `${window.location.origin}?inv=${dealId}`; }
   };
   const inviteLink = buildInviteLink();
   const copyLink = () => {
@@ -2941,13 +2943,47 @@ function NewDealPage({setPage,onDealCreated,userName}) {
       </div>
     </div>
   );
-  const handleNext=()=>{
+  const handleNext=async()=>{
     if(step<3){setStep(s=>s+1);return;}
     setSending(true);
-    setTimeout(()=>{
-      onDealCreated({id:Date.now(),brand:form.brandName,bi:form.brandName.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),ci:Math.floor(Math.random()*6),amount:parseInt(form.amount)||0,platform:form.platform,status:"Pending",deadline:form.deadline||"TBD",deliverables:form.deliverables,progress:0,source:"external",campaignTitle:"External Deal — "+form.brandName,escrow:false,escrowReleased:false});
-      setSending(false);setDone(true);
-    },1200);
+    const dealData = {
+      id:dealId, brand:form.brandName,
+      bi:form.brandName.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),
+      ci:Math.floor(Math.random()*6),
+      amount:parseInt(form.amount)||0, platform:form.platform,
+      status:"pending", deadline:form.deadline||"TBD",
+      deliverables:form.deliverables, progress:0, source:"external",
+      campaignTitle:"External Deal — "+form.brandName,
+      escrow:false, escrowReleased:false,
+      creatorUserId:authUser?.id||"", creatorName:userName,
+    };
+    try {
+      const resp = await fetch(`${BRIDGN_API_URL}/api/deals`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          bridgnDealId: dealId,
+          creatorUserId: authUser?.id||"",
+          creatorName: userName,
+          brandName: form.brandName,
+          brandEmail: form.brandEmail,
+          amount: parseInt(form.amount)||0,
+          platform: form.platform,
+          deliverables: form.deliverables||"",
+          deadline: form.deadline||"TBD",
+          campaignTitle: "External Deal — "+form.brandName,
+        }),
+      });
+      if(resp.ok) {
+        const {deal} = await resp.json();
+        onDealCreated({...dealData, ...deal});
+      } else {
+        onDealCreated(dealData);
+      }
+    } catch(e) {
+      console.error("[NewDeal] Failed to persist to DB, saving locally:", e);
+      onDealCreated(dealData);
+    }
+    setSending(false); setDone(true);
   };
   return (
     <div className="fade-in">
@@ -6742,8 +6778,28 @@ function App() {
     setPage("dashboard");
   };
 
-  const addDeal    = d           => setDeals(x=>[...x,d]);
-  const updateDeal = (id,fields) => setDeals(x=>x.map(d=>d.id===id?{...d,...fields}:d));
+  const addDeal    = d => setDeals(x=>[...x,d]);
+  const updateDeal = (id,fields) => {
+    setDeals(x=>x.map(d=>d.id===id?{...d,...fields}:d));
+    // Sync status changes to Supabase
+    if(fields.status) {
+      fetch(`${BRIDGN_API_URL}/api/deals/status`, {
+        method:"PUT", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({bridgnDealId:String(id), status:fields.status, userId:authUser?.id}),
+      }).catch(e=>console.error("[updateDeal] DB sync failed:", e));
+    }
+  };
+
+  // Load deals from Supabase when user authenticates
+  useEffect(()=>{
+    if(!authUser) return;
+    fetch(`${BRIDGN_API_URL}/api/deals?userId=${authUser.id}`)
+      .then(r=>r.ok?r.json():null)
+      .then(data=>{
+        if(data?.deals?.length) setDeals(data.deals);
+      })
+      .catch(e=>console.error("[loadDeals] Failed:", e));
+  },[authUser]);
 
   // Parse invite context from URL query string once on mount
   const [inviteCtx] = useState(()=>{
@@ -6755,34 +6811,54 @@ function App() {
     return null;
   });
 
-  const handleInviteAuth = (user, ctx) => {
+  const handleInviteAuth = async (user, ctx) => {
     const r = user.user_metadata?.role||"brand";
     setAuthUser(user);
     setRole(r);
-    // Create the deal from invite context and land in deal room
-    if(ctx) {
-      const deal = {
-        id: Date.now(),
-        brand: ctx.brandName||"Brand",
-        bi: (ctx.brandName||"BR").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),
-        ci: 1,
-        amount: ctx.amount||0,
-        platform: ctx.platform||"Instagram",
-        status: "Pending",
-        deadline: ctx.deadline||"TBD",
-        deliverables: ctx.deliverables||"",
-        progress: 0,
-        source: "external",
-        campaignTitle: ctx.campaignTitle||("Deal with "+(ctx.brandName||"Brand")),
-        escrow: false,
-        escrowReleased: false,
-        _fromInvite: true,
-        _creatorName: ctx.creatorName,
-      };
-      setDeals([deal]);
-      setSelected(deal);
-      setPage("deal-room");
+    if(!ctx) return;
+
+    // Build a local deal from the invite context (fallback)
+    const localDeal = {
+      id: ctx.bridgnDealId||String(Date.now()),
+      brand: ctx.brandName||"Brand",
+      bi: (ctx.brandName||"BR").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),
+      ci: 1,
+      amount: ctx.amount||0,
+      platform: ctx.platform||"Instagram",
+      status: "Active",
+      deadline: ctx.deadline||"TBD",
+      deliverables: ctx.deliverables||"",
+      progress: 0,
+      source: "external",
+      campaignTitle: ctx.campaignTitle||("Deal with "+(ctx.brandName||"Brand")),
+      escrow: false,
+      escrowReleased: false,
+      creatorUserId: ctx.creatorUserId||"",
+      creatorName: ctx.creatorName||"",
+      _fromInvite: true,
+    };
+
+    // Try to join the deal in Supabase so both sides share the same record
+    try {
+      const resp = await fetch(`${BRIDGN_API_URL}/api/deals/join`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ bridgnDealId: localDeal.id, brandUserId: user.id }),
+      });
+      if(resp.ok) {
+        const {deal} = await resp.json();
+        setDeals([deal]);
+        setSelected(deal);
+        setPage("deal-room");
+        return;
+      }
+    } catch(e) {
+      console.error("[handleInviteAuth] DB join failed, using local deal:", e);
     }
+
+    // Fallback: use the deal built from the invite link payload
+    setDeals([localDeal]);
+    setSelected(localDeal);
+    setPage("deal-room");
   };
 
   if(authLoading) return (
@@ -6809,7 +6885,7 @@ function App() {
         case "deals":        return React.createElement(CreatorDealsPage,{setPage,setSelected,deals});
         case "deal-room":    return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal});
         case "active-deal":  return React.createElement(ActiveDealPage,{deal:selected,setPage});
-        case "new-deal":     return React.createElement(NewDealPage,{setPage,onDealCreated:addDeal,userName});
+        case "new-deal":     return React.createElement(NewDealPage,{setPage,onDealCreated:addDeal,userName,authUser});
         case "dispute":      return React.createElement(DisputePage,{deal:selected,setPage});
         case "offer":        return React.createElement(OfferPage,{offer:selected,setPage});
         case "analytics":    return React.createElement(CreatorAnalyticsPage,{onAnalyticsUploaded:()=>updateProfileFlags({analyticsUploaded:true})});

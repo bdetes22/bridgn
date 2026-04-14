@@ -8,6 +8,7 @@ const cors    = require("cors");
 
 const stripeRoutes  = require("./routes/stripe");
 const webhookRouter = require("./routes/webhook");
+const dealsRouter   = require("./routes/deals");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -40,6 +41,7 @@ app.use(express.json());
 // ─── API routes ───────────────────────────────────────────────────────────────
 
 app.use("/api/stripe", stripeRoutes);
+app.use("/api/deals", dealsRouter);
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
