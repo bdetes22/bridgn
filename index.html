@@ -2749,7 +2749,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                         <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{briefFile.name}</div>
                         <div style={{fontSize:"11px",color:"var(--text3)"}}>{(briefFile.size/1024).toFixed(0)} KB</div>
                       </div>
-                      <a href={briefFile.dataUrl} download={briefFile.name} className="btn btn-secondary btn-sm" style={{flexShrink:0,textDecoration:"none"}}>Download</a>
+                      <button onClick={()=>{fetch(briefFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=briefFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{flexShrink:0}}>Download</button>
                     </div>
                   )}
                   {briefLink&&(
@@ -2869,7 +2869,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                         <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contractFile.name}</div>
                         <div style={{fontSize:"11px",color:"var(--text3)"}}>{(contractFile.size/1024).toFixed(0)} KB</div>
                       </div>
-                      <a href={contractFile.dataUrl} download={contractFile.name} className="btn btn-secondary btn-sm" style={{flexShrink:0,textDecoration:"none"}}>Download</a>
+                      <button onClick={()=>{fetch(contractFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=contractFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{flexShrink:0}}>Download</button>
                     </div>
                   )}
                   {contractLink&&(
