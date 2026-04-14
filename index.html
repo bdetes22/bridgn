@@ -6325,6 +6325,8 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
     if(!form.name.trim()){setError("Please enter your company name.");return;}
     if(form.password.length<6){setError("Password must be at least 6 characters.");return;}
     setLoading(true);
+    // Persist invite context so it survives the email verification redirect
+    try { localStorage.setItem("bridgn_pending_invite", JSON.stringify(inviteCtx)); } catch {}
     const {data,error:e} = await supabase.auth.signUp({
       email:form.email, password:form.password,
       options:{data:{company_name:form.name,role:"brand"}}
@@ -6340,6 +6342,8 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
 
   const handleLogin = async () => {
     setError("");setLoading(true);
+    // Persist invite context in case onAuth triggers a page reload
+    try { localStorage.setItem("bridgn_pending_invite", JSON.stringify(inviteCtx)); } catch {}
     const {data,error:e} = await supabase.auth.signInWithPassword({email:form.email,password:form.password});
     setLoading(false);
     if(e){setError(e.message);return;}
@@ -6799,6 +6803,36 @@ function App() {
         if(data?.deals?.length) setDeals(data.deals);
       })
       .catch(e=>console.error("[loadDeals] Failed:", e));
+  },[authUser]);
+
+  // Recover pending invite after email verification redirect.
+  // The brand signed up on InviteWelcomeScreen, verified their email,
+  // and got redirected back WITHOUT the ?inv= param. The invite context
+  // was saved to localStorage before signup.
+  useEffect(()=>{
+    if(!authUser) return;
+    let raw;
+    try { raw = localStorage.getItem("bridgn_pending_invite"); } catch {}
+    if(!raw) return;
+    try { localStorage.removeItem("bridgn_pending_invite"); } catch {}
+    const ctx = JSON.parse(raw);
+    if(!ctx?.bridgnDealId && !ctx?.code) return;
+    const dealId = ctx.bridgnDealId || ctx.code;
+    // Join the deal in Supabase and navigate to the Deal Room
+    fetch(`${BRIDGN_API_URL}/api/deals/join`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ bridgnDealId: dealId, brandUserId: authUser.id }),
+    })
+      .then(r=>r.ok?r.json():null)
+      .then(data=>{
+        if(data?.deal) {
+          setRole("brand");
+          setDeals([data.deal]);
+          setSelected(data.deal);
+          setPage("deal-room");
+        }
+      })
+      .catch(e=>console.error("[pendingInvite] Join failed:", e));
   },[authUser]);
 
   // Parse invite context from URL query string once on mount
