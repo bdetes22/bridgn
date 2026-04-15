@@ -273,6 +273,9 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
   .det-body{padding:16px}
   table.tbl{display:block;overflow-x:auto;white-space:nowrap}
   .mob-bottom-nav{display:flex}
+  .deal-room-grid{grid-template-columns:1fr !important}
+  .msg-page-grid{grid-template-columns:1fr !important;height:auto !important;min-height:auto !important}
+  .msg-page-threads{display:none}
 }
 @media(max-width:480px){
   .g4,.g3{grid-template-columns:1fr}
@@ -1316,7 +1319,7 @@ function SkeletonPage({layout="list"}){
   if(layout==="deal-room") return (
     <div className="fade-in">
       <Hdr/>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 360px",gap:20}}>
+      <div className="deal-room-grid" style={{display:"grid",gridTemplateColumns:"1fr 360px",gap:20}}>
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
           <div className="card-lg" style={{padding:"20px 22px"}}>
             <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:16}}>
@@ -1643,7 +1646,7 @@ function ProfileCompletenessCard({pct, pcDone, setPage}) {
 
 function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,userName,socialLinks={},onboarding={},updateOnboarding,profileFlags={},stripeConnected,authUser}) {
   const loading = useSkeleton();
-  const [showModal,setShowModal] = useState(!onboarding.seen);
+  const [showModal,setShowModal] = useState(false);
 
   // Compute step completion from real state
   const stepDone = {
@@ -2672,7 +2675,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
           </select>
         </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 360px",gap:20,alignItems:"start"}}>
+      <div className="deal-room-grid" style={{display:"grid",gridTemplateColumns:"1fr 360px",gap:20,alignItems:"start"}}>
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
           <div className="card-lg" style={{overflow:"hidden"}}>
             <div style={{height:4,background:"linear-gradient(90deg,"+g[0]+","+g[1]+")"}}></div>
@@ -6296,7 +6299,7 @@ function MessagesPage({setPage}) {
           <button className="btn btn-primary" onClick={()=>setNewModal(true)}>+ New Conversation</button>
         </div>
       ):(
-        <div style={{display:"grid",gridTemplateColumns:"290px 1fr",height:"calc(100vh - 196px)",minHeight:440,background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",overflow:"hidden"}}>
+        <div className="msg-page-grid" style={{display:"grid",gridTemplateColumns:"290px 1fr",height:"calc(100vh - 196px)",minHeight:440,background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",overflow:"hidden"}}>
 
           {/* ── Thread list ── */}
           <div style={{borderRight:"1px solid var(--border)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
