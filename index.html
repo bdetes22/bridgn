@@ -276,11 +276,16 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
   .deal-room-grid{grid-template-columns:1fr !important}
   .msg-page-grid{grid-template-columns:1fr !important;height:auto !important;min-height:auto !important}
   .msg-page-threads{display:none}
+  .nav-clock{display:none}
+  .nav-role-badge{display:none}
+  .navbar{padding:0 12px;gap:8px}
+  .mob-bottom-nav button span.mob-label{font-size:9px}
 }
 @media(max-width:480px){
   .g4,.g3{grid-template-columns:1fr}
-  .navbar{padding:0 14px;gap:10px}
+  .navbar{padding:0 10px;gap:6px}
   .content-area{padding:14px 14px 90px}
+  .nav-logo{font-size:20px !important}
 }
 /* ── MOBILE BOTTOM NAV ── */
 .mob-bottom-nav{
@@ -943,12 +948,13 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle,darkMode,setDa
         <span/><span/><span/>
       </div>
       <span className="nav-logo" onClick={()=>setPage("dashboard")}>bridgn</span>
-      <div style={{marginRight:"auto",marginLeft:16}}>
+      <div style={{marginRight:"auto",marginLeft:16,flexShrink:1}} className="nav-role-badge">
         <span style={{padding:"5px 14px",borderRadius:99,fontSize:12,fontWeight:700,background:role==="creator"?"rgba(91,138,245,.15)":role==="agency"?"rgba(167,139,250,.15)":"rgba(240,160,80,.15)",color:role==="creator"?"var(--accent)":role==="agency"?"var(--purple)":"var(--accent2)",border:"1px solid "+(role==="creator"?"rgba(91,138,245,.3)":role==="agency"?"rgba(167,139,250,.3)":"rgba(240,160,80,.3)")}}>
           {role==="creator"?"✨ Creator":role==="agency"?"💼 Agency":"📋 Brand"}
         </span>
       </div>
-      <NavClock/>
+      <div style={{flex:1}} className="nav-spacer"/>
+      <div className="nav-clock"><NavClock/></div>
       <button
         onClick={()=>setDarkMode(d=>!d)}
         title={darkMode?"Switch to light mode":"Switch to dark mode"}
@@ -7075,9 +7081,9 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
                 <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:22}}>You're joining as a <strong>Brand</strong> — free, no card needed.</div>
                 {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
                 {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
-                <div className="fg"><label className="fl">Company Name</label><input className="fi" value={form.name} onChange={e=>up("name",e.target.value)} placeholder="Your brand or company name" autoFocus/></div>
-                <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@company.com"/></div>
-                <div className="fg"><label className="fl">Password</label><input className="fi" type="password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="At least 6 characters" onKeyDown={e=>e.key==="Enter"&&handleSignup()}/></div>
+                <div className="fg"><label className="fl" htmlFor="inv-name">Company Name</label><input className="fi" id="inv-name" name="name" autoComplete="organization" value={form.name} onChange={e=>up("name",e.target.value)} placeholder="Your brand or company name" autoFocus/></div>
+                <div className="fg"><label className="fl" htmlFor="inv-email">Email</label><input className="fi" id="inv-email" name="email" type="email" autoComplete="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@company.com"/></div>
+                <div className="fg"><label className="fl" htmlFor="inv-password">Password</label><input className="fi" id="inv-password" name="password" type="password" autoComplete="new-password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="At least 6 characters" onKeyDown={e=>e.key==="Enter"&&handleSignup()}/></div>
                 <button onClick={handleSignup} disabled={loading||!form.email||!form.password||!form.name} className="btn btn-primary btn-lg" style={{width:"100%",marginTop:4,opacity:loading||!form.email||!form.password||!form.name?.6:1}}>
                   {loading?<span style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>Creating account...</span>:"Create Brand Account"}
                 </button>
@@ -7093,8 +7099,8 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
                 <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:22}}>Sign in to access your Deal Room.</div>
                 {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
                 {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
-                <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@company.com" autoFocus onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
-                <div className="fg"><label className="fl">Password</label><input className="fi" type="password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="Your password" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
+                <div className="fg"><label className="fl" htmlFor="inv-login-email">Email</label><input className="fi" id="inv-login-email" name="email" type="email" autoComplete="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@company.com" autoFocus onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
+                <div className="fg"><label className="fl" htmlFor="inv-login-password">Password</label><input className="fi" id="inv-login-password" name="password" type="password" autoComplete="current-password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="Your password" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
                 <button onClick={handleLogin} disabled={loading||!form.email||!form.password} className="btn btn-primary btn-lg" style={{width:"100%",marginTop:4,opacity:loading||!form.email||!form.password?.6:1}}>
                   {loading?<span style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>Signing in...</span>:"Sign In to Deal Room"}
                 </button>
@@ -7173,8 +7179,8 @@ function AuthScreen({onAuth}) {
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Sign in to your bridgn account</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
-              <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
-              <div className="fg"><label className="fl">Password</label><input className="fi" type="password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="Your password" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
+              <div className="fg"><label className="fl" htmlFor="login-email">Email</label><input className="fi" id="login-email" name="email" type="email" autoComplete="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
+              <div className="fg"><label className="fl" htmlFor="login-password">Password</label><input className="fi" id="login-password" name="password" type="password" autoComplete="current-password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="Your password" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
               <div style={{textAlign:"right",marginTop:-8,marginBottom:20}}><button onClick={()=>{setMode("reset");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif"}}>Forgot password?</button></div>
               <button onClick={handleLogin} disabled={loading||!form.email||!form.password} className="btn btn-primary btn-lg" style={{width:"100%",opacity:loading||!form.email||!form.password?.6:1}}>
                 {loading?<span style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>Signing in...</span>:"Sign In"}
@@ -7187,9 +7193,9 @@ function AuthScreen({onAuth}) {
               <div style={{fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Create your account</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Join bridgn free — no credit card needed</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
-              <div className="fg"><label className="fl">{form.role==="brand"?"Company Name":form.role==="agency"?"Agency Name":"Full Name"}</label><input className="fi" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Halo Health, Acme Corp":form.role==="agency"?"e.g. Viral Nation, Whalar, Open Influence":"Your full name"}/></div>
-              <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com"/></div>
-              <div className="fg"><label className="fl">Password</label><input className="fi" type="password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="At least 6 characters"/></div>
+              <div className="fg"><label className="fl" htmlFor="signup-name">{form.role==="brand"?"Company Name":form.role==="agency"?"Agency Name":"Full Name"}</label><input className="fi" id="signup-name" name="name" autoComplete="name" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Halo Health, Acme Corp":form.role==="agency"?"e.g. Viral Nation, Whalar, Open Influence":"Your full name"}/></div>
+              <div className="fg"><label className="fl" htmlFor="signup-email">Email</label><input className="fi" id="signup-email" name="email" type="email" autoComplete="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com"/></div>
+              <div className="fg"><label className="fl" htmlFor="signup-password">Password</label><input className="fi" id="signup-password" name="password" type="password" autoComplete="new-password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="At least 6 characters"/></div>
               <div className="fg">
                 <label className="fl">I am joining as a...</label>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9,marginTop:4}}>
@@ -7216,7 +7222,7 @@ function AuthScreen({onAuth}) {
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Enter your email and we will send a reset link.</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
-              <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com"/></div>
+              <div className="fg"><label className="fl" htmlFor="reset-email">Email</label><input className="fi" id="reset-email" name="email" type="email" autoComplete="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com"/></div>
               <button onClick={handleReset} disabled={loading||!form.email} className="btn btn-primary btn-lg" style={{width:"100%",opacity:loading||!form.email?.6:1}}>
                 {loading?"Sending...":"Send Reset Link"}
               </button>
@@ -7303,7 +7309,7 @@ function MobBottomNav({role, page, setPage}) {
             <span key={active?"on":"off"} style={{animation:active?"tabIconPop .3s cubic-bezier(.34,1.56,.64,1) both":"none"}}>
               {tab.icon(active)}
             </span>
-            <span style={{
+            <span className="mob-label" style={{
               fontSize:"9.5px",fontWeight:active?700:500,
               letterSpacing:".04em",textTransform:"uppercase",
               color:active?"var(--accent)":"var(--text3)",
