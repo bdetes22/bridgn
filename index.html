@@ -2241,7 +2241,7 @@ function CreatorDealsPage({setPage,setSelected,deals}) {
               <div style={{flex:1}}>
                 <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:3,flexWrap:"wrap"}}><span style={{fontSize:"14px",fontWeight:600}}>{d.brand}</span>{d.source==="external"&&<ExtBadge/>}{d.escrow&&<EscrowBadge released={d.escrowReleased}/>}</div>
                 <div style={{fontSize:"12px",color:"var(--text2)"}}>{d.platform} · Due {d.deadline}</div>
-                {d.status==="Active"&&<div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:((d.progress/6)*100)+"%"}}></div></div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>Step {d.progress} of 6</div></div>}
+                {d.status!=="payment_released"&&<div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:((([true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.every?.(Boolean),d.status==="payment_released"].filter(Boolean).length)/6)*100)+"%"}}></div></div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>{[true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.every?.(Boolean),d.status==="payment_released"].filter(Boolean).length} of 6 steps</div></div>}
               </div>
               <div style={{textAlign:"right"}}>
                 <div style={{fontSize:"17px",fontWeight:700,fontFamily:"Syne,sans-serif"}}><AnimNum value={"$"+d.amount.toLocaleString()}/></div>
@@ -2288,6 +2288,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const [msgInput,setMsgInput] = useState("");
   const [msgs,setMsgs] = useState([]);
   const msgEndRef = React.useRef(null);
+  const lastMsgEmailRef = React.useRef(0); // timestamp of last message email sent
 
   // Load existing messages + subscribe to new ones via Supabase Realtime
   useEffect(()=>{
@@ -2720,7 +2721,14 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
       body:text,
     }).then(({error})=>{
       if(error) console.error("[sendMsg]",error.message);
-      else notifyOther("new_message",{messagePreview:text.slice(0,200)});
+      else {
+        // Only send email if last message email was more than 2 minutes ago
+        const now = Date.now();
+        if(now - lastMsgEmailRef.current > 120000) {
+          lastMsgEmailRef.current = now;
+          notifyOther("new_message",{messagePreview:text.slice(0,200)});
+        }
+      }
     });
   };
   // Compute live progress percentage from actual deal state
@@ -3180,7 +3188,31 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                         <a href={contentFile.dataUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px",textDecoration:"none"}}>View</a>
                       </div>
                     )}
-                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>Review the content. If it meets the brief, approve each deliverable with the checkboxes and release payment.</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5,marginBottom:10}}>Review the content. If it meets the brief, approve the deliverables above.</div>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      style={{width:"100%"}}
+                      onClick={()=>{
+                        const reason = prompt("What revisions are needed?");
+                        if(!reason) return;
+                        // Reset content uploaded state and notify creator
+                        setContentFile(null);
+                        setContentUploaded(false);
+                        updateApproved(DELIVERABLES.map(()=>false));
+                        syncDealFields({content_file_name:null,content_file_data:null,approved_deliverables:DELIVERABLES.map(()=>false)});
+                        // Send revision request as a message
+                        supabase.from("deal_messages").insert({
+                          deal_id:String(activeDeal.id),
+                          sender_id:authUser.id,
+                          sender_role:"brand",
+                          sender_name:authUser.user_metadata?.full_name||authUser.user_metadata?.company_name||"Brand",
+                          body:"📝 Revision requested: "+reason,
+                        }).then(()=>{});
+                        notifyOther("content_submitted",{fileName:"Revision requested"});
+                      }}
+                    >
+                      Request Revisions
+                    </button>
                   </div>
                 ):(
                   <div style={{padding:"16px",textAlign:"center",border:"1px solid var(--border)",borderRadius:"var(--radius)",background:"var(--surface2)"}}>
@@ -3418,8 +3450,15 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
             if(isBrand) {
               const busy = achPhase==="creating"||achPhase==="collecting"||achPhase==="confirming";
               const phaseLabel = {creating:"Creating payment…",collecting:"Connecting bank account…",confirming:"Authorizing payment…"};
+              const allApprovedNoPay = DELIVERABLES.length>0 && approved.every(Boolean);
               return (
                 <div className="card-lg" style={{padding:"16px 18px"}}>
+                  {allApprovedNoPay&&(
+                    <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
+                      <span>✅</span>
+                      <div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>All deliverables approved — fund the deal to release payment to the creator.</div>
+                    </div>
+                  )}
                   <div style={{fontSize:"13px",fontWeight:700,marginBottom:4}}>Fund This Deal</div>
                   <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>Pay <strong>${activeDeal.amount.toLocaleString()}</strong> via ACH Direct Debit. bridgn holds funds in escrow until you approve the content. An <strong>8% platform fee</strong> (${feeDollars.toLocaleString()}) is applied. Auto-releases in <strong>{escrowReleaseDays} days</strong> if not disputed.</div>
                   {achPhase==="error"&&achError&&(
@@ -4991,12 +5030,14 @@ function ExpensesPage() {
 }
 
 // ─── BRAND DASHBOARD ──────────────────────────────────────────────────────────
-function BrandDashboard({setPage,setSelected}) {
+function BrandDashboard({setPage,setSelected,deals=[]}) {
   const loading = useSkeleton();
   if(loading) return <SkeletonPage layout="dashboard"/>;
-  const brandDeals=[];
-  const active=brandDeals.filter(d=>d.status==="Active");
-  const escrowTotal=brandDeals.filter(d=>d.escrow).reduce((s,d)=>s+d.amount,0);
+  const active = deals.filter(d=>d.status!=="Completed"&&d.status!=="payment_released");
+  const escrowDeals = deals.filter(d=>["payment_held","content_delivered","payment_processing"].includes(d.status));
+  const escrowTotal = escrowDeals.reduce((s,d)=>s+d.amount,0);
+  const contentCount = deals.filter(d=>d.contentFile).length;
+  const uniqueCreators = [...new Set(deals.map(d=>d.creatorUserId).filter(Boolean))].length;
   return (
     <div className="fade-in">
       <div className="ph-row">
@@ -5007,38 +5048,45 @@ function BrandDashboard({setPage,setSelected}) {
       </div>
       <div className="g4 section">
         {[
-          {l:"Active Deals",v:"0",spk:[0,0,0,0,0,0,0]},
-          {l:"Creators Working With",v:"0",spk:[0,0,0,0,0,0,0]},
-          {l:"Total In Escrow",v:"$0",spk:[0,0,0,0,0,0,0]},
-          {l:"Content Pieces",v:"0",spk:[0,0,0,0,0,0,0]}
+          {l:"Active Deals",v:String(active.length)},
+          {l:"Creators",v:String(uniqueCreators)},
+          {l:"In Escrow",v:"$"+escrowTotal.toLocaleString()},
+          {l:"Content Received",v:String(contentCount)}
         ].map((s,i)=>(
-          <StatCard key={i} label={s.l} value={s.v} sparkData={s.spk}/>
+          <StatCard key={i} label={s.l} value={s.v} sparkData={[0,0,0,0,0,0,parseInt(s.v.replace(/\D/g,""))||0]}/>
         ))}
       </div>
       <div className="g2" style={{gap:22,alignItems:"start"}}>
         <div>
           <div className="section">
             <div className="section-hdr"><span className="section-title">Active Deals</span><button className="section-link" onClick={()=>setPage("deals")}>View all</button></div>
-            <div className="card" style={{padding:"32px 20px",textAlign:"center"}}>
-              <EmptySVG type="branddeals" size={116}/>
-              <div style={{fontSize:"14px",fontWeight:600,marginBottom:5}}>No active deals</div>
-              <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.65}}>Launch a campaign and invite creators to get started.</div>
-            </div>
-          </div>
-          <div className="section">
-            <div className="section-hdr"><span className="section-title">Upcoming Deliverables</span><button className="section-link" onClick={()=>setPage("campaign-calendar")}>Full calendar</button></div>
-            <div className="card" style={{padding:"32px 20px",textAlign:"center"}}>
-              <div style={{fontSize:"28px",marginBottom:10}}>📅</div>
-              <div style={{fontSize:"14px",fontWeight:600,marginBottom:5}}>No deliverables yet</div>
-              <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.65}}>Deadlines will appear here once deals are active.</div>
-            </div>
+            {active.length===0?(
+              <div className="card" style={{padding:"32px 20px",textAlign:"center"}}>
+                <EmptySVG type="branddeals" size={116}/>
+                <div style={{fontSize:"14px",fontWeight:600,marginBottom:5}}>No active deals</div>
+                <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.65}}>When a creator invites you to a deal, it will appear here.</div>
+              </div>
+            ):(
+              <div className="card">
+                {active.map((d,i)=>(
+                  <div key={d.id} className="deal-row" style={i>0?{borderTop:"1px solid var(--border)"}:{}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
+                    <div className="deal-av" style={{background:bc(d.ci),width:34,height:34,fontSize:"11px"}}>{d.bi}</div>
+                    <div className="deal-info">
+                      <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span className="deal-name">{d.brand}</span><span style={{fontSize:"11px",color:"var(--text3)"}}>with {d.creatorName||"Creator"}</span></div>
+                      <div className="deal-sub">{d.platform} · Due {d.deadline}</div>
+                    </div>
+                    <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</div><StatusBadge s={d.status}/></div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div>
           <div className="section">
             <div className="section-hdr"><span className="section-title">Quick Actions</span></div>
             <div style={{display:"flex",flexDirection:"column",gap:7}}>
-              {[["🔍","Browse Creators","Find your next perfect partner","browse"],["🎬","Content Library","View all delivered content","content-library"],["🔗","Affiliate Manager","Track links and conversions","affiliate"],["🏅","Creator Scorecards","Rate your past partners","scorecards"],["👥","Team Settings","Manage who has access","team"]].map(([icon,title,desc,p])=>(
+              {[["🏠","Deal Room","Open your shared workspace","deal-room"],["🔍","Browse Creators","Find your next perfect partner","browse"],["🎬","Content Library","View all delivered content","content-library"],["🏅","Creator Scorecards","Rate your past partners","scorecards"],["👥","Team Settings","Manage who has access","team"]].map(([icon,title,desc,p])=>(
                 <button key={p} className="card card-hover" style={{padding:"11px 14px",display:"flex",alignItems:"center",gap:10,width:"100%",border:"1px solid var(--border)",cursor:"pointer",textAlign:"left",background:"var(--surface)"}} onClick={()=>setPage(p)}>
                   <span style={{fontSize:"18px",flexShrink:0}}>{icon}</span>
                   <div><div style={{fontSize:"13px",fontWeight:600,color:"var(--text)"}}>{title}</div><div style={{fontSize:"11px",color:"var(--text2)",marginTop:1}}>{desc}</div></div>
@@ -5597,33 +5645,9 @@ function CampaignCalendarPage() {
 }
 
 // ─── BRAND DEALS ──────────────────────────────────────────────────────────────
-function BrandDealsPage({setPage,setSelected}) {
+function BrandDealsPage({setPage,setSelected,deals=[]}) {
   const loading = useSkeleton();
-  const [view,setView] = useState("table");
   const [f,setF] = useState("All");
-  const [deals,setDeals] = useState([]);
-  const statusToCol = s => s==="Pending"?"invited":s==="Active"?"inProgress":s==="Completed"?"completed":"invited";
-  const [colMap,setColMap] = useState({});
-  const [dragging,setDragging] = useState(null);
-  const [dragOver,setDragOver] = useState(null);
-  const [dropAnim,setDropAnim] = useState(null);
-
-  const COLS = [
-    {key:"invited",    label:"Invited",     color:"#a78bfa", bg:"rgba(167,139,250,.09)"},
-    {key:"inProgress", label:"In Progress", color:"#5b8af5", bg:"rgba(91,138,245,.09)"},
-    {key:"inReview",   label:"In Review",   color:"#f0a050", bg:"rgba(240,160,80,.09)"},
-    {key:"completed",  label:"Completed",   color:"#34d399", bg:"rgba(52,211,153,.09)"},
-  ];
-
-  const handleDrop = colKey => {
-    if(!dragging) return;
-    setColMap(m=>({...m,[dragging]:colKey}));
-    setDropAnim(dragging);
-    setTimeout(()=>setDropAnim(null),450);
-    setDragging(null);
-    setDragOver(null);
-  };
-
   const list = f==="All"?deals:deals.filter(d=>d.status===f);
   if(loading) return <SkeletonPage layout="list"/>;
 
@@ -5631,157 +5655,34 @@ function BrandDealsPage({setPage,setSelected}) {
     <div className="fade-in">
       <div className="ph-row">
         <div><div className="page-title">Deals Manager</div><div className="page-subtitle">All active and past creator partnerships.</div></div>
-        <div style={{display:"flex",gap:7}}>
-          {[["table","≡ Table"],["kanban","⊞ Kanban"]].map(([v,l])=>(
-            <button key={v} className={"filter-btn"+(view===v?" active":"")} onClick={()=>setView(v)}>{l}</button>
-          ))}
-        </div>
       </div>
 
-      {view==="table"&&(
-        <>
-          <div style={{display:"flex",gap:8,marginBottom:18}}>
-            {["All","Active","Pending","Completed"].map(x=><button key={x} className={"filter-btn"+(f===x?" active":"")} onClick={()=>setF(x)}>{x}</button>)}
-          </div>
-          <div className="card-lg" style={{overflow:"hidden"}}>
-            <table className="tbl">
-              <thead><tr><th>Creator</th><th>Campaign</th><th>Platform</th><th>Amount</th><th>Source</th><th>Escrow</th><th>Status</th><th></th></tr></thead>
-              <tbody>
-                {list.length===0?(
-                  <tr><td colSpan={8} style={{textAlign:"center",padding:"40px 20px"}}><EmptySVG type="branddeals" size={110}/><div style={{fontSize:"13px",fontWeight:600,color:"var(--text2)",marginTop:4}}>No deals yet — launch a campaign and invite creators to get started.</div></td></tr>
-                ):list.map(d=>(
-                  <tr key={d.id} style={{cursor:"pointer"}} onClick={()=>setPage("deal-room")}>
-                    <td><div style={{display:"flex",gap:9,alignItems:"center"}}><div style={{width:28,height:28,borderRadius:"50%",background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",fontWeight:700,color:"white",flexShrink:0}}>{d.ci2}</div><span style={{fontWeight:500}}>{d.creator}</span></div></td>
-                    <td style={{color:"var(--text2)"}}>{d.campaign}</td>
-                    <td><PlatformBadge p={d.platform}/></td>
-                    <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</td>
-                    <td>{d.source==="external"?<ExtBadge/>:<span className="badge badge-blue" style={{fontSize:"11px"}}>bridgn</span>}</td>
-                    <td>{d.escrow?<EscrowBadge released={false}/>:<span style={{fontSize:"11px",color:"var(--text3)"}}>—</span>}</td>
-                    <td><StatusBadge s={d.status}/></td>
-                    <td>
-                      {d.status==="Active"?(
-                        <button onClick={e=>{e.stopPropagation();setPage("deal-room");}} className="btn btn-primary btn-sm">Deal Room</button>
-                      ):<button onClick={e=>{e.stopPropagation();}} className="btn btn-secondary btn-sm">View</button>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+      <div style={{display:"flex",gap:8,marginBottom:18}}>
+        {["All","Active","Pending","payment_held","payment_released"].map(x=><button key={x} className={"filter-btn"+(f===x?" active":"")} onClick={()=>setF(x)}>{x==="payment_held"?"In Escrow":x==="payment_released"?"Completed":x}</button>)}
+      </div>
+      <div className="card-lg" style={{overflow:"hidden"}}>
+        <table className="tbl">
+          <thead><tr><th>Creator</th><th>Campaign</th><th>Platform</th><th>Amount</th><th>Escrow</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {list.length===0?(
+              <tr><td colSpan={7} style={{textAlign:"center",padding:"40px 20px"}}><EmptySVG type="branddeals" size={110}/><div style={{fontSize:"13px",fontWeight:600,color:"var(--text2)",marginTop:4}}>No deals yet — when a creator invites you, your deals will appear here.</div></td></tr>
+            ):list.map(d=>(
+              <tr key={d.id} style={{cursor:"pointer"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
+                <td><div style={{display:"flex",gap:9,alignItems:"center"}}><div style={{width:28,height:28,borderRadius:"50%",background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",fontWeight:700,color:"white",flexShrink:0}}>{d.bi}</div><span style={{fontWeight:500}}>{d.creatorName||"Creator"}</span></div></td>
+                <td style={{color:"var(--text2)"}}>{d.campaignTitle}</td>
+                <td><PlatformBadge p={d.platform}/></td>
+                <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</td>
+                <td>{d.escrow?<EscrowBadge released={d.escrowReleased}/>:<span style={{fontSize:"11px",color:"var(--text3)"}}>—</span>}</td>
+                <td><StatusBadge s={d.status}/></td>
+                <td>
+                  <button onClick={e=>{e.stopPropagation();setSelected(d);setPage("deal-room");}} className="btn btn-primary btn-sm">Deal Room</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      {view==="kanban"&&(
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,alignItems:"start"}}>
-          {COLS.map(col=>{
-            const colDeals = deals.filter(d=>colMap[d.id]===col.key);
-            const isOver = dragOver===col.key;
-            const isDraggingHere = isOver && dragging && !colDeals.find(d=>d.id===dragging);
-            return (
-              <div
-                key={col.key}
-                onDragOver={e=>{e.preventDefault();setDragOver(col.key);}}
-                onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget))setDragOver(null);}}
-                onDrop={()=>handleDrop(col.key)}
-                style={{
-                  background:isOver?col.bg:"var(--surface)",
-                  border:"1px solid "+(isOver?col.color+"55":"var(--border)"),
-                  borderRadius:"var(--radius-lg)",
-                  padding:"14px 11px 16px",
-                  minHeight:300,
-                  transition:"background 180ms,border-color 180ms,box-shadow 180ms",
-                  boxShadow:isOver?"0 0 0 2px "+col.color+"28,var(--shadow)":"none",
-                }}
-              >
-                {/* Column header */}
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:13,padding:"0 3px"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <div style={{width:7,height:7,borderRadius:"50%",background:col.color,boxShadow:"0 0 7px "+col.color+"99",flexShrink:0}}/>
-                    <span style={{fontSize:"12px",fontWeight:700,letterSpacing:".01em"}}>{col.label}</span>
-                  </div>
-                  <span style={{fontSize:"11px",fontWeight:700,color:col.color,background:col.bg,border:"1px solid "+col.color+"33",borderRadius:99,padding:"1px 9px"}}>{colDeals.length}</span>
-                </div>
-
-                {/* Drop target placeholder */}
-                {isDraggingHere&&(
-                  <div style={{height:68,border:"2px dashed "+col.color+"55",borderRadius:"var(--radius-sm)",marginBottom:9,display:"flex",alignItems:"center",justifyContent:"center",background:col.bg,transition:"all 150ms"}}>
-                    <span style={{fontSize:"11px",color:col.color,fontWeight:600,opacity:.75}}>Drop here</span>
-                  </div>
-                )}
-
-                {/* Cards */}
-                <div style={{display:"flex",flexDirection:"column",gap:9}}>
-                  {colDeals.map(d=>{
-                    const isBeingDragged = dragging===d.id;
-                    const isDropping = dropAnim===d.id;
-                    return (
-                      <div
-                        key={d.id}
-                        draggable
-                        onDragStart={e=>{setDragging(d.id);e.dataTransfer.effectAllowed="move";}}
-                        onDragEnd={()=>{setDragging(null);setDragOver(null);}}
-                        onClick={()=>!dragging&&setPage("deal-room")}
-                        style={{
-                          background:"var(--surface2)",
-                          border:"1px solid "+(isBeingDragged?col.color+"66":"var(--border)"),
-                          borderRadius:"var(--radius)",
-                          padding:"13px 13px 11px",
-                          cursor:isBeingDragged?"grabbing":"grab",
-                          opacity:isBeingDragged?0.35:1,
-                          transform:isBeingDragged?"rotate(1.8deg) scale(1.03)":"none",
-                          transition:"opacity 160ms,transform 160ms,box-shadow 180ms,border-color 160ms",
-                          boxShadow:isBeingDragged?"var(--shadow-lg)":"var(--shadow-sm)",
-                          animation:isDropping?"cardDrop 420ms cubic-bezier(.16,1,.3,1) both":"none",
-                          userSelect:"none",
-                          position:"relative",
-                        }}
-                      >
-                        {/* 2×2 drag-handle dots */}
-                        <div style={{position:"absolute",top:9,right:10,display:"flex",flexDirection:"column",gap:2.5,opacity:.2,pointerEvents:"none"}}>
-                          {[0,1].map(r=>(
-                            <div key={r} style={{display:"flex",gap:2.5}}>
-                              {[0,1].map(c=><div key={c} style={{width:3,height:3,borderRadius:"50%",background:"var(--text)"}}/>)}
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Creator row */}
-                        <div style={{display:"flex",gap:9,alignItems:"center",marginBottom:10}}>
-                          <div style={{width:32,height:32,borderRadius:"50%",background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",fontWeight:700,color:"white",flexShrink:0}}>{d.ci2}</div>
-                          <div style={{minWidth:0,flex:1}}>
-                            <div style={{fontSize:"13px",fontWeight:700,lineHeight:1.2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.creator}</div>
-                            <div style={{fontSize:"11px",color:"var(--text3)",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.campaign}</div>
-                          </div>
-                        </div>
-
-                        {/* Amount + platform */}
-                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-                          <span style={{fontSize:"16px",fontWeight:800,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</span>
-                          <PlatformBadge p={d.platform}/>
-                        </div>
-
-                        {/* Badges */}
-                        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                          {d.escrow&&<EscrowBadge released={false}/>}
-                          {d.source==="external"?<ExtBadge/>:<span className="badge badge-blue" style={{fontSize:"10px"}}>bridgn</span>}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Empty column state */}
-                {colDeals.length===0&&!isDraggingHere&&(
-                  <div style={{height:90,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,opacity:.28}}>
-                    <div style={{fontSize:18,letterSpacing:6}}>· · ·</div>
-                    <div style={{fontSize:"11px",fontWeight:500,color:"var(--text3)"}}>Empty</div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
@@ -7690,12 +7591,12 @@ function App() {
       }
     } else {
       switch(page) {
-        case "dashboard":     return React.createElement(BrandDashboard,{setPage,setSelected});
+        case "dashboard":     return React.createElement(BrandDashboard,{setPage,setSelected,deals});
         case "browse":        return React.createElement(BrowseCreatorsPage,{setPage});
         case "creator-profile": return React.createElement(CreatorProfilePage,{creator:selected,setPage});
         case "campaigns":     return React.createElement(BrandCampaignsPage,{setPage,setSelected,campaignQuestions,setCampaignQuestions});
         case "campaign-calendar": return React.createElement(CampaignCalendarPage,{});
-        case "deals":         return React.createElement(BrandDealsPage,{setPage,setSelected});
+        case "deals":         return React.createElement(BrandDealsPage,{setPage,setSelected,deals});
         case "deal-room":     return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal});
         case "content-library": return React.createElement(ContentLibraryPage,{});
         case "affiliate":     return React.createElement(AffiliateManagerPage,{});
