@@ -2705,7 +2705,11 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
       else notifyOther("new_message",{messagePreview:text.slice(0,200)});
     });
   };
-  const pct = Math.round((activeDeal.progress/6)*100);
+  // Compute live progress percentage from actual deal state
+  const liveStepsDone = [true, briefSubmitted, contractSigned, contentUploaded,
+    activeDeal.status==="payment_held"||activeDeal.status==="payment_released",
+    activeDeal.status==="payment_released"].filter(Boolean).length;
+  const pct = Math.round((liveStepsDone/6)*100);
   return (
     <div className="fade-in">
       <div className="ph-row">
@@ -3179,31 +3183,48 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
               <button onClick={sendMsg} disabled={!msgInput.trim()} className="btn btn-primary btn-sm" style={{opacity:msgInput.trim()?1:.5}}>Send</button>
             </div>
           </div>
-          <div className="card-lg" style={{padding:"16px 18px"}}>
-            <div style={{fontSize:"13px",fontWeight:700,marginBottom:10}}>Deal Progress</div>
-            {/* SVG connector lines drawn between completed step circles */}
-            <div style={{position:"relative"}}>
-              <svg aria-hidden="true" style={{position:"absolute",left:0,top:0,width:20,height:204,pointerEvents:"none",overflow:"visible",zIndex:0}}>
-                {[0,1,2,3,4].map(i=>{
-                  if(activeDeal.progress<=i) return null;
-                  const y1=i*34+17, y2=(i+1)*34+17, len=y2-y1;
-                  return (
-                    <line key={i} x1={10} y1={y1} x2={10} y2={y2}
-                      stroke="var(--green)" strokeWidth={2} strokeLinecap="round"
-                      style={{strokeDasharray:len,strokeDashoffset:len,animation:`drawLine .4s ease-out ${(i*.12).toFixed(2)}s both`}}
-                    />
-                  );
-                })}
-              </svg>
-              {["Deal Created","Brief Sent","Contract Signed","Content Delivered","Brand Review","Payment Released"].map((step,i)=>(
-                <div key={i} style={{display:"flex",gap:10,alignItems:"center",padding:"7px 0",borderBottom:i<5?"1px solid var(--border)":"none",position:"relative",zIndex:1}}>
-                  <div style={{width:20,height:20,borderRadius:"50%",background:activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--accent)":"var(--surface2)",border:"1.5px solid "+(activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--accent)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",flexShrink:0,color:"white",fontWeight:700,boxShadow:activeDeal.progress>i?"0 0 8px rgba(52,211,153,.45)":activeDeal.progress===i?"0 0 8px rgba(91,138,245,.45)":"none"}}>{activeDeal.progress>i?"✓":i+1}</div>
-                  <span style={{fontSize:"12px",fontWeight:activeDeal.progress===i?600:400,color:activeDeal.progress>i?"var(--green)":activeDeal.progress===i?"var(--text)":"var(--text3)"}}>{step}</span>
-                  {activeDeal.progress===i&&<span style={{fontSize:"10px",fontWeight:700,color:"var(--accent)",marginLeft:"auto"}}>Current</span>}
-                </div>
-              ))}
+          {(()=>{
+            // Compute progress from actual deal state instead of a static number
+            const steps = [
+              {label:"Deal Created",      done:true}, // always done if we're in the deal room
+              {label:"Brief Sent",        done:briefSubmitted},
+              {label:"Contract Signed",   done:contractSigned},
+              {label:"Content Delivered", done:contentUploaded},
+              {label:"Brand Review",      done:activeDeal.status==="payment_held"||activeDeal.status==="payment_released"},
+              {label:"Payment Released",  done:activeDeal.status==="payment_released"},
+            ];
+            const liveProgress = steps.filter(s=>s.done).length;
+            const currentStep = Math.min(liveProgress, steps.length-1);
+            return (
+            <div className="card-lg" style={{padding:"16px 18px"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                <div style={{fontSize:"13px",fontWeight:700}}>Deal Progress</div>
+                <span style={{fontSize:"11px",fontWeight:600,color:"var(--accent)"}}>{liveProgress} of {steps.length}</span>
+              </div>
+              <div style={{position:"relative"}}>
+                <svg aria-hidden="true" style={{position:"absolute",left:0,top:0,width:20,height:204,pointerEvents:"none",overflow:"visible",zIndex:0}}>
+                  {[0,1,2,3,4].map(i=>{
+                    if(liveProgress<=i) return null;
+                    const y1=i*34+17, y2=(i+1)*34+17, len=y2-y1;
+                    return (
+                      <line key={i} x1={10} y1={y1} x2={10} y2={y2}
+                        stroke="var(--green)" strokeWidth={2} strokeLinecap="round"
+                        style={{strokeDasharray:len,strokeDashoffset:len,animation:`drawLine .4s ease-out ${(i*.12).toFixed(2)}s both`}}
+                      />
+                    );
+                  })}
+                </svg>
+                {steps.map((step,i)=>(
+                  <div key={i} style={{display:"flex",gap:10,alignItems:"center",padding:"7px 0",borderBottom:i<steps.length-1?"1px solid var(--border)":"none",position:"relative",zIndex:1}}>
+                    <div style={{width:20,height:20,borderRadius:"50%",background:step.done?"var(--green)":i===currentStep?"var(--accent)":"var(--surface2)",border:"1.5px solid "+(step.done?"var(--green)":i===currentStep?"var(--accent)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",flexShrink:0,color:"white",fontWeight:700,boxShadow:step.done?"0 0 8px rgba(52,211,153,.45)":i===currentStep?"0 0 8px rgba(91,138,245,.45)":"none"}}>{step.done?"✓":i+1}</div>
+                    <span style={{fontSize:"12px",fontWeight:i===currentStep?600:400,color:step.done?"var(--green)":i===currentStep?"var(--text)":"var(--text3)"}}>{step.label}</span>
+                    {!step.done&&i===currentStep&&<span style={{fontSize:"10px",fontWeight:700,color:"var(--accent)",marginLeft:"auto"}}>Current</span>}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+            );
+          })()}
           {/* ── Escrow / Payment Panel ── */}
           {(()=>{
             const st = activeDeal.status;
