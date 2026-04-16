@@ -6185,6 +6185,160 @@ function AffiliateManagerPage({authUser,deals=[]}) {
             </tbody>
           </table>
         </div>
+
+        {/* ── Store Integration Setup ── */}
+        {(()=>{
+          const [intTab,setIntTab] = React.useState("shopify");
+          const [intCopied,setIntCopied] = React.useState(null);
+          const webhookUrl = "https://uyucrqodrhrtqcgsfuei.supabase.co/functions/v1/affiliate-conversion";
+          const hasWebhookConv = conversions.some(c=>c.logged_by==="webhook"||c.logged_by==="shopify");
+          const copySnippet = (text,key) => {navigator.clipboard.writeText(text).catch(()=>{});setIntCopied(key);setTimeout(()=>setIntCopied(null),2500);};
+
+          const shopifyScript = `<script>
+  // bridgn affiliate tracking — paste in Shopify Additional Scripts
+  (function(){
+    try {
+      var code = Shopify.checkout.discountApplications?.[0]?.title || "";
+      if (!code) return;
+      fetch("${webhookUrl}", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          code: code,
+          order_value: Math.round(Shopify.checkout.totalPrice * 100),
+          order_id: Shopify.checkout.orderName || "",
+          customer_email: Shopify.checkout.email || "",
+          source: "shopify"
+        })
+      });
+    } catch(e) {}
+  })();
+</script>`;
+
+          const wooSnippet = `// bridgn affiliate tracking — add to functions.php
+add_action('woocommerce_thankyou', function($order_id) {
+  $order = wc_get_order($order_id);
+  $codes = $order->get_coupon_codes();
+  if (empty($codes)) return;
+  $body = json_encode([
+    'code'           => $codes[0],
+    'order_value'    => intval($order->get_total() * 100),
+    'order_id'       => (string) $order_id,
+    'customer_email' => $order->get_billing_email(),
+    'source'         => 'webhook'
+  ]);
+  wp_remote_post('${webhookUrl}', [
+    'headers' => ['Content-Type' => 'application/json'],
+    'body'    => $body,
+    'timeout' => 5,
+  ]);
+});`;
+
+          const stepStyle = {display:"flex",gap:14,marginBottom:18};
+          const numStyle = (n) => ({width:28,height:28,borderRadius:"50%",background:"var(--accent)",color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",fontWeight:700,flexShrink:0});
+          const codeBlock = (text,key) => (
+            <div style={{position:"relative",marginTop:8}}>
+              <pre style={{background:"var(--bg)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",padding:"12px 14px",fontSize:"12px",color:"var(--accent)",lineHeight:1.6,overflow:"auto",whiteSpace:"pre-wrap",wordBreak:"break-all",maxHeight:200}}>{text}</pre>
+              <button onClick={()=>copySnippet(text,key)} style={{position:"absolute",top:8,right:8,background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:"11px",fontWeight:600,color:intCopied===key?"var(--green)":"var(--accent)",fontFamily:"Space Grotesk,sans-serif"}}>{intCopied===key?"✓ Copied":"Copy"}</button>
+            </div>
+          );
+
+          return (
+            <div className="card-lg" style={{padding:"22px 24px",marginTop:20}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{fontSize:"14px",fontWeight:700}}>Store Integration</div>
+                  {hasWebhookConv&&<span className="badge badge-green" style={{fontSize:"10px"}}>Connected</span>}
+                </div>
+                <div style={{display:"flex",gap:6}}>
+                  {[["shopify","🟢 Shopify"],["woo","🟣 WooCommerce"]].map(([k,l])=>(
+                    <button key={k} className={"filter-btn"+(intTab===k?" active":"")} onClick={()=>setIntTab(k)} style={{fontSize:"11px",padding:"5px 10px"}}>{l}</button>
+                  ))}
+                </div>
+              </div>
+
+              {intTab==="shopify"&&(
+                <div>
+                  <div style={stepStyle}>
+                    <div style={numStyle()}>1</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:600,marginBottom:2}}>Open Shopify Webhooks</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>In your Shopify admin, go to <strong>Settings → Notifications → Webhooks</strong></div>
+                    </div>
+                  </div>
+                  <div style={stepStyle}>
+                    <div style={numStyle()}>2</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:600,marginBottom:2}}>Create a Webhook</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>Click <strong>Create Webhook</strong>, choose <strong>Order Payment</strong> as the event, format <strong>JSON</strong></div>
+                    </div>
+                  </div>
+                  <div style={stepStyle}>
+                    <div style={numStyle()}>3</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:600,marginBottom:2}}>Paste this webhook URL</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>Use this as the webhook endpoint:</div>
+                      {codeBlock(webhookUrl,"webhook-url")}
+                    </div>
+                  </div>
+                  <div style={stepStyle}>
+                    <div style={numStyle()}>4</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:600,marginBottom:2}}>Add tracking script</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>Go to <strong>Settings → Checkout → Order status page → Additional scripts</strong> and paste this:</div>
+                      {codeBlock(shopifyScript,"shopify-script")}
+                    </div>
+                  </div>
+                  <div style={stepStyle}>
+                    <div style={numStyle()}>5</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:600,marginBottom:2}}>Test it</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>Place a test order using one of your creator promo codes. If successful, a <span className="badge badge-green" style={{fontSize:"10px"}}>Connected</span> badge will appear here and the conversion will show in your table above.</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {intTab==="woo"&&(
+                <div>
+                  <div style={stepStyle}>
+                    <div style={numStyle()}>1</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:600,marginBottom:2}}>Open your theme's functions.php</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>In WordPress admin, go to <strong>Appearance → Theme Editor → functions.php</strong> (or use a code snippets plugin)</div>
+                    </div>
+                  </div>
+                  <div style={stepStyle}>
+                    <div style={numStyle()}>2</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:600,marginBottom:2}}>Add this code snippet</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>Paste at the bottom of functions.php. This fires after every successful order and sends the coupon code + order value to bridgn:</div>
+                      {codeBlock(wooSnippet,"woo-snippet")}
+                    </div>
+                  </div>
+                  <div style={stepStyle}>
+                    <div style={numStyle()}>3</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:600,marginBottom:2}}>Create matching coupons in WooCommerce</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>Go to <strong>Marketing → Coupons</strong> and create coupons that match the promo codes you created in bridgn (e.g. SARAH10, MIKE20).</div>
+                    </div>
+                  </div>
+                  <div style={stepStyle}>
+                    <div style={numStyle()}>4</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:600,marginBottom:2}}>Test it</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>Place a test order using one of your creator codes. The conversion will appear in your conversions table with source <span className="badge badge-teal" style={{fontSize:"10px"}}>webhook</span>.</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!hasWebhookConv&&(
+                <div style={{padding:"10px 14px",background:"rgba(240,160,80,.08)",border:"1px solid rgba(240,160,80,.2)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--accent2)",marginTop:4}}>Waiting for first webhook conversion... Complete the setup above and place a test order.</div>
+              )}
+            </div>
+          );
+        })()}
       </>)}
 
       {/* ═══ PAYOUTS TAB ═══ */}
