@@ -54,6 +54,8 @@ function dealToFrontend(row) {
     contractFile:      row.contract_file_name ? { name: row.contract_file_name, size: 0, dataUrl: row.contract_file_data || "" } : null,
     signedFile:        row.signed_file_name ? { name: row.signed_file_name, size: 0, dataUrl: row.signed_file_data || "" } : null,
     contentFile:       row.content_file_name ? { name: row.content_file_name, size: 0, dataUrl: row.content_file_data || "" } : null,
+    scriptUrl:         row.script_url || "",
+    scriptSubmitted:   !!row.script_submitted,
     contractLink:      row.contract_link || "",
     contractNotes:     row.contract_notes || "",
     contractSent:      !!row.contract_sent,
@@ -193,6 +195,7 @@ const ALLOWED_FIELDS = [
   "contract_sent", "contract_signed", "contract_signed_at",
   "signed_file_name", "signed_file_data",
   "content_file_name", "content_file_data",
+  "script_url", "script_submitted",
   "status", "progress",
 ];
 

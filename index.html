@@ -2454,6 +2454,8 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     setSignedFile(deal.signedFile||null);
     setContentFile(deal.contentFile||null);
     setContentUploaded(!!deal.contentFile);
+    setScriptUrl(deal.scriptUrl||"");
+    setScriptSubmitted(!!deal.scriptSubmitted);
   };
 
   // Re-sync when activeDeal changes (switching deals or initial load)
@@ -2515,8 +2517,8 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     }
     setUploadingContent(false);
   };
-  const [scriptUrl,setScriptUrl] = useState(""); // creator pastes script/draft link
-  const [scriptSubmitted,setScriptSubmitted] = useState(false);
+  const [scriptUrl,setScriptUrl] = useState(activeDeal?.scriptUrl||"");
+  const [scriptSubmitted,setScriptSubmitted] = useState(!!activeDeal?.scriptSubmitted);
 
   // ── ACH Payment + Escrow state ──────────────────────────────────────────────
   const [achPhase,setAchPhase] = useState("idle"); // idle | creating | collecting | confirming | done | error
@@ -3053,8 +3055,8 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                   <div>
                     <div style={{fontSize:"12px",fontWeight:600,marginBottom:6}}>Share script or draft</div>
                     <div style={{display:"flex",gap:7}}>
-                      <input className="fi" style={{flex:1,padding:"8px 11px",fontSize:"12px"}} value={scriptUrl} onChange={e=>setScriptUrl(e.target.value)} placeholder="Paste Google Doc, Notion, or draft URL…" onKeyDown={e=>e.key==="Enter"&&scriptUrl.trim()&&setScriptSubmitted(true)}/>
-                      <button className="btn btn-secondary btn-sm" onClick={()=>{if(scriptUrl.trim())setScriptSubmitted(true);}} disabled={!scriptUrl.trim()}>Send</button>
+                      <input className="fi" style={{flex:1,padding:"8px 11px",fontSize:"12px"}} value={scriptUrl} onChange={e=>setScriptUrl(e.target.value)} placeholder="Paste Google Doc, Notion, or draft URL…" onKeyDown={e=>e.key==="Enter"&&scriptUrl.trim()&&(()=>{setScriptSubmitted(true);syncDealFields({script_url:scriptUrl.trim(),script_submitted:true});})()}/>
+                      <button className="btn btn-secondary btn-sm" onClick={()=>{if(scriptUrl.trim()){setScriptSubmitted(true);syncDealFields({script_url:scriptUrl.trim(),script_submitted:true});}}} disabled={!scriptUrl.trim()}>Send</button>
                     </div>
                   </div>
                 ):(
@@ -3062,8 +3064,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     <span>📎</span>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:"12px",fontWeight:600,color:"var(--accent)"}}>Script shared with brand</div>
-                      <div style={{fontSize:"11px",color:"var(--text3)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{scriptUrl}</div>
+                      <a href={scriptUrl} target="_blank" rel="noopener noreferrer" style={{fontSize:"11px",color:"var(--accent)",textDecoration:"underline",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{scriptUrl}</a>
                     </div>
+                    <button onClick={()=>{setScriptSubmitted(false);setScriptUrl("");syncDealFields({script_url:null,script_submitted:false});}} style={{background:"none",border:"none",cursor:"pointer",fontSize:"11px",color:"var(--text3)",textDecoration:"underline",flexShrink:0}}>Edit</button>
                   </div>
                 )}
                 <input ref={contentFileInputRef} type="file" accept=".mp4,.mov,.jpg,.jpeg,.png,.gif,.webm,.pdf" onChange={handleContentFileUpload} style={{display:"none"}}/>
@@ -3077,8 +3080,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                       <span>✅</span>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontSize:"13px",fontWeight:600,color:"var(--green)"}}>Content submitted for review</div>
-                        {contentFile&&<div style={{fontSize:"11px",color:"var(--green)",opacity:.7,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contentFile.name}</div>}
+                        {contentFile&&<a href={contentFile.dataUrl} target="_blank" rel="noopener noreferrer" style={{fontSize:"11px",color:"var(--green)",opacity:.7,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block",textDecoration:"underline"}}>{contentFile.name}</a>}
                       </div>
+                      {contentFile&&<a href={contentFile.dataUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px",textDecoration:"none"}}>View</a>}
                     </div>
                   </div>
                 )}
