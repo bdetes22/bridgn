@@ -6190,7 +6190,7 @@ function AffiliateManagerPage({authUser,deals=[]}) {
         {(()=>{
           const [intTab,setIntTab] = React.useState("shopify");
           const [intCopied,setIntCopied] = React.useState(null);
-          const webhookUrl = "https://uyucrqodrhrtqcgsfuei.supabase.co/functions/v1/affiliate-conversion";
+          const webhookUrl = "https://bridgn.onrender.com/api/affiliate/conversion";
           const hasWebhookConv = conversions.some(c=>c.logged_by==="webhook"||c.logged_by==="shopify");
           const copySnippet = (text,key) => {navigator.clipboard.writeText(text).catch(()=>{});setIntCopied(key);setTimeout(()=>setIntCopied(null),2500);};
 
