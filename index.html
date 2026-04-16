@@ -2468,6 +2468,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     setContentUploaded(!!deal.contentFile);
     setScriptUrl(deal.scriptUrl||"");
     setScriptSubmitted(!!deal.scriptSubmitted);
+    if(Array.isArray(deal.approvedDeliverables)) setApproved(deal.approvedDeliverables);
   };
 
   // Re-sync when activeDeal changes (switching deals or initial load)
@@ -2659,14 +2660,31 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
 
   // All hooks must be called before any conditional return (React Rules of Hooks).
   const DELIVERABLES = activeDeal ? (activeDeal.deliverables||"").split(",").map(d=>d.trim()).filter(Boolean) : [];
-  const [approved,setApproved] = useState(DELIVERABLES.map(()=>false));
 
-  // Reset approved checkboxes when active deal changes
+  // Initialize approved state from persisted data
+  const [approved,setApproved] = useState(()=>{
+    const saved = activeDeal?.approvedDeliverables;
+    if(Array.isArray(saved) && saved.length === DELIVERABLES.length) return saved;
+    return DELIVERABLES.map(()=>false);
+  });
+
+  // Sync approved from deal data when deal changes
   useEffect(()=>{
     if(!activeDeal) return;
     const dels = (activeDeal.deliverables||"").split(",").map(d=>d.trim()).filter(Boolean);
-    setApproved(dels.map(()=>false));
+    const saved = activeDeal.approvedDeliverables;
+    if(Array.isArray(saved) && saved.length === dels.length) {
+      setApproved(saved);
+    } else {
+      setApproved(dels.map(()=>false));
+    }
   },[activeDeal?.id]);
+
+  // Persist approved changes to DB
+  const updateApproved = (newApproved) => {
+    setApproved(newApproved);
+    syncDealFields({approved_deliverables: newApproved});
+  };
 
   if(loading) return <SkeletonPage layout="deal-room"/>;
   if(!activeDeal) return (
@@ -3061,13 +3079,36 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
             </div>
             {DELIVERABLES.map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:i<DELIVERABLES.length-1?"1px solid var(--border)":"none"}}>
-                <div style={{width:22,height:22,borderRadius:6,background:approved[i]?"var(--green-bg)":"var(--surface2)",border:"1px solid "+(approved[i]?"rgba(52,211,153,.4)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",flexShrink:0,cursor:isBrand?"pointer":"default",transition:"all .15s"}} onClick={()=>{if(!isBrand)return;const a=[...approved];a[i]=!a[i];setApproved(a);if(a[i])fireConfetti();}}>{approved[i]?"✓":""}</div>
+                <div style={{width:22,height:22,borderRadius:6,background:approved[i]?"var(--green-bg)":"var(--surface2)",border:"1px solid "+(approved[i]?"rgba(52,211,153,.4)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",flexShrink:0,cursor:isBrand?"pointer":"default",transition:"all .15s"}} onClick={()=>{if(!isBrand)return;const a=[...approved];a[i]=!a[i];updateApproved(a);if(a[i])fireConfetti();}}>{approved[i]?"✓":""}</div>
                 <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:500}}>{d}</div></div>
                 {approved[i]&&<span className="badge badge-green" style={{fontSize:"10px"}}>Approved</span>}
               </div>
             ))}
             {DELIVERABLES.length===0&&(
               <div style={{fontSize:"12px",color:"var(--text3)",padding:"8px 0"}}>No deliverables specified for this deal.</div>
+            )}
+            {/* Approve All / status for brand */}
+            {isBrand&&DELIVERABLES.length>0&&(
+              approved.every(Boolean)?(
+                <div style={{marginTop:12,padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",display:"flex",gap:8,alignItems:"center"}}>
+                  <span>✅</span>
+                  <div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>All deliverables approved</div>
+                </div>
+              ):(
+                <button
+                  className="btn btn-primary btn-sm"
+                  style={{marginTop:12,width:"100%"}}
+                  onClick={()=>{const allTrue=DELIVERABLES.map(()=>true);updateApproved(allTrue);fireConfetti();}}
+                >
+                  Approve All Deliverables
+                </button>
+              )
+            )}
+            {/* Creator sees approval status */}
+            {!isBrand&&DELIVERABLES.length>0&&approved.some(Boolean)&&(
+              <div style={{marginTop:12,padding:"10px 14px",background:approved.every(Boolean)?"var(--green-bg)":"var(--accent-light)",border:"1px solid "+(approved.every(Boolean)?"rgba(52,211,153,.3)":"rgba(91,138,245,.25)"),borderRadius:"var(--radius-sm)",fontSize:"12px",fontWeight:600,color:approved.every(Boolean)?"var(--green)":"var(--accent)"}}>
+                {approved.every(Boolean)?"✅ All deliverables approved by the brand":"📋 "+approved.filter(Boolean).length+" of "+DELIVERABLES.length+" deliverables approved"}
+              </div>
             )}
 
             {/* ── Creator: upload content + paste script URL ── */}
