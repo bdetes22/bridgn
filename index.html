@@ -2508,11 +2508,15 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
       const cf = {name:file.name, size:file.size, dataUrl:urlData.publicUrl};
       setContentFile(cf);
       setContentUploaded(true);
-      const upd = {...activeDeal, status:"content_delivered", contentFile:cf};
+      // Only change status to content_delivered if payment is in escrow (payment_held).
+      // Otherwise just save the file without touching the deal status.
+      const hasPayment = !!activeDeal.paymentIntentId;
+      const newStatus = (hasPayment && activeDeal.status==="payment_held") ? "content_delivered" : activeDeal.status;
+      const upd = {...activeDeal, contentFile:cf, status:newStatus};
       setActiveDeal(upd);
-      updateDeal && updateDeal(activeDeal.id, {status:"content_delivered"});
+      if(newStatus!==activeDeal.status) updateDeal && updateDeal(activeDeal.id, {status:newStatus});
       pausePoll();
-      syncDealFields({status:"content_delivered", content_file_name:cf.name, content_file_data:cf.dataUrl});
+      syncDealFields({content_file_name:cf.name, content_file_data:cf.dataUrl, ...(newStatus!==activeDeal.status?{status:newStatus}:{})});
     } catch(err) {
       console.error("[contentUpload]", err);
     }
@@ -3190,11 +3194,12 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
           {/* ── Escrow / Payment Panel ── */}
           {(()=>{
             const st = activeDeal.status;
+            const hasPaid = !!activeDeal.paymentIntentId;
             const feeDollars = Math.round(activeDeal.amount * 0.08);
             const creatorNet = activeDeal.amount - feeDollars;
 
             // ── payment_released — green success, both sides ──
-            if(st==="payment_released") return (
+            if(st==="payment_released"&&hasPaid) return (
               <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(34,197,94,.07),rgba(34,197,94,.03))",border:"1.5px solid rgba(34,197,94,.25)"}}>
                 <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
                   <span style={{fontSize:"22px",flexShrink:0}}>💸</span>
@@ -3211,7 +3216,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
             );
 
             // ── payment_disputed — red hold, both sides ──
-            if(st==="payment_disputed") return (
+            if(st==="payment_disputed"&&hasPaid) return (
               <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(239,68,68,.07),rgba(239,68,68,.03))",border:"1.5px solid rgba(239,68,68,.25)"}}>
                 <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
                   <span style={{fontSize:"22px",flexShrink:0}}>⚠️</span>
@@ -3231,8 +3236,8 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
               </div>
             );
 
-            // ── payment_held or content_delivered — escrow active, actions available ──
-            if(st==="payment_held"||st==="content_delivered") {
+            // ── payment_held or content_delivered WITH payment — escrow active ──
+            if((st==="payment_held"||st==="content_delivered")&&hasPaid) {
               const autoRelease = activeDeal.autoReleaseAt ? new Date(activeDeal.autoReleaseAt) : null;
               const daysLeft = autoRelease ? Math.max(0, Math.ceil((autoRelease - Date.now()) / (1000*60*60*24))) : escrowReleaseDays;
               return (<>
@@ -3299,7 +3304,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
             }
 
             // ── payment_processing — ACH in transit ──
-            if(st==="payment_processing" || achPhase==="done") return (
+            if((st==="payment_processing"&&hasPaid) || achPhase==="done") return (
               <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(91,138,245,.07),rgba(91,138,245,.03))",border:"1.5px solid rgba(91,138,245,.25)"}}>
                 <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
                   <span style={{fontSize:"22px",flexShrink:0}}>⏳</span>
