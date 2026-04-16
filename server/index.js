@@ -19,8 +19,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({
   origin: [
     process.env.CLIENT_URL || "http://localhost:3000",
+    "https://bridgn.com",
+    "https://www.bridgn.com",
     "https://bridgn.app",
-    "https://www.bridgn.app",
     "https://bridgn.vercel.app",
   ],
   credentials: true,

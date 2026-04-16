@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_EMAIL = "bridgn <notifications@bridgn.com>";
-const CTA_URL = "https://bridgn.vercel.app";
+const CTA_URL = "https://bridgn.com";
 
 // ─── HTML email template ────────────────────────────────────────────────────
 

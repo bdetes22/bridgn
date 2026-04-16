@@ -7186,7 +7186,7 @@ function AuthScreen({onAuth}) {
 
   const handleReset=async()=>{
     setError("");setSuccess("");setLoading(true);
-    const {error:e}=await supabase.auth.resetPasswordForEmail(form.email,{redirectTo:"https://bridgn.vercel.app"});
+    const {error:e}=await supabase.auth.resetPasswordForEmail(form.email,{redirectTo:"https://bridgn.com"});
     setLoading(false);
     if(e){setError(e.message);return;}
     setSuccess("Password reset email sent. Check your inbox.");

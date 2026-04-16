@@ -50,7 +50,7 @@ async function createConnectedAccount(userId, email) {
     },
     business_profile: {
       product_description: "Creator / influencer on the bridgn platform",
-      url: "https://bridgn.app",
+      url: "https://bridgn.com",
     },
     metadata: {
       bridgn_user_id: userId,

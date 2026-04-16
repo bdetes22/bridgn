@@ -21,6 +21,6 @@ services:
       - key: APP_URL
         sync: false
       - key: CLIENT_URL
-        value: "https://bridgn.app"
+        value: "https://bridgn.com"
       - key: PORT
         value: "3000"
