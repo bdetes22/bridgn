@@ -5790,204 +5790,387 @@ function ContentLibraryPage() {
 }
 
 // ─── AFFILIATE MANAGER ────────────────────────────────────────────────────────
-function AffiliateManagerPage({authUser}) {
+function AffiliateManagerPage({authUser,deals=[]}) {
   const loading = useSkeleton();
+  const [tab,setTab] = useState("links");
   const [modal,setModal] = useState(false);
-  const [convModal,setConvModal] = useState(null); // link code for logging conversion
-  const [convForm,setConvForm] = useState({value:"",notes:""});
+  const [convModal,setConvModal] = useState(null);
+  const [convForm,setConvForm] = useState({code:"",value:"",notes:""});
   const [convSaving,setConvSaving] = useState(false);
-  const [newLink,setNewLink] = useState({creator:"",campaign:"",url:"",rate:"10",type:"link",commType:"percentage",flatAmount:""});
+  const [payModal,setPayModal] = useState(null);
+  const [payNotes,setPayNotes] = useState("");
+  const NL_INIT = {creator:"",campaign:"",url:"",rate:"10",type:"link",commType:"percentage",flatAmount:"",customCode:"",dealId:""};
+  const [newLink,setNewLink] = useState(NL_INIT);
   const [copied,setCopied] = useState(null);
   const [links,setLinks] = useState([]);
+  const [conversions,setConversions] = useState([]);
+  const [payouts,setPayouts] = useState([]);
   const [saving,setSaving] = useState(false);
+  const [convFilter,setConvFilter] = useState({creator:"",campaign:""});
 
-  // Generate unique 8-char alphanumeric code
   const genCode = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-    let code = "";
-    for(let i=0;i<8;i++) code += chars[Math.floor(Math.random()*chars.length)];
-    return code;
+    const c = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let s = "";
+    for(let i=0;i<8;i++) s += c[Math.floor(Math.random()*c.length)];
+    return s;
+  };
+  const genSmartCode = (name,type) => {
+    const slug = (name||"").replace(/[^a-zA-Z]/g,"").toUpperCase().slice(0,6);
+    return type==="code" ? slug+(newLink.rate||"10") : slug+Math.floor(1000+Math.random()*9000);
   };
 
-  // Load links from Supabase
+  // Load data from Supabase
   useEffect(()=>{
     if(!authUser) return;
-    supabase.from("affiliate_links").select("*").eq("brand_id",authUser.id).order("created_at",{ascending:false})
-      .then(({data})=>{ if(data) setLinks(data); });
+    supabase.from("affiliate_links").select("*").eq("brand_id",authUser.id).order("created_at",{ascending:false}).then(({data})=>{if(data)setLinks(data);});
+    supabase.from("affiliate_conversions").select("*").order("logged_at",{ascending:false}).then(({data})=>{if(data)setConversions(data);});
+    supabase.from("affiliate_payouts").select("*").eq("brand_id",authUser.id).order("paid_at",{ascending:false}).then(({data})=>{if(data)setPayouts(data);});
   },[authUser]);
 
-  const totalRev = links.reduce((s,a)=>s+(a.revenue||0),0);
-  const totalConv = links.reduce((s,a)=>s+(a.conversions||0),0);
-  const totalComm = links.reduce((s,a)=>s+Math.round((a.revenue||0)*(a.commission_rate||10)/100),0);
+  // Realtime subscription on affiliate_links for live click counts
+  useEffect(()=>{
+    if(!authUser) return;
+    const ch = supabase.channel("aff-links-rt").on("postgres_changes",{event:"UPDATE",schema:"public",table:"affiliate_links",filter:"brand_id=eq."+authUser.id},(payload)=>{
+      setLinks(ls=>ls.map(l=>l.id===payload.new.id?{...l,...payload.new}:l));
+    }).subscribe();
+    return ()=>{supabase.removeChannel(ch);};
+  },[authUser]);
 
-  const copy = (code) => {
-    navigator.clipboard.writeText("https://bridgn.com/r/"+code).catch(()=>{});
-    setCopied(code);
+  const totalClicks = links.reduce((s,a)=>s+(a.clicks||0),0);
+  const totalConv = links.reduce((s,a)=>s+(a.conversions||0),0);
+  const totalRev = links.reduce((s,a)=>s+(a.revenue||0),0);
+  const totalComm = links.reduce((s,a)=>s+(a.commission_earned||0),0);
+  const convRate = totalClicks>0?((totalConv/totalClicks)*100).toFixed(1):"0";
+  const creators = deals.map(d=>d.creatorName).filter(Boolean);
+  const uniqueCreators = [...new Set(creators)];
+  const $ = c => (c/100).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
+
+  const copy = (a) => {
+    const text = a.type==="code" ? a.code : "https://bridgn.com/r/"+a.code;
+    navigator.clipboard.writeText(text).catch(()=>{});
+    setCopied(a.code);
     setTimeout(()=>setCopied(null),2000);
   };
 
   const addLink = async () => {
-    if(!newLink.creator || !authUser) return;
+    if(!newLink.creator||!authUser) return;
     setSaving(true);
-    const code = genCode();
+    const code = newLink.type==="code"&&newLink.customCode.trim() ? newLink.customCode.trim().toUpperCase() : genSmartCode(newLink.creator,newLink.type);
     const {data,error} = await supabase.from("affiliate_links").insert({
-      brand_id: authUser.id,
-      code,
-      type: newLink.type,
-      creator_name: newLink.creator,
-      campaign_name: newLink.campaign,
-      destination_url: newLink.type==="link" ? (newLink.url || null) : null,
-      commission_rate: parseInt(newLink.rate) || 10,
-      commission_type: newLink.commType,
-      commission_flat_amount: newLink.commType==="flat" ? Math.round((parseFloat(newLink.flatAmount)||0)*100) : null,
+      brand_id:authUser.id, code, type:newLink.type,
+      creator_name:newLink.creator, campaign_name:newLink.campaign,
+      destination_url:newLink.type==="link"?(newLink.url||null):null,
+      commission_rate:parseInt(newLink.rate)||10, commission_type:newLink.commType,
+      commission_flat_amount:newLink.commType==="flat"?Math.round((parseFloat(newLink.flatAmount)||0)*100):null,
+      deal_id:newLink.dealId||null,
     }).select().single();
-    if(error) { console.error("[affiliate]",error.message); setSaving(false); return; }
-    setLinks(l=>[data,...l]);
-    setModal(false);
-    setNewLink({creator:"",campaign:"",url:"",rate:"10",type:"link",commType:"percentage",flatAmount:""});
-    setSaving(false);
+    if(error){console.error("[affiliate]",error.message);setSaving(false);return;}
+    setLinks(l=>[data,...l]);setModal(false);setNewLink(NL_INIT);setSaving(false);
   };
 
   const logConversion = async () => {
-    if(!convModal) return;
+    const code = convForm.code||convModal;
+    if(!code) return;
     setConvSaving(true);
     try {
-      const resp = await fetch(`${BRIDGN_API_URL}/api/affiliate/conversion`, {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({code:convModal, conversionValue:parseFloat(convForm.value)||0, notes:convForm.notes}),
-      });
-      if(resp.ok) {
-        const {link_totals} = await resp.json();
-        // Update local state
-        setLinks(ls=>ls.map(l=>l.code===convModal?{...l,conversions:link_totals.conversions,revenue:link_totals.revenue,commission_earned:link_totals.commission}:l));
+      const resp = await fetch(`${BRIDGN_API_URL}/api/affiliate/conversion`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,conversionValue:parseFloat(convForm.value)||0,notes:convForm.notes})});
+      if(resp.ok){
+        const {link_totals,conversion}=await resp.json();
+        setLinks(ls=>ls.map(l=>l.code===code?{...l,conversions:link_totals.conversions,revenue:link_totals.revenue_cents||link_totals.revenue,commission_earned:link_totals.commission_earned_cents||link_totals.commission}:l));
+        if(conversion) setConversions(c=>[conversion,...c]);
       }
-    } catch(e) { console.error("[conversion]",e); }
-    setConvSaving(false);
-    setConvModal(null);
-    setConvForm({value:"",notes:""});
+    }catch(e){console.error("[conversion]",e);}
+    setConvSaving(false);setConvModal(null);setConvForm({code:"",value:"",notes:""});
   };
 
   const toggleActive = async (link) => {
-    const newVal = !link.is_active;
-    setLinks(ls=>ls.map(l=>l.id===link.id?{...l,is_active:newVal}:l));
-    await supabase.from("affiliate_links").update({is_active:newVal}).eq("id",link.id);
+    const v=!link.is_active;
+    setLinks(ls=>ls.map(l=>l.id===link.id?{...l,is_active:v}:l));
+    await supabase.from("affiliate_links").update({is_active:v}).eq("id",link.id);
   };
 
+  const deleteLink = async (link) => {
+    if(!confirm("Delete this link? This cannot be undone.")) return;
+    setLinks(ls=>ls.filter(l=>l.id!==link.id));
+    await supabase.from("affiliate_links").delete().eq("id",link.id);
+  };
+
+  const markPaid = async (creatorName,amount,codes) => {
+    const {data} = await supabase.from("affiliate_payouts").insert({brand_id:authUser.id,creator_name:creatorName,amount,codes,notes:payNotes}).select().single();
+    if(data) setPayouts(p=>[data,...p]);
+    // Reset commission_earned on those links
+    for(const code of codes) await supabase.from("affiliate_links").update({commission_earned:0}).eq("code",code);
+    setLinks(ls=>ls.map(l=>codes.includes(l.code)?{...l,commission_earned:0}:l));
+    setPayModal(null);setPayNotes("");
+  };
+
+  const exportCSV = () => {
+    const rows = [["Date","Creator","Code","Value","Commission","Source"]];
+    conversions.forEach(c=>{
+      const link = links.find(l=>l.code===c.link_code);
+      rows.push([new Date(c.logged_at).toLocaleDateString(),link?.creator_name||"",c.link_code,"$"+(c.conversion_value/100).toFixed(2),"$"+(c.commission_amount/100).toFixed(2),c.logged_by]);
+    });
+    const csv = rows.map(r=>r.join(",")).join("\n");
+    const blob = new Blob([csv],{type:"text/csv"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="bridgn-affiliate-report.csv";a.click();
+  };
+
+  // Payout grouping
+  const owedByCreator = {};
+  links.forEach(l=>{
+    if((l.commission_earned||0)>0){
+      if(!owedByCreator[l.creator_name]) owedByCreator[l.creator_name]={amount:0,codes:[]};
+      owedByCreator[l.creator_name].amount += l.commission_earned;
+      owedByCreator[l.creator_name].codes.push(l.code);
+    }
+  });
+
+  // Recent click check (within 24h) — uses created_at on the link as proxy
+  const now24 = Date.now()-86400000;
+
   if(loading) return <SkeletonPage layout="list"/>;
+
+  const tabBtn = (k,l) => <button className={"filter-btn"+(tab===k?" active":"")} onClick={()=>setTab(k)} style={{fontSize:13}}>{l}</button>;
+
   return (
     <div className="fade-in">
-      <div className="ph-row"><div><div className="page-title">Affiliate Manager</div><div className="page-subtitle">Generate links and codes, track clicks, conversions and commissions.</div></div><button className="btn btn-primary" onClick={()=>setModal(true)}>+ New Link</button></div>
-      <div className="g4 section" style={{gap:12}}>
-        {[
-          {l:"Total Revenue",v:"$"+(totalRev/100).toLocaleString(undefined,{minimumFractionDigits:0}),sc:"#34d399"},
-          {l:"Commissions",v:"$"+(totalComm/100).toLocaleString(undefined,{minimumFractionDigits:0})},
-          {l:"Conversions",v:String(totalConv),sc:"#a78bfa"},
-          {l:"Links",v:String(links.length)}
-        ].map((s,i)=>(
-          <StatCard key={i} label={s.l} value={s.v} sparkColor={s.sc}/>
-        ))}
-      </div>
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {links.length===0?(
-          <div className="card" style={{padding:"40px 20px",textAlign:"center"}}>
-            <EmptySVG type="affiliate" size={110}/>
-            <div style={{fontSize:"13px",fontWeight:600,color:"var(--text2)",marginTop:4}}>No affiliate links yet — create one to start tracking conversions.</div>
-          </div>
-        ):links.map(a=>(
-          <div key={a.id} className="card card-hover" style={{padding:"16px 18px",opacity:a.is_active===false?.5:1}}>
-            <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
-              <div style={{width:36,height:36,borderRadius:10,background:bc(Math.abs(a.code.charCodeAt(0))%6),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",fontWeight:700,color:"white",flexShrink:0}}>{(a.creator_name||"?").split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap"}}>
-                  <span style={{fontSize:"14px",fontWeight:600}}>{a.creator_name}</span>
-                  {a.campaign_name&&<span style={{fontSize:"11px",color:"var(--text3)"}}>· {a.campaign_name}</span>}
-                  <span className={"badge badge-"+(a.type==="code"?"purple":"blue")} style={{fontSize:"10px"}}>{a.type==="code"?"Promo Code":"Link"}</span>
-                  {a.is_active===false&&<span className="badge" style={{fontSize:"10px",background:"var(--surface2)",color:"var(--text3)"}}>Paused</span>}
-                </div>
-                <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:6}}>
-                  <code style={{background:"var(--surface2)",padding:"2px 8px",borderRadius:5,fontSize:"12px",fontWeight:700,color:"var(--accent)",letterSpacing:".03em"}}>bridgn.com/r/{a.code}</code>
-                  <button onClick={()=>copy(a.code)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"11px",color:copied===a.code?"var(--green)":"var(--accent)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{copied===a.code?"Copied!":"Copy"}</button>
-                </div>
-                <div style={{display:"flex",gap:4,alignItems:"center",fontSize:"11px",color:"var(--text3)"}}>
-                  {a.commission_type==="flat"?<span>Flat ${((a.commission_flat_amount||0)/100).toFixed(2)} per conversion</span>:<span>{a.commission_rate}% commission</span>}
-                  {a.destination_url&&<span> · <a href={a.destination_url} target="_blank" rel="noopener noreferrer" style={{color:"var(--accent)",textDecoration:"none"}}>{a.destination_url.replace(/^https?:\/\//,"").slice(0,30)}</a></span>}
-                </div>
-              </div>
-              <div style={{display:"flex",gap:14,alignItems:"center",flexShrink:0}}>
-                <div style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700}}>{a.clicks||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Clicks</div></div>
-                <div style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700,color:"var(--green)"}}>{a.conversions||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Conv.</div></div>
-                <div style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700,fontFamily:"Syne,sans-serif"}}>${((a.revenue||0)/100).toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Rev.</div></div>
-                <div style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700,color:"var(--accent2)"}}>${((a.commission_earned||0)/100).toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Comm.</div></div>
-              </div>
-            </div>
-            <div style={{display:"flex",gap:6,marginTop:10,paddingTop:10,borderTop:"1px solid var(--border)"}}>
-              <button className="btn btn-secondary btn-sm" onClick={()=>setConvModal(a.code)}>+ Log Conversion</button>
-              <button className="btn btn-secondary btn-sm" onClick={()=>toggleActive(a)}>{a.is_active===false?"Activate":"Pause"}</button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <div className="ph-row"><div><div className="page-title">Affiliate Manager</div><div className="page-subtitle">Links, promo codes, conversions and commissions.</div></div><button className="btn btn-primary" onClick={()=>setModal(true)}>+ Create New</button></div>
 
-      {/* Create Link Modal */}
+      {/* Tabs */}
+      <div style={{display:"flex",gap:8,marginBottom:18}}>{tabBtn("links","Links & Codes")}{tabBtn("conversions","Conversions")}{tabBtn("payouts","Payouts")}</div>
+
+      {/* ═══ LINKS & CODES TAB ═══ */}
+      {tab==="links"&&(<>
+        <div className="g4 section" style={{gap:12}}>
+          {[{l:"Clicks",v:String(totalClicks)},{l:"Conversions",v:String(totalConv)},{l:"Revenue",v:"$"+$(totalRev)},{l:"Commissions",v:"$"+$(totalComm)}].map((s,i)=>(
+            <StatCard key={i} label={s.l} value={s.v}/>
+          ))}
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {links.length===0?(
+            <div className="card" style={{padding:"40px 20px",textAlign:"center"}}><EmptySVG type="affiliate" size={110}/><div style={{fontSize:"13px",fontWeight:600,color:"var(--text2)",marginTop:4}}>No affiliate links yet — create one to start tracking.</div></div>
+          ):links.map(a=>(
+            <div key={a.id} className="card card-hover" style={{padding:"16px 18px",opacity:a.is_active===false?.5:1}}>
+              <div style={{display:"flex",gap:14,alignItems:"flex-start",flexWrap:"wrap"}}>
+                <div style={{width:36,height:36,borderRadius:10,background:bc(Math.abs((a.code||"").charCodeAt(0))%6),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",fontWeight:700,color:"white",flexShrink:0}}>{(a.creator_name||"?").split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
+                <div style={{flex:1,minWidth:180}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap"}}>
+                    <span style={{fontSize:"14px",fontWeight:600}}>{a.creator_name}</span>
+                    {a.campaign_name&&<span style={{fontSize:"11px",color:"var(--text3)"}}>· {a.campaign_name}</span>}
+                    <span className={"badge badge-"+(a.type==="code"?"purple":"blue")} style={{fontSize:"10px"}}>{a.type==="code"?"Code":"Link"}</span>
+                    {a.is_active===false&&<span className="badge" style={{fontSize:"10px",background:"var(--surface2)",color:"var(--text3)"}}>Paused</span>}
+                  </div>
+                  <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:4}}>
+                    <code style={{background:"var(--surface2)",padding:"2px 8px",borderRadius:5,fontSize:"12px",fontWeight:700,color:"var(--accent)",letterSpacing:".03em"}}>{a.type==="code"?a.code:"bridgn.com/r/"+a.code}</code>
+                    <button onClick={()=>copy(a)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"11px",color:copied===a.code?"var(--green)":"var(--accent)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{copied===a.code?"✓":"Copy"}</button>
+                  </div>
+                  <div style={{fontSize:"11px",color:"var(--text3)"}}>
+                    {a.commission_type==="flat"?"Flat $"+((a.commission_flat_amount||0)/100).toFixed(2)+" each":a.commission_rate+"% commission"}
+                    {a.destination_url&&<span> · <a href={a.destination_url} target="_blank" rel="noopener noreferrer" style={{color:"var(--accent)",textDecoration:"none"}}>{a.destination_url.replace(/^https?:\/\//,"").slice(0,35)}</a></span>}
+                  </div>
+                </div>
+                <div style={{display:"flex",gap:12,alignItems:"center",flexShrink:0,flexWrap:"wrap"}}>
+                  <div style={{textAlign:"center",minWidth:40}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><div style={{fontSize:"14px",fontWeight:700}}>{a.clicks||0}</div>{(a.clicks||0)>0&&<div style={{width:6,height:6,borderRadius:"50%",background:"var(--green)",animation:"pulse 2s infinite"}}/>}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Clicks</div></div>
+                  <div style={{textAlign:"center",minWidth:40}}><div style={{fontSize:"14px",fontWeight:700,color:"var(--green)"}}>{a.conversions||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Conv.</div></div>
+                  <div style={{textAlign:"center",minWidth:40}}><div style={{fontSize:"14px",fontWeight:700,fontFamily:"Syne,sans-serif"}}>${$((a.revenue||0))}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Rev.</div></div>
+                  <div style={{textAlign:"center",minWidth:40}}><div style={{fontSize:"14px",fontWeight:700,color:"var(--accent2)"}}>${$((a.commission_earned||0))}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Comm.</div></div>
+                </div>
+              </div>
+              <div style={{display:"flex",gap:6,marginTop:10,paddingTop:10,borderTop:"1px solid var(--border)",flexWrap:"wrap"}}>
+                <button className="btn btn-secondary btn-sm" onClick={()=>{setConvModal(a.code);setConvForm({code:a.code,value:"",notes:""});}}>+ Conversion</button>
+                <button className="btn btn-secondary btn-sm" onClick={()=>toggleActive(a)}>{a.is_active===false?"Activate":"Pause"}</button>
+                <button className="btn btn-secondary btn-sm" style={{color:"var(--red)"}} onClick={()=>deleteLink(a)}>Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>)}
+
+      {/* ═══ CONVERSIONS TAB ═══ */}
+      {tab==="conversions"&&(<>
+        <div className="g3 section" style={{gap:12}}>
+          {[{l:"Total Revenue",v:"$"+$(totalRev)},{l:"Commissions Owed",v:"$"+$(totalComm)},{l:"Conversion Rate",v:convRate+"%"}].map((s,i)=>(
+            <StatCard key={i} label={s.l} value={s.v}/>
+          ))}
+        </div>
+        <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+          <select className="fsel" style={{padding:"7px 12px",fontSize:"12px"}} value={convFilter.creator} onChange={e=>setConvFilter(f=>({...f,creator:e.target.value}))}>
+            <option value="">All Creators</option>
+            {[...new Set(links.map(l=>l.creator_name))].map(n=><option key={n} value={n}>{n}</option>)}
+          </select>
+          <select className="fsel" style={{padding:"7px 12px",fontSize:"12px"}} value={convFilter.campaign} onChange={e=>setConvFilter(f=>({...f,campaign:e.target.value}))}>
+            <option value="">All Campaigns</option>
+            {[...new Set(links.map(l=>l.campaign_name).filter(Boolean))].map(n=><option key={n} value={n}>{n}</option>)}
+          </select>
+          <button className="btn btn-secondary btn-sm" onClick={()=>{setConvModal("manual");setConvForm({code:links[0]?.code||"",value:"",notes:""});}}>+ Log Conversion</button>
+          <button className="btn btn-secondary btn-sm" onClick={exportCSV}>Export CSV</button>
+        </div>
+        <div className="card-lg" style={{overflow:"hidden"}}>
+          <table className="tbl">
+            <thead><tr><th>Date</th><th>Creator</th><th>Code</th><th>Order Value</th><th>Commission</th><th>Source</th></tr></thead>
+            <tbody>
+              {conversions.filter(c=>{
+                const link=links.find(l=>l.code===c.link_code);
+                if(convFilter.creator&&link?.creator_name!==convFilter.creator) return false;
+                if(convFilter.campaign&&link?.campaign_name!==convFilter.campaign) return false;
+                return true;
+              }).length===0?(
+                <tr><td colSpan={6} style={{textAlign:"center",padding:"32px"}}><div style={{fontSize:"13px",color:"var(--text3)"}}>No conversions recorded yet.</div></td></tr>
+              ):conversions.filter(c=>{
+                const link=links.find(l=>l.code===c.link_code);
+                if(convFilter.creator&&link?.creator_name!==convFilter.creator) return false;
+                if(convFilter.campaign&&link?.campaign_name!==convFilter.campaign) return false;
+                return true;
+              }).map(c=>{
+                const link=links.find(l=>l.code===c.link_code);
+                return (
+                  <tr key={c.id}>
+                    <td style={{fontSize:"12px"}}>{new Date(c.logged_at).toLocaleDateString()}</td>
+                    <td style={{fontWeight:500}}>{link?.creator_name||"—"}</td>
+                    <td><code style={{fontSize:"11px",color:"var(--accent)"}}>{c.link_code}</code></td>
+                    <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${(c.conversion_value/100).toFixed(2)}</td>
+                    <td style={{fontWeight:700,color:"var(--accent2)"}}>${(c.commission_amount/100).toFixed(2)}</td>
+                    <td><span className={"badge badge-"+(c.logged_by==="manual"?"blue":c.logged_by==="shopify"?"purple":"teal")} style={{fontSize:"10px"}}>{c.logged_by}</span></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </>)}
+
+      {/* ═══ PAYOUTS TAB ═══ */}
+      {tab==="payouts"&&(<>
+        <div style={{fontSize:"14px",fontWeight:700,marginBottom:14}}>Commissions Owed</div>
+        {Object.keys(owedByCreator).length===0?(
+          <div className="card" style={{padding:"32px 20px",textAlign:"center"}}><div style={{fontSize:"13px",color:"var(--text3)"}}>No outstanding commissions. All paid up.</div></div>
+        ):(
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:24}}>
+            {Object.entries(owedByCreator).map(([name,{amount,codes}])=>(
+              <div key={name} className="card" style={{padding:"14px 18px",display:"flex",alignItems:"center",gap:14}}>
+                <div style={{width:36,height:36,borderRadius:10,background:bc(Math.abs(name.charCodeAt(0))%6),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",fontWeight:700,color:"white",flexShrink:0}}>{name.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:"14px",fontWeight:600}}>{name}</div>
+                  <div style={{fontSize:"11px",color:"var(--text3)"}}>{codes.length} link{codes.length!==1?"s":""}</div>
+                </div>
+                <div style={{fontSize:"18px",fontWeight:800,fontFamily:"Syne,sans-serif",color:"var(--accent2)",marginRight:12}}>${$(amount)}</div>
+                <button className="btn btn-primary btn-sm" onClick={()=>setPayModal({name,amount,codes})}>Mark Paid</button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{fontSize:"14px",fontWeight:700,marginBottom:14}}>Payment History</div>
+        {payouts.length===0?(
+          <div className="card" style={{padding:"32px 20px",textAlign:"center"}}><div style={{fontSize:"13px",color:"var(--text3)"}}>No payments recorded yet.</div></div>
+        ):(
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {payouts.map(p=>(
+              <div key={p.id} className="card" style={{padding:"12px 16px",display:"flex",alignItems:"center",gap:12}}>
+                <span style={{fontSize:"16px"}}>💸</span>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:"13px",fontWeight:600}}>${$(p.amount)} paid to {p.creator_name}</div>
+                  <div style={{fontSize:"11px",color:"var(--text3)"}}>{new Date(p.paid_at).toLocaleDateString()} · {(p.codes||[]).length} link{(p.codes||[]).length!==1?"s":""}{p.notes?" · "+p.notes:""}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <button className="btn btn-secondary btn-sm" style={{marginTop:16}} onClick={exportCSV}>Export Full Report (CSV)</button>
+      </>)}
+
+      {/* ═══ CREATE MODAL ═══ */}
       {modal&&(
         <Modal onClose={()=>setModal(false)}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Create Affiliate Link</div>
-
-            {/* Type selector */}
-            <div className="fg">
-              <label className="fl">Type</label>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Create {newLink.type==="code"?"Promo Code":"Tracking Link"}</div>
+            <div className="fg"><label className="fl">Type</label>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                 {[["link","🔗 Tracking Link"],["code","🏷️ Promo Code"]].map(([v,l])=>(
                   <button key={v} onClick={()=>setNewLink(f=>({...f,type:v}))} style={{padding:"10px",borderRadius:"var(--radius-sm)",border:"2px solid "+(newLink.type===v?"var(--accent)":"var(--border)"),background:newLink.type===v?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500,color:newLink.type===v?"var(--accent)":"var(--text2)"}}>{l}</button>
                 ))}
               </div>
             </div>
-
-            <div className="fg"><label className="fl">Creator Name</label><input className="fi" value={newLink.creator} onChange={e=>setNewLink(f=>({...f,creator:e.target.value}))} placeholder="Creator name" autoFocus/></div>
-            <div className="fg"><label className="fl">Campaign</label><input className="fi" value={newLink.campaign} onChange={e=>setNewLink(f=>({...f,campaign:e.target.value}))} placeholder="Campaign name"/></div>
-
-            {newLink.type==="link"&&(
-              <div className="fg"><label className="fl">Destination URL</label><input className="fi" value={newLink.url} onChange={e=>setNewLink(f=>({...f,url:e.target.value}))} placeholder="https://yourbrand.com/product"/></div>
+            <div className="fg"><label className="fl">Creator</label>
+              {uniqueCreators.length>0?(
+                <select className="fsel" value={newLink.creator} onChange={e=>setNewLink(f=>({...f,creator:e.target.value}))}>
+                  <option value="">Select a creator...</option>
+                  {uniqueCreators.map(n=><option key={n} value={n}>{n}</option>)}
+                  <option value="__custom">Other (type name)</option>
+                </select>
+              ):null}
+              {(newLink.creator==="__custom"||uniqueCreators.length===0)&&<input className="fi" style={{marginTop:6}} value={newLink.creator==="__custom"?"":newLink.creator} onChange={e=>setNewLink(f=>({...f,creator:e.target.value}))} placeholder="Creator name"/>}
+            </div>
+            <div className="fg"><label className="fl">Campaign</label><input className="fi" value={newLink.campaign} onChange={e=>setNewLink(f=>({...f,campaign:e.target.value}))} placeholder="Summer Launch, Product X, etc."/></div>
+            {newLink.type==="link"&&<div className="fg"><label className="fl">Destination URL</label><input className="fi" value={newLink.url} onChange={e=>setNewLink(f=>({...f,url:e.target.value}))} placeholder="https://yourbrand.com/product"/></div>}
+            {newLink.type==="code"&&(
+              <div className="fg"><label className="fl">Custom Code</label>
+                <div style={{display:"flex",gap:6}}>
+                  <input className="fi" value={newLink.customCode} onChange={e=>setNewLink(f=>({...f,customCode:e.target.value.toUpperCase()}))} placeholder={genSmartCode(newLink.creator,"code")} style={{flex:1}}/>
+                  <button className="btn btn-secondary btn-sm" onClick={()=>setNewLink(f=>({...f,customCode:genSmartCode(f.creator,"code")}))}>Generate</button>
+                </div>
+                <div style={{fontSize:"11px",color:"var(--text3)",marginTop:4}}>Give this code to your creator to share with their audience.</div>
+              </div>
             )}
-
-            {/* Commission type */}
-            <div className="fg">
-              <label className="fl">Commission</label>
+            <div className="fg"><label className="fl">Commission</label>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
                 {[["percentage","Percentage"],["flat","Flat Amount"]].map(([v,l])=>(
-                  <button key={v} onClick={()=>setNewLink(f=>({...f,commType:v}))} style={{padding:"8px",borderRadius:"var(--radius-sm)",border:"1.5px solid "+(newLink.commType===v?"var(--accent)":"var(--border)"),background:newLink.commType===v?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:12,fontWeight:500,color:newLink.commType===v?"var(--accent)":"var(--text2)"}}>{l}</button>
+                  <button key={v} onClick={()=>setNewLink(f=>({...f,commType:v}))} style={{padding:"8px",borderRadius:"var(--radius-sm)",border:"1.5px solid "+(newLink.commType===v?"var(--accent)":"var(--border)"),background:newLink.commType===v?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:12,color:newLink.commType===v?"var(--accent)":"var(--text2)"}}>{l}</button>
                 ))}
               </div>
-              {newLink.commType==="percentage"?(
-                <div style={{display:"flex",gap:6,alignItems:"center"}}><input className="fi" type="number" value={newLink.rate} onChange={e=>setNewLink(f=>({...f,rate:e.target.value}))} placeholder="10" style={{width:80}}/><span style={{fontSize:"13px",color:"var(--text3)"}}>% of sale</span></div>
-              ):(
-                <div style={{display:"flex",gap:6,alignItems:"center"}}><span style={{fontSize:"13px",color:"var(--text3)"}}>$</span><input className="fi" type="number" value={newLink.flatAmount} onChange={e=>setNewLink(f=>({...f,flatAmount:e.target.value}))} placeholder="5.00" style={{width:100}}/><span style={{fontSize:"13px",color:"var(--text3)"}}>per conversion</span></div>
-              )}
+              {newLink.commType==="percentage"?<div style={{display:"flex",gap:6,alignItems:"center"}}><input className="fi" type="number" value={newLink.rate} onChange={e=>setNewLink(f=>({...f,rate:e.target.value}))} placeholder="10" style={{width:80}}/><span style={{fontSize:"13px",color:"var(--text3)"}}>% of sale</span></div>:<div style={{display:"flex",gap:6,alignItems:"center"}}><span style={{fontSize:"13px",color:"var(--text3)"}}>$</span><input className="fi" type="number" value={newLink.flatAmount} onChange={e=>setNewLink(f=>({...f,flatAmount:e.target.value}))} placeholder="5.00" style={{width:100}}/><span style={{fontSize:"13px",color:"var(--text3)"}}>per conversion</span></div>}
             </div>
-
-            <div style={{padding:"9px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",fontSize:"12px",color:"var(--text2)",marginBottom:14}}>A unique 8-character code will be generated automatically. Link: <code style={{color:"var(--accent)"}}>bridgn.com/r/[code]</code></div>
+            {deals.length>0&&<div className="fg"><label className="fl">Tie to Deal <span style={{color:"var(--text3)",fontWeight:400}}>(optional)</span></label>
+              <select className="fsel" value={newLink.dealId} onChange={e=>setNewLink(f=>({...f,dealId:e.target.value}))}>
+                <option value="">No specific deal</option>
+                {deals.map(d=><option key={d.id} value={d.id}>{d.campaignTitle} — {d.creatorName||d.brand}</option>)}
+              </select>
+            </div>}
+            {/* Preview */}
+            {newLink.creator&&<div style={{padding:"12px 14px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",marginBottom:14}}>
+              <div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}}>Creator will share</div>
+              {newLink.type==="code"?<div style={{fontSize:"14px",fontWeight:700,color:"var(--accent)"}}>{newLink.customCode||genSmartCode(newLink.creator,"code")}</div>:<div style={{fontSize:"13px",color:"var(--accent)"}}><code>bridgn.com/r/{genSmartCode(newLink.creator,"link")}</code></div>}
+              <div style={{fontSize:"11px",color:"var(--text3)",marginTop:4}}>{newLink.commType==="flat"?"$"+((parseFloat(newLink.flatAmount)||5))+"/conv":(newLink.rate||10)+"% commission"}{newLink.campaign?" · "+newLink.campaign:""}</div>
+            </div>}
             <div style={{display:"flex",gap:9}}>
-              <button onClick={addLink} disabled={!newLink.creator||saving} className="btn btn-primary btn-lg" style={{flex:1,opacity:newLink.creator&&!saving?1:.5}}>
-                {saving?"Creating...":"Create "+(newLink.type==="code"?"Promo Code":"Link")}
-              </button>
-              <button onClick={()=>setModal(false)} className="btn btn-secondary btn-lg">Cancel</button>
+              <button onClick={addLink} disabled={!newLink.creator||newLink.creator==="__custom"||saving} className="btn btn-primary btn-lg" style={{flex:1,opacity:newLink.creator&&newLink.creator!=="__custom"&&!saving?1:.5}}>{saving?"Creating...":"Create "+(newLink.type==="code"?"Promo Code":"Link")}</button>
+              <button onClick={()=>{setModal(false);setNewLink(NL_INIT);}} className="btn btn-secondary btn-lg">Cancel</button>
             </div>
           </div>
         </Modal>
       )}
 
-      {/* Log Conversion Modal */}
+      {/* ═══ LOG CONVERSION MODAL ═══ */}
       {convModal&&(
-        <Modal onClose={()=>{setConvModal(null);setConvForm({value:"",notes:""});}}>
+        <Modal onClose={()=>{setConvModal(null);setConvForm({code:"",value:"",notes:""});}}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,letterSpacing:"-.3px",marginBottom:4}}>Log Conversion</div>
-            <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:16}}>Code: <code style={{color:"var(--accent)"}}>{convModal}</code></div>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,marginBottom:12}}>Log Conversion</div>
+            {convModal==="manual"?(
+              <div className="fg"><label className="fl">Code</label>
+                <select className="fsel" value={convForm.code} onChange={e=>setConvForm(f=>({...f,code:e.target.value}))}>
+                  {links.map(l=><option key={l.code} value={l.code}>{l.code} — {l.creator_name}</option>)}
+                </select>
+              </div>
+            ):<div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12}}>Code: <code style={{color:"var(--accent)"}}>{convModal}</code></div>}
             <div className="fg"><label className="fl">Sale Amount ($)</label><input className="fi" type="number" value={convForm.value} onChange={e=>setConvForm(f=>({...f,value:e.target.value}))} placeholder="99.00" autoFocus/></div>
             <div className="fg"><label className="fl">Notes <span style={{color:"var(--text3)",fontWeight:400}}>(optional)</span></label><input className="fi" value={convForm.notes} onChange={e=>setConvForm(f=>({...f,notes:e.target.value}))} placeholder="Order #, customer name, etc."/></div>
             <div style={{display:"flex",gap:9}}>
               <button onClick={logConversion} disabled={convSaving} className="btn btn-primary btn-lg" style={{flex:1,opacity:convSaving?.5:1}}>{convSaving?"Saving...":"Log Conversion"}</button>
-              <button onClick={()=>{setConvModal(null);setConvForm({value:"",notes:""});}} className="btn btn-secondary btn-lg">Cancel</button>
+              <button onClick={()=>{setConvModal(null);setConvForm({code:"",value:"",notes:""});}} className="btn btn-secondary btn-lg">Cancel</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ═══ MARK PAID MODAL ═══ */}
+      {payModal&&(
+        <Modal onClose={()=>{setPayModal(null);setPayNotes("");}}>
+          <div style={{padding:26}}>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,marginBottom:4}}>Mark as Paid</div>
+            <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:16}}>Confirm you've paid <strong>{payModal.name}</strong> their <strong>${$(payModal.amount)}</strong> commission.</div>
+            <div className="fg"><label className="fl">Notes <span style={{color:"var(--text3)",fontWeight:400}}>(optional)</span></label><input className="fi" value={payNotes} onChange={e=>setPayNotes(e.target.value)} placeholder="Payment method, reference #, etc."/></div>
+            <div style={{display:"flex",gap:9}}>
+              <button onClick={()=>markPaid(payModal.name,payModal.amount,payModal.codes)} className="btn btn-primary btn-lg" style={{flex:1}}>Confirm Payment</button>
+              <button onClick={()=>{setPayModal(null);setPayNotes("");}} className="btn btn-secondary btn-lg">Cancel</button>
             </div>
           </div>
         </Modal>
@@ -7743,7 +7926,7 @@ function App() {
         case "deals":         return React.createElement(BrandDealsPage,{setPage,setSelected,deals});
         case "deal-room":     return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal});
         case "content-library": return React.createElement(ContentLibraryPage,{});
-        case "affiliate":     return React.createElement(AffiliateManagerPage,{authUser});
+        case "affiliate":     return React.createElement(AffiliateManagerPage,{authUser,deals});
         case "brief-builder": return React.createElement(BriefBuilderPage,{});
         case "scorecards":    return React.createElement(CreatorScorecardsPage,{});
         case "team":          return React.createElement(TeamManagementPage,{});
