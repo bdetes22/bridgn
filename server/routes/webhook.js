@@ -93,12 +93,30 @@ async function onPaymentIntentSucceeded(pi) {
       message: `Your payment of $${(amountCents / 100).toFixed(2)} has settled and is held in escrow. Release it after the creator delivers, or it auto-releases in ${releaseDays} days.`,
     });
 
-    // Email the brand
+    // Email the brand (payment settled) + creator (escrow funded)
     try {
       const { db } = require("../../lib/db");
       const { data: brandUser } = await db.auth.admin.getUserById(brandId);
-      const { data: dealRows } = await db.from("deals").select("campaign_title, creator_name").eq("bridgn_deal_id", dealId).limit(1);
+      const { data: dealRows } = await db.from("deals").select("campaign_title, creator_name, brand_name").eq("bridgn_deal_id", dealId).limit(1);
       const deal = dealRows?.[0];
+      const SUPA_URL = process.env.SUPABASE_URL;
+      const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
+
+      // Notify brand — funds settled
+      if (brandUser?.user?.email && SUPA_URL && SUPA_KEY) {
+        fetch(`${SUPA_URL}/functions/v1/send-notification-email`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPA_KEY}`, apikey: SUPA_KEY },
+          body: JSON.stringify({
+            to: brandUser.user.email,
+            type: "content_submitted", // closest: "review content / release payment"
+            senderName: deal?.creator_name || "the creator",
+            recipientName: brandUser.user.user_metadata?.full_name || "there",
+            dealName: deal?.campaign_title || "your deal",
+          }),
+        }).catch(() => {});
+      }
+      // Fallback: direct Resend
       if (brandUser?.user?.email) {
         const email = paymentSettledEmail({
           brandName: brandUser.user.user_metadata?.full_name || brandUser.user.user_metadata?.company_name || "there",
@@ -108,8 +126,27 @@ async function onPaymentIntentSucceeded(pi) {
         });
         await sendEmail({ to: brandUser.user.email, ...email });
       }
+
+      // Notify creator — escrow funded
+      if (creatorId && SUPA_URL && SUPA_KEY) {
+        const { data: creatorUser } = await db.auth.admin.getUserById(creatorId);
+        if (creatorUser?.user?.email) {
+          fetch(`${SUPA_URL}/functions/v1/send-notification-email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${SUPA_KEY}`, apikey: SUPA_KEY },
+            body: JSON.stringify({
+              to: creatorUser.user.email,
+              type: "escrow_funded",
+              senderName: deal?.brand_name || "The brand",
+              recipientName: creatorUser.user.user_metadata?.full_name || "there",
+              dealName: deal?.campaign_title || "your deal",
+              amount: (creatorNetCents / 100).toFixed(0),
+            }),
+          }).catch(() => {});
+        }
+      }
     } catch (emailErr) {
-      log.warn("payment_intent.succeeded", "Failed to send email to brand", { error: emailErr.message });
+      log.warn("payment_intent.succeeded", "Failed to send notification emails", { error: emailErr.message });
     }
   }
   if (creatorId) {

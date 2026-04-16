@@ -2420,7 +2420,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const pausePoll = () => { pollPaused.current = true; setTimeout(()=>{ pollPaused.current = false; }, 8000); };
 
   // Sync brief/contract state to Supabase and update App-level deals
-  // Fire an email notification to the other party
+  // Fire an email notification to the other party.
+  // Calls the Express route which looks up the recipient's email,
+  // then sends via the Supabase Edge Function.
   const notifyOther = (type, extra={}) => {
     if(!activeDeal?.id || !authUser?.id) return;
     fetch(`${BRIDGN_API_URL}/api/notify`, {
