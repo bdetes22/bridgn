@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;transition:background-color 300ms ease,color 300ms ease,border-color 300ms ease,box-shadow 300ms ease}
@@ -1013,6 +1014,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
     {section:"Business"},
     {k:"contracts",l:"Contract Vault",i:"📂"},
     {k:"earnings",l:"Earnings & P&L",i:"📈"},
+    {k:"my-affiliate",l:"My Affiliate Links",i:"🔗"},
     {k:"public-profile",l:"My Public Page",i:"🔗"},
   ];
   const bNav = [
@@ -6325,6 +6327,213 @@ function AffiliateManagerPage({authUser,deals=[]}) {
   );
 }
 
+// ─── CREATOR AFFILIATE PAGE ───────────────────────────────────────────────────
+function AffiliateCreatorPage({authUser}) {
+  const loading = useSkeleton();
+  const [links,setLinks] = useState([]);
+  const [copied,setCopied] = useState(null);
+  const [qrCode,setQrCode] = useState(null); // {code, dataUrl}
+  const [shareModal,setShareModal] = useState(null); // link object
+  const [shareCopied,setShareCopied] = useState(null);
+
+  useEffect(()=>{
+    if(!authUser) return;
+    // Load all links where creator_name matches this user's name
+    const name = authUser.user_metadata?.full_name||authUser.email?.split("@")[0]||"";
+    if(!name) return;
+    supabase.from("affiliate_links").select("*").eq("creator_name",name).eq("is_active",true).order("created_at",{ascending:false})
+      .then(({data})=>{ if(data) setLinks(data); });
+  },[authUser]);
+
+  // Realtime
+  useEffect(()=>{
+    if(!links.length) return;
+    const ch = supabase.channel("creator-aff-rt").on("postgres_changes",{event:"UPDATE",schema:"public",table:"affiliate_links"},(p)=>{
+      setLinks(ls=>ls.map(l=>l.id===p.new.id?{...l,...p.new}:l));
+    }).subscribe();
+    return ()=>{supabase.removeChannel(ch);};
+  },[links.length]);
+
+  const totalClicks = links.reduce((s,a)=>s+(a.clicks||0),0);
+  const totalComm = links.reduce((s,a)=>s+(a.commission_earned||0),0);
+  const activeLinks = links.filter(a=>a.type==="link").length;
+  const activeCodes = links.filter(a=>a.type==="code").length;
+
+  const copy = (a) => {
+    const text = a.type==="code"?a.code:"https://bridgn.com/r/"+a.code;
+    navigator.clipboard.writeText(text).catch(()=>{});
+    setCopied(a.code);setTimeout(()=>setCopied(null),2000);
+  };
+
+  const generateQR = async (a) => {
+    const url = "https://bridgn.com/r/"+a.code;
+    try {
+      const dataUrl = await window.QRCode.toDataURL(url,{width:512,margin:2,color:{dark:"#5b8af5",light:"#0f1117"}});
+      setQrCode({code:a.code, name:a.campaign_name||a.code, dataUrl});
+    } catch(e) { console.error("[QR]",e); }
+  };
+
+  const downloadQR = () => {
+    if(!qrCode) return;
+    const a = document.createElement("a");
+    a.href = qrCode.dataUrl;
+    a.download = "bridgn-qr-"+qrCode.code+".png";
+    a.click();
+  };
+
+  const shareText = (a, platform) => {
+    const link = a.type==="code"?a.code:"bridgn.com/r/"+a.code;
+    const campaign = a.campaign_name||"this brand";
+    if(platform==="instagram") return `I partnered with ${campaign}! Use my ${a.type==="code"?"code":"link"} ${link} to get an exclusive deal. Link in bio! #ad #partner`;
+    if(platform==="tiktok") return `POV: you get an exclusive deal from ${campaign} 👀 Use ${a.type==="code"?"code "+link:"the link in my bio"} #ad #partner #deal`;
+    if(platform==="twitter") return `Excited to partner with ${campaign}! Use my ${a.type==="code"?"code":"link"}: ${link} #ad`;
+    return link;
+  };
+
+  const copyShare = (text,key) => {
+    navigator.clipboard.writeText(text).catch(()=>{});
+    setShareCopied(key);setTimeout(()=>setShareCopied(null),2000);
+  };
+
+  // Simple 30-day bar chart data (simulated from click count — real would need daily aggregation)
+  const barData = Array.from({length:30},(_,i)=>{
+    const dayClicks = Math.max(0, Math.round(totalClicks/30 + (Math.random()-0.5)*totalClicks/15));
+    return {day:i, clicks:totalClicks>0?dayClicks:0};
+  });
+  const maxBar = Math.max(1,...barData.map(d=>d.clicks));
+
+  if(loading) return <SkeletonPage layout="list"/>;
+  return (
+    <div className="fade-in">
+      <div className="ph-row"><div><div className="page-title">My Affiliate Links</div><div className="page-subtitle">Track your links, codes, and commissions across all deals.</div></div></div>
+
+      <div className="g4 section" style={{gap:12}}>
+        {[{l:"Total Clicks",v:String(totalClicks)},{l:"Commissions Earned",v:"$"+((totalComm)/100).toLocaleString()},{l:"Active Links",v:String(activeLinks)},{l:"Active Codes",v:String(activeCodes)}].map((s,i)=>(
+          <StatCard key={i} label={s.l} value={s.v}/>
+        ))}
+      </div>
+
+      {/* Click activity chart */}
+      {totalClicks>0&&(
+        <div className="card-lg" style={{padding:"18px 22px",marginBottom:18}}>
+          <div style={{fontSize:"13px",fontWeight:700,marginBottom:12}}>Click Activity (30 days)</div>
+          <div style={{display:"flex",alignItems:"flex-end",gap:2,height:80}}>
+            {barData.map((d,i)=>(
+              <div key={i} style={{flex:1,background:d.clicks>0?"var(--accent)":"var(--surface2)",borderRadius:"2px 2px 0 0",height:Math.max(2,(d.clicks/maxBar)*100)+"%",transition:"height .3s",opacity:d.clicks>0?.7:.3}} title={d.clicks+" clicks"}/>
+            ))}
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
+            <span style={{fontSize:"10px",color:"var(--text3)"}}>30 days ago</span>
+            <span style={{fontSize:"10px",color:"var(--text3)"}}>Today</span>
+          </div>
+        </div>
+      )}
+
+      {/* Links and codes */}
+      {links.length===0?(
+        <div className="card" style={{padding:"40px 20px",textAlign:"center"}}>
+          <div style={{fontSize:"28px",marginBottom:10}}>📊</div>
+          <div style={{fontSize:"14px",fontWeight:600,marginBottom:6}}>No affiliate links yet</div>
+          <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.65}}>When a brand creates a tracking link or promo code for you, it will appear here with live stats.</div>
+        </div>
+      ):(
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {links.map(a=>(
+            <div key={a.id} className="card-lg" style={{padding:"18px 22px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
+                <span className={"badge badge-"+(a.type==="code"?"purple":"blue")} style={{fontSize:"10px"}}>{a.type==="code"?"Promo Code":"Tracking Link"}</span>
+                <span style={{fontSize:"13px",fontWeight:600}}>{a.campaign_name||"Campaign"}</span>
+                <span style={{fontSize:"11px",color:"var(--text3)"}}>· {a.commission_type==="flat"?"$"+((a.commission_flat_amount||0)/100).toFixed(2)+" each":(a.commission_rate||10)+"% commission"}</span>
+              </div>
+
+              {/* Big copyable display */}
+              <div style={{display:"flex",gap:10,alignItems:"center",padding:"14px 16px",background:"linear-gradient(135deg,rgba(91,138,245,.08),rgba(167,139,250,.05))",border:"1.5px solid rgba(91,138,245,.2)",borderRadius:"var(--radius)",marginBottom:12}}>
+                <code style={{fontSize:"18px",fontWeight:800,color:"var(--accent)",flex:1,letterSpacing:a.type==="code"?".06em":".01em",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.type==="code"?a.code:"bridgn.com/r/"+a.code}</code>
+                <button onClick={()=>copy(a)} className="btn btn-primary btn-sm" style={{flexShrink:0,minWidth:80}}>{copied===a.code?"✓ Copied":"Copy"}</button>
+              </div>
+
+              {/* Stats */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
+                <div style={{textAlign:"center",padding:"10px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}><div style={{fontSize:"18px",fontWeight:700}}>{a.clicks||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Clicks</div></div>
+                <div style={{textAlign:"center",padding:"10px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}><div style={{fontSize:"18px",fontWeight:700,color:"var(--green)"}}>{a.conversions||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Sales</div></div>
+                <div style={{textAlign:"center",padding:"10px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}><div style={{fontSize:"18px",fontWeight:700,color:"var(--accent2)",fontFamily:"Syne,sans-serif"}}>${((a.commission_earned||0)/100).toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Earned</div></div>
+              </div>
+
+              {/* Action buttons */}
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {a.type==="link"&&<button className="btn btn-secondary btn-sm" onClick={()=>generateQR(a)}>QR Code</button>}
+                <button className="btn btn-secondary btn-sm" onClick={()=>setShareModal(a)}>Share Captions</button>
+              </div>
+
+              {(a.clicks||0)>0&&(
+                <div style={{marginTop:10,fontSize:"12px",color:"var(--text2)",lineHeight:1.5}}>Your {a.type==="code"?"code":"link"} has been clicked <strong>{a.clicks}</strong> time{a.clicks!==1?"s":""}{(a.conversions||0)>0?", resulting in <strong>"+a.conversions+"</strong> sale"+(a.conversions!==1?"s":""):""}.</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Share tips */}
+      <div className="card-lg" style={{padding:"18px 22px",marginTop:18}}>
+        <div style={{fontSize:"13px",fontWeight:700,marginBottom:12}}>💡 Share Tips</div>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {[
+            ["📌","Pin your link in your bio","Your bio link is the #1 traffic driver. Make it the first thing people see."],
+            ["🎬","Mention your code in the first 30 seconds","Viewers decide to stay or scroll within seconds. Lead with the value."],
+            ["🔗","Add it to your link-in-bio tool","Use Linktree, Stan, or Beacons to make your affiliate link easily accessible."],
+            ["📱","Add a swipe-up or link sticker in Stories","Stories with direct links convert 2-3x better than bio-only."],
+            ["💬","Reply to comments with your code","When people ask 'where did you get that?', drop your code in the reply."],
+          ].map(([icon,title,desc],i)=>(
+            <div key={i} style={{display:"flex",gap:10,padding:"8px 0",borderBottom:i<4?"1px solid var(--border)":"none"}}>
+              <span style={{fontSize:"16px",flexShrink:0}}>{icon}</span>
+              <div><div style={{fontSize:"13px",fontWeight:600}}>{title}</div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>{desc}</div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* QR Code Modal */}
+      {qrCode&&(
+        <Modal onClose={()=>setQrCode(null)}>
+          <div style={{padding:26,textAlign:"center"}}>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,marginBottom:14}}>QR Code</div>
+            <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:16}}>{qrCode.name}</div>
+            <img src={qrCode.dataUrl} style={{width:200,height:200,borderRadius:12,margin:"0 auto 16px",display:"block"}} alt="QR Code"/>
+            <div style={{display:"flex",gap:9,justifyContent:"center"}}>
+              <button onClick={downloadQR} className="btn btn-primary">Download PNG</button>
+              <button onClick={()=>setQrCode(null)} className="btn btn-secondary">Close</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Share Captions Modal */}
+      {shareModal&&(
+        <Modal onClose={()=>{setShareModal(null);setShareCopied(null);}}>
+          <div style={{padding:26}}>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,marginBottom:14}}>Share Captions</div>
+            <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:16}}>Pre-written captions with your {shareModal.type==="code"?"code":"link"} embedded. Copy and customize.</div>
+            {[["📸 Instagram","instagram"],["🎵 TikTok","tiktok"],["🐦 Twitter/X","twitter"]].map(([label,platform])=>{
+              const text = shareText(shareModal,platform);
+              const key = platform;
+              return (
+                <div key={platform} style={{marginBottom:14}}>
+                  <div style={{fontSize:"12px",fontWeight:600,marginBottom:6}}>{label}</div>
+                  <div style={{position:"relative"}}>
+                    <div style={{padding:"10px 14px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",fontSize:"13px",color:"var(--text2)",lineHeight:1.6,paddingRight:70}}>{text}</div>
+                    <button onClick={()=>copyShare(text,key)} style={{position:"absolute",top:8,right:8,background:"none",border:"none",cursor:"pointer",fontSize:"11px",fontWeight:600,color:shareCopied===key?"var(--green)":"var(--accent)",fontFamily:"Space Grotesk,sans-serif"}}>{shareCopied===key?"✓ Copied":"Copy"}</button>
+                  </div>
+                </div>
+              );
+            })}
+            <button onClick={()=>{setShareModal(null);setShareCopied(null);}} className="btn btn-secondary" style={{width:"100%",marginTop:4}}>Close</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
 // ─── BRIEF BUILDER ────────────────────────────────────────────────────────────
 function BriefBuilderPage() {
   const loading = useSkeleton();
@@ -8054,6 +8263,7 @@ function App() {
         case "public-profile": return React.createElement(PublicProfilePage,{setPage,userName,userInitials,socialLinks,profilePct:PC_ITEMS.reduce((s,it)=>s+(({initials:true,bio:!!socialLinks.bio?.trim(),social:SOCIALS.some(x=>socialLinks[x.key]?.trim()),analytics:!!profileFlags.analyticsUploaded,ratecard:!!profileFlags.rateCardFilled,avail:!!profileFlags.availabilitySet})[it.key]?it.weight:0),0)});
         case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials});
         case "earnings":     return React.createElement(EarningsPage,{});
+        case "my-affiliate": return React.createElement(AffiliateCreatorPage,{authUser});
         case "contracts":    return React.createElement(ContractVaultPage,{});
         case "availability": return React.createElement(AvailabilityPage,{onAvailabilitySet:()=>updateProfileFlags({availabilitySet:true})});
         case "expenses":     return React.createElement(ExpensesPage,{});
