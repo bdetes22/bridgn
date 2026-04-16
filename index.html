@@ -2724,9 +2724,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
     });
   };
   // Compute live progress percentage from actual deal state
+  const allDeliverablesApproved = DELIVERABLES.length>0 && approved.every(Boolean);
   const liveStepsDone = [true, briefSubmitted, contractSigned, contentUploaded,
-    activeDeal.status==="payment_held"||activeDeal.status==="payment_released",
-    activeDeal.status==="payment_released"].filter(Boolean).length;
+    allDeliverablesApproved, activeDeal.status==="payment_released"].filter(Boolean).length;
   const pct = Math.round((liveStepsDone/6)*100);
   return (
     <div className="fade-in">
@@ -3226,13 +3226,14 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
           </div>
           {(()=>{
             // Compute progress from actual deal state instead of a static number
+            const allApproved = DELIVERABLES.length>0 && approved.every(Boolean);
             const steps = [
-              {label:"Deal Created",      done:true}, // always done if we're in the deal room
-              {label:"Brief Sent",        done:briefSubmitted},
-              {label:"Contract Signed",   done:contractSigned},
-              {label:"Content Delivered", done:contentUploaded},
-              {label:"Brand Review",      done:activeDeal.status==="payment_held"||activeDeal.status==="payment_released"},
-              {label:"Payment Released",  done:activeDeal.status==="payment_released"},
+              {label:"Deal Created",         done:true},
+              {label:"Brief Sent",           done:briefSubmitted},
+              {label:"Contract Signed",      done:contractSigned},
+              {label:"Content Delivered",    done:contentUploaded},
+              {label:"Deliverables Approved",done:allApproved},
+              {label:"Payment Released",     done:activeDeal.status==="payment_released"},
             ];
             const liveProgress = steps.filter(s=>s.done).length;
             const currentStep = Math.min(liveProgress, steps.length-1);
