@@ -9,7 +9,8 @@ const cors    = require("cors");
 const stripeRoutes  = require("./routes/stripe");
 const webhookRouter = require("./routes/webhook");
 const dealsRouter   = require("./routes/deals");
-const notifyRouter  = require("./routes/notify");
+const notifyRouter    = require("./routes/notify");
+const affiliateRouter = require("./routes/affiliate");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -46,6 +47,10 @@ app.use(express.json({ limit: "50mb" }));
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/deals", dealsRouter);
 app.use("/api/notify", notifyRouter);
+app.use("/api/affiliate", affiliateRouter);
+
+// Affiliate redirect — /r/:code (must be before the catch-all)
+app.use(affiliateRouter);
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
