@@ -6194,26 +6194,7 @@ function AffiliateManagerPage({authUser,deals=[]}) {
           const hasWebhookConv = conversions.some(c=>c.logged_by==="webhook"||c.logged_by==="shopify");
           const copySnippet = (text,key) => {navigator.clipboard.writeText(text).catch(()=>{});setIntCopied(key);setTimeout(()=>setIntCopied(null),2500);};
 
-          const shopifyScript = `<script>
-  // bridgn affiliate tracking — paste in Shopify Additional Scripts
-  (function(){
-    try {
-      var code = Shopify.checkout.discountApplications?.[0]?.title || "";
-      if (!code) return;
-      fetch("${webhookUrl}", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          code: code,
-          order_value: Math.round(Shopify.checkout.totalPrice * 100),
-          order_id: Shopify.checkout.orderName || "",
-          customer_email: Shopify.checkout.email || "",
-          source: "shopify"
-        })
-      });
-    } catch(e) {}
-  })();
-</script>`;
+          const shopifyScript = "<scr"+"ipt>\n  // bridgn affiliate tracking — paste in Shopify Additional Scripts\n  (function(){\n    try {\n      var code = Shopify.checkout.discountApplications?.[0]?.title || \"\";\n      if (!code) return;\n      fetch(\""+webhookUrl+"\", {\n        method: \"POST\",\n        headers: {\"Content-Type\": \"application/json\"},\n        body: JSON.stringify({\n          code: code,\n          order_value: Math.round(Shopify.checkout.totalPrice * 100),\n          order_id: Shopify.checkout.orderName || \"\",\n          customer_email: Shopify.checkout.email || \"\",\n          source: \"shopify\"\n        })\n      });\n    } catch(e) {}\n  })();\n<"+"/scr"+"ipt>";
 
           const wooSnippet = `// bridgn affiliate tracking — add to functions.php
 add_action('woocommerce_thankyou', function($order_id) {
