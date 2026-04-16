@@ -288,16 +288,29 @@ router.post("/create-deal-payment", async (req, res) => {
       },
     });
 
-    // ── 4. Pre-create the deal row so the webhook can update it ──────────────
-    await upsertDeal(paymentIntent.id, {
-      bridgn_deal_id:        String(dealId),
-      brand_user_id:         brandUserId,
-      creator_user_id:       creatorUserId,
-      amount_cents:          amountCents,
-      application_fee_cents: applicationFeeCents,
-      auto_release_days:     releaseDays,
-      status:                "payment_processing",
-    });
+    // ── 4. Update the existing deal row with the PaymentIntent ID ─────────────
+    // If a deal already exists for this bridgn_deal_id, update it.
+    // Otherwise create a new row (fallback for deals not created via the frontend).
+    const existingDeal = await getDealByBridgnDealId(String(dealId));
+    if (existingDeal) {
+      await updateDealById(existingDeal.id, {
+        payment_intent_id:     paymentIntent.id,
+        amount_cents:          amountCents,
+        application_fee_cents: applicationFeeCents,
+        auto_release_days:     releaseDays,
+        status:                "payment_processing",
+      });
+    } else {
+      await upsertDeal(paymentIntent.id, {
+        bridgn_deal_id:        String(dealId),
+        brand_user_id:         brandUserId,
+        creator_user_id:       creatorUserId,
+        amount_cents:          amountCents,
+        application_fee_cents: applicationFeeCents,
+        auto_release_days:     releaseDays,
+        status:                "payment_processing",
+      });
+    }
 
     res.json({
       clientSecret:        paymentIntent.client_secret,
