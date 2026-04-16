@@ -2420,6 +2420,15 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const pausePoll = () => { pollPaused.current = true; setTimeout(()=>{ pollPaused.current = false; }, 8000); };
 
   // Sync brief/contract state to Supabase and update App-level deals
+  // Fire an email notification to the other party
+  const notifyOther = (type, extra={}) => {
+    if(!activeDeal?.id || !authUser?.id) return;
+    fetch(`${BRIDGN_API_URL}/api/notify`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({type, dealId:String(activeDeal.id), senderUserId:authUser.id, ...extra}),
+    }).catch(e=>console.error("[notify]",e));
+  };
+
   const syncDealFields = (fields) => {
     if(!activeDeal?.id) return;
     pausePoll();
@@ -2517,6 +2526,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
       if(newStatus!==activeDeal.status) updateDeal && updateDeal(activeDeal.id, {status:newStatus});
       pausePoll();
       syncDealFields({content_file_name:cf.name, content_file_data:cf.dataUrl, ...(newStatus!==activeDeal.status?{status:newStatus}:{})});
+      notifyOther("content_submitted", {fileName:cf.name});
     } catch(err) {
       console.error("[contentUpload]", err);
     }
@@ -2690,6 +2700,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
       body:text,
     }).then(({error})=>{
       if(error) console.error("[sendMsg]",error.message);
+      else notifyOther("new_message",{messagePreview:text.slice(0,200)});
     });
   };
   const pct = Math.round((activeDeal.progress/6)*100);
@@ -2799,7 +2810,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     />
                   </div>
 
-                  <button onClick={()=>{if(briefFile||briefLink.trim()||briefComments.trim()){setBriefSubmitted(true);syncDealFields({brief_file_name:briefFile?.name||null,brief_file_data:briefFile?.dataUrl||null,brief_link:briefLink||null,brief_comments:briefComments||null,brief_submitted:true});}}} className="btn btn-primary" style={{width:"100%"}} disabled={!briefFile&&!briefLink.trim()&&!briefComments.trim()}>Send Brief to Creator</button>
+                  <button onClick={()=>{if(briefFile||briefLink.trim()||briefComments.trim()){setBriefSubmitted(true);syncDealFields({brief_file_name:briefFile?.name||null,brief_file_data:briefFile?.dataUrl||null,brief_link:briefLink||null,brief_comments:briefComments||null,brief_submitted:true});notifyOther("brief_submitted");}}} className="btn btn-primary" style={{width:"100%"}} disabled={!briefFile&&!briefLink.trim()&&!briefComments.trim()}>Send Brief to Creator</button>
                 </div>
               )
             ) : (
@@ -2928,7 +2939,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     <label style={{fontSize:"12px",fontWeight:600,color:"var(--text3)",display:"block",marginBottom:4}}>Notes for the creator</label>
                     <textarea value={contractNotes} onChange={e=>setContractNotes(e.target.value)} placeholder="Payment terms, exclusivity clauses, anything they should pay attention to…" rows={3} style={{width:"100%",boxSizing:"border-box",padding:"10px 12px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",color:"var(--text)",fontSize:"13px",fontFamily:"inherit",lineHeight:1.6,outline:"none",resize:"vertical"}}/>
                   </div>
-                  <button onClick={()=>{if(contractFile||contractLink.trim()){setContractSent(true);syncDealFields({contract_file_name:contractFile?.name||null,contract_file_data:contractFile?.dataUrl||null,contract_link:contractLink||null,contract_notes:contractNotes||null,contract_sent:true});}}} className="btn btn-primary" style={{width:"100%"}} disabled={!contractFile&&!contractLink.trim()}>Send Contract to Creator</button>
+                  <button onClick={()=>{if(contractFile||contractLink.trim()){setContractSent(true);syncDealFields({contract_file_name:contractFile?.name||null,contract_file_data:contractFile?.dataUrl||null,contract_link:contractLink||null,contract_notes:contractNotes||null,contract_sent:true});notifyOther("contract_sent");}}} className="btn btn-primary" style={{width:"100%"}} disabled={!contractFile&&!contractLink.trim()}>Send Contract to Creator</button>
                 </div>
               )
             ) : (
@@ -3005,7 +3016,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                     <button onClick={()=>{
                       // If brand sent a file (no link), require signed copy upload first
                       if(contractFile&&!contractLink&&!signedFile) return;
-                      const now=new Date().toISOString();setContractSigned(true);setContractSignedAt(now);syncDealFields({contract_signed:true,contract_signed_at:now});
+                      const now=new Date().toISOString();setContractSigned(true);setContractSignedAt(now);syncDealFields({contract_signed:true,contract_signed_at:now});notifyOther("contract_signed");
                     }} className="btn btn-primary" style={{width:"100%",opacity:(contractFile&&!contractLink&&!signedFile)?.5:1}} disabled={contractFile&&!contractLink&&!signedFile}>
                       {contractFile&&!contractLink
                         ? (signedFile ? "Submit Signed Contract" : "Upload signed copy first")
@@ -3060,8 +3071,8 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
                   <div>
                     <div style={{fontSize:"12px",fontWeight:600,marginBottom:6}}>Share script or draft</div>
                     <div style={{display:"flex",gap:7}}>
-                      <input className="fi" style={{flex:1,padding:"8px 11px",fontSize:"12px"}} value={scriptUrl} onChange={e=>setScriptUrl(e.target.value)} placeholder="Paste Google Doc, Notion, or draft URL…" onKeyDown={e=>e.key==="Enter"&&scriptUrl.trim()&&(()=>{setScriptSubmitted(true);syncDealFields({script_url:scriptUrl.trim(),script_submitted:true});})()}/>
-                      <button className="btn btn-secondary btn-sm" onClick={()=>{if(scriptUrl.trim()){setScriptSubmitted(true);syncDealFields({script_url:scriptUrl.trim(),script_submitted:true});}}} disabled={!scriptUrl.trim()}>Send</button>
+                      <input className="fi" style={{flex:1,padding:"8px 11px",fontSize:"12px"}} value={scriptUrl} onChange={e=>setScriptUrl(e.target.value)} placeholder="Paste Google Doc, Notion, or draft URL…" onKeyDown={e=>e.key==="Enter"&&scriptUrl.trim()&&(()=>{setScriptSubmitted(true);syncDealFields({script_url:scriptUrl.trim(),script_submitted:true});notifyOther("script_shared",{scriptUrl:scriptUrl.trim()});})()}/>
+                      <button className="btn btn-secondary btn-sm" onClick={()=>{if(scriptUrl.trim()){setScriptSubmitted(true);syncDealFields({script_url:scriptUrl.trim(),script_submitted:true});notifyOther("script_shared",{scriptUrl:scriptUrl.trim()});}}} disabled={!scriptUrl.trim()}>Send</button>
                     </div>
                   </div>
                 ):(

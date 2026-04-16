@@ -26,6 +26,7 @@ const {
   updateCreatorProfileByStripeAccount,
   insertNotification,
 } = require("../../lib/db");
+const { sendEmail, paymentSettledEmail } = require("../../lib/email");
 
 const router = express.Router();
 
@@ -84,13 +85,32 @@ async function onPaymentIntentSucceeded(pi) {
     payment_failure_reason: null,
   });
 
-  // Notify both parties
+  // Notify both parties (in-app + email)
   if (brandId) {
     await insertNotification(brandId, "payment_held", {
       bridgn_deal_id: dealId,
       amount_cents:   amountCents,
       message: `Your payment of $${(amountCents / 100).toFixed(2)} has settled and is held in escrow. Release it after the creator delivers, or it auto-releases in ${releaseDays} days.`,
     });
+
+    // Email the brand
+    try {
+      const { db } = require("../../lib/db");
+      const { data: brandUser } = await db.auth.admin.getUserById(brandId);
+      const { data: dealRows } = await db.from("deals").select("campaign_title, creator_name").eq("bridgn_deal_id", dealId).limit(1);
+      const deal = dealRows?.[0];
+      if (brandUser?.user?.email) {
+        const email = paymentSettledEmail({
+          brandName: brandUser.user.user_metadata?.full_name || brandUser.user.user_metadata?.company_name || "there",
+          creatorName: deal?.creator_name || "the creator",
+          amount: (amountCents / 100).toFixed(2),
+          dealTitle: deal?.campaign_title || "your deal",
+        });
+        await sendEmail({ to: brandUser.user.email, ...email });
+      }
+    } catch (emailErr) {
+      log.warn("payment_intent.succeeded", "Failed to send email to brand", { error: emailErr.message });
+    }
   }
   if (creatorId) {
     await insertNotification(creatorId, "payment_held", {
