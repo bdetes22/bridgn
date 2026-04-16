@@ -2272,10 +2272,11 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const [activeDeal,setActiveDeal] = useState(deals.find(d=>d.status==="Active")||deals.find(d=>d.status!=="Completed")||deals[0]);
 
   // Keep activeDeal in sync when deals array changes (loaded from DB, refreshed, etc.)
+  // Skip if poll is paused — local state is more recent than what the server returned.
   useEffect(()=>{
     if(!deals.length) return;
+    if(pollPaused.current) return;
     if(activeDeal) {
-      // Find the same deal in the updated array and merge fresh data
       const fresh = deals.find(d=>String(d.id)===String(activeDeal.id));
       if(fresh) { setActiveDeal(fresh); syncFromDeal(fresh); }
     } else {
