@@ -9,7 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;transition:background-color 300ms ease,color 300ms ease,border-color 300ms ease,box-shadow 300ms ease}
@@ -5955,6 +5955,8 @@ function AffiliateManagerPage({authUser,deals=[]}) {
   const [payouts,setPayouts] = useState([]);
   const [saving,setSaving] = useState(false);
   const [convFilter,setConvFilter] = useState({creator:"",campaign:""});
+  const [intTab,setIntTab] = useState("shopify");
+  const [intCopied,setIntCopied] = useState(null);
 
   const genCode = () => {
     const c = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -6188,8 +6190,6 @@ function AffiliateManagerPage({authUser,deals=[]}) {
 
         {/* ── Store Integration Setup ── */}
         {(()=>{
-          const [intTab,setIntTab] = React.useState("shopify");
-          const [intCopied,setIntCopied] = React.useState(null);
           const webhookUrl = "https://bridgn.onrender.com/api/affiliate/conversion";
           const hasWebhookConv = conversions.some(c=>c.logged_by==="webhook"||c.logged_by==="shopify");
           const copySnippet = (text,key) => {navigator.clipboard.writeText(text).catch(()=>{});setIntCopied(key);setTimeout(()=>setIntCopied(null),2500);};
