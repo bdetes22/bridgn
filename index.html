@@ -5790,68 +5790,117 @@ function ContentLibraryPage() {
 }
 
 // ─── AFFILIATE MANAGER ────────────────────────────────────────────────────────
-function AffiliateManagerPage() {
+function AffiliateManagerPage({authUser}) {
   const loading = useSkeleton();
-  const [modal,setModal] = useState(false);const [newLink,setNewLink] = useState({creator:"",campaign:"",code:"",rate:"10"});const [copied,setCopied] = useState(null);const [links,setLinks] = useState([]);
-  const totalRev=links.reduce((s,a)=>s+a.revenue,0);const totalComm=links.reduce((s,a)=>s+a.commission,0);const totalConv=links.reduce((s,a)=>s+a.conversions,0);
-  const copy=(id)=>{setCopied(id);setTimeout(()=>setCopied(null),2000);};
-  const addLink=()=>{setLinks(l=>[...l,{id:Date.now(),creator:newLink.creator,ci:Math.floor(Math.random()*6),code:newLink.code.toUpperCase(),link:"bridgn.com/r/"+newLink.code.toLowerCase(),campaign:newLink.campaign,clicks:0,conversions:0,revenue:0,commission:0,rate:parseInt(newLink.rate)}]);setModal(false);setNewLink({creator:"",campaign:"",code:"",rate:"10"});};
+  const [modal,setModal] = useState(false);
+  const [newLink,setNewLink] = useState({creator:"",campaign:"",url:"",rate:"10"});
+  const [copied,setCopied] = useState(null);
+  const [links,setLinks] = useState([]);
+  const [saving,setSaving] = useState(false);
+
+  // Generate unique 8-char alphanumeric code
+  const genCode = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let code = "";
+    for(let i=0;i<8;i++) code += chars[Math.floor(Math.random()*chars.length)];
+    return code;
+  };
+
+  // Load links from Supabase
+  useEffect(()=>{
+    if(!authUser) return;
+    supabase.from("affiliate_links").select("*").eq("brand_id",authUser.id).order("created_at",{ascending:false})
+      .then(({data})=>{ if(data) setLinks(data); });
+  },[authUser]);
+
+  const totalRev = links.reduce((s,a)=>s+(a.revenue||0),0);
+  const totalConv = links.reduce((s,a)=>s+(a.conversions||0),0);
+  const totalComm = links.reduce((s,a)=>s+Math.round((a.revenue||0)*(a.commission_rate||10)/100),0);
+
+  const copy = (code) => {
+    navigator.clipboard.writeText("https://bridgn.com/r/"+code).catch(()=>{});
+    setCopied(code);
+    setTimeout(()=>setCopied(null),2000);
+  };
+
+  const addLink = async () => {
+    if(!newLink.creator || !authUser) return;
+    setSaving(true);
+    const code = genCode();
+    const {data,error} = await supabase.from("affiliate_links").insert({
+      brand_id: authUser.id,
+      code,
+      creator_name: newLink.creator,
+      campaign_name: newLink.campaign,
+      destination_url: newLink.url || null,
+      commission_rate: parseInt(newLink.rate) || 10,
+    }).select().single();
+    if(error) { console.error("[affiliate]",error.message); setSaving(false); return; }
+    setLinks(l=>[data,...l]);
+    setModal(false);
+    setNewLink({creator:"",campaign:"",url:"",rate:"10"});
+    setSaving(false);
+  };
+
   if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Affiliate Manager</div><div className="page-subtitle">Generate links and codes, track clicks, conversions and commissions.</div></div><button className="btn btn-primary" onClick={()=>setModal(true)}>+ New Link</button></div>
       <div className="g4 section" style={{gap:12}}>
         {[
-          {l:"Total Revenue",v:"$"+totalRev.toLocaleString(),sc:"#34d399"},
-          {l:"Commissions",v:"$"+totalComm.toLocaleString()},
+          {l:"Total Revenue",v:"$"+(totalRev/100).toLocaleString(undefined,{minimumFractionDigits:0}),sc:"#34d399"},
+          {l:"Commissions",v:"$"+(totalComm/100).toLocaleString(undefined,{minimumFractionDigits:0})},
           {l:"Conversions",v:String(totalConv),sc:"#a78bfa"},
-          {l:"Creators",v:String(links.length)}
+          {l:"Links",v:String(links.length)}
         ].map((s,i)=>(
           <StatCard key={i} label={s.l} value={s.v} sparkColor={s.sc}/>
         ))}
       </div>
-      <div className="card-lg" style={{overflow:"hidden"}}>
-        <table className="tbl">
-          <thead><tr><th>Creator</th><th>Campaign</th><th>Code / Link</th><th>Clicks</th><th>Conversions</th><th>Revenue</th><th>Commission</th><th>Rate</th><th></th></tr></thead>
-          <tbody>
-            {links.length===0?(
-              <tr><td colSpan={9} style={{textAlign:"center",padding:"40px 20px"}}><EmptySVG type="affiliate" size={110}/><div style={{fontSize:"13px",fontWeight:600,color:"var(--text2)",marginTop:4}}>No affiliate links yet — create one to start tracking conversions.</div></td></tr>
-            ):links.map(a=>(
-              <tr key={a.id}>
-                <td><div style={{display:"flex",gap:8,alignItems:"center"}}><div style={{width:26,height:26,borderRadius:"50%",background:bc(a.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"9px",fontWeight:700,color:"white",flexShrink:0}}>{a.creator.split(" ").map(n=>n[0]).join("")}</div><span style={{fontWeight:500}}>{a.creator}</span></div></td>
-                <td style={{color:"var(--text2)"}}>{a.campaign}</td>
-                <td>
-                  <div style={{display:"flex",flex:"column",gap:4}}>
-                    <code style={{background:"var(--surface2)",padding:"2px 7px",borderRadius:5,fontSize:"11px",fontWeight:700,color:"var(--accent2)",letterSpacing:".05em"}}>{a.code}</code>
-                    <div style={{display:"flex",gap:5,marginTop:3,alignItems:"center"}}>
-                      <span style={{fontSize:"10px",color:"var(--text3)"}}>{a.link}</span>
-                      <button onClick={()=>copy(a.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"10px",color:copied===a.id?"var(--green)":"var(--accent)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{copied===a.id?"Copied!":"Copy"}</button>
-                    </div>
-                  </div>
-                </td>
-                <td style={{fontWeight:600}}>{a.clicks.toLocaleString()}</td>
-                <td style={{fontWeight:600,color:"var(--green)"}}>{a.conversions.toLocaleString()}</td>
-                <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${a.revenue.toLocaleString()}</td>
-                <td style={{fontWeight:700,color:"var(--accent2)"}}>${a.commission.toLocaleString()}</td>
-                <td><span className="badge badge-teal" style={{fontSize:"10px"}}>{a.rate}%</span></td>
-                <td><button className="btn btn-secondary btn-sm">Edit</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {links.length===0?(
+          <div className="card" style={{padding:"40px 20px",textAlign:"center"}}>
+            <EmptySVG type="affiliate" size={110}/>
+            <div style={{fontSize:"13px",fontWeight:600,color:"var(--text2)",marginTop:4}}>No affiliate links yet — create one to start tracking conversions.</div>
+          </div>
+        ):links.map(a=>(
+          <div key={a.id} className="card card-hover" style={{padding:"16px 18px"}}>
+            <div style={{display:"flex",gap:14,alignItems:"center"}}>
+              <div style={{width:36,height:36,borderRadius:10,background:bc(Math.abs(a.code.charCodeAt(0))%6),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",fontWeight:700,color:"white",flexShrink:0}}>{(a.creator_name||"?").split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap"}}>
+                  <span style={{fontSize:"14px",fontWeight:600}}>{a.creator_name}</span>
+                  {a.campaign_name&&<span style={{fontSize:"11px",color:"var(--text3)"}}>· {a.campaign_name}</span>}
+                  <span className="badge badge-teal" style={{fontSize:"10px"}}>{a.commission_rate}%</span>
+                </div>
+                <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                  <code style={{background:"var(--surface2)",padding:"2px 8px",borderRadius:5,fontSize:"12px",fontWeight:700,color:"var(--accent)",letterSpacing:".03em"}}>bridgn.com/r/{a.code}</code>
+                  <button onClick={()=>copy(a.code)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"11px",color:copied===a.code?"var(--green)":"var(--accent)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{copied===a.code?"Copied!":"Copy"}</button>
+                </div>
+              </div>
+              <div style={{display:"flex",gap:16,alignItems:"center",flexShrink:0}}>
+                <div style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700}}>{a.clicks||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Clicks</div></div>
+                <div style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700,color:"var(--green)"}}>{a.conversions||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Conversions</div></div>
+                <div style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700,fontFamily:"Syne,sans-serif"}}>${((a.revenue||0)/100).toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Revenue</div></div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
       {modal&&(
         <Modal onClose={()=>setModal(false)}>
           <div style={{padding:26}}>
             <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Create Affiliate Link</div>
-            <div className="fg"><label className="fl">Creator Name</label><input className="fi" value={newLink.creator} onChange={e=>setNewLink(f=>({...f,creator:e.target.value}))} placeholder="Creator name"/></div>
+            <div className="fg"><label className="fl">Creator Name</label><input className="fi" value={newLink.creator} onChange={e=>setNewLink(f=>({...f,creator:e.target.value}))} placeholder="Creator name" autoFocus/></div>
             <div className="fg"><label className="fl">Campaign</label><input className="fi" value={newLink.campaign} onChange={e=>setNewLink(f=>({...f,campaign:e.target.value}))} placeholder="Campaign name"/></div>
-            <div className="frow">
-              <div className="fg"><label className="fl">Promo Code</label><input className="fi" value={newLink.code} onChange={e=>setNewLink(f=>({...f,code:e.target.value.toUpperCase()}))} placeholder="AISHA20"/></div>
-              <div className="fg"><label className="fl">Commission Rate (%)</label><input className="fi" type="number" value={newLink.rate} onChange={e=>setNewLink(f=>({...f,rate:e.target.value}))} placeholder="10"/></div>
+            <div className="fg"><label className="fl">Destination URL <span style={{color:"var(--text3)",fontWeight:400}}>(optional)</span></label><input className="fi" value={newLink.url} onChange={e=>setNewLink(f=>({...f,url:e.target.value}))} placeholder="https://yourbrand.com/product"/></div>
+            <div className="fg"><label className="fl">Commission Rate (%)</label><input className="fi" type="number" value={newLink.rate} onChange={e=>setNewLink(f=>({...f,rate:e.target.value}))} placeholder="10"/></div>
+            <div style={{padding:"9px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",fontSize:"12px",color:"var(--text2)",marginBottom:14}}>A unique 8-character code will be generated automatically. Link format: <code style={{color:"var(--accent)"}}>bridgn.com/r/[code]</code></div>
+            <div style={{display:"flex",gap:9}}>
+              <button onClick={addLink} disabled={!newLink.creator||saving} className="btn btn-primary btn-lg" style={{flex:1,opacity:newLink.creator&&!saving?1:.5}}>
+                {saving?"Creating...":"Create Link"}
+              </button>
+              <button onClick={()=>setModal(false)} className="btn btn-secondary btn-lg">Cancel</button>
             </div>
-            {newLink.code&&<div style={{padding:"9px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",fontSize:"12px",color:"var(--text2)",marginBottom:14}}>Link preview: <code style={{color:"var(--accent)"}}>bridgn.com/r/{newLink.code.toLowerCase()}</code></div>}
-            <div style={{display:"flex",gap:9}}><button onClick={addLink} disabled={!newLink.creator||!newLink.code} className="btn btn-primary btn-lg" style={{flex:1,opacity:newLink.creator&&newLink.code?1:.5}}>Create Link</button><button onClick={()=>setModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
           </div>
         </Modal>
       )}
@@ -7606,7 +7655,7 @@ function App() {
         case "deals":         return React.createElement(BrandDealsPage,{setPage,setSelected,deals});
         case "deal-room":     return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal});
         case "content-library": return React.createElement(ContentLibraryPage,{});
-        case "affiliate":     return React.createElement(AffiliateManagerPage,{});
+        case "affiliate":     return React.createElement(AffiliateManagerPage,{authUser});
         case "brief-builder": return React.createElement(BriefBuilderPage,{});
         case "scorecards":    return React.createElement(CreatorScorecardsPage,{});
         case "team":          return React.createElement(TeamManagementPage,{});
