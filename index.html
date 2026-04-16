@@ -2586,6 +2586,11 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
 
   const createDealAffLink = async (type) => {
     if(!activeDeal||!authUser) return;
+    let destUrl = null;
+    if(type==="link") {
+      destUrl = prompt("Enter your product or landing page URL:\n(This is where the creator's audience will land)","https://");
+      if(!destUrl || destUrl==="https://") return;
+    }
     setAffSaving(true);
     const creatorSlug = (activeDeal.creatorName||"creator").replace(/[^a-zA-Z]/g,"").toUpperCase().slice(0,6);
     const code = type==="code" ? creatorSlug+"10" : creatorSlug+Math.floor(1000+Math.random()*9000);
@@ -2595,7 +2600,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
       type,
       creator_name:activeDeal.creatorName||"Creator",
       campaign_name:activeDeal.campaignTitle||"",
-      destination_url:type==="link"?"https://bridgn.com":null,
+      destination_url:destUrl,
       deal_id:String(activeDeal.id),
       commission_rate:10,
       commission_type:"percentage",
