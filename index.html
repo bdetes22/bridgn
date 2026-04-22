@@ -1029,7 +1029,6 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
     {section:"Business"},
     {k:"contracts",l:"Contract Vault",i:ICONS.folder},
     {k:"earnings",l:"Earnings & P&L",i:ICONS.trending},
-    {k:"my-affiliate",l:"My Affiliate Links",i:ICONS.link},
     {k:"public-profile",l:"My Public Page",i:ICONS.user},
   ];
   const bNav = [
@@ -1048,7 +1047,6 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
     {k:"deal-room",l:"Deal Room",i:ICONS.building},
     {section:"Content & Analytics"},
     {k:"content-library",l:"Content Library",i:ICONS.film},
-    {k:"affiliate",l:"Affiliate Manager",i:ICONS.link},
     {k:"roi",l:"ROI Tracker",i:ICONS.roi},
     {section:"Business"},
     {k:"invoices",l:"Payments",i:ICONS.creditcard},
@@ -2559,64 +2557,6 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const [scriptUrl,setScriptUrl] = useState(activeDeal?.scriptUrl||"");
   const [scriptSubmitted,setScriptSubmitted] = useState(!!activeDeal?.scriptSubmitted);
 
-  // Affiliate tracking for this deal
-  const [dealLinks,setDealLinks] = useState([]);
-  const [affCopied,setAffCopied] = useState(null);
-  const [showAffModal,setShowAffModal] = useState(null); // "link" or "code"
-  const [affSaving,setAffSaving] = useState(false);
-
-  // Load affiliate links tied to this deal or this creator
-  useEffect(()=>{
-    if(!activeDeal?.id || !authUser) return;
-    const creatorId = activeDeal.creatorUserId;
-    const brandId = activeDeal.brandUserId;
-    // Fetch links tied to this deal OR created by this brand for this creator
-    supabase.from("affiliate_links").select("*")
-      .or(`deal_id.eq.${activeDeal.id}` + (creatorId ? `,and(brand_id.eq.${brandId||authUser.id},creator_name.eq.${activeDeal.creatorName||""})` : ""))
-      .order("created_at",{ascending:false})
-      .then(({data})=>{ if(data) setDealLinks(data); });
-  },[activeDeal?.id, authUser]);
-
-  // Realtime for live click updates on deal links
-  useEffect(()=>{
-    if(!dealLinks.length) return;
-    const ch = supabase.channel("deal-aff-rt-"+activeDeal?.id).on("postgres_changes",{event:"UPDATE",schema:"public",table:"affiliate_links"},(payload)=>{
-      setDealLinks(ls=>ls.map(l=>l.id===payload.new.id?{...l,...payload.new}:l));
-    }).subscribe();
-    return ()=>{supabase.removeChannel(ch);};
-  },[dealLinks.length, activeDeal?.id]);
-
-  const genAffCode = () => {
-    const c = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-    let s = "";for(let i=0;i<8;i++) s+=c[Math.floor(Math.random()*c.length)];return s;
-  };
-
-  const createDealAffLink = async (type) => {
-    if(!activeDeal||!authUser) return;
-    let destUrl = null;
-    if(type==="link") {
-      destUrl = prompt("Enter your product or landing page URL:\n(This is where the creator's audience will land)","https://");
-      if(!destUrl || destUrl==="https://") return;
-    }
-    setAffSaving(true);
-    const creatorSlug = (activeDeal.creatorName||"creator").replace(/[^a-zA-Z]/g,"").toUpperCase().slice(0,6);
-    const code = type==="code" ? creatorSlug+"10" : creatorSlug+Math.floor(1000+Math.random()*9000);
-    const {data,error} = await supabase.from("affiliate_links").insert({
-      brand_id:authUser.id,
-      code,
-      type,
-      creator_name:activeDeal.creatorName||"Creator",
-      campaign_name:activeDeal.campaignTitle||"",
-      destination_url:destUrl,
-      deal_id:String(activeDeal.id),
-      commission_rate:10,
-      commission_type:"percentage",
-    }).select().single();
-    if(!error&&data) setDealLinks(ls=>[data,...ls]);
-    setAffSaving(false);
-    setShowAffModal(null);
-  };
-
   const copyAff = (a) => {
     const text = a.type==="code"?a.code:"https://bridgn.com/r/"+a.code;
     navigator.clipboard.writeText(text).catch(()=>{});
@@ -3308,92 +3248,6 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
             )}
           </div>
 
-          {/* ── Tracking Section ── */}
-          <div className="card-lg" style={{padding:"18px 22px"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-              <div style={{fontSize:"14px",fontWeight:700}}>Tracking</div>
-              {dealLinks.length>0&&<span className="badge badge-blue" style={{fontSize:"10px"}}>{dealLinks.length} active</span>}
-            </div>
-
-            {isBrand ? (
-              /* ── Brand: manage tracking links/codes for this deal ── */
-              <>
-                {dealLinks.length===0?(
-                  <div style={{textAlign:"center",padding:"16px 0"}}>
-                    <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.5}}>Create a tracking link or promo code for this creator to share with their audience.</div>
-                    <div style={{display:"flex",gap:8,justifyContent:"center"}}>
-                      <button className="btn btn-primary btn-sm" onClick={()=>createDealAffLink("link")} disabled={affSaving}>{affSaving?"Creating...":"Create Link"}</button>
-                      <button className="btn btn-secondary btn-sm" onClick={()=>createDealAffLink("code")} disabled={affSaving}>{affSaving?"Creating...":"Create Code"}</button>
-                    </div>
-                  </div>
-                ):(
-                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                    {dealLinks.map(a=>(
-                      <div key={a.id} style={{padding:"12px 14px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)"}}>
-                        <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:8}}>
-                          <span className={"badge badge-"+(a.type==="code"?"purple":"blue")} style={{fontSize:"10px"}}>{a.type==="code"?"Code":"Link"}</span>
-                          <code style={{fontSize:"13px",fontWeight:700,color:"var(--accent)",flex:1}}>{a.type==="code"?a.code:"bridgn.com/r/"+a.code}</code>
-                          <button onClick={()=>copyAff(a)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"11px",color:affCopied===a.code?"var(--green)":"var(--accent)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{affCopied===a.code?"✓ Copied":"Copy"}</button>
-                        </div>
-                        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
-                          {[["Clicks",a.clicks||0],["Conversions",a.conversions||0],["Revenue","$"+((a.revenue||0)/100).toLocaleString()],["Commission","$"+((a.commission_earned||0)/100).toLocaleString()]].map(([l,v],i)=>(
-                            <div key={l} style={{textAlign:"center"}}>
-                              <div style={{fontSize:"15px",fontWeight:700,color:i===0&&(a.clicks||0)>0?"var(--text)":i===1?"var(--green)":i===3?"var(--accent2)":"var(--text)"}}>{v}{i===0&&(a.clicks||0)>0&&<span style={{display:"inline-block",width:5,height:5,borderRadius:"50%",background:"var(--green)",marginLeft:4,animation:"pulse 2s infinite",verticalAlign:"middle"}}/>}</div>
-                              <div style={{fontSize:"10px",color:"var(--text3)"}}>{l}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                    <div style={{display:"flex",gap:6}}>
-                      <button className="btn btn-secondary btn-sm" onClick={()=>createDealAffLink("link")} disabled={affSaving}>+ Add Link</button>
-                      <button className="btn btn-secondary btn-sm" onClick={()=>createDealAffLink("code")} disabled={affSaving}>+ Add Code</button>
-                    </div>
-                    {/* Deal tracking total */}
-                    {(()=>{
-                      const totalRev = dealLinks.reduce((s,a)=>s+(a.revenue||0),0);
-                      const totalComm = dealLinks.reduce((s,a)=>s+(a.commission_earned||0),0);
-                      return totalRev>0?(
-                        <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--green)",fontWeight:600}}>Total revenue from tracking: ${(totalRev/100).toLocaleString()} · Commission: ${(totalComm/100).toLocaleString()}</div>
-                      ):null;
-                    })()}
-                  </div>
-                )}
-              </>
-            ) : (
-              /* ── Creator: see their links/codes and performance ── */
-              <>
-                {dealLinks.length===0?(
-                  <div style={{textAlign:"center",padding:"16px 0"}}>
-                    <div style={{fontSize:"22px",marginBottom:8}}></div>
-                    <div style={{fontSize:"13px",fontWeight:600,marginBottom:4}}>No tracking links yet</div>
-                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>The brand will create a tracking link or promo code for you to share with your audience.</div>
-                  </div>
-                ):(
-                  <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                    {dealLinks.map(a=>(
-                      <div key={a.id} style={{padding:"14px 16px",background:"linear-gradient(135deg,rgba(91,138,245,.06),rgba(167,139,250,.04))",border:"1.5px solid rgba(91,138,245,.2)",borderRadius:"var(--radius)"}}>
-                        <div style={{fontSize:"11px",fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:8}}>{a.type==="code"?"Your Promo Code":"Your Tracking Link"}</div>
-                        <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:10}}>
-                          <code style={{fontSize:"16px",fontWeight:800,color:"var(--accent)",flex:1,letterSpacing:a.type==="code"?".08em":".01em"}}>{a.type==="code"?a.code:"bridgn.com/r/"+a.code}</code>
-                          <button onClick={()=>copyAff(a)} className="btn btn-primary btn-sm" style={{flexShrink:0}}>{affCopied===a.code?"✓ Copied":"Copy"}</button>
-                        </div>
-                        <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6,marginBottom:12}}>Share this {a.type==="code"?"code":"link"} with your audience. Every sale is tracked automatically. You earn <strong style={{color:"var(--accent)"}}>{a.commission_type==="flat"?"$"+((a.commission_flat_amount||0)/100).toFixed(2):(a.commission_rate||10)+"%"}</strong> per sale.</div>
-                        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,padding:"10px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}>
-                          <div style={{textAlign:"center"}}><div style={{fontSize:"16px",fontWeight:700}}>{a.clicks||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Clicks</div></div>
-                          <div style={{textAlign:"center"}}><div style={{fontSize:"16px",fontWeight:700,color:"var(--green)"}}>{a.conversions||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Sales</div></div>
-                          <div style={{textAlign:"center"}}><div style={{fontSize:"16px",fontWeight:700,color:"var(--accent2)",fontFamily:"Syne,sans-serif"}}>${((a.commission_earned||0)/100).toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Earned</div></div>
-                        </div>
-                        {(a.clicks||0)>0&&(
-                          <div style={{marginTop:10,fontSize:"12px",color:"var(--text2)",lineHeight:1.5}}>Your {a.type==="code"?"code":"link"} has been clicked <strong>{a.clicks}</strong> time{a.clicks!==1?"s":""}{(a.conversions||0)>0?", resulting in <strong>"+a.conversions+"</strong> sale"+(a.conversions!==1?"s":""):""}.</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
           <div className="card-lg" style={{overflow:"hidden",display:"flex",flexDirection:"column"}}>
@@ -7944,118 +7798,113 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
 
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
 function LandingPage({onGetStarted,onLogin}) {
+  const lp = {bg:"#faf9f7",text:"#1a1a2e",text2:"#6b6b80",text3:"#a0a0b0",border:"#e8e5e0",surface:"#ffffff",accent:"#1a1a2e"};
   return (
-    <div style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}>
+    <div style={{minHeight:"100vh",background:lp.bg,color:lp.text,fontFamily:"Space Grotesk,sans-serif"}}>
 
       {/* ── Nav ── */}
-      <nav style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 32px",maxWidth:1200,margin:"0 auto"}}>
-        <img src="assets/logo-white.svg" alt="bridgn" className="nav-logo" style={{height:24}}/>
-        <div style={{display:"flex",gap:8}}>
-          <button onClick={onLogin} style={{padding:"8px 18px",borderRadius:8,border:"1px solid var(--border)",background:"none",color:"var(--text)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500}}>Log in</button>
-          <button onClick={onGetStarted} className="btn btn-primary" style={{padding:"8px 20px",fontSize:13}}>Get started free</button>
+      <nav style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 32px",maxWidth:1100,margin:"0 auto"}}>
+        <img src="assets/logo-dark.svg" alt="bridgn" style={{height:22}}/>
+        <div style={{display:"flex",gap:24,alignItems:"center"}}>
+          <button onClick={onLogin} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:14,fontWeight:500,color:lp.text2}}>Log in</button>
+          <button onClick={onGetStarted} style={{padding:"9px 22px",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:600}}>Get started free</button>
         </div>
       </nav>
 
       {/* ── Hero ── */}
-      <section style={{textAlign:"center",padding:"80px 24px 60px",maxWidth:720,margin:"0 auto"}}>
-        <h1 style={{fontFamily:"Syne,sans-serif",fontSize:"clamp(36px,5vw,56px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-.5px",marginBottom:20,color:"var(--text)"}}>
-          The partnership platform for creators and brands
+      <section style={{textAlign:"center",padding:"100px 24px 80px",maxWidth:680,margin:"0 auto"}}>
+        <h1 style={{fontFamily:"Syne,sans-serif",fontSize:"clamp(38px,5.5vw,58px)",fontWeight:800,lineHeight:1.08,letterSpacing:"-1px",marginBottom:20,color:lp.text}}>
+          Where creators and brands build together
         </h1>
-        <p style={{fontSize:"clamp(15px,2vw,18px)",color:"var(--text2)",lineHeight:1.7,maxWidth:540,margin:"0 auto 32px"}}>
-          Manage deals, contracts, payments, and affiliate tracking — all in one place. No spreadsheets, no back-and-forth emails, no missed payments.
+        <p style={{fontSize:"clamp(16px,2vw,19px)",color:lp.text2,lineHeight:1.7,maxWidth:480,margin:"0 auto 36px"}}>
+          One place for deals, contracts, payments, and content — so you can focus on the work, not the admin.
         </p>
         <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-          <button onClick={onGetStarted} className="btn btn-primary" style={{padding:"12px 28px",fontSize:15,fontWeight:600}}>Start for free</button>
-          <button onClick={onLogin} style={{padding:"12px 28px",borderRadius:8,border:"1px solid var(--border)",background:"none",color:"var(--text)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:15,fontWeight:500}}>I have an account</button>
+          <button onClick={onGetStarted} style={{padding:"13px 32px",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:15,fontWeight:600}}>Start for free</button>
+          <button onClick={onLogin} style={{padding:"13px 32px",borderRadius:99,border:"1.5px solid "+lp.border,background:"none",color:lp.text,cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:15,fontWeight:500}}>I have an account</button>
         </div>
       </section>
 
-      {/* ── Social proof bar ── */}
-      <div style={{textAlign:"center",padding:"0 24px 60px"}}>
-        <p style={{fontSize:12,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",fontWeight:600,marginBottom:12}}>Built for creators and brands who take partnerships seriously</p>
-      </div>
-
-      {/* ── Features ── */}
-      <section style={{maxWidth:1000,margin:"0 auto",padding:"0 24px 80px"}}>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:20}}>
-          {[
-            {
-              title:"Deal Room",
-              desc:"A shared workspace for every deal. Briefs, contracts, content uploads, messages, and approvals — both sides see everything in real time.",
-            },
-            {
-              title:"Escrow Payments",
-              desc:"Brands fund deals via ACH. Funds are held securely until content is approved. Creators get paid automatically — no invoicing, no chasing.",
-            },
-            {
-              title:"Contracts & Briefs",
-              desc:"Brands upload briefs and contracts directly in the Deal Room. Creators review, acknowledge, and sign — all tracked with timestamps.",
-            },
-            {
-              title:"Real-time Messaging",
-              desc:"Deal-specific messaging powered by Supabase Realtime. No more switching between email, DMs, and Slack to manage one partnership.",
-            },
-            {
-              title:"Affiliate Tracking",
-              desc:"Generate tracking links and promo codes. Monitor clicks, conversions, and commissions in real time. Connect Shopify or WooCommerce in minutes.",
-            },
-            {
-              title:"Email Notifications",
-              desc:"Both parties get notified instantly when something needs attention — new content, signed contracts, messages, and settled payments.",
-            },
-          ].map((f,i)=>(
-            <div key={i} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:12,padding:"28px 24px"}}>
-              <h3 style={{fontSize:16,fontWeight:700,marginBottom:8,fontFamily:"Syne,sans-serif"}}>{f.title}</h3>
-              <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.65,margin:0}}>{f.desc}</p>
+      {/* ── Bento feature grid (Passionfroot-inspired) ── */}
+      <section style={{maxWidth:960,margin:"0 auto",padding:"0 24px 100px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gridTemplateRows:"auto auto",gap:16}}>
+          {/* Large left card */}
+          <div style={{gridRow:"1 / 3",background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"32px 28px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
+            <div>
+              <h3 style={{fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,lineHeight:1.2,marginBottom:12,letterSpacing:"-.3px"}}>Deal Room</h3>
+              <p style={{fontSize:14,color:lp.text2,lineHeight:1.65}}>A shared workspace where both sides manage briefs, contracts, content, messages, and approvals in real time.</p>
             </div>
-          ))}
+            <div style={{marginTop:24,padding:"16px",background:lp.bg,borderRadius:10,border:"1px solid "+lp.border}}>
+              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
+                <div style={{width:8,height:8,borderRadius:"50%",background:"#34d399"}}/>
+                <span style={{fontSize:11,fontWeight:600,color:"#34d399"}}>Live</span>
+              </div>
+              <div style={{fontSize:12,color:lp.text2}}>Both sides see updates instantly</div>
+            </div>
+          </div>
+          {/* Top right cards */}
+          <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 24px"}}>
+            <h4 style={{fontSize:15,fontWeight:700,marginBottom:6}}>Escrow Payments</h4>
+            <p style={{fontSize:13,color:lp.text2,lineHeight:1.55,margin:0}}>Funds held securely until content is approved. Creators get paid automatically.</p>
+          </div>
+          <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 24px"}}>
+            <h4 style={{fontSize:15,fontWeight:700,marginBottom:6}}>Contracts & Briefs</h4>
+            <p style={{fontSize:13,color:lp.text2,lineHeight:1.55,margin:0}}>Upload, review, and sign — all tracked with timestamps. No more email attachments.</p>
+          </div>
+          {/* Bottom right cards */}
+          <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 24px"}}>
+            <h4 style={{fontSize:15,fontWeight:700,marginBottom:6}}>Real-time Messaging</h4>
+            <p style={{fontSize:13,color:lp.text2,lineHeight:1.55,margin:0}}>Deal-specific conversations. No more searching through DMs and email threads.</p>
+          </div>
+          <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 24px"}}>
+            <h4 style={{fontSize:15,fontWeight:700,marginBottom:6}}>Email Notifications</h4>
+            <p style={{fontSize:13,color:lp.text2,lineHeight:1.55,margin:0}}>Instant alerts when something needs attention. Never miss a deadline or message.</p>
+          </div>
         </div>
       </section>
 
       {/* ── How it works ── */}
-      <section style={{maxWidth:800,margin:"0 auto",padding:"0 24px 80px"}}>
-        <h2 style={{fontFamily:"Syne,sans-serif",fontSize:28,fontWeight:800,textAlign:"center",marginBottom:40,letterSpacing:"-.3px"}}>How it works</h2>
-        <div style={{display:"flex",flexDirection:"column",gap:0}}>
-          {[
-            {step:"1",role:"Creator",action:"Creates a deal and sends an invite link to the brand."},
-            {step:"2",role:"Brand",action:"Joins via the link, uploads a brief and contract in the Deal Room."},
-            {step:"3",role:"Creator",action:"Reviews the brief, signs the contract, and uploads content for review."},
-            {step:"4",role:"Brand",action:"Approves deliverables and funds the deal via ACH — money goes into escrow."},
-            {step:"5",role:"Both",action:"Funds release to the creator automatically. The deal is complete."},
-          ].map((s,i)=>(
-            <div key={i} style={{display:"flex",gap:20,padding:"20px 0",borderBottom:i<4?"1px solid var(--border)":"none"}}>
-              <div style={{width:32,height:32,borderRadius:"50%",background:"var(--accent)",color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,flexShrink:0}}>{s.step}</div>
-              <div>
-                <span style={{fontSize:11,fontWeight:700,color:"var(--accent)",textTransform:"uppercase",letterSpacing:".06em"}}>{s.role}</span>
-                <p style={{fontSize:14,color:"var(--text2)",lineHeight:1.6,margin:"4px 0 0"}}>{s.action}</p>
-              </div>
+      <section style={{maxWidth:640,margin:"0 auto",padding:"0 24px 100px"}}>
+        <h2 style={{fontFamily:"Syne,sans-serif",fontSize:28,fontWeight:800,textAlign:"center",marginBottom:48,letterSpacing:"-.3px",color:lp.text}}>How it works</h2>
+        {[
+          {n:"1",t:"Creator creates a deal",d:"Set the terms, deliverables, and deadline. Send the brand an invite link."},
+          {n:"2",t:"Brand uploads brief & contract",d:"Share everything the creator needs in the Deal Room. They review and sign."},
+          {n:"3",t:"Creator delivers content",d:"Upload drafts, share scripts, submit final content — all in one place."},
+          {n:"4",t:"Brand approves & pays",d:"Review deliverables, approve, and fund via ACH. Money goes into escrow."},
+          {n:"5",t:"Payment releases automatically",d:"Once approved, funds transfer to the creator. Deal complete."},
+        ].map((s,i)=>(
+          <div key={i} style={{display:"flex",gap:20,padding:"22px 0",borderBottom:i<4?"1px solid "+lp.border:"none"}}>
+            <div style={{width:32,height:32,borderRadius:"50%",background:lp.accent,color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,flexShrink:0}}>{s.n}</div>
+            <div>
+              <div style={{fontSize:15,fontWeight:700,marginBottom:3}}>{s.t}</div>
+              <p style={{fontSize:13,color:lp.text2,lineHeight:1.6,margin:0}}>{s.d}</p>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </section>
 
       {/* ── Two-sided CTA ── */}
-      <section style={{maxWidth:800,margin:"0 auto",padding:"0 24px 80px"}}>
+      <section style={{maxWidth:800,margin:"0 auto",padding:"0 24px 100px"}}>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-          <div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:12,padding:"32px 28px",textAlign:"center"}}>
-            <div style={{fontSize:13,fontWeight:700,color:"var(--accent)",textTransform:"uppercase",letterSpacing:".08em",marginBottom:10}}>For Creators</div>
-            <h3 style={{fontSize:18,fontWeight:700,fontFamily:"Syne,sans-serif",marginBottom:8}}>Get paid on time, every time</h3>
-            <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.6,marginBottom:20}}>No more chasing invoices. Funds are secured in escrow before you start creating. Track your affiliate earnings in real time.</p>
-            <button onClick={onGetStarted} className="btn btn-primary" style={{width:"100%"}}>Join as Creator</button>
+          <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px"}}>
+            <div style={{fontSize:12,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Creators</div>
+            <h3 style={{fontFamily:"Syne,sans-serif",fontSize:20,fontWeight:800,marginBottom:10,lineHeight:1.2}}>Get paid on time, every time</h3>
+            <p style={{fontSize:13,color:lp.text2,lineHeight:1.65,marginBottom:24}}>No more chasing invoices. Funds are secured in escrow before you start creating.</p>
+            <button onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:14,fontWeight:600}}>Join as Creator</button>
           </div>
-          <div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:12,padding:"32px 28px",textAlign:"center"}}>
-            <div style={{fontSize:13,fontWeight:700,color:"var(--accent)",textTransform:"uppercase",letterSpacing:".08em",marginBottom:10}}>For Brands</div>
-            <h3 style={{fontSize:18,fontWeight:700,fontFamily:"Syne,sans-serif",marginBottom:8}}>Manage partnerships, not chaos</h3>
-            <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.6,marginBottom:20}}>One place for briefs, contracts, content approvals, and payments. Track ROI with built-in affiliate analytics and conversion tracking.</p>
-            <button onClick={onGetStarted} className="btn btn-primary" style={{width:"100%"}}>Join as Brand</button>
+          <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px"}}>
+            <div style={{fontSize:12,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Brands</div>
+            <h3 style={{fontFamily:"Syne,sans-serif",fontSize:20,fontWeight:800,marginBottom:10,lineHeight:1.2}}>Manage partnerships, not chaos</h3>
+            <p style={{fontSize:13,color:lp.text2,lineHeight:1.65,marginBottom:24}}>One place for briefs, contracts, content approvals, and payments.</p>
+            <button onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:14,fontWeight:600}}>Join as Brand</button>
           </div>
         </div>
       </section>
 
       {/* ── Footer ── */}
-      <footer style={{borderTop:"1px solid var(--border)",padding:"32px 24px",textAlign:"center"}}>
-        <img src="assets/logo-white.svg" alt="bridgn" className="nav-logo" style={{height:20,marginBottom:12,display:"inline-block"}}/>
-        <p style={{fontSize:12,color:"var(--text3)",margin:0}}>The creator-brand partnership platform</p>
+      <footer style={{borderTop:"1px solid "+lp.border,padding:"40px 24px",textAlign:"center"}}>
+        <img src="assets/logo-dark.svg" alt="bridgn" style={{height:18,marginBottom:10,display:"inline-block"}}/>
+        <p style={{fontSize:12,color:lp.text3,margin:0}}>The creator-brand partnership platform</p>
       </footer>
     </div>
   );
