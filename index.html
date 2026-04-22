@@ -18,25 +18,25 @@ body{overflow-x:hidden;max-width:100vw;-webkit-overflow-scrolling:touch}
 :root{
   --bg:#060818;--surface:#13161f;--surface2:#191d2c;--border:#21273d;
   --text:#edf0f7;--text2:#8691b0;--text3:#4b5470;
-  --accent:#5b8af5;--accent-light:#131d3a;--accent2:#f0a050;--accent2-light:#221608;
+  --accent:#1a7fa8;--accent-light:#0d2a38;--accent2:#f0a050;--accent2-light:#221608;
   --green:#34d399;--green-bg:#0a2619;--yellow:#fbbf24;--yellow-bg:#201b05;
   --red:#f87171;--red-bg:#270e0e;--purple:#a78bfa;--purple-bg:#181130;
   --teal:#0891b2;--teal-bg:#091d2a;
   --shadow-sm:0 1px 3px rgba(0,0,0,.55),0 1px 2px rgba(0,0,0,.3);
   --shadow:0 4px 24px rgba(0,0,0,.55),0 1px 6px rgba(0,0,0,.35);
   --shadow-lg:0 20px 60px rgba(0,0,0,.7),0 4px 20px rgba(0,0,0,.45);
-  --radius:14px;--radius-sm:9px;--radius-lg:20px
+  --radius:12px;--radius-sm:8px;--radius-lg:16px
 }
 html.light{
-  --bg:#f8f7f4;--surface:#ffffff;--surface2:#f0ede8;--border:#e0dbd3;
-  --text:#1a1a2e;--text2:#5a5a7a;--text3:#9898b8;
-  --accent:#4a7ae8;--accent-light:#eaeffd;--accent2:#c4732a;--accent2-light:#fdf3e8;
-  --green:#188f5e;--green-bg:#e4f9f2;--yellow:#a07200;--yellow-bg:#fdf7df;
-  --red:#c23535;--red-bg:#fde8e8;--purple:#6b4ec4;--purple-bg:#eeebff;
-  --teal:#0568a0;--teal-bg:#e0f3ff;
-  --shadow-sm:0 1px 4px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
-  --shadow:0 4px 24px rgba(0,0,0,.07),0 1px 6px rgba(0,0,0,.04);
-  --shadow-lg:0 20px 60px rgba(0,0,0,.1),0 4px 20px rgba(0,0,0,.07)
+  --bg:#f5f3f0;--surface:#ffffff;--surface2:#f0ede8;--border:#e2ded8;
+  --text:#0a1628;--text2:#4a5568;--text3:#8896a8;
+  --accent:#1a7fa8;--accent-light:#e8f4f8;--accent2:#c4732a;--accent2-light:#fdf3e8;
+  --green:#059669;--green-bg:#ecfdf5;--yellow:#a07200;--yellow-bg:#fdf7df;
+  --red:#dc2626;--red-bg:#fef2f2;--purple:#6b4ec4;--purple-bg:#f3f0ff;
+  --teal:#0e7490;--teal-bg:#e0f7fa;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06);
+  --shadow:0 2px 12px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 30px rgba(0,0,0,.08)
 }
 html.light body{background:var(--bg)}
 html.light .navbar{background:var(--surface);border-bottom-color:var(--border)}
@@ -1651,7 +1651,7 @@ function ProfileCompletenessCard({pct, pcDone, setPage}) {
         {/* Content */}
         <div style={{flex:1,minWidth:0}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-            <span style={{fontFamily:"DM Serif Display,serif",fontSize:"15px",fontWeight:800}}>Profile Completeness</span>
+            <span style={{fontFamily:"DM Serif Display,serif",fontSize:"15px",fontWeight:400}}>Profile Completeness</span>
           </div>
           <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.5}}>Complete your profile so brands can discover and trust you.</div>
           <div style={{display:"flex",flexDirection:"column",gap:7}}>
@@ -1875,7 +1875,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
             <div style={{padding:"32px 28px 24px",borderBottom:"1px solid var(--border)"}}>
               <div>
                 <img src="assets/logo-white.svg" alt="bridgn" style={{height:24,marginBottom:20,display:"inline-block"}}/>
-                <div style={{fontSize:28,fontWeight:800,color:"white",fontFamily:"DM Serif Display,serif",letterSpacing:"-.5px",lineHeight:1.15,marginBottom:10}}>Welcome, {firstName}!</div>
+                <div style={{fontSize:28,fontWeight:400,color:"white",fontFamily:"DM Serif Display,serif",letterSpacing:"-.5px",lineHeight:1.15,marginBottom:10}}>Welcome, {firstName}!</div>
                 <div style={{fontSize:14,color:"rgba(255,255,255,.55)",lineHeight:1.65}}>You're {4-doneCount} step{4-doneCount!==1?"s":""} away from your first brand deal.<br/>Let's get your profile ready to go.</div>
                 {/* Mini progress dots */}
                 <div style={{display:"flex",gap:6,marginTop:20}}>
@@ -2040,7 +2040,7 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
                 <div style={{position:"absolute",bottom:13,left:14}}>
                   <div style={{display:"inline-flex",alignItems:"baseline",gap:5,padding:"5px 13px",borderRadius:99,background:"rgba(0,0,0,.45)",backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,.14)"}}>
                     <span style={{fontSize:"10px",color:"rgba(255,255,255,.6)",fontWeight:600,textTransform:"uppercase",letterSpacing:".05em"}}>Budget</span>
-                    <span style={{fontSize:"17px",fontWeight:800,color:"white",fontFamily:"DM Serif Display,serif",lineHeight:1}}>${c.budget.toLocaleString()}</span>
+                    <span style={{fontSize:"17px",fontWeight:400,color:"white",fontFamily:"DM Serif Display,serif",lineHeight:1}}>${c.budget.toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -2092,7 +2092,7 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
                 </div>
 
                 {/* Title */}
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"17px",fontWeight:800,letterSpacing:"-.25px",marginBottom:5,lineHeight:1.25}}>{c.title}</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"17px",fontWeight:400,letterSpacing:"-.25px",marginBottom:5,lineHeight:1.25}}>{c.title}</div>
 
                 {/* Description with see more */}
                 <div style={{marginBottom:10}}>
@@ -3636,10 +3636,10 @@ function ActiveDealPage({deal:initDeal,setPage}) {
       {modal&&(
         <Modal onClose={()=>setModal(null)}>
           <div style={{padding:26}}>
-            {modal==="accepted"&&<><div style={{fontSize:"26px",marginBottom:10}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:8}}>Deal Accepted</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:20}}>Review and sign the agreement to get started.</div><button onClick={()=>setModal("signed")} className="btn btn-primary btn-lg" style={{width:"100%"}}>Review Agreement</button></>}
+            {modal==="accepted"&&<><div style={{fontSize:"26px",marginBottom:10}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:8}}>Deal Accepted</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:20}}>Review and sign the agreement to get started.</div><button onClick={()=>setModal("signed")} className="btn btn-primary btn-lg" style={{width:"100%"}}>Review Agreement</button></>}
             {modal==="signed"&&(
               <>
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Partnership Agreement</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:14}}>Partnership Agreement</div>
                 <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"14px",maxHeight:180,overflowY:"auto",marginBottom:16,fontSize:"13px",color:"var(--text2)",lineHeight:1.75}}>
                   <strong style={{color:"var(--text)"}}>Deliverables:</strong> {deal.deliverables}<br/><br/>
                   <strong style={{color:"var(--text)"}}>Payment:</strong> ${deal.amount.toLocaleString()} upon approval<br/><br/>
@@ -3655,7 +3655,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
             )}
             {modal==="brief"&&(
               <>
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Creative Brief</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:14}}>Creative Brief</div>
                 <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"14px",marginBottom:16,fontSize:"13px",color:"var(--text2)",lineHeight:1.8}}>
                   <strong style={{color:"var(--text)"}}>Tone:</strong> Authentic, lifestyle-forward<br/>
                   <strong style={{color:"var(--text)"}}>Key message:</strong> Natural product use in daily life<br/>
@@ -3667,7 +3667,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
             )}
             {modal==="content"&&(
               <>
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Submit Content</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:14}}>Submit Content</div>
                 {!submitted?(
                   <>
                     <div onClick={()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setSubmitted(true);fireConfetti();},1400);}} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"28px",textAlign:"center",marginBottom:14,cursor:"pointer",background:"var(--bg)"}}>
@@ -3676,7 +3676,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
                     <button onClick={()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setSubmitted(true);fireConfetti();},1400);}} disabled={submitting} className="btn btn-primary" style={{width:"100%"}}>Submit for Review</button>
                   </>
                 ):(
-                  <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:"40px",marginBottom:10}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:6}}>Content Submitted!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>{deal.brand} will review within 48 hours.</div><button onClick={()=>setModal(null)} className="btn btn-primary">Close</button></div>
+                  <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:"40px",marginBottom:10}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:400,letterSpacing:"-.2px",marginBottom:6}}>Content Submitted!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>{deal.brand} will review within 48 hours.</div><button onClick={()=>setModal(null)} className="btn btn-primary">Close</button></div>
                 )}
               </>
             )}
@@ -4185,7 +4185,7 @@ function RateCardPage({onRateCardFilled}) {
       <div className="card-lg" style={{padding:0,overflow:"hidden",opacity:isActive?1:0.55}}>
         <div style={{padding:"14px 20px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10,background:isActive?`linear-gradient(90deg,${color}18,transparent)`:"transparent"}}>
           <span style={{fontSize:"20px"}}>{icon}</span>
-          <span style={{fontFamily:"DM Serif Display,serif",fontSize:"15px",fontWeight:800,color:isActive?color:"var(--text2)"}}>{name}</span>
+          <span style={{fontFamily:"DM Serif Display,serif",fontSize:"15px",fontWeight:400,color:isActive?color:"var(--text2)"}}>{name}</span>
           {isActive&&<span style={{marginLeft:"auto",fontSize:"11px",fontWeight:700,padding:"2px 9px",borderRadius:99,background:color+"22",color,border:`1px solid ${color}44`}}>{data.tier}</span>}
           {!isActive&&<span style={{marginLeft:"auto",fontSize:"11px",color:"var(--text3)"}}>No data</span>}
         </div>
@@ -4421,7 +4421,7 @@ function InvoicesPage({role}) {
         <Modal onClose={()=>{setModal(null);setSent(false);}}>
           {!sent?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Create Invoice</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:16}}>Create Invoice</div>
               <div className="fg"><label className="fl">Bill To</label><input className="fi" value={form.to} onChange={e=>up("to",e.target.value)} placeholder="Brand name"/></div>
               <div className="frow"><div className="fg"><label className="fl">Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="2500"/></div><div className="fg"><label className="fl">Due Date</label><input className="fi" type="date" value={form.dueDate} onChange={e=>up("dueDate",e.target.value)}/></div></div>
               <div className="fg"><label className="fl">Line Items / Notes</label><textarea className="fta" style={{minHeight:70}} value={form.notes} onChange={e=>up("notes",e.target.value)} placeholder="e.g. 2x Feed Posts, 1x Reel as per agreement..."></textarea></div>
@@ -4429,7 +4429,7 @@ function InvoicesPage({role}) {
               <div style={{display:"flex",gap:9}}><button onClick={()=>setSent(true)} className="btn btn-primary btn-lg" style={{flex:1}}>Send Invoice</button><button onClick={()=>setModal(null)} className="btn btn-secondary btn-lg">Cancel</button></div>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:8}}>Invoice Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.to||"The brand"}</strong> has been emailed a payment link.</div><button onClick={()=>{setModal(null);setSent(false);}} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:8}}>Invoice Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.to||"The brand"}</strong> has been emailed a payment link.</div><button onClick={()=>{setModal(null);setSent(false);}} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -4563,10 +4563,10 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profile
       {bookingModal&&(
         <Modal onClose={()=>{setBookingModal(false);setBookSent(false);}}>
           {bookSent?(
-            <div style={{padding:"48px 26px 26px",textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Inquiry Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{userName}</strong> will review and reply within 48 hours.</div><button onClick={()=>{setBookingModal(false);setBookSent(false);}} className="btn btn-primary">Got it</button></div>
+            <div style={{padding:"48px 26px 26px",textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:7}}>Inquiry Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{userName}</strong> will review and reply within 48 hours.</div><button onClick={()=>{setBookingModal(false);setBookSent(false);}} className="btn btn-primary">Got it</button></div>
           ):(
             <div style={{padding:"48px 26px 26px"}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Work with {(userName||"me").split(" ")[0]}</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:16}}>Work with {(userName||"me").split(" ")[0]}</div>
               <div className="fg"><label className="fl">Your Brand Name</label><input className="fi" value={bookForm.name} onChange={e=>setBookForm(f=>({...f,name:e.target.value}))} placeholder="Luxara Skincare"/></div>
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={bookForm.email} onChange={e=>setBookForm(f=>({...f,email:e.target.value}))} placeholder="your@brand.com"/></div>
               <div className="frow"><div className="fg"><label className="fl">Budget</label><input className="fi" value={bookForm.budget} onChange={e=>setBookForm(f=>({...f,budget:e.target.value}))} placeholder="$2,000"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={bookForm.platform} onChange={e=>setBookForm(f=>({...f,platform:e.target.value}))}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Multiple</option></select></div></div>
@@ -4682,7 +4682,7 @@ function EarningsPage() {
             <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
               {goal>0 ? (
                 <>
-                  <div style={{fontSize:done?"20px":"26px",fontWeight:800,fontFamily:"DM Serif Display,serif",lineHeight:1,color:done?"var(--green)":"var(--text)",transition:"color .4s"}}>
+                  <div style={{fontSize:done?"20px":"26px",fontWeight:400,fontFamily:"DM Serif Display,serif",lineHeight:1,color:done?"var(--green)":"var(--text)",transition:"color .4s"}}>
                     {done?"100%":Math.round(Math.min(pct,1)*100)+"%"}
                   </div>
                   {!done&&<div style={{fontSize:"10px",color:"var(--text3)",marginTop:4,fontWeight:600,letterSpacing:".04em"}}>OF GOAL</div>}
@@ -4713,11 +4713,11 @@ function EarningsPage() {
                 <div style={{display:"flex",gap:28,flexWrap:"wrap"}}>
                   <div>
                     <div style={{fontSize:"10px",fontWeight:800,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:5}}>Earned ({currentMonth.month})</div>
-                    <div style={{fontSize:"30px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:"var(--accent)",lineHeight:1}}>${current.toLocaleString()}</div>
+                    <div style={{fontSize:"30px",fontWeight:400,fontFamily:"DM Serif Display,serif",color:"var(--accent)",lineHeight:1}}>${current.toLocaleString()}</div>
                   </div>
                   <div>
                     <div style={{fontSize:"10px",fontWeight:800,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:5}}>Target</div>
-                    <div style={{fontSize:"30px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:"var(--text)",lineHeight:1}}>${goal.toLocaleString()}</div>
+                    <div style={{fontSize:"30px",fontWeight:400,fontFamily:"DM Serif Display,serif",color:"var(--text)",lineHeight:1}}>${goal.toLocaleString()}</div>
                   </div>
                 </div>
                 {done ? (
@@ -5038,7 +5038,7 @@ function ExpensesPage() {
       {modal&&(
         <Modal onClose={()=>setModal(false)}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Add Expense</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:16}}>Add Expense</div>
             <div className="fg"><label className="fl">Description</label><input className="fi" value={form.desc} onChange={e=>up("desc",e.target.value)} placeholder="e.g. Studio rental for brand shoot"/></div>
             <div className="frow"><div className="fg"><label className="fl">Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="250"/></div><div className="fg"><label className="fl">Date</label><input className="fi" type="date" value={form.date} onChange={e=>up("date",e.target.value)}/></div></div>
             <div className="fg"><label className="fl">Category</label><select className="fsel" value={form.category} onChange={e=>up("category",e.target.value)}>{CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></div>
@@ -5139,7 +5139,7 @@ function BrowseCreatorsPage({setPage}) {
       </div>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"80px 20px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
         <EmptySVG type="creators" size={140}/>
-        <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:800,letterSpacing:"-.3px",marginBottom:10}}>No creators have joined yet</div>
+        <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:400,letterSpacing:"-.3px",marginBottom:10}}>No creators have joined yet</div>
         <div style={{fontSize:"14px",color:"var(--text2)",lineHeight:1.75,marginBottom:28}}>As creators sign up for bridgn they will appear here. Invite your first creators to get started.</div>
         <button className="btn btn-primary btn-lg" onClick={()=>setInviteModal(true)}>Invite a Creator</button>
       </div>
@@ -5148,7 +5148,7 @@ function BrowseCreatorsPage({setPage}) {
           {inviteSent?(
             <div style={{textAlign:"center",padding:"20px 0 8px"}}>
               <div style={{fontSize:"36px",marginBottom:14}}></div>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"18px",fontWeight:800,marginBottom:8}}>Invite Sent!</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"18px",fontWeight:400,marginBottom:8}}>Invite Sent!</div>
               <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:20}}>We sent an invite to <strong>{inviteEmail}</strong>. When they sign up as a creator their profile will appear here automatically.</div>
               <button className="btn btn-primary" style={{width:"100%"}} onClick={()=>{setInviteModal(false);setInviteSent(false);setInviteEmail("");}}>Done</button>
             </div>
@@ -5234,8 +5234,8 @@ function BridgnScoreBadge({score, breakdown}) {
   const tipContent = (
     <div style={{position:"fixed",top:tipPos.top,left:tipPos.left,width:240,background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"16px",boxShadow:"var(--shadow-lg)",zIndex:9000,animation:"fadeIn .15s ease both"}}>
       <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:13}}>
-        <span style={{fontSize:"13px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:"var(--text)"}}>bridgn Score</span>
-        <span style={{fontSize:"22px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:col,marginLeft:"auto",lineHeight:1}}>{score}</span>
+        <span style={{fontSize:"13px",fontWeight:400,fontFamily:"DM Serif Display,serif",color:"var(--text)"}}>bridgn Score</span>
+        <span style={{fontSize:"22px",fontWeight:400,fontFamily:"DM Serif Display,serif",color:col,marginLeft:"auto",lineHeight:1}}>{score}</span>
         <span style={{fontSize:"11px",color:"var(--text3)"}}>/ 100</span>
       </div>
       {breakdown.map((b,i)=>{
@@ -5276,7 +5276,7 @@ function BridgnScoreBadge({score, breakdown}) {
           <circle cx={DIM/2} cy={DIM/2} r={R} fill="none" stroke={col} strokeWidth={SW} strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} filter="url(#sGlow)" style={{transition:"stroke-dashoffset .7s cubic-bezier(.16,1,.3,1),stroke .4s ease"}}/>
         </svg>
         <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
-          <div style={{fontSize:"20px",fontWeight:800,fontFamily:"DM Serif Display,serif",lineHeight:1,color:col}}>{score}</div>
+          <div style={{fontSize:"20px",fontWeight:400,fontFamily:"DM Serif Display,serif",lineHeight:1,color:col}}>{score}</div>
           <div style={{fontSize:"7.5px",fontWeight:800,color:"rgba(255,255,255,.45)",letterSpacing:".12em",marginTop:2}}>SCORE</div>
         </div>
       </div>
@@ -5403,13 +5403,13 @@ function CreatorProfilePage({creator,setPage}) {
         <Modal onClose={()=>{setInviteModal(false);setSent(false);}}>
           {!sent?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Invite {c.name.split(" ")[0]} to Campaign</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:16}}>Invite {c.name.split(" ")[0]} to Campaign</div>
               <div className="fg"><label className="fl">Select Campaign</label><select className="fsel" value={inviteForm.campaign} onChange={e=>setInviteForm(f=>({...f,campaign:e.target.value}))}><option value="">Choose a campaign...</option>{BRAND_CAMPAIGNS.map(x=><option key={x.id} value={x.title}>{x.title}</option>)}</select></div>
               <div className="fg"><label className="fl">Personal Message (optional)</label><textarea className="fta" value={inviteForm.message} onChange={e=>setInviteForm(f=>({...f,message:e.target.value}))} placeholder={"Tell "+c.name.split(" ")[0]+" why you think they are a great fit..."}></textarea></div>
               <div style={{display:"flex",gap:9}}><button onClick={()=>setSent(true)} disabled={!inviteForm.campaign} className="btn btn-primary btn-lg" style={{flex:1,opacity:inviteForm.campaign?1:.5}}>Send Invite</button><button onClick={()=>setInviteModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{c.name}</strong> will receive your campaign invite and can respond from their bridgn dashboard.</div><button onClick={()=>{setInviteModal(false);setSent(false);}} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{c.name}</strong> will receive your campaign invite and can respond from their bridgn dashboard.</div><button onClick={()=>{setInviteModal(false);setSent(false);}} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -5558,10 +5558,10 @@ function BrandCampaignsPage({setPage,setSelected,campaignQuestions={},setCampaig
       {modal&&(
         <Modal onClose={()=>setModal(false)} maxWidth={580}>
           {created?(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Campaign Live!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.title}</strong> is now live. Start inviting creators to apply.</div><div style={{display:"flex",gap:9,justifyContent:"center"}}><button onClick={()=>setPage("browse")} className="btn btn-primary">Find Creators</button><button onClick={()=>setModal(false)} className="btn btn-secondary">Close</button></div></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:7}}>Campaign Live!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.title}</strong> is now live. Start inviting creators to apply.</div><div style={{display:"flex",gap:9,justifyContent:"center"}}><button onClick={()=>setPage("browse")} className="btn btn-primary">Find Creators</button><button onClick={()=>setModal(false)} className="btn btn-secondary">Close</button></div></div>
           ):(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:18}}>New Campaign — Step {step} of 2</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:18}}>New Campaign — Step {step} of 2</div>
               {step===1&&(
                 <>
                   <div className="fg"><label className="fl">Campaign Title</label><input className="fi" value={form.title} onChange={e=>up("title",e.target.value)} placeholder="e.g. Summer Hydration Campaign"/></div>
@@ -5784,7 +5784,7 @@ function ContentLibraryPage() {
             <div style={{height:120,background:"linear-gradient(135deg,"+bg(selected.ci)[0]+","+bg(selected.ci)[1]+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"40px",borderRadius:"var(--radius-lg) var(--radius-lg) 0 0"}}>{selected.thumbnail}</div>
             <div style={{padding:"20px 22px"}}>
               <div style={{display:"flex",gap:7,marginBottom:10,flexWrap:"wrap"}}><PlatformBadge p={selected.platform}/><span className="badge badge-gray">{selected.type}</span><span className={"badge "+(selected.approved?"badge-green":"badge-yellow")}>{selected.approved?"Approved":"Pending Approval"}</span></div>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:4}}>{selected.creator}</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:400,letterSpacing:"-.2px",marginBottom:4}}>{selected.creator}</div>
               <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:16}}>{selected.campaign} · Delivered {selected.delivered}</div>
               <div className="g2" style={{gap:10,marginBottom:16}}>
                 {[["Usage Rights",selected.rights],["Rights Expire",selected.rightsExp],["Days Remaining",selected.daysLeft+"d"],["Campaign",selected.campaign]].map(([l,v],i)=>(
@@ -6203,7 +6203,7 @@ add_action('woocommerce_thankyou', function($order_id) {
                   <div style={{fontSize:"14px",fontWeight:600}}>{name}</div>
                   <div style={{fontSize:"11px",color:"var(--text3)"}}>{codes.length} link{codes.length!==1?"s":""}</div>
                 </div>
-                <div style={{fontSize:"18px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:"var(--accent2)",marginRight:12}}>${$(amount)}</div>
+                <div style={{fontSize:"18px",fontWeight:400,fontFamily:"DM Serif Display,serif",color:"var(--accent2)",marginRight:12}}>${$(amount)}</div>
                 <button className="btn btn-primary btn-sm" onClick={()=>setPayModal({name,amount,codes})}>Mark Paid</button>
               </div>
             ))}
@@ -6232,7 +6232,7 @@ add_action('woocommerce_thankyou', function($order_id) {
       {modal&&(
         <Modal onClose={()=>setModal(false)}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Create {newLink.type==="code"?"Promo Code":"Tracking Link"}</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:400,letterSpacing:"-.3px",marginBottom:16}}>Create {newLink.type==="code"?"Promo Code":"Tracking Link"}</div>
             <div className="fg"><label className="fl">Type</label>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                 {[["link","Tracking Link"],["code","Promo Code"]].map(([v,l])=>(
@@ -6293,7 +6293,7 @@ add_action('woocommerce_thankyou', function($order_id) {
       {convModal&&(
         <Modal onClose={()=>{setConvModal(null);setConvForm({code:"",value:"",notes:""});}}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:800,marginBottom:12}}>Log Conversion</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:400,marginBottom:12}}>Log Conversion</div>
             {convModal==="manual"?(
               <div className="fg"><label className="fl">Code</label>
                 <select className="fsel" value={convForm.code} onChange={e=>setConvForm(f=>({...f,code:e.target.value}))}>
@@ -6315,7 +6315,7 @@ add_action('woocommerce_thankyou', function($order_id) {
       {payModal&&(
         <Modal onClose={()=>{setPayModal(null);setPayNotes("");}}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:800,marginBottom:4}}>Mark as Paid</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:400,marginBottom:4}}>Mark as Paid</div>
             <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:16}}>Confirm you've paid <strong>{payModal.name}</strong> their <strong>${$(payModal.amount)}</strong> commission.</div>
             <div className="fg"><label className="fl">Notes <span style={{color:"var(--text3)",fontWeight:400}}>(optional)</span></label><input className="fi" value={payNotes} onChange={e=>setPayNotes(e.target.value)} placeholder="Payment method, reference #, etc."/></div>
             <div style={{display:"flex",gap:9}}>
@@ -6498,7 +6498,7 @@ function AffiliateCreatorPage({authUser}) {
       {qrCode&&(
         <Modal onClose={()=>setQrCode(null)}>
           <div style={{padding:26,textAlign:"center"}}>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:800,marginBottom:14}}>QR Code</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:400,marginBottom:14}}>QR Code</div>
             <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:16}}>{qrCode.name}</div>
             <img src={qrCode.dataUrl} style={{width:200,height:200,borderRadius:12,margin:"0 auto 16px",display:"block"}} alt="QR Code"/>
             <div style={{display:"flex",gap:9,justifyContent:"center"}}>
@@ -6513,7 +6513,7 @@ function AffiliateCreatorPage({authUser}) {
       {shareModal&&(
         <Modal onClose={()=>{setShareModal(null);setShareCopied(null);}}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:800,marginBottom:14}}>Share Captions</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:400,marginBottom:14}}>Share Captions</div>
             <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:16}}>Pre-written captions with your {shareModal.type==="code"?"code":"link"} embedded. Copy and customize.</div>
             {[["📸 Instagram","instagram"],["🎵 TikTok","tiktok"],["🐦 Twitter/X","twitter"]].map(([label,platform])=>{
               const text = shareText(shareModal,platform);
@@ -6652,7 +6652,7 @@ function CreatorScorecardsPage() {
         <Modal onClose={()=>setModal(false)} maxWidth={520}>
           {!submitted?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Rate a Creator</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:16}}>Rate a Creator</div>
               <div className="fg"><label className="fl">Creator</label><select className="fsel" value={form.ci} onChange={e=>up("ci",parseInt(e.target.value))}><option value={-1}>Select creator...</option>{CREATORS.map((c,i)=><option key={i} value={i}>{c.name}</option>)}</select></div>
               <div className="fg"><label className="fl">Campaign</label><select className="fsel" value={form.campaign} onChange={e=>up("campaign",e.target.value)}><option value="">Select campaign...</option>{BRAND_CAMPAIGNS.map(c=><option key={c.id} value={c.title}>{c.title}</option>)}</select></div>
               <div className="divider"></div>
@@ -6668,7 +6668,7 @@ function CreatorScorecardsPage() {
               <button onClick={submit} disabled={form.ci<0||!form.campaign||form.communication===0} className="btn btn-primary btn-lg" style={{width:"100%",opacity:form.ci>=0&&form.campaign&&form.communication>0?1:.5}}>Submit Scorecard</button>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Scorecard Saved!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>This is private to your brand. It helps inform future hiring decisions on bridgn.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:7}}>Scorecard Saved!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>This is private to your brand. It helps inform future hiring decisions on bridgn.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -6731,7 +6731,7 @@ function TeamManagementPage() {
         <Modal onClose={()=>setModal(false)}>
           {!sent?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Invite Team Member</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:16}}>Invite Team Member</div>
               <div className="fg"><label className="fl">Full Name</label><input className="fi" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Alex Chen"/></div>
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="alex@yourbrand.com"/></div>
               <div className="fg"><label className="fl">Role</label>
@@ -6747,7 +6747,7 @@ function TeamManagementPage() {
               <div style={{display:"flex",gap:9,marginTop:20}}><button onClick={invite} disabled={!form.name||!form.email} className="btn btn-primary btn-lg" style={{flex:1,opacity:form.name&&form.email?1:.5}}>Send Invite</button><button onClick={()=>setModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}><strong>{form.name}</strong> will receive an email invitation to join your brand account.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}><strong>{form.name}</strong> will receive an email invitation to join your brand account.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -6906,7 +6906,7 @@ function ShortlistsPage({setPage,setSelected}) {
       {modal&&(
         <Modal onClose={()=>setModal(false)} maxWidth={400}>
           <div style={{padding:24}}>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:14}}>New Shortlist</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:400,letterSpacing:"-.2px",marginBottom:14}}>New Shortlist</div>
             <div className="fg"><label className="fl">List Name</label><input className="fi" value={listName} onChange={e=>setListName(e.target.value)} placeholder="e.g. Spring Campaign, Q3 Push..."/></div>
             <div style={{display:"flex",gap:9}}><button onClick={create} disabled={!listName.trim()} className="btn btn-primary btn-lg" style={{flex:1,opacity:listName.trim()?1:.5}}>Create List</button><button onClick={()=>setModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
           </div>
@@ -7120,7 +7120,7 @@ function MessagesPage({setPage}) {
       {newModal&&(
         <div style={{position:"fixed",inset:0,zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:20,background:"rgba(4,6,15,.82)",backdropFilter:"blur(10px)"}} onClick={()=>setNewModal(false)}>
           <div style={{background:"var(--surface)",borderRadius:20,padding:"28px 28px 22px",width:"100%",maxWidth:400,boxShadow:"var(--shadow-lg)",animation:"modalIn .3s cubic-bezier(.16,1,.3,1) both"}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",fontWeight:800,letterSpacing:"-.2px",marginBottom:4}}>New Conversation</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",fontWeight:400,letterSpacing:"-.2px",marginBottom:4}}>New Conversation</div>
             <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:20}}>Enter a brand name or email address to start a new thread.</div>
             <div className="fg" style={{marginBottom:18}}>
               <label className="fl">Brand name or email</label>
@@ -7719,7 +7719,7 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
             {/* Creator invite header */}
             <div style={{textAlign:"center",marginBottom:24}}>
               <div style={{width:64,height:64,borderRadius:18,background:`linear-gradient(135deg,${g[0]},${g[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"22px",fontWeight:800,color:"white",margin:"0 auto 14px",boxShadow:`0 8px 32px ${g[0]}44`}}>{ci}</div>
-              <div style={{fontSize:"22px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:"var(--text)",letterSpacing:"-.3px",lineHeight:1.25,marginBottom:8}}>
+              <div style={{fontSize:"22px",fontWeight:400,fontFamily:"DM Serif Display,serif",color:"var(--text)",letterSpacing:"-.3px",lineHeight:1.25,marginBottom:8}}>
                 {inviteCtx.creatorName} has invited you
               </div>
               <div style={{fontSize:"14px",color:"var(--text2)",lineHeight:1.6}}>
@@ -7753,7 +7753,7 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
 
             {mode==="signup"&&(
               <>
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,marginBottom:4,letterSpacing:"-.3px"}}>Create your account</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:400,marginBottom:4,letterSpacing:"-.3px"}}>Create your account</div>
                 <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:22}}>You're joining as a <strong>Brand</strong> — free, no card needed.</div>
                 {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
                 {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
@@ -7771,7 +7771,7 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
 
             {mode==="login"&&(
               <>
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,marginBottom:4,letterSpacing:"-.3px"}}>Welcome back</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:400,marginBottom:4,letterSpacing:"-.3px"}}>Welcome back</div>
                 <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:22}}>Sign in to access your Deal Room.</div>
                 {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
                 {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
@@ -7796,11 +7796,54 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
   );
 }
 
+// ─── LANDING PAGE HOOKS ───────────────────────────────────────────────────────
+// Scroll-reveal: fades in + slides up when element enters viewport
+function useReveal(threshold=0.15) {
+  const ref = useRef(null);
+  const [visible,setVisible] = useState(false);
+  useEffect(()=>{
+    const el = ref.current;
+    if(!el) return;
+    const obs = new IntersectionObserver(([e])=>{if(e.isIntersecting){setVisible(true);obs.disconnect();}},{threshold});
+    obs.observe(el);
+    return ()=>obs.disconnect();
+  },[]);
+  return [ref,visible];
+}
+function Reveal({children,delay=0,style={}}) {
+  const [ref,visible] = useReveal();
+  return React.createElement("div",{ref,style:{...style,opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(24px)",transition:`opacity .6s ease ${delay}s, transform .6s ease ${delay}s`}},children);
+}
+// Animated counter: counts up from 0 to target when visible
+function AnimCounter({value,prefix="",suffix="",duration=1500}) {
+  const [ref,visible] = useReveal(0.3);
+  const [count,setCount] = useState(0);
+  const numericVal = parseInt(String(value).replace(/[^0-9]/g,""))||0;
+  useEffect(()=>{
+    if(!visible) return;
+    let start = 0;
+    const step = numericVal / (duration/16);
+    const timer = setInterval(()=>{
+      start += step;
+      if(start >= numericVal) { setCount(numericVal); clearInterval(timer); }
+      else setCount(Math.floor(start));
+    },16);
+    return ()=>clearInterval(timer);
+  },[visible]);
+  return React.createElement("span",{ref},prefix+count.toLocaleString()+suffix);
+}
+
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
 function LandingPage({onGetStarted,onLogin}) {
   const lp = {text:"#0a1628",text2:"#4a5568",text3:"#8896a8",border:"#d0dbe8",surface:"rgba(255,255,255,.85)",accent:"#0a1628"};
   const [faqOpen,setFaqOpen] = useState(null);
-  const [navDrop,setNavDrop] = useState(null); // "creators" | "brands" | null
+  const [navDrop,setNavDrop] = useState(null);
+  const [navSticky,setNavSticky] = useState(false);
+  useEffect(()=>{
+    const onScroll = ()=>setNavSticky(window.scrollY > 80);
+    window.addEventListener("scroll",onScroll,{passive:true});
+    return ()=>window.removeEventListener("scroll",onScroll);
+  },[]);
   // Floating cards animation
   const float = (delay,x,y) => ({
     position:"absolute",left:x,top:y,
@@ -7894,6 +7937,11 @@ function LandingPage({onGetStarted,onLogin}) {
           .lp-bento{grid-template-columns:1fr !important}
           .lp-bento>div:first-child{grid-row:auto !important}
           .lp-cta-grid{grid-template-columns:1fr !important}
+          .lp-steps-grid{grid-template-columns:1fr !important}
+          .lp-testimonial-grid{grid-template-columns:1fr !important}
+          .lp-showcase-grid{grid-template-columns:1fr !important}
+          .lp-deep-dive{flex-direction:column !important}
+          .lp-deep-dive-reverse{flex-direction:column !important}
           .lp-caustic,.lp-rays{display:none}
           .lp-showcase-grid{grid-template-columns:1fr !important}
           .lp-steps-grid{grid-template-columns:1fr !important}
@@ -7902,6 +7950,13 @@ function LandingPage({onGetStarted,onLogin}) {
           .lp-deep-dive-reverse{flex-direction:column !important}
           .lp-deep-dive>div,.lp-deep-dive-reverse>div{width:100% !important}
         }
+        /* Hover micro-interactions */
+        .lp-card{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+        .lp-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.1);border-color:#b8cde0}
+        .lp-btn-arrow{display:inline-block;transition:transform .2s ease;margin-left:4px}
+        .lp-cta-btn:hover .lp-btn-arrow{transform:translateX(4px)}
+        .lp-cta-btn{transition:transform .15s ease,box-shadow .15s ease}
+        .lp-cta-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.15)}
       `}</style>
 
       {/* ══════ HERO — Ocean gradient with floating cards + mockup ══════ */}
@@ -7948,7 +8003,7 @@ function LandingPage({onGetStarted,onLogin}) {
 
         {/* Nav */}
         {navDrop&&<div style={{position:"fixed",inset:0,zIndex:8}} onClick={()=>setNavDrop(null)}/>}
-        <nav style={{position:"relative",zIndex:10,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 24px",maxWidth:1100,margin:"12px auto 0",width:"calc(100% - 48px)",background:"rgba(0,0,0,.25)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderRadius:99,border:"1px solid rgba(255,255,255,.1)"}}>
+        <nav style={{position:navSticky?"fixed":"relative",top:navSticky?12:0,left:navSticky?"50%":"auto",transform:navSticky?"translateX(-50%)":"none",zIndex:100,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 24px",maxWidth:1100,margin:navSticky?0:"12px auto 0",width:"calc(100% - 48px)",background:navSticky?"rgba(0,0,0,.65)":"rgba(0,0,0,.25)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderRadius:99,border:"1px solid rgba(255,255,255,.1)",transition:"background .3s,box-shadow .3s",boxShadow:navSticky?"0 4px 24px rgba(0,0,0,.2)":"none"}}>
           <div style={{display:"flex",alignItems:"center",gap:28}}>
             <img src="assets/logo-white.svg" alt="bridgn" style={{height:22}}/>
             {/* Dropdown triggers */}
@@ -8009,14 +8064,14 @@ function LandingPage({onGetStarted,onLogin}) {
           </div>
           <div style={{display:"flex",gap:20,alignItems:"center"}}>
             <button onClick={onLogin} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:500,color:"rgba(255,255,255,.8)"}}>Log in</button>
-            <button onClick={onGetStarted} style={{padding:"9px 22px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:600}}>Get started free</button>
+            <button className="lp-cta-btn" onClick={onGetStarted} style={{padding:"9px 22px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:600}}>Get started free<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
           </div>
         </nav>
 
         {/* Hero content */}
         <div style={{position:"relative",zIndex:5,flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"60px 24px 140px",textAlign:"center"}}>
-          <h1 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(36px,5.5vw,56px)",fontWeight:800,lineHeight:1.08,letterSpacing:"-1px",marginBottom:20,color:"white",maxWidth:650}}>
-            <em style={{fontStyle:"italic",fontWeight:800}}>Dive in</em> to seamless creator-brand partnerships
+          <h1 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(36px,5.5vw,56px)",fontWeight:400,lineHeight:1.08,letterSpacing:"-1px",marginBottom:20,color:"white",maxWidth:650}}>
+            <em style={{fontStyle:"italic",fontWeight:400}}>Dive in</em> to seamless creator-brand partnerships
           </h1>
           <p style={{fontSize:"clamp(15px,2vw,18px)",color:"rgba(255,255,255,.75)",lineHeight:1.7,maxWidth:480,margin:"0 auto 36px"}}>
             One place for deals, contracts, payments, and content — so you can focus on the work, not the admin.
@@ -8030,7 +8085,7 @@ function LandingPage({onGetStarted,onLogin}) {
           <div className="lp-floating" style={{position:"absolute",inset:0,pointerEvents:"none"}}>
             <div className="lp-float-card" style={{...float(0,"8%","30%"),transform:"rotate(-4deg)"}}>
               <div style={{fontSize:11,fontWeight:600,color:"#34d399",marginBottom:4}}>Payment received</div>
-              <div style={{fontSize:20,fontWeight:800,fontFamily:"DM Serif Display,serif",color:lp.text}}>$2,500</div>
+              <div style={{fontSize:20,fontWeight:400,fontFamily:"DM Serif Display,serif",color:lp.text}}>$2,500</div>
             </div>
             <div className="lp-float-card" style={{...float(1.5,"78%","25%"),transform:"rotate(3deg)"}}>
               <div style={{display:"flex",gap:6,alignItems:"center"}}>
@@ -8076,7 +8131,7 @@ function LandingPage({onGetStarted,onLogin}) {
                   </div>
                 ))}
                 <div style={{marginTop:12,padding:"10px 12px",background:"#f0f9ff",borderRadius:6,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <div><div style={{fontSize:10,color:lp.text3}}>Escrow</div><div style={{fontSize:15,fontWeight:800,fontFamily:"DM Serif Display,serif",color:lp.text}}>$4,200</div></div>
+                  <div><div style={{fontSize:10,color:lp.text3}}>Escrow</div><div style={{fontSize:15,fontWeight:400,fontFamily:"DM Serif Display,serif",color:lp.text}}>$4,200</div></div>
                   <div style={{padding:"5px 12px",borderRadius:99,background:"#0e7490",color:"white",fontSize:10,fontWeight:600}}>Protected</div>
                 </div>
               </div>
@@ -8089,30 +8144,33 @@ function LandingPage({onGetStarted,onLogin}) {
       <div style={{background:"#f0f6fa"}}>
 
         {/* ── Social Proof Bar ── */}
+        <Reveal>
         <section style={{maxWidth:960,margin:"0 auto",padding:"60px 24px 0",textAlign:"center"}}>
           <p style={{fontSize:14,color:lp.text3,fontWeight:500,marginBottom:28,letterSpacing:".02em"}}>Trusted by creators and brands managing real partnerships</p>
           <div style={{display:"flex",justifyContent:"center",gap:48,flexWrap:"wrap"}}>
             {[
-              {val:"500+",label:"Deals managed"},
-              {val:"$100K+",label:"In payments processed"},
-              {val:"10K+",label:"Messages sent"},
+              {val:500,prefix:"",suffix:"+",label:"Deals managed"},
+              {val:100,prefix:"$",suffix:"K+",label:"In payments processed"},
+              {val:10,prefix:"",suffix:"K+",label:"Messages sent"},
             ].map((s,i)=>(
               <div key={i} style={{textAlign:"center"}}>
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:800,color:lp.text}}>{s.val}</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:400,color:lp.text}}><AnimCounter value={s.val} prefix={s.prefix} suffix={s.suffix}/></div>
                 <div style={{fontSize:12,color:lp.text3,marginTop:4}}>{s.label}</div>
               </div>
             ))}
           </div>
         </section>
+        </Reveal>
 
         {/* ── Bento feature grid ── */}
+        <Reveal>
         <section style={{maxWidth:960,margin:"0 auto",padding:"80px 24px 100px"}}>
-          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:800,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>Everything you need in one place</h2>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>Everything you need in one place</h2>
           <p style={{textAlign:"center",fontSize:15,color:lp.text2,marginBottom:48,maxWidth:440,margin:"0 auto 48px"}}>No more juggling emails, spreadsheets, and payment apps.</p>
           <div className="lp-bento" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gridTemplateRows:"auto auto",gap:16}}>
             <div style={{gridRow:"1 / 3",background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"32px 28px",display:"flex",flexDirection:"column",justifyContent:"space-between",backdropFilter:"blur(8px)"}}>
               <div>
-                <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:800,lineHeight:1.2,marginBottom:12}}>Deal Room</h3>
+                <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:400,lineHeight:1.2,marginBottom:12}}>Deal Room</h3>
                 <p style={{fontSize:14,color:lp.text2,lineHeight:1.65}}>A shared workspace where both sides manage briefs, contracts, content, messages, and approvals in real time.</p>
               </div>
               <div style={{marginTop:24,padding:16,background:"#f0f6fa",borderRadius:10,border:"1px solid "+lp.border}}>
@@ -8136,16 +8194,18 @@ function LandingPage({onGetStarted,onLogin}) {
             ))}
           </div>
         </section>
+        </Reveal>
 
         {/* ── Product Showcase — How It Looks ── */}
+        <Reveal>
         <section style={{maxWidth:1060,margin:"0 auto",padding:"0 24px 100px"}}>
-          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:800,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>See how it looks</h2>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>See how it looks</h2>
           <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:480,margin:"0 auto 48px"}}>Every deal gets a dedicated workspace. Here is what you will actually use.</p>
           <div className="lp-showcase-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:24}}>
             {/* Deal Room mockup */}
-            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
+            <div className="lp-card" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
               <div style={{padding:"20px 20px 0"}}>
-                <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:800,marginBottom:6}}>Deal Room</h4>
+                <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:400,marginBottom:6}}>Deal Room</h4>
               </div>
               <div style={{padding:"12px 20px 20px"}}>
                 <div style={{background:"#f5f7fa",borderRadius:10,padding:14,border:"1px solid "+lp.border}}>
@@ -8165,9 +8225,9 @@ function LandingPage({onGetStarted,onLogin}) {
               </div>
             </div>
             {/* Messages mockup */}
-            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
+            <div className="lp-card" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
               <div style={{padding:"20px 20px 0"}}>
-                <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:800,marginBottom:6}}>Messages</h4>
+                <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:400,marginBottom:6}}>Messages</h4>
               </div>
               <div style={{padding:"12px 20px 20px"}}>
                 <div style={{background:"#f5f7fa",borderRadius:10,padding:14,border:"1px solid "+lp.border}}>
@@ -8190,16 +8250,16 @@ function LandingPage({onGetStarted,onLogin}) {
               </div>
             </div>
             {/* Payment mockup */}
-            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
+            <div className="lp-card" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
               <div style={{padding:"20px 20px 0"}}>
-                <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:800,marginBottom:6}}>Payments</h4>
+                <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:400,marginBottom:6}}>Payments</h4>
               </div>
               <div style={{padding:"12px 20px 20px"}}>
                 <div style={{background:"#f5f7fa",borderRadius:10,padding:14,border:"1px solid "+lp.border}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                     <div>
                       <div style={{fontSize:10,color:lp.text3}}>Escrow Balance</div>
-                      <div style={{fontSize:22,fontWeight:800,fontFamily:"DM Serif Display,serif",color:lp.text}}>$4,200</div>
+                      <div style={{fontSize:22,fontWeight:400,fontFamily:"DM Serif Display,serif",color:lp.text}}>$4,200</div>
                     </div>
                     <div style={{padding:"5px 14px",borderRadius:99,background:"#0e7490",color:"white",fontSize:10,fontWeight:600}}>Protected</div>
                   </div>
@@ -8221,10 +8281,12 @@ function LandingPage({onGetStarted,onLogin}) {
             </div>
           </div>
         </section>
+        </Reveal>
 
         {/* ── Feature Deep Dives ── */}
         <section style={{maxWidth:1000,margin:"0 auto",padding:"0 24px 80px"}}>
           {/* Deep dive 1: Deal Room — mockup left, text right */}
+          <Reveal delay={0.1}>
           <div className="lp-deep-dive" style={{display:"flex",gap:48,alignItems:"center",marginBottom:80}}>
             <div style={{width:"50%",flexShrink:0}}>
               <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
@@ -8249,12 +8311,14 @@ function LandingPage({onGetStarted,onLogin}) {
               </div>
             </div>
             <div style={{width:"50%"}}>
-              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:800,lineHeight:1.15,marginBottom:16,color:lp.text}}>A shared workspace for every deal</h3>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:400,lineHeight:1.15,marginBottom:16,color:lp.text}}>A shared workspace for every deal</h3>
               <p style={{fontSize:15,color:lp.text2,lineHeight:1.7,margin:0}}>The Deal Room brings everything into one place. Briefs, contracts, deliverables, messages, and approvals live side by side so nothing falls through the cracks. Both creator and brand see the same view in real time, making collaboration effortless.</p>
             </div>
           </div>
+          </Reveal>
 
           {/* Deep dive 2: Payments — text left, mockup right */}
+          <Reveal delay={0.1}>
           <div className="lp-deep-dive-reverse" style={{display:"flex",flexDirection:"row-reverse",gap:48,alignItems:"center",marginBottom:80}}>
             <div style={{width:"50%",flexShrink:0}}>
               <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
@@ -8266,7 +8330,7 @@ function LandingPage({onGetStarted,onLogin}) {
                 </div>
                 <div style={{textAlign:"center",padding:"16px 0 8px"}}>
                   <div style={{fontSize:10,color:lp.text3,marginBottom:4}}>Escrow Balance</div>
-                  <div style={{fontSize:28,fontWeight:800,fontFamily:"DM Serif Display,serif",color:lp.text}}>$3,750</div>
+                  <div style={{fontSize:28,fontWeight:400,fontFamily:"DM Serif Display,serif",color:lp.text}}>$3,750</div>
                   <div style={{margin:"10px auto 0",padding:"5px 16px",borderRadius:99,background:"#0e7490",color:"white",fontSize:10,fontWeight:600,display:"inline-block"}}>Protected</div>
                 </div>
                 <div style={{margin:"16px 0 0",borderTop:"1px solid "+lp.border,paddingTop:12}}>
@@ -8280,12 +8344,14 @@ function LandingPage({onGetStarted,onLogin}) {
               </div>
             </div>
             <div style={{width:"50%"}}>
-              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:800,lineHeight:1.15,marginBottom:16,color:lp.text}}>Payments you can trust</h3>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:400,lineHeight:1.15,marginBottom:16,color:lp.text}}>Payments you can trust</h3>
               <p style={{fontSize:15,color:lp.text2,lineHeight:1.7,margin:0}}>Brands fund escrow before work begins. Creators know the money is there. Once content is approved, payment releases automatically. No invoices, no awkward follow-ups, no wondering if you will get paid.</p>
             </div>
           </div>
+          </Reveal>
 
           {/* Deep dive 3: Messaging — mockup left, text right */}
+          <Reveal delay={0.1}>
           <div className="lp-deep-dive" style={{display:"flex",gap:48,alignItems:"center",marginBottom:0}}>
             <div style={{width:"50%",flexShrink:0}}>
               <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
@@ -8313,15 +8379,17 @@ function LandingPage({onGetStarted,onLogin}) {
               </div>
             </div>
             <div style={{width:"50%"}}>
-              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:800,lineHeight:1.15,marginBottom:16,color:lp.text}}>Real conversations, not email threads</h3>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:400,lineHeight:1.15,marginBottom:16,color:lp.text}}>Real conversations, not email threads</h3>
               <p style={{fontSize:15,color:lp.text2,lineHeight:1.7,margin:0}}>Every deal has its own message thread. Discuss deliverables, share feedback, ask questions, and keep a full history. No more digging through inboxes or losing context across platforms.</p>
             </div>
           </div>
+          </Reveal>
         </section>
 
         {/* ── How it works — horizontal cards ── */}
+        <Reveal>
         <section style={{maxWidth:1060,margin:"0 auto",padding:"80px 24px 100px"}}>
-          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:800,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>How it works</h2>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>How it works</h2>
           <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>Five simple steps from handshake to payment.</p>
           <div className="lp-steps-grid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:16}}>
             {[
@@ -8331,18 +8399,22 @@ function LandingPage({onGetStarted,onLogin}) {
               {n:"4",t:"Approve & fund",d:"Brand reviews deliverables, approves, and funds the deal via escrow."},
               {n:"5",t:"Get paid",d:"Once approved, funds transfer to the creator automatically. Done."},
             ].map((s,i)=>(
-              <div key={i} style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 20px",backdropFilter:"blur(8px)",textAlign:"center"}}>
+              <Reveal key={i} delay={i*0.08}>
+              <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 20px",backdropFilter:"blur(8px)",textAlign:"center"}}>
                 <div style={{width:36,height:36,borderRadius:"50%",background:lp.accent,color:"white",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700,marginBottom:14}}>{s.n}</div>
                 <div style={{fontSize:14,fontWeight:700,marginBottom:6,color:lp.text}}>{s.t}</div>
                 <p style={{fontSize:12,color:lp.text2,lineHeight:1.55,margin:0}}>{s.d}</p>
               </div>
+              </Reveal>
             ))}
           </div>
         </section>
+        </Reveal>
 
         {/* ── Testimonials ── */}
+        <Reveal>
         <section style={{maxWidth:1000,margin:"0 auto",padding:"0 24px 100px"}}>
-          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:800,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>What people are saying</h2>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>What people are saying</h2>
           <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>Creators and brands who use bridgn to manage their partnerships.</p>
           <div className="lp-testimonial-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:20}}>
             {[
@@ -8360,28 +8432,29 @@ function LandingPage({onGetStarted,onLogin}) {
             ))}
           </div>
         </section>
+        </Reveal>
 
         {/* ── Two-sided CTA ── */}
         <section style={{maxWidth:800,margin:"0 auto",padding:"0 24px 100px"}}>
           <div className="lp-cta-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
             <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px",backdropFilter:"blur(8px)"}}>
               <div style={{fontSize:12,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Creators</div>
-              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:20,fontWeight:800,marginBottom:10,lineHeight:1.2}}>Get paid on time, every time</h3>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:20,fontWeight:400,marginBottom:10,lineHeight:1.2}}>Get paid on time, every time</h3>
               <p style={{fontSize:13,color:lp.text2,lineHeight:1.65,marginBottom:24}}>No more chasing invoices. Funds are secured in escrow before you start creating.</p>
-              <button onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Creator</button>
+              <button className="lp-cta-btn" onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Creator<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
             </div>
             <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px",backdropFilter:"blur(8px)"}}>
               <div style={{fontSize:12,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Brands</div>
-              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:20,fontWeight:800,marginBottom:10,lineHeight:1.2}}>Manage partnerships, not chaos</h3>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:20,fontWeight:400,marginBottom:10,lineHeight:1.2}}>Manage partnerships, not chaos</h3>
               <p style={{fontSize:13,color:lp.text2,lineHeight:1.65,marginBottom:24}}>One place for briefs, contracts, content approvals, and payments.</p>
-              <button onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Brand</button>
+              <button className="lp-cta-btn" onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Brand<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
             </div>
           </div>
         </section>
 
         {/* ── FAQ Section ── */}
         <section style={{maxWidth:700,margin:"0 auto",padding:"0 24px 100px"}}>
-          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:800,textAlign:"center",marginBottom:48,letterSpacing:"-.3px",color:lp.text}}>Frequently asked questions</h2>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:48,letterSpacing:"-.3px",color:lp.text}}>Frequently asked questions</h2>
           {[
             {q:"Is bridgn free?",a:"Yes, creating an account is free for both creators and brands. You can start managing deals right away without any subscription or upfront cost."},
             {q:"How do payments work?",a:"Brands fund an escrow account when a deal is agreed upon. The funds are held securely until the creator delivers content and the brand approves it. Once approved, payment releases automatically to the creator. This protects both sides."},
@@ -8407,9 +8480,9 @@ function LandingPage({onGetStarted,onLogin}) {
         {/* ── Final CTA Banner ── */}
         <section style={{maxWidth:900,margin:"0 auto",padding:"0 24px 100px"}}>
           <div style={{background:lp.accent,borderRadius:20,padding:"60px 40px",textAlign:"center"}}>
-            <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:800,color:"white",marginBottom:16,lineHeight:1.2}}>Ready to simplify your partnerships?</h2>
+            <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,color:"white",marginBottom:16,lineHeight:1.2}}>Ready to simplify your partnerships?</h2>
             <p style={{fontSize:15,color:"rgba(255,255,255,.7)",maxWidth:420,margin:"0 auto 32px",lineHeight:1.6}}>Join creators and brands who use bridgn to manage deals, payments, and communication in one place.</p>
-            <button onClick={onGetStarted} style={{padding:"15px 40px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:16,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.15)"}}>Get started free</button>
+            <button className="lp-cta-btn" onClick={onGetStarted} style={{padding:"15px 40px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:16,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.15)"}}>Get started free<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
           </div>
         </section>
 
@@ -8481,7 +8554,7 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
         <div className="card-lg" style={{padding:36,boxShadow:"var(--shadow-lg)"}}>
           {mode==="login"&&(
             <>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Welcome back</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:400,marginBottom:6,letterSpacing:"-.3px"}}>Welcome back</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Sign in to your bridgn account</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
@@ -8496,7 +8569,7 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
           )}
           {mode==="signup"&&(
             <>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Create your account</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:400,marginBottom:6,letterSpacing:"-.3px"}}>Create your account</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Join bridgn free — no credit card needed</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               <div className="fg"><label className="fl" htmlFor="signup-name">{form.role==="brand"?"Company Name":form.role==="agency"?"Agency Name":"Full Name"}</label><input className="fi" id="signup-name" name="name" autoComplete="name" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Halo Health, Acme Corp":form.role==="agency"?"e.g. Viral Nation, Whalar, Open Influence":"Your full name"}/></div>
@@ -8524,7 +8597,7 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
           )}
           {mode==="reset"&&(
             <>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Reset your password</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:400,marginBottom:6,letterSpacing:"-.3px"}}>Reset your password</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Enter your email and we will send a reset link.</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
@@ -8645,7 +8718,7 @@ function App() {
   const [stripeConnected,setStripeConnected] = useState(()=>{
     try { return localStorage.getItem("bridgn_stripe_connected")==="1"; } catch { return false; }
   });
-  const [darkMode,setDarkMode] = useState(true);
+  const [darkMode,setDarkMode] = useState(false);
   const [showAuth,setShowAuth] = useState(false);
   const [authMode,setAuthMode] = useState("signup");
 
