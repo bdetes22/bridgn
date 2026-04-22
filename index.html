@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{overflow-x:hidden}
@@ -54,7 +54,7 @@ html.light .pb-yt{background:#fde8e8;color:#b80000;border-color:rgba(184,0,0,.15
 html.light .pb-tt{background:#e4f9f2;color:#0a7248;border-color:rgba(10,114,72,.15)}
 html.light .pb-tw{background:#e8f0fd;color:#1a4898;border-color:rgba(26,72,152,.15)}
 html.light .skel{background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 50%,rgba(0,0,0,.04) 75%);background-size:800px 100%}
-body{font-family:"Space Grotesk",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
 body::before,body::after{display:none}
 #root{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
@@ -68,7 +68,7 @@ body::before,body::after{display:none}
 .nav-logo{height:24px;cursor:pointer;user-select:none}
 html.light .nav-logo{content:url("assets/logo-dark.svg")}
 .role-toggle{display:flex;background:rgba(0,0,0,.5);border-radius:var(--radius-sm);padding:3px;border:1px solid var(--border)}
-.role-btn{padding:5px 16px;border-radius:7px;border:none;cursor:pointer;font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:500;transition:all .18s;background:transparent;color:var(--text2)}
+.role-btn{padding:5px 16px;border-radius:7px;border:none;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:13px;font-weight:500;transition:all .18s;background:transparent;color:var(--text2)}
 .role-btn.active{background:var(--surface2);color:var(--text);box-shadow:var(--shadow-sm)}
 .nav-notif{width:36px;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;font-size:15px;transition:all .18s}
 .nav-notif:hover{border-color:var(--accent);background:var(--accent-light)}
@@ -94,7 +94,7 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 .card-hover::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at var(--sx,50%) var(--sy,50%),rgba(255,255,255,.1) 0%,transparent 65%);opacity:var(--so,0);transition:opacity .4s;z-index:1}
 .card-hover{transition:border-color .15s,box-shadow .15s}
 .card-hover:hover{border-color:var(--accent);box-shadow:var(--shadow-sm)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 19px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:"Space Grotesk",sans-serif;font-size:14px;font-weight:600;transition:all .18s;white-space:nowrap;line-height:1;letter-spacing:.01em}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 19px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:14px;font-weight:600;transition:all .18s;white-space:nowrap;line-height:1;letter-spacing:.01em}
 .btn:disabled{opacity:.45;cursor:default}
 .btn-primary{background:var(--accent);color:white}
 .btn-primary:hover:not(:disabled){opacity:.9}
@@ -134,10 +134,10 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 .stat-card{padding:20px;position:relative;overflow:hidden}
 .stat-card::before,.stat-card::after{display:none}
 .stat-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
-.stat-value{font-size:28px;font-weight:700;font-family:"Syne",sans-serif;line-height:1;letter-spacing:-.5px;color:var(--text)}
+.stat-value{font-size:26px;font-weight:400;font-family:"DM Serif Display",serif;line-height:1;letter-spacing:-.3px;color:var(--text)}
 .stat-change{font-size:12px;margin-top:6px;font-weight:500;color:var(--text3)}
 .stat-up{color:var(--green)}.stat-neutral{color:var(--text3)}
-.page-title{font-family:"Syne",sans-serif;font-size:36px;font-weight:800;color:var(--text);line-height:1.1;letter-spacing:-.5px}
+.page-title{font-family:"DM Serif Display",serif;font-size:32px;font-weight:400;color:var(--text);line-height:1.15;letter-spacing:-.3px}
 .page-subtitle{font-size:13px;color:var(--text2);margin-top:5px;line-height:1.5}
 .ph-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:32px}
 .g2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
@@ -146,7 +146,7 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 .section{margin-bottom:30px}
 .section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .section-title{font-size:13px;font-weight:700;color:var(--text);letter-spacing:.01em}
-.section-link{font-size:12px;color:var(--accent2);cursor:pointer;font-weight:600;background:none;border:none;font-family:"Space Grotesk",sans-serif;letter-spacing:.02em;transition:color .15s}
+.section-link{font-size:12px;color:var(--accent2);cursor:pointer;font-weight:600;background:none;border:none;font-family:"DM Sans",sans-serif;letter-spacing:.02em;transition:color .15s}
 .section-link:hover{color:#ffba70}
 .deal-row{padding:14px 18px;display:flex;align-items:center;gap:14px}
 .deal-row+.deal-row{border-top:1px solid rgba(33,39,61,.9)}
@@ -158,32 +158,32 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 .cr-av{width:58px;height:58px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:white;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 .cr-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:12px 0}
 .cr-stat{background:var(--surface2);padding:11px 6px}
-.cr-stat-v{font-size:17px;font-weight:700;color:var(--text);font-family:"Syne",sans-serif;letter-spacing:-.2px}
+.cr-stat-v{font-size:17px;font-weight:700;color:var(--text);font-family:"DM Serif Display",serif;letter-spacing:-.2px}
 .cr-stat-l{font-size:9px;color:var(--text3);font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
-.search-input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"Space Grotesk",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:border-color .18s,box-shadow .18s}
+.search-input{width:100%;padding:10px 12px 10px 36px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:border-color .18s,box-shadow .18s}
 .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,138,245,.12)}
-.filter-btn{padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s}
+.filter-btn{padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);font-family:"DM Sans",sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s}
 .filter-btn.active,.filter-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
 .det-banner{height:180px;border-radius:var(--radius-lg) var(--radius-lg) 0 0;display:flex;align-items:flex-end;padding:22px;position:relative;overflow:hidden}
 .det-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,.08))}
 .det-av{width:68px;height:68px;border-radius:50%;border:3px solid rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;color:white;position:relative;z-index:1;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 .det-name-wrap{position:relative;z-index:1;margin-left:14px;flex:1}
-.det-name{font-size:26px;font-weight:800;color:white;font-family:"Syne",sans-serif;letter-spacing:-.3px}
+.det-name{font-size:26px;font-weight:800;color:white;font-family:"DM Serif Display",serif;letter-spacing:-.3px}
 .det-sub{font-size:13px;color:rgba(255,255,255,.68);margin-top:3px}
 .det-body{padding:24px 28px}
 .det-stats{display:grid;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:22px}
 .det-stat{background:var(--surface2);padding:16px;text-align:center}
-.det-stat-v{font-size:24px;font-weight:700;color:var(--text);font-family:"Syne",sans-serif;letter-spacing:-.2px}
+.det-stat-v{font-size:24px;font-weight:700;color:var(--text);font-family:"DM Serif Display",serif;letter-spacing:-.2px}
 .det-stat-l{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-weight:800;margin-top:4px}
 .det-sec{margin-bottom:22px}
 .det-sec-title{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:10px}
 .fg{margin-bottom:18px}
 .fl{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:7px;letter-spacing:.01em}
-.fi{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"Space Grotesk",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:all .18s}
+.fi{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:all .18s}
 .fi:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,138,245,.12)}
-.fta{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"Space Grotesk",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:all .18s;resize:vertical;min-height:90px}
+.fta{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:all .18s;resize:vertical;min-height:90px}
 .fta:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,138,245,.12)}
-.fsel{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"Space Grotesk",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;cursor:pointer}
+.fsel{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;cursor:pointer}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .prog-bar{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden}
 .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),#7ba8ff)}
@@ -448,7 +448,7 @@ function DeadlineAlertBanner({deals}) {
               </div>
               <div style={{fontSize:"11px",color:"var(--text3)",marginTop:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{al.deliverables}</div>
             </div>
-            <div style={{fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:700,color:col,background:pill,border:"1px solid "+bdr,borderRadius:7,padding:"5px 12px",flexShrink:0,letterSpacing:".03em",whiteSpace:"nowrap"}}>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:col,background:pill,border:"1px solid "+bdr,borderRadius:7,padding:"5px 12px",flexShrink:0,letterSpacing:".03em",whiteSpace:"nowrap"}}>
               {over?"OVERDUE":countdown}
             </div>
           </div>
@@ -896,7 +896,7 @@ function Toast({msg, emoji, type, duration=3000, onDone}) {
       padding:"14px 18px 18px",
       display:"flex", alignItems:"flex-start", gap:11,
       boxShadow:"0 8px 40px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07)",
-      fontFamily:'"Space Grotesk",sans-serif',
+      fontFamily:'"DM Sans",sans-serif',
       pointerEvents:"none",
       overflow:"hidden",
       animation: out
@@ -998,12 +998,12 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle,darkMode,setDa
               <div style={{fontSize:13,fontWeight:600,marginTop:3}}>{userInitials}</div>
               <div style={{fontSize:11,color:"var(--text3)",marginTop:2,textTransform:"capitalize"}}>{role} Account</div>
             </div>
-            <button onClick={()=>{setShowMenu(false);setPage("profile-settings");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>Profile Settings</button>
-            <button onClick={()=>{setShowMenu(false);setPage("public-profile");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>My Profile</button>
-            <button onClick={()=>{setShowMenu(false);setPage("notifications");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>Notifications</button>
-            <button onClick={()=>{setShowMenu(false);setPage("settings");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>Settings</button>
+            <button onClick={()=>{setShowMenu(false);setPage("profile-settings");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>Profile Settings</button>
+            <button onClick={()=>{setShowMenu(false);setPage("public-profile");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>My Profile</button>
+            <button onClick={()=>{setShowMenu(false);setPage("notifications");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>Notifications</button>
+            <button onClick={()=>{setShowMenu(false);setPage("settings");}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,color:"var(--text)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>Settings</button>
             <div style={{height:1,background:"var(--border)"}}></div>
-            <button onClick={()=>{setShowMenu(false);onSignOut&&onSignOut();}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,color:"var(--red)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>Sign Out</button>
+            <button onClick={()=>{setShowMenu(false);onSignOut&&onSignOut();}} style={{width:"100%",padding:"10px 16px",background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,color:"var(--red)",textAlign:"left",display:"flex",alignItems:"center",gap:9}}>Sign Out</button>
           </div>
         )}
       </div>
@@ -1094,7 +1094,7 @@ function AvailabilityBanner({status,setStatus}) {
         <div style={{fontSize:"13px",fontWeight:700,color:open?"var(--green)":"var(--red)"}}>{open?"Open to Collaborations":"Currently Unavailable"}</div>
         <div style={{fontSize:"12px",color:"var(--text3)",marginTop:1}}>{open?"Brands can see you are available and are more likely to reach out.":"Your profile is hidden from brand discovery."}</div>
       </div>
-      <button onClick={()=>setStatus(open?"closed":"open")} style={{padding:"6px 13px",borderRadius:"var(--radius-sm)",border:"1px solid "+(open?"rgba(52,211,153,.4)":"rgba(248,113,113,.4)"),background:"transparent",fontFamily:"Space Grotesk,sans-serif",fontSize:"12px",fontWeight:600,cursor:"pointer",color:open?"var(--green)":"var(--red)"}}>
+      <button onClick={()=>setStatus(open?"closed":"open")} style={{padding:"6px 13px",borderRadius:"var(--radius-sm)",border:"1px solid "+(open?"rgba(52,211,153,.4)":"rgba(248,113,113,.4)"),background:"transparent",fontFamily:"DM Sans,sans-serif",fontSize:"12px",fontWeight:600,cursor:"pointer",color:open?"var(--green)":"var(--red)"}}>
         {open?"Mark Unavailable":"Mark Available"}
       </button>
     </div>
@@ -1643,15 +1643,15 @@ function ProfileCompletenessCard({pct, pcDone, setPage}) {
               style={{transition:"stroke-dashoffset .8s cubic-bezier(.16,1,.3,1)"}}
             />
             <text x="52" y="49" textAnchor="middle" dominantBaseline="middle"
-              fill="var(--text)" fontSize="17" fontWeight="800" fontFamily="Syne,sans-serif">{pct}%</text>
+              fill="var(--text)" fontSize="17" fontWeight="800" fontFamily="DM Serif Display,serif">{pct}%</text>
             <text x="52" y="64" textAnchor="middle" dominantBaseline="middle"
-              fill="var(--text3)" fontSize="9" fontWeight="600" fontFamily="Space Grotesk,sans-serif" letterSpacing="0.5">COMPLETE</text>
+              fill="var(--text3)" fontSize="9" fontWeight="600" fontFamily="DM Sans,sans-serif" letterSpacing="0.5">COMPLETE</text>
           </svg>
         </div>
         {/* Content */}
         <div style={{flex:1,minWidth:0}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-            <span style={{fontFamily:"Syne,sans-serif",fontSize:"15px",fontWeight:800}}>Profile Completeness</span>
+            <span style={{fontFamily:"DM Serif Display,serif",fontSize:"15px",fontWeight:800}}>Profile Completeness</span>
           </div>
           <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.5}}>Complete your profile so brands can discover and trust you.</div>
           <div style={{display:"flex",flexDirection:"column",gap:7}}>
@@ -1660,7 +1660,7 @@ function ProfileCompletenessCard({pct, pcDone, setPage}) {
                 <div style={{width:6,height:6,borderRadius:"50%",background:"rgba(167,139,250,.6)",flexShrink:0}}/>
                 <span style={{fontSize:"12px",color:"var(--text2)",flex:1}}>{it.label}</span>
                 <span style={{fontSize:"11px",color:"var(--text3)",fontWeight:600,flexShrink:0}}>+{it.weight}%</span>
-                <button onClick={()=>setPage(it.page)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"11px",color:"var(--accent)",fontWeight:700,fontFamily:"Space Grotesk,sans-serif",padding:"2px 0",flexShrink:0}}>{it.action} →</button>
+                <button onClick={()=>setPage(it.page)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"11px",color:"var(--accent)",fontWeight:700,fontFamily:"DM Sans,sans-serif",padding:"2px 0",flexShrink:0}}>{it.action} →</button>
               </div>
             ))}
           </div>
@@ -1846,7 +1846,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
                     <div className="deal-sub">{d.platform} · Due {d.deadline}</div>
                     <div style={{marginTop:6}}><div className="prog-bar"><div className="prog-fill" style={{width:((d.progress/6)*100)+"%"}}></div></div></div>
                   </div>
-                  <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}><AnimNum value={"$"+d.amount.toLocaleString()}/></div><StatusBadge s={d.status}/></div>
+                  <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}><AnimNum value={"$"+d.amount.toLocaleString()}/></div><StatusBadge s={d.status}/></div>
                 </div>
               ))}
             </div>
@@ -1875,7 +1875,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
             <div style={{padding:"32px 28px 24px",borderBottom:"1px solid var(--border)"}}>
               <div>
                 <img src="assets/logo-white.svg" alt="bridgn" style={{height:24,marginBottom:20,display:"inline-block"}}/>
-                <div style={{fontSize:28,fontWeight:800,color:"white",fontFamily:"Syne,sans-serif",letterSpacing:"-.5px",lineHeight:1.15,marginBottom:10}}>Welcome, {firstName}!</div>
+                <div style={{fontSize:28,fontWeight:800,color:"white",fontFamily:"DM Serif Display,serif",letterSpacing:"-.5px",lineHeight:1.15,marginBottom:10}}>Welcome, {firstName}!</div>
                 <div style={{fontSize:14,color:"rgba(255,255,255,.55)",lineHeight:1.65}}>You're {4-doneCount} step{4-doneCount!==1?"s":""} away from your first brand deal.<br/>Let's get your profile ready to go.</div>
                 {/* Mini progress dots */}
                 <div style={{display:"flex",gap:6,marginTop:20}}>
@@ -2031,7 +2031,7 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
                     </div>
                     <div style={{fontSize:"10px",color:"rgba(255,255,255,.62)",marginTop:1}}>{TIMES[idx%TIMES.length]} ago · Sponsored</div>
                   </div>
-                  <button onClick={e=>{e.stopPropagation();setSelected&&setSelected(c);setPage("campaign-detail");}} style={{padding:"5px 16px",borderRadius:99,background:c.applied?"rgba(52,211,153,.25)":"rgba(255,255,255,.15)",border:"1px solid "+(c.applied?"rgba(52,211,153,.5)":"rgba(255,255,255,.3)"),color:c.applied?"#34d399":"white",fontSize:"12px",fontWeight:700,cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",backdropFilter:"blur(8px)",flexShrink:0,transition:"all .12s"}}>
+                  <button onClick={e=>{e.stopPropagation();setSelected&&setSelected(c);setPage("campaign-detail");}} style={{padding:"5px 16px",borderRadius:99,background:c.applied?"rgba(52,211,153,.25)":"rgba(255,255,255,.15)",border:"1px solid "+(c.applied?"rgba(52,211,153,.5)":"rgba(255,255,255,.3)"),color:c.applied?"#34d399":"white",fontSize:"12px",fontWeight:700,cursor:"pointer",fontFamily:"DM Sans,sans-serif",backdropFilter:"blur(8px)",flexShrink:0,transition:"all .12s"}}>
                     {c.applied?"Applied ✓":"Apply"}
                   </button>
                 </div>
@@ -2040,7 +2040,7 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
                 <div style={{position:"absolute",bottom:13,left:14}}>
                   <div style={{display:"inline-flex",alignItems:"baseline",gap:5,padding:"5px 13px",borderRadius:99,background:"rgba(0,0,0,.45)",backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,.14)"}}>
                     <span style={{fontSize:"10px",color:"rgba(255,255,255,.6)",fontWeight:600,textTransform:"uppercase",letterSpacing:".05em"}}>Budget</span>
-                    <span style={{fontSize:"17px",fontWeight:800,color:"white",fontFamily:"Syne,sans-serif",lineHeight:1}}>${c.budget.toLocaleString()}</span>
+                    <span style={{fontSize:"17px",fontWeight:800,color:"white",fontFamily:"DM Serif Display,serif",lineHeight:1}}>${c.budget.toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -2069,7 +2069,7 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
                   <div style={{position:"relative"}}>
                     <button onClick={()=>triggerLike(c.id)} style={{background:"none",border:"none",cursor:"pointer",padding:"6px 8px 6px 4px",display:"flex",alignItems:"center",gap:5,borderRadius:8}}>
                       <span className={isAnim?"heart-anim":""} style={{fontSize:"24px",display:"inline-block",lineHeight:1}}>{isLiked?"❤️":"🤍"}</span>
-                      <span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{likeBase+(isLiked?1:0)}</span>
+                      <span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600,fontFamily:"DM Sans,sans-serif"}}>{likeBase+(isLiked?1:0)}</span>
                     </button>
                     {/* Particle burst */}
                     {isAnim&&PARTICLE_DIRS.map((d,i)=>(
@@ -2080,7 +2080,7 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
                   {/* Comment */}
                   <button onClick={()=>setCommentOpen(c.id)} style={{background:"none",border:"none",cursor:"pointer",padding:"6px 8px",display:"flex",alignItems:"center",gap:5,borderRadius:8}}>
                     <span style={{fontSize:"21px",lineHeight:1}}>💬</span>
-                    <span style={{fontSize:"13px",color:(campaignQuestions[c.id]||[]).length>0?"var(--accent)":"var(--text2)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{(campaignQuestions[c.id]||[]).length||commentCount}</span>
+                    <span style={{fontSize:"13px",color:(campaignQuestions[c.id]||[]).length>0?"var(--accent)":"var(--text2)",fontWeight:600,fontFamily:"DM Sans,sans-serif"}}>{(campaignQuestions[c.id]||[]).length||commentCount}</span>
                   </button>
 
                   <div style={{flex:1}}/>
@@ -2092,13 +2092,13 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
                 </div>
 
                 {/* Title */}
-                <div style={{fontFamily:"Syne,sans-serif",fontSize:"17px",fontWeight:800,letterSpacing:"-.25px",marginBottom:5,lineHeight:1.25}}>{c.title}</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"17px",fontWeight:800,letterSpacing:"-.25px",marginBottom:5,lineHeight:1.25}}>{c.title}</div>
 
                 {/* Description with see more */}
                 <div style={{marginBottom:10}}>
                   <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,...(!isExpanded?{display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"}:{})}}>{c.desc}</div>
                   {!isExpanded&&c.desc.length>100&&(
-                    <button onClick={()=>setExpanded(e=>({...e,[c.id]:true}))} style={{background:"none",border:"none",cursor:"pointer",fontSize:"13px",color:"var(--text3)",fontFamily:"Space Grotesk,sans-serif",padding:0,marginTop:1}}>see more</button>
+                    <button onClick={()=>setExpanded(e=>({...e,[c.id]:true}))} style={{background:"none",border:"none",cursor:"pointer",fontSize:"13px",color:"var(--text3)",fontFamily:"DM Sans,sans-serif",padding:0,marginTop:1}}>see more</button>
                   )}
                 </div>
 
@@ -2117,7 +2117,7 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
             </div>
           );
         })}
-        <div style={{textAlign:"center",padding:"10px 0 30px",fontSize:"12px",color:"var(--text3)"}}>You're all caught up · <button onClick={()=>setPage("public-profile")} style={{background:"none",border:"none",cursor:"pointer",color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif",fontSize:"12px",fontWeight:600}}>Update your profile to get more matches</button></div>
+        <div style={{textAlign:"center",padding:"10px 0 30px",fontSize:"12px",color:"var(--text3)"}}>You're all caught up · <button onClick={()=>setPage("public-profile")} style={{background:"none",border:"none",cursor:"pointer",color:"var(--accent)",fontFamily:"DM Sans,sans-serif",fontSize:"12px",fontWeight:600}}>Update your profile to get more matches</button></div>
       </div>
 
       {/* Comment panel */}
@@ -2135,7 +2135,7 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
               {/* Header */}
               <div style={{flexShrink:0,padding:"10px 18px 12px",borderBottom:"1px solid var(--border)"}}>
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                  <div style={{flex:1,fontSize:"15px",fontWeight:700,fontFamily:"Syne,sans-serif"}}>{campaign?.title}</div>
+                  <div style={{flex:1,fontSize:"15px",fontWeight:700,fontFamily:"DM Serif Display,serif"}}>{campaign?.title}</div>
                   <button onClick={()=>{setCommentOpen(null);setQuestionText("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:"18px",color:"var(--text3)",lineHeight:1,padding:"2px 4px"}}>✕</button>
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"rgba(91,138,245,.07)",border:"1px solid rgba(91,138,245,.18)",borderRadius:"var(--radius-sm)"}}>
@@ -2262,7 +2262,7 @@ function CreatorDealsPage({setPage,setSelected,deals}) {
                 {d.status!=="payment_released"&&<div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:((([true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.every?.(Boolean),d.status==="payment_released"].filter(Boolean).length)/6)*100)+"%"}}></div></div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>{[true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.every?.(Boolean),d.status==="payment_released"].filter(Boolean).length} of 6 steps</div></div>}
               </div>
               <div style={{textAlign:"right"}}>
-                <div style={{fontSize:"17px",fontWeight:700,fontFamily:"Syne,sans-serif"}}><AnimNum value={"$"+d.amount.toLocaleString()}/></div>
+                <div style={{fontSize:"17px",fontWeight:700,fontFamily:"DM Serif Display,serif"}}><AnimNum value={"$"+d.amount.toLocaleString()}/></div>
                 <div style={{marginTop:5}}><StatusBadge s={d.status}/></div>
               </div>
               <div style={{color:"var(--text3)",fontSize:"18px",marginLeft:4}}>›</div>
@@ -3604,7 +3604,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
                     {step.active&&<span style={{fontSize:"10px",fontWeight:700,color:g[0],background:g[0]+"14",padding:"1px 7px",borderRadius:99}}>Now</span>}
                   </div>
                   <div style={{fontSize:"12px",color:step.done?"var(--text3)":step.active?"var(--text2)":"var(--text3)",lineHeight:1.5}}>{step.desc}</div>
-                  {step.active&&step.cta&&<button onClick={()=>setModal(step.key)} style={{marginTop:10,padding:"7px 16px",borderRadius:"var(--radius-sm)",border:"none",background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",color:"white",fontFamily:"Space Grotesk,sans-serif",fontSize:"12px",fontWeight:600,cursor:"pointer"}}>{step.cta}</button>}
+                  {step.active&&step.cta&&<button onClick={()=>setModal(step.key)} style={{marginTop:10,padding:"7px 16px",borderRadius:"var(--radius-sm)",border:"none",background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",color:"white",fontFamily:"DM Sans,sans-serif",fontSize:"12px",fontWeight:600,cursor:"pointer"}}>{step.cta}</button>}
                 </div>
               </div>
             </div>
@@ -3636,10 +3636,10 @@ function ActiveDealPage({deal:initDeal,setPage}) {
       {modal&&(
         <Modal onClose={()=>setModal(null)}>
           <div style={{padding:26}}>
-            {modal==="accepted"&&<><div style={{fontSize:"26px",marginBottom:10}}></div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:8}}>Deal Accepted</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:20}}>Review and sign the agreement to get started.</div><button onClick={()=>setModal("signed")} className="btn btn-primary btn-lg" style={{width:"100%"}}>Review Agreement</button></>}
+            {modal==="accepted"&&<><div style={{fontSize:"26px",marginBottom:10}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:8}}>Deal Accepted</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:20}}>Review and sign the agreement to get started.</div><button onClick={()=>setModal("signed")} className="btn btn-primary btn-lg" style={{width:"100%"}}>Review Agreement</button></>}
             {modal==="signed"&&(
               <>
-                <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Partnership Agreement</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Partnership Agreement</div>
                 <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"14px",maxHeight:180,overflowY:"auto",marginBottom:16,fontSize:"13px",color:"var(--text2)",lineHeight:1.75}}>
                   <strong style={{color:"var(--text)"}}>Deliverables:</strong> {deal.deliverables}<br/><br/>
                   <strong style={{color:"var(--text)"}}>Payment:</strong> ${deal.amount.toLocaleString()} upon approval<br/><br/>
@@ -3655,7 +3655,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
             )}
             {modal==="brief"&&(
               <>
-                <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Creative Brief</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Creative Brief</div>
                 <div style={{background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",padding:"14px",marginBottom:16,fontSize:"13px",color:"var(--text2)",lineHeight:1.8}}>
                   <strong style={{color:"var(--text)"}}>Tone:</strong> Authentic, lifestyle-forward<br/>
                   <strong style={{color:"var(--text)"}}>Key message:</strong> Natural product use in daily life<br/>
@@ -3667,7 +3667,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
             )}
             {modal==="content"&&(
               <>
-                <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Submit Content</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:14}}>Submit Content</div>
                 {!submitted?(
                   <>
                     <div onClick={()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setSubmitted(true);fireConfetti();},1400);}} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"28px",textAlign:"center",marginBottom:14,cursor:"pointer",background:"var(--bg)"}}>
@@ -3676,7 +3676,7 @@ function ActiveDealPage({deal:initDeal,setPage}) {
                     <button onClick={()=>{setSubmitting(true);setTimeout(()=>{setSubmitting(false);setSubmitted(true);fireConfetti();},1400);}} disabled={submitting} className="btn btn-primary" style={{width:"100%"}}>Submit for Review</button>
                   </>
                 ):(
-                  <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:"40px",marginBottom:10}}></div><div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:6}}>Content Submitted!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>{deal.brand} will review within 48 hours.</div><button onClick={()=>setModal(null)} className="btn btn-primary">Close</button></div>
+                  <div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:"40px",marginBottom:10}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:6}}>Content Submitted!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>{deal.brand} will review within 48 hours.</div><button onClick={()=>setModal(null)} className="btn btn-primary">Close</button></div>
                 )}
               </>
             )}
@@ -3940,7 +3940,7 @@ function OfferPage({offer,setPage}) {
           <div style={{display:"flex",gap:14,marginBottom:16}}>
             <div className="deal-av" style={{background:bc(o.ci),width:48,height:48,fontSize:"15px"}}>{o.bi}</div>
             <div style={{flex:1}}><div style={{fontSize:"17px",fontWeight:700}}>{o.brand}</div><div style={{fontSize:"12px",color:"var(--text2)"}}>{o.platform} · Direct Offer</div></div>
-            <div style={{fontSize:"24px",fontWeight:700,color:"var(--accent)",fontFamily:"Syne,sans-serif"}}>${o.amount.toLocaleString()}</div>
+            <div style={{fontSize:"24px",fontWeight:700,color:"var(--accent)",fontFamily:"DM Serif Display,serif"}}>${o.amount.toLocaleString()}</div>
           </div>
           <div style={{background:"var(--surface2)",borderRadius:"var(--radius)",padding:"12px 16px",fontSize:"13px",lineHeight:1.65,marginBottom:16,borderLeft:"3px solid var(--accent)",fontStyle:"italic",color:"var(--text2)"}}>"{o.message}"</div>
           <div className="g2">
@@ -4024,7 +4024,7 @@ function CreatorAnalyticsPage({onAnalyticsUploaded}) {
                           <span style={{fontSize:"13px"}}></span><span style={{fontSize:"12px",fontWeight:500,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.file}</span><span style={{fontSize:"11px",color:u.age===0?"var(--green)":"var(--text3)",fontWeight:600,flexShrink:0}}>{u.age===0?"Just now":u.age+"d ago"}</span>
                         </div>
                         <div style={{fontSize:"11px",color:"var(--text3)",marginBottom:10}}>Brands see upload timestamp — cannot be edited</div>
-                        <div style={{display:"flex",gap:7}}><button onClick={()=>simulate(p)} style={{padding:"6px 12px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",fontFamily:"Space Grotesk,sans-serif",fontSize:"12px",cursor:"pointer",color:"var(--accent)"}}>Update</button><button onClick={()=>remove(p)} className="btn btn-danger btn-sm">Remove</button></div>
+                        <div style={{display:"flex",gap:7}}><button onClick={()=>simulate(p)} style={{padding:"6px 12px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",fontFamily:"DM Sans,sans-serif",fontSize:"12px",cursor:"pointer",color:"var(--accent)"}}>Update</button><button onClick={()=>remove(p)} className="btn btn-danger btn-sm">Remove</button></div>
                       </div>
                     ):(
                       <div onClick={()=>!isUp&&simulate(p)} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"22px",textAlign:"center",cursor:"pointer",background:"var(--bg)"}} onMouseEnter={e=>{e.currentTarget.style.borderColor=g[0];}} onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";}}>
@@ -4062,7 +4062,7 @@ function ContentCalendarPage({deals}) {
         <>
           <div style={{display:"flex",gap:8,marginBottom:14,alignItems:"center"}}>
             <button className="btn btn-secondary btn-sm">‹</button>
-            <span style={{fontFamily:"Syne,sans-serif",fontSize:"17px",fontWeight:700,flex:1,textAlign:"center"}}>April 2025</span>
+            <span style={{fontFamily:"DM Serif Display,serif",fontSize:"17px",fontWeight:700,flex:1,textAlign:"center"}}>April 2025</span>
             <button className="btn btn-secondary btn-sm">›</button>
           </div>
           <div className="card-lg" style={{overflow:"hidden"}}>
@@ -4185,7 +4185,7 @@ function RateCardPage({onRateCardFilled}) {
       <div className="card-lg" style={{padding:0,overflow:"hidden",opacity:isActive?1:0.55}}>
         <div style={{padding:"14px 20px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10,background:isActive?`linear-gradient(90deg,${color}18,transparent)`:"transparent"}}>
           <span style={{fontSize:"20px"}}>{icon}</span>
-          <span style={{fontFamily:"Syne,sans-serif",fontSize:"15px",fontWeight:800,color:isActive?color:"var(--text2)"}}>{name}</span>
+          <span style={{fontFamily:"DM Serif Display,serif",fontSize:"15px",fontWeight:800,color:isActive?color:"var(--text2)"}}>{name}</span>
           {isActive&&<span style={{marginLeft:"auto",fontSize:"11px",fontWeight:700,padding:"2px 9px",borderRadius:99,background:color+"22",color,border:`1px solid ${color}44`}}>{data.tier}</span>}
           {!isActive&&<span style={{marginLeft:"auto",fontSize:"11px",color:"var(--text3)"}}>No data</span>}
         </div>
@@ -4201,7 +4201,7 @@ function RateCardPage({onRateCardFilled}) {
                     <div style={{height:2,background:"var(--border)",borderRadius:99,overflow:"hidden",marginTop:5}}><div style={{height:"100%",borderRadius:99,background:`linear-gradient(90deg,${color},${color}88)`,width:((i+1)/data.rates.length*60+30)+"%"}}/></div>
                   </div>
                   <div style={{textAlign:"right",flexShrink:0}}>
-                    <div style={{fontSize:"14px",fontWeight:700,fontFamily:"Syne,sans-serif",color}}>${r.low.toLocaleString()} – ${r.high.toLocaleString()}</div>
+                    <div style={{fontSize:"14px",fontWeight:700,fontFamily:"DM Serif Display,serif",color}}>${r.low.toLocaleString()} – ${r.high.toLocaleString()}</div>
                     <div style={{fontSize:"10px",color:"var(--text3)"}}>per deliverable</div>
                   </div>
                 </div>
@@ -4283,7 +4283,7 @@ function RateCardPage({onRateCardFilled}) {
               <div key={type} style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:220,padding:"9px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}>
                 <span style={{fontSize:"16px"}}>{icon}</span>
                 <div style={{flex:1,fontSize:"12px",fontWeight:600,color:"var(--text2)"}}>{type}</div>
-                <div style={{fontSize:"14px",fontWeight:700,fontFamily:"Syne,sans-serif",color:"var(--accent)"}}>${Math.round(bestBase*lo*100)*10 .toLocaleString()} – ${Math.round(bestBase*hi*100)*10 .toLocaleString()}</div>
+                <div style={{fontSize:"14px",fontWeight:700,fontFamily:"DM Serif Display,serif",color:"var(--accent)"}}>${Math.round(bestBase*lo*100)*10 .toLocaleString()} – ${Math.round(bestBase*hi*100)*10 .toLocaleString()}</div>
               </div>
             );
           })}
@@ -4307,7 +4307,7 @@ function MediaKitPage({userName,userInitials,socialLinks={}}) {
         <div style={{height:170,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",position:"relative",display:"flex",alignItems:"flex-end",padding:"22px 28px",gap:18}}>
           <div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>
           <div style={{flex:1}}>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"24px",color:"white",fontWeight:700}}>{userName}</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"24px",color:"white",fontWeight:700}}>{userName}</div>
             {socialLinks.location&&<div style={{fontSize:"11px",color:"rgba(255,255,255,.65)",marginTop:3}}>{socialLinks.location}</div>}
           </div>
           <div style={{textAlign:"right"}}><div style={{fontSize:"11px",fontWeight:700,color:"rgba(255,255,255,.6)",textTransform:"uppercase",letterSpacing:".08em"}}>bridgn.com/{handle}</div></div>
@@ -4394,7 +4394,7 @@ function InvoicesPage({role}) {
       </div>
       <div className="g3 section" style={{gap:12}}>
         {(isBrand?[["Total Paid","$"+totalPaid.toLocaleString(),""],["Pending","$"+pending.reduce((a,b)=>a+b.amount,0).toLocaleString(),""],["Avg Turnaround","3.2 days",""]]:[["Total Earned","$"+totalPaid.toLocaleString(),""],["Pending Payout","$"+pending.reduce((a,b)=>a+b.amount,0).toLocaleString(),""],["Sent",String(rows.length),""]]).map(([l,v,icon],i)=>(
-          <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}><span style={{fontSize:"24px"}}>{icon}</span><div><div style={{fontSize:"20px",fontWeight:700,fontFamily:"Syne,sans-serif",lineHeight:1}}>{v}</div><div style={{fontSize:"10px",color:"var(--text3)",fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",marginTop:3}}>{l}</div></div></div>
+          <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}><span style={{fontSize:"24px"}}>{icon}</span><div><div style={{fontSize:"20px",fontWeight:700,fontFamily:"DM Serif Display,serif",lineHeight:1}}>{v}</div><div style={{fontSize:"10px",color:"var(--text3)",fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",marginTop:3}}>{l}</div></div></div>
         ))}
       </div>
       <div className="card-lg" style={{overflow:"hidden"}}>
@@ -4408,7 +4408,7 @@ function InvoicesPage({role}) {
                 <td style={{fontWeight:600,color:"var(--accent)"}}>{inv.id}</td>
                 <td>{isBrand?inv.from:inv.to}</td>
                 <td style={{color:"var(--text2)"}}>{inv.campaign}</td>
-                <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${inv.amount.toLocaleString()}</td>
+                <td style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${inv.amount.toLocaleString()}</td>
                 <td style={{color:"var(--text3)"}}>{inv.date}</td>
                 <td><span className={"badge "+(inv.status==="Paid"?"badge-green":inv.status==="Pending"||inv.status==="Due"?"badge-yellow":"badge-gray")}>{inv.status}</span></td>
                 <td>{isBrand&&inv.status==="Due"?<button className="btn btn-primary btn-sm">Release Payment</button>:!isBrand&&inv.status==="Pending"?<button className="btn btn-secondary btn-sm">Follow Up</button>:<button className="btn btn-secondary btn-sm">View</button>}</td>
@@ -4421,7 +4421,7 @@ function InvoicesPage({role}) {
         <Modal onClose={()=>{setModal(null);setSent(false);}}>
           {!sent?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Create Invoice</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Create Invoice</div>
               <div className="fg"><label className="fl">Bill To</label><input className="fi" value={form.to} onChange={e=>up("to",e.target.value)} placeholder="Brand name"/></div>
               <div className="frow"><div className="fg"><label className="fl">Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="2500"/></div><div className="fg"><label className="fl">Due Date</label><input className="fi" type="date" value={form.dueDate} onChange={e=>up("dueDate",e.target.value)}/></div></div>
               <div className="fg"><label className="fl">Line Items / Notes</label><textarea className="fta" style={{minHeight:70}} value={form.notes} onChange={e=>up("notes",e.target.value)} placeholder="e.g. 2x Feed Posts, 1x Reel as per agreement..."></textarea></div>
@@ -4429,7 +4429,7 @@ function InvoicesPage({role}) {
               <div style={{display:"flex",gap:9}}><button onClick={()=>setSent(true)} className="btn btn-primary btn-lg" style={{flex:1}}>Send Invoice</button><button onClick={()=>setModal(null)} className="btn btn-secondary btn-lg">Cancel</button></div>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:8}}>Invoice Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.to||"The brand"}</strong> has been emailed a payment link.</div><button onClick={()=>{setModal(null);setSent(false);}} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:8}}>Invoice Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.to||"The brand"}</strong> has been emailed a payment link.</div><button onClick={()=>{setModal(null);setSent(false);}} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -4529,7 +4529,7 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profile
             <div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2.5px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>
             <div style={{flex:1}}>
               <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                <span style={{fontSize:"22px",fontWeight:700,color:"white",fontFamily:"Syne,sans-serif"}}>{userName}</span>
+                <span style={{fontSize:"22px",fontWeight:700,color:"white",fontFamily:"DM Serif Display,serif"}}>{userName}</span>
                 {profilePct===100&&(
                   <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:99,background:"linear-gradient(135deg,rgba(91,138,245,.35),rgba(167,139,250,.35))",border:"1px solid rgba(167,139,250,.5)",fontSize:"11px",fontWeight:700,color:"white",letterSpacing:".03em",backdropFilter:"blur(6px)"}}>
                     ✦ Profile Ready
@@ -4563,10 +4563,10 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profile
       {bookingModal&&(
         <Modal onClose={()=>{setBookingModal(false);setBookSent(false);}}>
           {bookSent?(
-            <div style={{padding:"48px 26px 26px",textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Inquiry Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{userName}</strong> will review and reply within 48 hours.</div><button onClick={()=>{setBookingModal(false);setBookSent(false);}} className="btn btn-primary">Got it</button></div>
+            <div style={{padding:"48px 26px 26px",textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Inquiry Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{userName}</strong> will review and reply within 48 hours.</div><button onClick={()=>{setBookingModal(false);setBookSent(false);}} className="btn btn-primary">Got it</button></div>
           ):(
             <div style={{padding:"48px 26px 26px"}}>
-              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Work with {(userName||"me").split(" ")[0]}</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Work with {(userName||"me").split(" ")[0]}</div>
               <div className="fg"><label className="fl">Your Brand Name</label><input className="fi" value={bookForm.name} onChange={e=>setBookForm(f=>({...f,name:e.target.value}))} placeholder="Luxara Skincare"/></div>
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={bookForm.email} onChange={e=>setBookForm(f=>({...f,email:e.target.value}))} placeholder="your@brand.com"/></div>
               <div className="frow"><div className="fg"><label className="fl">Budget</label><input className="fi" value={bookForm.budget} onChange={e=>setBookForm(f=>({...f,budget:e.target.value}))} placeholder="$2,000"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={bookForm.platform} onChange={e=>setBookForm(f=>({...f,platform:e.target.value}))}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Multiple</option></select></div></div>
@@ -4682,7 +4682,7 @@ function EarningsPage() {
             <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
               {goal>0 ? (
                 <>
-                  <div style={{fontSize:done?"20px":"26px",fontWeight:800,fontFamily:"Syne,sans-serif",lineHeight:1,color:done?"var(--green)":"var(--text)",transition:"color .4s"}}>
+                  <div style={{fontSize:done?"20px":"26px",fontWeight:800,fontFamily:"DM Serif Display,serif",lineHeight:1,color:done?"var(--green)":"var(--text)",transition:"color .4s"}}>
                     {done?"100%":Math.round(Math.min(pct,1)*100)+"%"}
                   </div>
                   {!done&&<div style={{fontSize:"10px",color:"var(--text3)",marginTop:4,fontWeight:600,letterSpacing:".04em"}}>OF GOAL</div>}
@@ -4713,11 +4713,11 @@ function EarningsPage() {
                 <div style={{display:"flex",gap:28,flexWrap:"wrap"}}>
                   <div>
                     <div style={{fontSize:"10px",fontWeight:800,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:5}}>Earned ({currentMonth.month})</div>
-                    <div style={{fontSize:"30px",fontWeight:800,fontFamily:"Syne,sans-serif",color:"var(--accent)",lineHeight:1}}>${current.toLocaleString()}</div>
+                    <div style={{fontSize:"30px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:"var(--accent)",lineHeight:1}}>${current.toLocaleString()}</div>
                   </div>
                   <div>
                     <div style={{fontSize:"10px",fontWeight:800,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:5}}>Target</div>
-                    <div style={{fontSize:"30px",fontWeight:800,fontFamily:"Syne,sans-serif",color:"var(--text)",lineHeight:1}}>${goal.toLocaleString()}</div>
+                    <div style={{fontSize:"30px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:"var(--text)",lineHeight:1}}>${goal.toLocaleString()}</div>
                   </div>
                 </div>
                 {done ? (
@@ -4728,7 +4728,7 @@ function EarningsPage() {
                 ) : (
                   <div>
                     <div style={{fontSize:"10px",fontWeight:800,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:5}}>Still needed</div>
-                    <div style={{fontSize:"22px",fontWeight:700,fontFamily:"Syne,sans-serif",color:"var(--accent2)"}}>${(goal-current).toLocaleString()}</div>
+                    <div style={{fontSize:"22px",fontWeight:700,fontFamily:"DM Serif Display,serif",color:"var(--accent2)"}}>${(goal-current).toLocaleString()}</div>
                     <div style={{marginTop:10,height:5,background:"var(--surface2)",borderRadius:99,overflow:"hidden",maxWidth:280}}>
                       <div style={{height:"100%",width:(Math.min(pct,1)*100)+"%",background:"linear-gradient(90deg,var(--accent),#a78bfa)",borderRadius:99,transition:"width .75s cubic-bezier(.16,1,.3,1)"}}/>
                     </div>
@@ -4790,7 +4790,7 @@ function EarningsPage() {
                 <div key={i} className="deal-row" style={i>0?{borderTop:"1px solid var(--border)"}:{}}>
                   <div className="deal-av" style={{background:bc(b.ci),width:34,height:34,fontSize:"11px"}}>{b.bi}</div>
                   <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:600}}>{b.brand}</div><div style={{fontSize:"11px",color:"var(--text2)",marginTop:1}}>{b.deals} deals · ${b.avgDeal.toLocaleString()} avg</div><div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:(b.amount/ytd*100)+"%",background:bc(b.ci)}}></div></div></div></div>
-                  <div style={{fontWeight:700,fontFamily:"Syne,sans-serif",fontSize:"16px"}}>${b.amount.toLocaleString()}</div>
+                  <div style={{fontWeight:700,fontFamily:"DM Serif Display,serif",fontSize:"16px"}}>${b.amount.toLocaleString()}</div>
                 </div>
               ))}
             </div>
@@ -4852,7 +4852,7 @@ function ContractVaultPage() {
                 <div style={{fontSize:"12px",color:"var(--text2)"}}>{c.campaign} · {c.type}</div>
               </div>
               <div style={{textAlign:"right"}}>
-                <div style={{fontSize:"16px",fontWeight:700,fontFamily:"Syne,sans-serif"}}>${c.amount.toLocaleString()}</div>
+                <div style={{fontSize:"16px",fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${c.amount.toLocaleString()}</div>
                 <div style={{fontSize:"11px",color:c.status==="Expiring"?"var(--accent2)":c.status==="Expired"?"var(--red)":"var(--text3)",marginTop:3}}>
                   {c.status==="Expired"?"Expired":c.status==="Expiring"?"Expires in "+c.daysLeft+"d":"Expires "+c.expires}
                 </div>
@@ -4919,7 +4919,7 @@ function AvailabilityPage({onAvailabilitySet}) {
         {[["Open Days",String(openDays),"var(--green)"],["Blocked",String(blocked.length),"var(--red)"],["Booked",String(booked.length),"var(--accent2)"]].map(([l,v,col],i)=>(
           <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}>
             <div style={{width:12,height:12,borderRadius:"50%",background:col,flexShrink:0}}></div>
-            <div><div style={{fontSize:"20px",fontWeight:700,fontFamily:"Syne,sans-serif",lineHeight:1,color:col}}>{v}</div><div style={{fontSize:"11px",color:"var(--text3)",fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",marginTop:3}}>{l}</div></div>
+            <div><div style={{fontSize:"20px",fontWeight:700,fontFamily:"DM Serif Display,serif",lineHeight:1,color:col}}>{v}</div><div style={{fontSize:"11px",color:"var(--text3)",fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",marginTop:3}}>{l}</div></div>
           </div>
         ))}
       </div>
@@ -4933,7 +4933,7 @@ function AvailabilityPage({onAvailabilitySet}) {
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 18px",borderBottom:"1px solid var(--border)"}}>
           <div style={{display:"flex",gap:8,alignItems:"center"}}>
             <button className="btn btn-secondary btn-sm">‹</button>
-            <span style={{fontFamily:"Syne,sans-serif",fontSize:"16px",fontWeight:700}}>April 2025</span>
+            <span style={{fontFamily:"DM Serif Display,serif",fontSize:"16px",fontWeight:700}}>April 2025</span>
             <button className="btn btn-secondary btn-sm">›</button>
           </div>
           <button className="btn btn-secondary btn-sm" onClick={()=>setBlocked([])}>Clear All Blocked</button>
@@ -5003,7 +5003,7 @@ function ExpensesPage() {
                   <tr key={e.id}>
                     <td style={{fontWeight:500}}>{e.desc}</td>
                     <td><span className="badge badge-gray" style={{fontSize:"11px"}}>{e.category}</span></td>
-                    <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${e.amount.toLocaleString()}</td>
+                    <td style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${e.amount.toLocaleString()}</td>
                     <td style={{color:"var(--text3)"}}>{e.date}</td>
                     <td><span className={"badge "+(e.deductible?"badge-green":"badge-gray")} style={{fontSize:"11px"}}>{e.deductible?"Yes":"No"}</span></td>
                   </tr>
@@ -5038,7 +5038,7 @@ function ExpensesPage() {
       {modal&&(
         <Modal onClose={()=>setModal(false)}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Add Expense</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Add Expense</div>
             <div className="fg"><label className="fl">Description</label><input className="fi" value={form.desc} onChange={e=>up("desc",e.target.value)} placeholder="e.g. Studio rental for brand shoot"/></div>
             <div className="frow"><div className="fg"><label className="fl">Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="250"/></div><div className="fg"><label className="fl">Date</label><input className="fi" type="date" value={form.date} onChange={e=>up("date",e.target.value)}/></div></div>
             <div className="fg"><label className="fl">Category</label><select className="fsel" value={form.category} onChange={e=>up("category",e.target.value)}>{CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></div>
@@ -5097,7 +5097,7 @@ function BrandDashboard({setPage,setSelected,deals=[]}) {
                       <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span className="deal-name">{d.brand}</span><span style={{fontSize:"11px",color:"var(--text3)"}}>with {d.creatorName||"Creator"}</span></div>
                       <div className="deal-sub">{d.platform} · Due {d.deadline}</div>
                     </div>
-                    <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</div><StatusBadge s={d.status}/></div>
+                    <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${d.amount.toLocaleString()}</div><StatusBadge s={d.status}/></div>
                   </div>
                 ))}
               </div>
@@ -5139,7 +5139,7 @@ function BrowseCreatorsPage({setPage}) {
       </div>
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"80px 20px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
         <EmptySVG type="creators" size={140}/>
-        <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,letterSpacing:"-.3px",marginBottom:10}}>No creators have joined yet</div>
+        <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:800,letterSpacing:"-.3px",marginBottom:10}}>No creators have joined yet</div>
         <div style={{fontSize:"14px",color:"var(--text2)",lineHeight:1.75,marginBottom:28}}>As creators sign up for bridgn they will appear here. Invite your first creators to get started.</div>
         <button className="btn btn-primary btn-lg" onClick={()=>setInviteModal(true)}>Invite a Creator</button>
       </div>
@@ -5148,7 +5148,7 @@ function BrowseCreatorsPage({setPage}) {
           {inviteSent?(
             <div style={{textAlign:"center",padding:"20px 0 8px"}}>
               <div style={{fontSize:"36px",marginBottom:14}}></div>
-              <div style={{fontFamily:"Syne,sans-serif",fontSize:"18px",fontWeight:800,marginBottom:8}}>Invite Sent!</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"18px",fontWeight:800,marginBottom:8}}>Invite Sent!</div>
               <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:20}}>We sent an invite to <strong>{inviteEmail}</strong>. When they sign up as a creator their profile will appear here automatically.</div>
               <button className="btn btn-primary" style={{width:"100%"}} onClick={()=>{setInviteModal(false);setInviteSent(false);setInviteEmail("");}}>Done</button>
             </div>
@@ -5234,8 +5234,8 @@ function BridgnScoreBadge({score, breakdown}) {
   const tipContent = (
     <div style={{position:"fixed",top:tipPos.top,left:tipPos.left,width:240,background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"16px",boxShadow:"var(--shadow-lg)",zIndex:9000,animation:"fadeIn .15s ease both"}}>
       <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:13}}>
-        <span style={{fontSize:"13px",fontWeight:800,fontFamily:"Syne,sans-serif",color:"var(--text)"}}>bridgn Score</span>
-        <span style={{fontSize:"22px",fontWeight:800,fontFamily:"Syne,sans-serif",color:col,marginLeft:"auto",lineHeight:1}}>{score}</span>
+        <span style={{fontSize:"13px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:"var(--text)"}}>bridgn Score</span>
+        <span style={{fontSize:"22px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:col,marginLeft:"auto",lineHeight:1}}>{score}</span>
         <span style={{fontSize:"11px",color:"var(--text3)"}}>/ 100</span>
       </div>
       {breakdown.map((b,i)=>{
@@ -5276,7 +5276,7 @@ function BridgnScoreBadge({score, breakdown}) {
           <circle cx={DIM/2} cy={DIM/2} r={R} fill="none" stroke={col} strokeWidth={SW} strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} filter="url(#sGlow)" style={{transition:"stroke-dashoffset .7s cubic-bezier(.16,1,.3,1),stroke .4s ease"}}/>
         </svg>
         <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
-          <div style={{fontSize:"20px",fontWeight:800,fontFamily:"Syne,sans-serif",lineHeight:1,color:col}}>{score}</div>
+          <div style={{fontSize:"20px",fontWeight:800,fontFamily:"DM Serif Display,serif",lineHeight:1,color:col}}>{score}</div>
           <div style={{fontSize:"7.5px",fontWeight:800,color:"rgba(255,255,255,.45)",letterSpacing:".12em",marginTop:2}}>SCORE</div>
         </div>
       </div>
@@ -5309,7 +5309,7 @@ function CreatorProfilePage({creator,setPage}) {
             <div style={{width:72,height:72,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2.5px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"24px",fontWeight:800,color:"white",flexShrink:0}}>{c.init}</div>
             <div style={{flex:1}}>
               <div style={{display:"flex",gap:9,alignItems:"center",marginBottom:4,flexWrap:"wrap"}}>
-                <div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",color:"white",fontWeight:700}}>{c.name}</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",color:"white",fontWeight:700}}>{c.name}</div>
                 {hasTrust&&<TrustBadge paidOnTime={c.paidOnTime} total={c.totalDeals}/>}
               </div>
               <div style={{fontSize:"13px",color:"rgba(255,255,255,.8)"}}>{c.niche} · {c.loc}</div>
@@ -5324,7 +5324,7 @@ function CreatorProfilePage({creator,setPage}) {
         <div style={{padding:"0 0 0"}}>
           <div style={{display:"flex",borderBottom:"1px solid var(--border)",padding:"0 22px"}}>
             {["overview","analytics","scorecard"].map(t=>(
-              <button key={t} onClick={()=>setTab(t)} style={{padding:"13px 16px",background:"none",border:"none",borderBottom:"2px solid "+(tab===t?"var(--accent)":"transparent"),cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:"13px",fontWeight:tab===t?600:400,color:tab===t?"var(--accent)":"var(--text2)",textTransform:"capitalize",transition:"color .12s"}}>{t}</button>
+              <button key={t} onClick={()=>setTab(t)} style={{padding:"13px 16px",background:"none",border:"none",borderBottom:"2px solid "+(tab===t?"var(--accent)":"transparent"),cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:"13px",fontWeight:tab===t?600:400,color:tab===t?"var(--accent)":"var(--text2)",textTransform:"capitalize",transition:"color .12s"}}>{t}</button>
             ))}
           </div>
           {tab==="overview"&&(
@@ -5403,13 +5403,13 @@ function CreatorProfilePage({creator,setPage}) {
         <Modal onClose={()=>{setInviteModal(false);setSent(false);}}>
           {!sent?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Invite {c.name.split(" ")[0]} to Campaign</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Invite {c.name.split(" ")[0]} to Campaign</div>
               <div className="fg"><label className="fl">Select Campaign</label><select className="fsel" value={inviteForm.campaign} onChange={e=>setInviteForm(f=>({...f,campaign:e.target.value}))}><option value="">Choose a campaign...</option>{BRAND_CAMPAIGNS.map(x=><option key={x.id} value={x.title}>{x.title}</option>)}</select></div>
               <div className="fg"><label className="fl">Personal Message (optional)</label><textarea className="fta" value={inviteForm.message} onChange={e=>setInviteForm(f=>({...f,message:e.target.value}))} placeholder={"Tell "+c.name.split(" ")[0]+" why you think they are a great fit..."}></textarea></div>
               <div style={{display:"flex",gap:9}}><button onClick={()=>setSent(true)} disabled={!inviteForm.campaign} className="btn btn-primary btn-lg" style={{flex:1,opacity:inviteForm.campaign?1:.5}}>Send Invite</button><button onClick={()=>setInviteModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{c.name}</strong> will receive your campaign invite and can respond from their bridgn dashboard.</div><button onClick={()=>{setInviteModal(false);setSent(false);}} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{c.name}</strong> will receive your campaign invite and can respond from their bridgn dashboard.</div><button onClick={()=>{setInviteModal(false);setSent(false);}} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -5558,10 +5558,10 @@ function BrandCampaignsPage({setPage,setSelected,campaignQuestions={},setCampaig
       {modal&&(
         <Modal onClose={()=>setModal(false)} maxWidth={580}>
           {created?(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Campaign Live!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.title}</strong> is now live. Start inviting creators to apply.</div><div style={{display:"flex",gap:9,justifyContent:"center"}}><button onClick={()=>setPage("browse")} className="btn btn-primary">Find Creators</button><button onClick={()=>setModal(false)} className="btn btn-secondary">Close</button></div></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Campaign Live!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7,marginBottom:18}}><strong>{form.title}</strong> is now live. Start inviting creators to apply.</div><div style={{display:"flex",gap:9,justifyContent:"center"}}><button onClick={()=>setPage("browse")} className="btn btn-primary">Find Creators</button><button onClick={()=>setModal(false)} className="btn btn-secondary">Close</button></div></div>
           ):(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:18}}>New Campaign — Step {step} of 2</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:18}}>New Campaign — Step {step} of 2</div>
               {step===1&&(
                 <>
                   <div className="fg"><label className="fl">Campaign Title</label><input className="fi" value={form.title} onChange={e=>up("title",e.target.value)} placeholder="e.g. Summer Hydration Campaign"/></div>
@@ -5624,7 +5624,7 @@ function CampaignCalendarPage() {
         </div>
         <div className="card-lg" style={{overflow:"hidden",marginBottom:18}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"13px 20px",borderBottom:"1px solid var(--border)"}}>
-            <div style={{display:"flex",gap:8,alignItems:"center"}}><button className="btn btn-secondary btn-sm">‹</button><span style={{fontFamily:"Syne,sans-serif",fontSize:"17px",fontWeight:700}}>April 2025</span><button className="btn btn-secondary btn-sm">›</button></div>
+            <div style={{display:"flex",gap:8,alignItems:"center"}}><button className="btn btn-secondary btn-sm">‹</button><span style={{fontFamily:"DM Serif Display,serif",fontSize:"17px",fontWeight:700}}>April 2025</span><button className="btn btn-secondary btn-sm">›</button></div>
             <span style={{fontSize:"12px",color:"var(--text3)"}}>{calEvents.length} deliverables this month</span>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",background:"var(--surface2)",borderBottom:"1px solid var(--border)"}}>
@@ -5693,7 +5693,7 @@ function BrandDealsPage({setPage,setSelected,deals=[]}) {
                 <td><div style={{display:"flex",gap:9,alignItems:"center"}}><div style={{width:28,height:28,borderRadius:"50%",background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"10px",fontWeight:700,color:"white",flexShrink:0}}>{d.bi}</div><span style={{fontWeight:500}}>{d.creatorName||"Creator"}</span></div></td>
                 <td style={{color:"var(--text2)"}}>{d.campaignTitle}</td>
                 <td><PlatformBadge p={d.platform}/></td>
-                <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${d.amount.toLocaleString()}</td>
+                <td style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${d.amount.toLocaleString()}</td>
                 <td>{d.escrow?<EscrowBadge released={d.escrowReleased}/>:<span style={{fontSize:"11px",color:"var(--text3)"}}>—</span>}</td>
                 <td><StatusBadge s={d.status}/></td>
                 <td>
@@ -5784,7 +5784,7 @@ function ContentLibraryPage() {
             <div style={{height:120,background:"linear-gradient(135deg,"+bg(selected.ci)[0]+","+bg(selected.ci)[1]+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"40px",borderRadius:"var(--radius-lg) var(--radius-lg) 0 0"}}>{selected.thumbnail}</div>
             <div style={{padding:"20px 22px"}}>
               <div style={{display:"flex",gap:7,marginBottom:10,flexWrap:"wrap"}}><PlatformBadge p={selected.platform}/><span className="badge badge-gray">{selected.type}</span><span className={"badge "+(selected.approved?"badge-green":"badge-yellow")}>{selected.approved?"Approved":"Pending Approval"}</span></div>
-              <div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:4}}>{selected.creator}</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:4}}>{selected.creator}</div>
               <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:16}}>{selected.campaign} · Delivered {selected.delivered}</div>
               <div className="g2" style={{gap:10,marginBottom:16}}>
                 {[["Usage Rights",selected.rights],["Rights Expire",selected.rightsExp],["Days Remaining",selected.daysLeft+"d"],["Campaign",selected.campaign]].map(([l,v],i)=>(
@@ -5979,7 +5979,7 @@ function AffiliateManagerPage({authUser,deals=[]}) {
                   </div>
                   <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:4}}>
                     <code style={{background:"var(--surface2)",padding:"2px 8px",borderRadius:5,fontSize:"12px",fontWeight:700,color:"var(--accent)",letterSpacing:".03em"}}>{a.type==="code"?a.code:"bridgn.com/r/"+a.code}</code>
-                    <button onClick={()=>copy(a)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"11px",color:copied===a.code?"var(--green)":"var(--accent)",fontWeight:600,fontFamily:"Space Grotesk,sans-serif"}}>{copied===a.code?"✓":"Copy"}</button>
+                    <button onClick={()=>copy(a)} style={{background:"none",border:"none",cursor:"pointer",fontSize:"11px",color:copied===a.code?"var(--green)":"var(--accent)",fontWeight:600,fontFamily:"DM Sans,sans-serif"}}>{copied===a.code?"✓":"Copy"}</button>
                   </div>
                   <div style={{fontSize:"11px",color:"var(--text3)"}}>
                     {a.commission_type==="flat"?"Flat $"+((a.commission_flat_amount||0)/100).toFixed(2)+" each":a.commission_rate+"% commission"}
@@ -5989,7 +5989,7 @@ function AffiliateManagerPage({authUser,deals=[]}) {
                 <div style={{display:"flex",gap:12,alignItems:"center",flexShrink:0,flexWrap:"wrap"}}>
                   <div style={{textAlign:"center",minWidth:40}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><div style={{fontSize:"14px",fontWeight:700}}>{a.clicks||0}</div>{(a.clicks||0)>0&&<div style={{width:6,height:6,borderRadius:"50%",background:"var(--green)",animation:"pulse 2s infinite"}}/>}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Clicks</div></div>
                   <div style={{textAlign:"center",minWidth:40}}><div style={{fontSize:"14px",fontWeight:700,color:"var(--green)"}}>{a.conversions||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Conv.</div></div>
-                  <div style={{textAlign:"center",minWidth:40}}><div style={{fontSize:"14px",fontWeight:700,fontFamily:"Syne,sans-serif"}}>${$((a.revenue||0))}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Rev.</div></div>
+                  <div style={{textAlign:"center",minWidth:40}}><div style={{fontSize:"14px",fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${$((a.revenue||0))}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Rev.</div></div>
                   <div style={{textAlign:"center",minWidth:40}}><div style={{fontSize:"14px",fontWeight:700,color:"var(--accent2)"}}>${$((a.commission_earned||0))}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Comm.</div></div>
                 </div>
               </div>
@@ -6045,7 +6045,7 @@ function AffiliateManagerPage({authUser,deals=[]}) {
                     <td style={{fontSize:"12px"}}>{new Date(c.logged_at).toLocaleDateString()}</td>
                     <td style={{fontWeight:500}}>{link?.creator_name||"—"}</td>
                     <td><code style={{fontSize:"11px",color:"var(--accent)"}}>{c.link_code}</code></td>
-                    <td style={{fontWeight:700,fontFamily:"Syne,sans-serif"}}>${(c.conversion_value/100).toFixed(2)}</td>
+                    <td style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${(c.conversion_value/100).toFixed(2)}</td>
                     <td style={{fontWeight:700,color:"var(--accent2)"}}>${(c.commission_amount/100).toFixed(2)}</td>
                     <td><span className={"badge badge-"+(c.logged_by==="manual"?"blue":c.logged_by==="shopify"?"purple":"teal")} style={{fontSize:"10px"}}>{c.logged_by}</span></td>
                   </tr>
@@ -6087,7 +6087,7 @@ add_action('woocommerce_thankyou', function($order_id) {
           const codeBlock = (text,key) => (
             <div style={{position:"relative",marginTop:8}}>
               <pre style={{background:"var(--bg)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",padding:"12px 14px",fontSize:"12px",color:"var(--accent)",lineHeight:1.6,overflow:"auto",whiteSpace:"pre-wrap",wordBreak:"break-all",maxHeight:200}}>{text}</pre>
-              <button onClick={()=>copySnippet(text,key)} style={{position:"absolute",top:8,right:8,background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:"11px",fontWeight:600,color:intCopied===key?"var(--green)":"var(--accent)",fontFamily:"Space Grotesk,sans-serif"}}>{intCopied===key?"✓ Copied":"Copy"}</button>
+              <button onClick={()=>copySnippet(text,key)} style={{position:"absolute",top:8,right:8,background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:"11px",fontWeight:600,color:intCopied===key?"var(--green)":"var(--accent)",fontFamily:"DM Sans,sans-serif"}}>{intCopied===key?"✓ Copied":"Copy"}</button>
             </div>
           );
 
@@ -6203,7 +6203,7 @@ add_action('woocommerce_thankyou', function($order_id) {
                   <div style={{fontSize:"14px",fontWeight:600}}>{name}</div>
                   <div style={{fontSize:"11px",color:"var(--text3)"}}>{codes.length} link{codes.length!==1?"s":""}</div>
                 </div>
-                <div style={{fontSize:"18px",fontWeight:800,fontFamily:"Syne,sans-serif",color:"var(--accent2)",marginRight:12}}>${$(amount)}</div>
+                <div style={{fontSize:"18px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:"var(--accent2)",marginRight:12}}>${$(amount)}</div>
                 <button className="btn btn-primary btn-sm" onClick={()=>setPayModal({name,amount,codes})}>Mark Paid</button>
               </div>
             ))}
@@ -6232,11 +6232,11 @@ add_action('woocommerce_thankyou', function($order_id) {
       {modal&&(
         <Modal onClose={()=>setModal(false)}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Create {newLink.type==="code"?"Promo Code":"Tracking Link"}</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Create {newLink.type==="code"?"Promo Code":"Tracking Link"}</div>
             <div className="fg"><label className="fl">Type</label>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                 {[["link","Tracking Link"],["code","Promo Code"]].map(([v,l])=>(
-                  <button key={v} onClick={()=>setNewLink(f=>({...f,type:v}))} style={{padding:"10px",borderRadius:"var(--radius-sm)",border:"2px solid "+(newLink.type===v?"var(--accent)":"var(--border)"),background:newLink.type===v?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500,color:newLink.type===v?"var(--accent)":"var(--text2)"}}>{l}</button>
+                  <button key={v} onClick={()=>setNewLink(f=>({...f,type:v}))} style={{padding:"10px",borderRadius:"var(--radius-sm)",border:"2px solid "+(newLink.type===v?"var(--accent)":"var(--border)"),background:newLink.type===v?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:500,color:newLink.type===v?"var(--accent)":"var(--text2)"}}>{l}</button>
                 ))}
               </div>
             </div>
@@ -6264,7 +6264,7 @@ add_action('woocommerce_thankyou', function($order_id) {
             <div className="fg"><label className="fl">Commission</label>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
                 {[["percentage","Percentage"],["flat","Flat Amount"]].map(([v,l])=>(
-                  <button key={v} onClick={()=>setNewLink(f=>({...f,commType:v}))} style={{padding:"8px",borderRadius:"var(--radius-sm)",border:"1.5px solid "+(newLink.commType===v?"var(--accent)":"var(--border)"),background:newLink.commType===v?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:12,color:newLink.commType===v?"var(--accent)":"var(--text2)"}}>{l}</button>
+                  <button key={v} onClick={()=>setNewLink(f=>({...f,commType:v}))} style={{padding:"8px",borderRadius:"var(--radius-sm)",border:"1.5px solid "+(newLink.commType===v?"var(--accent)":"var(--border)"),background:newLink.commType===v?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:12,color:newLink.commType===v?"var(--accent)":"var(--text2)"}}>{l}</button>
                 ))}
               </div>
               {newLink.commType==="percentage"?<div style={{display:"flex",gap:6,alignItems:"center"}}><input className="fi" type="number" value={newLink.rate} onChange={e=>setNewLink(f=>({...f,rate:e.target.value}))} placeholder="10" style={{width:80}}/><span style={{fontSize:"13px",color:"var(--text3)"}}>% of sale</span></div>:<div style={{display:"flex",gap:6,alignItems:"center"}}><span style={{fontSize:"13px",color:"var(--text3)"}}>$</span><input className="fi" type="number" value={newLink.flatAmount} onChange={e=>setNewLink(f=>({...f,flatAmount:e.target.value}))} placeholder="5.00" style={{width:100}}/><span style={{fontSize:"13px",color:"var(--text3)"}}>per conversion</span></div>}
@@ -6293,7 +6293,7 @@ add_action('woocommerce_thankyou', function($order_id) {
       {convModal&&(
         <Modal onClose={()=>{setConvModal(null);setConvForm({code:"",value:"",notes:""});}}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,marginBottom:12}}>Log Conversion</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:800,marginBottom:12}}>Log Conversion</div>
             {convModal==="manual"?(
               <div className="fg"><label className="fl">Code</label>
                 <select className="fsel" value={convForm.code} onChange={e=>setConvForm(f=>({...f,code:e.target.value}))}>
@@ -6315,7 +6315,7 @@ add_action('woocommerce_thankyou', function($order_id) {
       {payModal&&(
         <Modal onClose={()=>{setPayModal(null);setPayNotes("");}}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,marginBottom:4}}>Mark as Paid</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:800,marginBottom:4}}>Mark as Paid</div>
             <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:16}}>Confirm you've paid <strong>{payModal.name}</strong> their <strong>${$(payModal.amount)}</strong> commission.</div>
             <div className="fg"><label className="fl">Notes <span style={{color:"var(--text3)",fontWeight:400}}>(optional)</span></label><input className="fi" value={payNotes} onChange={e=>setPayNotes(e.target.value)} placeholder="Payment method, reference #, etc."/></div>
             <div style={{display:"flex",gap:9}}>
@@ -6458,7 +6458,7 @@ function AffiliateCreatorPage({authUser}) {
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
                 <div style={{textAlign:"center",padding:"10px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}><div style={{fontSize:"18px",fontWeight:700}}>{a.clicks||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Clicks</div></div>
                 <div style={{textAlign:"center",padding:"10px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}><div style={{fontSize:"18px",fontWeight:700,color:"var(--green)"}}>{a.conversions||0}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Sales</div></div>
-                <div style={{textAlign:"center",padding:"10px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}><div style={{fontSize:"18px",fontWeight:700,color:"var(--accent2)",fontFamily:"Syne,sans-serif"}}>${((a.commission_earned||0)/100).toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Earned</div></div>
+                <div style={{textAlign:"center",padding:"10px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}><div style={{fontSize:"18px",fontWeight:700,color:"var(--accent2)",fontFamily:"DM Serif Display,serif"}}>${((a.commission_earned||0)/100).toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Earned</div></div>
               </div>
 
               {/* Action buttons */}
@@ -6498,7 +6498,7 @@ function AffiliateCreatorPage({authUser}) {
       {qrCode&&(
         <Modal onClose={()=>setQrCode(null)}>
           <div style={{padding:26,textAlign:"center"}}>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,marginBottom:14}}>QR Code</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:800,marginBottom:14}}>QR Code</div>
             <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:16}}>{qrCode.name}</div>
             <img src={qrCode.dataUrl} style={{width:200,height:200,borderRadius:12,margin:"0 auto 16px",display:"block"}} alt="QR Code"/>
             <div style={{display:"flex",gap:9,justifyContent:"center"}}>
@@ -6513,7 +6513,7 @@ function AffiliateCreatorPage({authUser}) {
       {shareModal&&(
         <Modal onClose={()=>{setShareModal(null);setShareCopied(null);}}>
           <div style={{padding:26}}>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"20px",fontWeight:800,marginBottom:14}}>Share Captions</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:800,marginBottom:14}}>Share Captions</div>
             <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:16}}>Pre-written captions with your {shareModal.type==="code"?"code":"link"} embedded. Copy and customize.</div>
             {[["📸 Instagram","instagram"],["🎵 TikTok","tiktok"],["🐦 Twitter/X","twitter"]].map(([label,platform])=>{
               const text = shareText(shareModal,platform);
@@ -6523,7 +6523,7 @@ function AffiliateCreatorPage({authUser}) {
                   <div style={{fontSize:"12px",fontWeight:600,marginBottom:6}}>{label}</div>
                   <div style={{position:"relative"}}>
                     <div style={{padding:"10px 14px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",fontSize:"13px",color:"var(--text2)",lineHeight:1.6,paddingRight:70}}>{text}</div>
-                    <button onClick={()=>copyShare(text,key)} style={{position:"absolute",top:8,right:8,background:"none",border:"none",cursor:"pointer",fontSize:"11px",fontWeight:600,color:shareCopied===key?"var(--green)":"var(--accent)",fontFamily:"Space Grotesk,sans-serif"}}>{shareCopied===key?"✓ Copied":"Copy"}</button>
+                    <button onClick={()=>copyShare(text,key)} style={{position:"absolute",top:8,right:8,background:"none",border:"none",cursor:"pointer",fontSize:"11px",fontWeight:600,color:shareCopied===key?"var(--green)":"var(--accent)",fontFamily:"DM Sans,sans-serif"}}>{shareCopied===key?"✓ Copied":"Copy"}</button>
                   </div>
                 </div>
               );
@@ -6572,7 +6572,7 @@ function BriefBuilderPage() {
               <div style={{display:"flex",gap:10,marginBottom:16,alignItems:"center"}}>
                 <span style={{fontSize:"24px"}}>{t.icon}</span>
                 <div style={{flex:1}}><div style={{fontSize:"15px",fontWeight:700,color:"var(--text)"}}>{t.label} Brief</div></div>
-                <button onClick={()=>{setTemplate(null);setFields({});}} style={{fontSize:"12px",color:"var(--text3)",background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif"}}>Change template</button>
+                <button onClick={()=>{setTemplate(null);setFields({});}} style={{fontSize:"12px",color:"var(--text3)",background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>Change template</button>
               </div>
               <div className="fg"><label className="fl">Send to Creator</label><select className="fsel" value={creator} onChange={e=>setCreator(e.target.value)}><option value="">Select creator...</option>{CREATORS.map(c=><option key={c.id} value={c.name}>{c.name}</option>)}</select></div>
               {t.fields.map((f,i)=>(
@@ -6586,7 +6586,7 @@ function BriefBuilderPage() {
           </div>
           <div className="card-lg" style={{padding:"18px 22px",background:"rgba(8,145,178,.04)",border:"1.5px solid rgba(8,145,178,.25)"}}>
             <div style={{fontSize:"12px",fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:"var(--teal)",marginBottom:14}}>Creator will see this</div>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"16px",marginBottom:10,color:"var(--text)"}}>{t.label} Brief</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"16px",marginBottom:10,color:"var(--text)"}}>{t.label} Brief</div>
             {t.fields.map((f,i)=>(
               <div key={i} style={{marginBottom:12}}>
                 <div style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:"var(--text3)",marginBottom:4}}>{f}</div>
@@ -6652,7 +6652,7 @@ function CreatorScorecardsPage() {
         <Modal onClose={()=>setModal(false)} maxWidth={520}>
           {!submitted?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Rate a Creator</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Rate a Creator</div>
               <div className="fg"><label className="fl">Creator</label><select className="fsel" value={form.ci} onChange={e=>up("ci",parseInt(e.target.value))}><option value={-1}>Select creator...</option>{CREATORS.map((c,i)=><option key={i} value={i}>{c.name}</option>)}</select></div>
               <div className="fg"><label className="fl">Campaign</label><select className="fsel" value={form.campaign} onChange={e=>up("campaign",e.target.value)}><option value="">Select campaign...</option>{BRAND_CAMPAIGNS.map(c=><option key={c.id} value={c.title}>{c.title}</option>)}</select></div>
               <div className="divider"></div>
@@ -6668,7 +6668,7 @@ function CreatorScorecardsPage() {
               <button onClick={submit} disabled={form.ci<0||!form.campaign||form.communication===0} className="btn btn-primary btn-lg" style={{width:"100%",opacity:form.ci>=0&&form.campaign&&form.communication>0?1:.5}}>Submit Scorecard</button>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Scorecard Saved!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>This is private to your brand. It helps inform future hiring decisions on bridgn.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Scorecard Saved!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}>This is private to your brand. It helps inform future hiring decisions on bridgn.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -6731,7 +6731,7 @@ function TeamManagementPage() {
         <Modal onClose={()=>setModal(false)}>
           {!sent?(
             <div style={{padding:26}}>
-              <div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Invite Team Member</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:16}}>Invite Team Member</div>
               <div className="fg"><label className="fl">Full Name</label><input className="fi" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Alex Chen"/></div>
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="alex@yourbrand.com"/></div>
               <div className="fg"><label className="fl">Role</label>
@@ -6747,7 +6747,7 @@ function TeamManagementPage() {
               <div style={{display:"flex",gap:9,marginTop:20}}><button onClick={invite} disabled={!form.name||!form.email} className="btn btn-primary btn-lg" style={{flex:1,opacity:form.name&&form.email?1:.5}}>Send Invite</button><button onClick={()=>setModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
             </div>
           ):(
-            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"Syne,sans-serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}><strong>{form.name}</strong> will receive an email invitation to join your brand account.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
+            <div style={{padding:26,textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:800,letterSpacing:"-.3px",marginBottom:7}}>Invite Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",marginBottom:18}}><strong>{form.name}</strong> will receive an email invitation to join your brand account.</div><button onClick={()=>setModal(false)} className="btn btn-primary">Done</button></div>
           )}
         </Modal>
       )}
@@ -6794,7 +6794,7 @@ function ROITrackerPage() {
                 <td style={{color:"var(--text2)"}}>{r.campaign}</td>
                 <td><PlatformBadge p={r.platform}/></td>
                 <td style={{fontWeight:600}}>${r.spend.toLocaleString()}</td>
-                <td style={{fontWeight:700,fontFamily:"Syne,sans-serif",color:"var(--green)"}}>${r.revenue.toLocaleString()}</td>
+                <td style={{fontWeight:700,fontFamily:"DM Serif Display,serif",color:"var(--green)"}}>${r.revenue.toLocaleString()}</td>
                 <td><div style={{display:"flex",gap:7,alignItems:"center"}}><div style={{width:60,height:5,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}><div style={{height:"100%",background:r.roi>300?"var(--green)":r.roi>100?"var(--accent)":"var(--accent2)",borderRadius:99,width:Math.min((r.roi/700)*100,100)+"%"}}></div></div><span style={{fontSize:"13px",fontWeight:700,color:r.roi>300?"var(--green)":r.roi>100?"var(--accent)":"var(--accent2)"}}>{r.roi}%</span></div></td>
                 <td style={{color:"var(--text2)"}}>{r.clicks.toLocaleString()}</td>
                 <td style={{color:"var(--text2)"}}>{r.conv.toLocaleString()}</td>
@@ -6906,7 +6906,7 @@ function ShortlistsPage({setPage,setSelected}) {
       {modal&&(
         <Modal onClose={()=>setModal(false)} maxWidth={400}>
           <div style={{padding:24}}>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:14}}>New Shortlist</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,letterSpacing:"-.2px",marginBottom:14}}>New Shortlist</div>
             <div className="fg"><label className="fl">List Name</label><input className="fi" value={listName} onChange={e=>setListName(e.target.value)} placeholder="e.g. Spring Campaign, Q3 Push..."/></div>
             <div style={{display:"flex",gap:9}}><button onClick={create} disabled={!listName.trim()} className="btn btn-primary btn-lg" style={{flex:1,opacity:listName.trim()?1:.5}}>Create List</button><button onClick={()=>setModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
           </div>
@@ -7009,7 +7009,7 @@ function MessagesPage({setPage}) {
           {/* ── Thread list ── */}
           <div style={{borderRight:"1px solid var(--border)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
             <div style={{padding:"10px 12px",borderBottom:"1px solid var(--border)",flexShrink:0}}>
-              <input placeholder="Search conversations…" style={{width:"100%",boxSizing:"border-box",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",padding:"7px 11px",fontSize:"12px",color:"var(--text)",outline:"none",fontFamily:"Space Grotesk,sans-serif"}}/>
+              <input placeholder="Search conversations…" style={{width:"100%",boxSizing:"border-box",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",padding:"7px 11px",fontSize:"12px",color:"var(--text)",outline:"none",fontFamily:"DM Sans,sans-serif"}}/>
             </div>
             <div style={{flex:1,overflowY:"auto"}}>
               {threads.map(t=>{
@@ -7094,7 +7094,7 @@ function MessagesPage({setPage}) {
                   onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}}}
                   placeholder={`Message ${activeThread.name}…`}
                   rows={1}
-                  style={{flex:1,background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:12,padding:"9px 13px",fontSize:"13px",color:"var(--text)",resize:"none",outline:"none",fontFamily:"Space Grotesk,sans-serif",lineHeight:1.55,maxHeight:112,overflowY:"auto",transition:"border-color .15s"}}
+                  style={{flex:1,background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:12,padding:"9px 13px",fontSize:"13px",color:"var(--text)",resize:"none",outline:"none",fontFamily:"DM Sans,sans-serif",lineHeight:1.55,maxHeight:112,overflowY:"auto",transition:"border-color .15s"}}
                   onFocus={e=>e.target.style.borderColor="var(--accent)"}
                   onBlur={e=>e.target.style.borderColor="var(--border)"}
                 />
@@ -7120,7 +7120,7 @@ function MessagesPage({setPage}) {
       {newModal&&(
         <div style={{position:"fixed",inset:0,zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:20,background:"rgba(4,6,15,.82)",backdropFilter:"blur(10px)"}} onClick={()=>setNewModal(false)}>
           <div style={{background:"var(--surface)",borderRadius:20,padding:"28px 28px 22px",width:"100%",maxWidth:400,boxShadow:"var(--shadow-lg)",animation:"modalIn .3s cubic-bezier(.16,1,.3,1) both"}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontFamily:"Syne,sans-serif",fontSize:"19px",fontWeight:800,letterSpacing:"-.2px",marginBottom:4}}>New Conversation</div>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"19px",fontWeight:800,letterSpacing:"-.2px",marginBottom:4}}>New Conversation</div>
             <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:20}}>Enter a brand name or email address to start a new thread.</div>
             <div className="fg" style={{marginBottom:18}}>
               <label className="fl">Brand name or email</label>
@@ -7719,7 +7719,7 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
             {/* Creator invite header */}
             <div style={{textAlign:"center",marginBottom:24}}>
               <div style={{width:64,height:64,borderRadius:18,background:`linear-gradient(135deg,${g[0]},${g[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"22px",fontWeight:800,color:"white",margin:"0 auto 14px",boxShadow:`0 8px 32px ${g[0]}44`}}>{ci}</div>
-              <div style={{fontSize:"22px",fontWeight:800,fontFamily:"Syne,sans-serif",color:"var(--text)",letterSpacing:"-.3px",lineHeight:1.25,marginBottom:8}}>
+              <div style={{fontSize:"22px",fontWeight:800,fontFamily:"DM Serif Display,serif",color:"var(--text)",letterSpacing:"-.3px",lineHeight:1.25,marginBottom:8}}>
                 {inviteCtx.creatorName} has invited you
               </div>
               <div style={{fontSize:"14px",color:"var(--text2)",lineHeight:1.6}}>
@@ -7733,7 +7733,7 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
               <button onClick={()=>setMode("signup")} className="btn btn-primary btn-lg" style={{width:"100%",background:"linear-gradient(135deg,var(--accent),#7c3aed)",border:"none",fontSize:"15px",fontWeight:700}}>
                 Create Brand Account
               </button>
-              <button onClick={()=>setMode("login")} style={{background:"none",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"13px",cursor:"pointer",fontSize:"13px",color:"var(--text2)",fontFamily:"Space Grotesk,sans-serif",fontWeight:500,transition:"border-color .15s"}} onMouseEnter={e=>e.currentTarget.style.borderColor="var(--accent)"} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+              <button onClick={()=>setMode("login")} style={{background:"none",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"13px",cursor:"pointer",fontSize:"13px",color:"var(--text2)",fontFamily:"DM Sans,sans-serif",fontWeight:500,transition:"border-color .15s"}} onMouseEnter={e=>e.currentTarget.style.borderColor="var(--accent)"} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
                 I already have an account — Sign In
               </button>
             </div>
@@ -7753,7 +7753,7 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
 
             {mode==="signup"&&(
               <>
-                <div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",fontWeight:800,marginBottom:4,letterSpacing:"-.3px"}}>Create your account</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,marginBottom:4,letterSpacing:"-.3px"}}>Create your account</div>
                 <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:22}}>You're joining as a <strong>Brand</strong> — free, no card needed.</div>
                 {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
                 {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
@@ -7764,14 +7764,14 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
                   {loading?<span style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>Creating account...</span>:"Create Brand Account"}
                 </button>
                 <div style={{textAlign:"center",marginTop:16,fontSize:13,color:"var(--text2)"}}>
-                  Already have an account? <button onClick={()=>{setMode("login");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif"}}>Sign in</button>
+                  Already have an account? <button onClick={()=>{setMode("login");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"DM Sans,sans-serif"}}>Sign in</button>
                 </div>
               </>
             )}
 
             {mode==="login"&&(
               <>
-                <div style={{fontFamily:"Syne,sans-serif",fontSize:"22px",fontWeight:800,marginBottom:4,letterSpacing:"-.3px"}}>Welcome back</div>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:"22px",fontWeight:800,marginBottom:4,letterSpacing:"-.3px"}}>Welcome back</div>
                 <div style={{fontSize:"13px",color:"var(--text2)",marginBottom:22}}>Sign in to access your Deal Room.</div>
                 {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
                 {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
@@ -7781,12 +7781,12 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
                   {loading?<span style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>Signing in...</span>:"Sign In to Deal Room"}
                 </button>
                 <div style={{textAlign:"center",marginTop:16,fontSize:13,color:"var(--text2)"}}>
-                  New here? <button onClick={()=>{setMode("signup");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif"}}>Create brand account</button>
+                  New here? <button onClick={()=>{setMode("signup");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"DM Sans,sans-serif"}}>Create brand account</button>
                 </div>
               </>
             )}
 
-            <button onClick={()=>{setMode(null);setError("");setSuccess("");}} style={{display:"block",margin:"16px auto 0",background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",fontFamily:"Space Grotesk,sans-serif"}}>← Back</button>
+            <button onClick={()=>{setMode(null);setError("");setSuccess("");}} style={{display:"block",margin:"16px auto 0",background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",fontFamily:"DM Sans,sans-serif"}}>← Back</button>
           </div>
         )}
 
@@ -7806,7 +7806,7 @@ function LandingPage({onGetStarted,onLogin}) {
     pointerEvents:"none",zIndex:2,
   });
   return (
-    <div style={{minHeight:"100vh",color:lp.text,fontFamily:"Space Grotesk,sans-serif",overflowX:"hidden"}}>
+    <div style={{minHeight:"100vh",color:lp.text,fontFamily:"DM Sans,sans-serif",overflowX:"hidden"}}>
       <style>{`
         @keyframes lpFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(1.5deg)}}
         @keyframes lpWave{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
@@ -7850,29 +7850,29 @@ function LandingPage({onGetStarted,onLogin}) {
         <nav style={{position:"relative",zIndex:10,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 32px",maxWidth:1100,margin:"0 auto",width:"100%"}}>
           <img src="assets/logo-white.svg" alt="bridgn" style={{height:22}}/>
           <div style={{display:"flex",gap:24,alignItems:"center"}}>
-            <button onClick={onLogin} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:14,fontWeight:500,color:"rgba(255,255,255,.8)"}}>Log in</button>
-            <button onClick={onGetStarted} style={{padding:"9px 22px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:600}}>Get started free</button>
+            <button onClick={onLogin} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:500,color:"rgba(255,255,255,.8)"}}>Log in</button>
+            <button onClick={onGetStarted} style={{padding:"9px 22px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:600}}>Get started free</button>
           </div>
         </nav>
 
         {/* Hero content */}
         <div style={{position:"relative",zIndex:5,flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"60px 24px 140px",textAlign:"center"}}>
-          <h1 style={{fontFamily:"Syne,sans-serif",fontSize:"clamp(36px,5.5vw,56px)",fontWeight:800,lineHeight:1.08,letterSpacing:"-1px",marginBottom:20,color:"white",maxWidth:650}}>
+          <h1 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(36px,5.5vw,56px)",fontWeight:800,lineHeight:1.08,letterSpacing:"-1px",marginBottom:20,color:"white",maxWidth:650}}>
             <em style={{fontStyle:"italic",fontWeight:800}}>Dive in</em> to seamless creator-brand partnerships
           </h1>
           <p style={{fontSize:"clamp(15px,2vw,18px)",color:"rgba(255,255,255,.75)",lineHeight:1.7,maxWidth:480,margin:"0 auto 36px"}}>
             One place for deals, contracts, payments, and content — so you can focus on the work, not the admin.
           </p>
           <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-            <button onClick={onGetStarted} style={{padding:"14px 36px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:15,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.12)"}}>Start for free</button>
-            <button onClick={onLogin} style={{padding:"14px 36px",borderRadius:99,border:"1.5px solid rgba(255,255,255,.4)",background:"rgba(255,255,255,.1)",color:"white",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:15,fontWeight:500,backdropFilter:"blur(4px)"}}>I have an account</button>
+            <button onClick={onGetStarted} style={{padding:"14px 36px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:15,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.12)"}}>Start for free</button>
+            <button onClick={onLogin} style={{padding:"14px 36px",borderRadius:99,border:"1.5px solid rgba(255,255,255,.4)",background:"rgba(255,255,255,.1)",color:"white",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:15,fontWeight:500,backdropFilter:"blur(4px)"}}>I have an account</button>
           </div>
 
           {/* Floating cards */}
           <div className="lp-floating" style={{position:"absolute",inset:0,pointerEvents:"none"}}>
             <div className="lp-float-card" style={{...float(0,"8%","30%"),transform:"rotate(-4deg)"}}>
               <div style={{fontSize:11,fontWeight:600,color:"#34d399",marginBottom:4}}>Payment received</div>
-              <div style={{fontSize:20,fontWeight:800,fontFamily:"Syne,sans-serif",color:lp.text}}>$2,500</div>
+              <div style={{fontSize:20,fontWeight:800,fontFamily:"DM Serif Display,serif",color:lp.text}}>$2,500</div>
             </div>
             <div className="lp-float-card" style={{...float(1.5,"78%","25%"),transform:"rotate(3deg)"}}>
               <div style={{display:"flex",gap:6,alignItems:"center"}}>
@@ -7918,7 +7918,7 @@ function LandingPage({onGetStarted,onLogin}) {
                   </div>
                 ))}
                 <div style={{marginTop:12,padding:"10px 12px",background:"#f0f9ff",borderRadius:6,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                  <div><div style={{fontSize:10,color:lp.text3}}>Escrow</div><div style={{fontSize:15,fontWeight:800,fontFamily:"Syne,sans-serif",color:lp.text}}>$4,200</div></div>
+                  <div><div style={{fontSize:10,color:lp.text3}}>Escrow</div><div style={{fontSize:15,fontWeight:800,fontFamily:"DM Serif Display,serif",color:lp.text}}>$4,200</div></div>
                   <div style={{padding:"5px 12px",borderRadius:99,background:"#0e7490",color:"white",fontSize:10,fontWeight:600}}>Protected</div>
                 </div>
               </div>
@@ -7932,12 +7932,12 @@ function LandingPage({onGetStarted,onLogin}) {
 
         {/* ── Bento feature grid ── */}
         <section style={{maxWidth:960,margin:"0 auto",padding:"80px 24px 100px"}}>
-          <h2 style={{fontFamily:"Syne,sans-serif",fontSize:28,fontWeight:800,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>Everything you need in one place</h2>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:800,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>Everything you need in one place</h2>
           <p style={{textAlign:"center",fontSize:15,color:lp.text2,marginBottom:48,maxWidth:440,margin:"0 auto 48px"}}>No more juggling emails, spreadsheets, and payment apps.</p>
           <div className="lp-bento" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gridTemplateRows:"auto auto",gap:16}}>
             <div style={{gridRow:"1 / 3",background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"32px 28px",display:"flex",flexDirection:"column",justifyContent:"space-between",backdropFilter:"blur(8px)"}}>
               <div>
-                <h3 style={{fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,lineHeight:1.2,marginBottom:12}}>Deal Room</h3>
+                <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:800,lineHeight:1.2,marginBottom:12}}>Deal Room</h3>
                 <p style={{fontSize:14,color:lp.text2,lineHeight:1.65}}>A shared workspace where both sides manage briefs, contracts, content, messages, and approvals in real time.</p>
               </div>
               <div style={{marginTop:24,padding:16,background:"#f0f6fa",borderRadius:10,border:"1px solid "+lp.border}}>
@@ -7964,7 +7964,7 @@ function LandingPage({onGetStarted,onLogin}) {
 
         {/* ── How it works ── */}
         <section style={{maxWidth:640,margin:"0 auto",padding:"0 24px 100px"}}>
-          <h2 style={{fontFamily:"Syne,sans-serif",fontSize:28,fontWeight:800,textAlign:"center",marginBottom:48,letterSpacing:"-.3px"}}>How it works</h2>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:800,textAlign:"center",marginBottom:48,letterSpacing:"-.3px"}}>How it works</h2>
           {[
             {n:"1",t:"Creator creates a deal",d:"Set the terms, deliverables, and deadline. Send the brand an invite link."},
             {n:"2",t:"Brand uploads brief & contract",d:"Share everything the creator needs. They review and sign in the Deal Room."},
@@ -7987,15 +7987,15 @@ function LandingPage({onGetStarted,onLogin}) {
           <div className="lp-cta-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
             <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px",backdropFilter:"blur(8px)"}}>
               <div style={{fontSize:12,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Creators</div>
-              <h3 style={{fontFamily:"Syne,sans-serif",fontSize:20,fontWeight:800,marginBottom:10,lineHeight:1.2}}>Get paid on time, every time</h3>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:20,fontWeight:800,marginBottom:10,lineHeight:1.2}}>Get paid on time, every time</h3>
               <p style={{fontSize:13,color:lp.text2,lineHeight:1.65,marginBottom:24}}>No more chasing invoices. Funds are secured in escrow before you start creating.</p>
-              <button onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:14,fontWeight:600}}>Join as Creator</button>
+              <button onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Creator</button>
             </div>
             <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px",backdropFilter:"blur(8px)"}}>
               <div style={{fontSize:12,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Brands</div>
-              <h3 style={{fontFamily:"Syne,sans-serif",fontSize:20,fontWeight:800,marginBottom:10,lineHeight:1.2}}>Manage partnerships, not chaos</h3>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:20,fontWeight:800,marginBottom:10,lineHeight:1.2}}>Manage partnerships, not chaos</h3>
               <p style={{fontSize:13,color:lp.text2,lineHeight:1.65,marginBottom:24}}>One place for briefs, contracts, content approvals, and payments.</p>
-              <button onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:14,fontWeight:600}}>Join as Brand</button>
+              <button onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Brand</button>
             </div>
           </div>
         </section>
@@ -8055,7 +8055,7 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
   return (
     <div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
       <div style={{width:"100%",maxWidth:440,animation:"fadeIn .3s ease"}}>
-        {onBack&&<button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--text2)",fontFamily:"Space Grotesk,sans-serif",marginBottom:20,display:"flex",alignItems:"center",gap:6}}>← Back to home</button>}
+        {onBack&&<button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--text2)",fontFamily:"DM Sans,sans-serif",marginBottom:20,display:"flex",alignItems:"center",gap:6}}>← Back to home</button>}
         <div style={{textAlign:"center",marginBottom:32}}>
           <img src="assets/logo-auth.svg" alt="bridgn" style={{height:64,marginBottom:8}}/>
           <div style={{fontSize:13,color:"var(--text3)"}}>The creator &amp; brand partnership platform</div>
@@ -8063,22 +8063,22 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
         <div className="card-lg" style={{padding:36,boxShadow:"var(--shadow-lg)"}}>
           {mode==="login"&&(
             <>
-              <div style={{fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Welcome back</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Welcome back</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Sign in to your bridgn account</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
               <div className="fg"><label className="fl" htmlFor="login-email">Email</label><input className="fi" id="login-email" name="email" type="email" autoComplete="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
               <div className="fg"><label className="fl" htmlFor="login-password">Password</label><input className="fi" id="login-password" name="password" type="password" autoComplete="current-password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="Your password" onKeyDown={e=>e.key==="Enter"&&handleLogin()}/></div>
-              <div style={{textAlign:"right",marginTop:-8,marginBottom:20}}><button onClick={()=>{setMode("reset");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif"}}>Forgot password?</button></div>
+              <div style={{textAlign:"right",marginTop:-8,marginBottom:20}}><button onClick={()=>{setMode("reset");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"DM Sans,sans-serif"}}>Forgot password?</button></div>
               <button onClick={handleLogin} disabled={loading||!form.email||!form.password} className="btn btn-primary btn-lg" style={{width:"100%",opacity:loading||!form.email||!form.password?.6:1}}>
                 {loading?<span style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>Signing in...</span>:"Sign In"}
               </button>
-              <div style={{textAlign:"center",marginTop:20,fontSize:13,color:"var(--text2)"}}>No account?<button onClick={()=>{setMode("signup");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif",marginLeft:6}}>Create one free</button></div>
+              <div style={{textAlign:"center",marginTop:20,fontSize:13,color:"var(--text2)"}}>No account?<button onClick={()=>{setMode("signup");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"DM Sans,sans-serif",marginLeft:6}}>Create one free</button></div>
             </>
           )}
           {mode==="signup"&&(
             <>
-              <div style={{fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Create your account</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Create your account</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Join bridgn free — no credit card needed</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               <div className="fg"><label className="fl" htmlFor="signup-name">{form.role==="brand"?"Company Name":form.role==="agency"?"Agency Name":"Full Name"}</label><input className="fi" id="signup-name" name="name" autoComplete="name" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Halo Health, Acme Corp":form.role==="agency"?"e.g. Viral Nation, Whalar, Open Influence":"Your full name"}/></div>
@@ -8087,9 +8087,9 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
               <div className="fg">
                 <label className="fl">I am joining as a...</label>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9,marginTop:4}}>
-                  <button onClick={()=>up("role","creator")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="creator"?"var(--accent)":"var(--border)"),background:form.role==="creator"?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500,color:form.role==="creator"?"var(--accent)":"var(--text2)",transition:"all .12s"}}>Creator</button>
-                  <button onClick={()=>up("role","brand")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="brand"?"var(--accent2)":"var(--border)"),background:form.role==="brand"?"var(--accent2-light)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500,color:form.role==="brand"?"var(--accent2)":"var(--text2)",transition:"all .12s"}}>Brand</button>
-                  <button onClick={()=>up("role","agency")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="agency"?"var(--purple)":"var(--border)"),background:form.role==="agency"?"rgba(167,139,250,.12)":"var(--surface2)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500,color:form.role==="agency"?"var(--purple)":"var(--text2)",transition:"all .12s"}}>Agency</button>
+                  <button onClick={()=>up("role","creator")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="creator"?"var(--accent)":"var(--border)"),background:form.role==="creator"?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:500,color:form.role==="creator"?"var(--accent)":"var(--text2)",transition:"all .12s"}}>Creator</button>
+                  <button onClick={()=>up("role","brand")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="brand"?"var(--accent2)":"var(--border)"),background:form.role==="brand"?"var(--accent2-light)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:500,color:form.role==="brand"?"var(--accent2)":"var(--text2)",transition:"all .12s"}}>Brand</button>
+                  <button onClick={()=>up("role","agency")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="agency"?"var(--purple)":"var(--border)"),background:form.role==="agency"?"rgba(167,139,250,.12)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:500,color:form.role==="agency"?"var(--purple)":"var(--text2)",transition:"all .12s"}}>Agency</button>
                 </div>
               </div>
               {form.role==="agency"&&(
@@ -8101,12 +8101,12 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
               <button onClick={handleSignup} disabled={loading||!form.email||!form.password||!form.name} className="btn btn-primary btn-lg" style={{width:"100%",marginTop:8,opacity:loading||!form.email||!form.password||!form.name?.6:1}}>
                 {loading?<span style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>Creating account...</span>:"Create Account"}
               </button>
-              <div style={{textAlign:"center",marginTop:20,fontSize:13,color:"var(--text2)"}}>Already have an account?<button onClick={()=>{setMode("login");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif",marginLeft:6}}>Sign in</button></div>
+              <div style={{textAlign:"center",marginTop:20,fontSize:13,color:"var(--text2)"}}>Already have an account?<button onClick={()=>{setMode("login");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"DM Sans,sans-serif",marginLeft:6}}>Sign in</button></div>
             </>
           )}
           {mode==="reset"&&(
             <>
-              <div style={{fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Reset your password</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:800,marginBottom:6,letterSpacing:"-.3px"}}>Reset your password</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Enter your email and we will send a reset link.</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               {success&&<div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--green)",marginBottom:16}}>{success}</div>}
@@ -8114,7 +8114,7 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
               <button onClick={handleReset} disabled={loading||!form.email} className="btn btn-primary btn-lg" style={{width:"100%",opacity:loading||!form.email?.6:1}}>
                 {loading?"Sending...":"Send Reset Link"}
               </button>
-              <div style={{textAlign:"center",marginTop:20}}><button onClick={()=>{setMode("login");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"Space Grotesk,sans-serif"}}>Back to sign in</button></div>
+              <div style={{textAlign:"center",marginTop:20}}><button onClick={()=>{setMode("login");setError("");setSuccess("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--accent)",fontFamily:"DM Sans,sans-serif"}}>Back to sign in</button></div>
             </>
           )}
         </div>
