@@ -7799,6 +7799,7 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
 function LandingPage({onGetStarted,onLogin}) {
   const lp = {text:"#0a1628",text2:"#4a5568",text3:"#8896a8",border:"#d0dbe8",surface:"rgba(255,255,255,.85)",accent:"#0a1628"};
+  const [faqOpen,setFaqOpen] = useState(null);
   // Floating cards animation
   const float = (delay,x,y) => ({
     position:"absolute",left:x,top:y,
@@ -7893,6 +7894,12 @@ function LandingPage({onGetStarted,onLogin}) {
           .lp-bento>div:first-child{grid-row:auto !important}
           .lp-cta-grid{grid-template-columns:1fr !important}
           .lp-caustic,.lp-rays{display:none}
+          .lp-showcase-grid{grid-template-columns:1fr !important}
+          .lp-steps-grid{grid-template-columns:1fr !important}
+          .lp-testimonial-grid{grid-template-columns:1fr !important}
+          .lp-deep-dive{flex-direction:column !important}
+          .lp-deep-dive-reverse{flex-direction:column !important}
+          .lp-deep-dive>div,.lp-deep-dive-reverse>div{width:100% !important}
         }
       `}</style>
 
@@ -8022,6 +8029,23 @@ function LandingPage({onGetStarted,onLogin}) {
       {/* ══════ Below the fold — light background ══════ */}
       <div style={{background:"#f0f6fa"}}>
 
+        {/* ── Social Proof Bar ── */}
+        <section style={{maxWidth:960,margin:"0 auto",padding:"60px 24px 0",textAlign:"center"}}>
+          <p style={{fontSize:14,color:lp.text3,fontWeight:500,marginBottom:28,letterSpacing:".02em"}}>Trusted by creators and brands managing real partnerships</p>
+          <div style={{display:"flex",justifyContent:"center",gap:48,flexWrap:"wrap"}}>
+            {[
+              {val:"500+",label:"Deals managed"},
+              {val:"$100K+",label:"In payments processed"},
+              {val:"10K+",label:"Messages sent"},
+            ].map((s,i)=>(
+              <div key={i} style={{textAlign:"center"}}>
+                <div style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:800,color:lp.text}}>{s.val}</div>
+                <div style={{fontSize:12,color:lp.text3,marginTop:4}}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* ── Bento feature grid ── */}
         <section style={{maxWidth:960,margin:"0 auto",padding:"80px 24px 100px"}}>
           <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:800,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>Everything you need in one place</h2>
@@ -8054,24 +8078,228 @@ function LandingPage({onGetStarted,onLogin}) {
           </div>
         </section>
 
-        {/* ── How it works ── */}
-        <section style={{maxWidth:640,margin:"0 auto",padding:"0 24px 100px"}}>
-          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:800,textAlign:"center",marginBottom:48,letterSpacing:"-.3px"}}>How it works</h2>
-          {[
-            {n:"1",t:"Creator creates a deal",d:"Set the terms, deliverables, and deadline. Send the brand an invite link."},
-            {n:"2",t:"Brand uploads brief & contract",d:"Share everything the creator needs. They review and sign in the Deal Room."},
-            {n:"3",t:"Creator delivers content",d:"Upload drafts, share scripts, submit final content — all in one place."},
-            {n:"4",t:"Brand approves & pays",d:"Review deliverables, approve, and fund via ACH. Money goes into escrow."},
-            {n:"5",t:"Payment releases automatically",d:"Once approved, funds transfer to the creator. Deal complete."},
-          ].map((s,i)=>(
-            <div key={i} style={{display:"flex",gap:20,padding:"22px 0",borderBottom:i<4?"1px solid "+lp.border:"none"}}>
-              <div style={{width:32,height:32,borderRadius:"50%",background:lp.accent,color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,flexShrink:0}}>{s.n}</div>
-              <div>
-                <div style={{fontSize:15,fontWeight:700,marginBottom:3}}>{s.t}</div>
-                <p style={{fontSize:13,color:lp.text2,lineHeight:1.6,margin:0}}>{s.d}</p>
+        {/* ── Product Showcase — How It Looks ── */}
+        <section style={{maxWidth:1060,margin:"0 auto",padding:"0 24px 100px"}}>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:800,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>See how it looks</h2>
+          <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:480,margin:"0 auto 48px"}}>Every deal gets a dedicated workspace. Here is what you will actually use.</p>
+          <div className="lp-showcase-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:24}}>
+            {/* Deal Room mockup */}
+            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
+              <div style={{padding:"20px 20px 0"}}>
+                <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:800,marginBottom:6}}>Deal Room</h4>
+              </div>
+              <div style={{padding:"12px 20px 20px"}}>
+                <div style={{background:"#f5f7fa",borderRadius:10,padding:14,border:"1px solid "+lp.border}}>
+                  <div style={{fontSize:12,fontWeight:700,color:lp.text,marginBottom:8}}>Creative Brief</div>
+                  <div style={{fontSize:11,color:lp.text2,lineHeight:1.55,marginBottom:10}}>Summer lifestyle campaign. Authentic, natural lighting. 3 deliverables.</div>
+                  <div style={{fontSize:11,fontWeight:600,color:lp.text,marginBottom:6}}>Deliverables</div>
+                  {["1 Instagram Reel","2 Story Frames"].map((d,i)=>(
+                    <div key={i} style={{display:"flex",gap:6,alignItems:"center",fontSize:10,color:lp.text2,marginBottom:3}}>
+                      <div style={{width:12,height:12,borderRadius:3,background:"#059669",display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,color:"white"}}>{">"}</div>
+                      <span>{d}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{padding:"0 20px 16px"}}>
+                <p style={{fontSize:12,color:lp.text3,lineHeight:1.5,margin:0}}>Your shared workspace for briefs, deliverables, and approvals.</p>
               </div>
             </div>
-          ))}
+            {/* Messages mockup */}
+            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
+              <div style={{padding:"20px 20px 0"}}>
+                <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:800,marginBottom:6}}>Messages</h4>
+              </div>
+              <div style={{padding:"12px 20px 20px"}}>
+                <div style={{background:"#f5f7fa",borderRadius:10,padding:14,border:"1px solid "+lp.border}}>
+                  {[
+                    {from:"Sarah K.",msg:"Hey! Just uploaded the first draft for review.",align:"flex-start",bg:"white"},
+                    {from:"You",msg:"Looks great, love the lighting. One small tweak on the intro.",align:"flex-end",bg:"#e0f2fe"},
+                    {from:"Sarah K.",msg:"On it! Will have the revision by tomorrow.",align:"flex-start",bg:"white"},
+                  ].map((m,i)=>(
+                    <div key={i} style={{display:"flex",justifyContent:m.align,marginBottom:i<2?8:0}}>
+                      <div style={{background:m.bg,borderRadius:10,padding:"8px 12px",maxWidth:"85%",border:"1px solid "+lp.border}}>
+                        <div style={{fontSize:9,fontWeight:700,color:lp.text3,marginBottom:2}}>{m.from}</div>
+                        <div style={{fontSize:10,color:lp.text2,lineHeight:1.4}}>{m.msg}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{padding:"0 20px 16px"}}>
+                <p style={{fontSize:12,color:lp.text3,lineHeight:1.5,margin:0}}>Real conversations tied to each deal. No more lost email threads.</p>
+              </div>
+            </div>
+            {/* Payment mockup */}
+            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
+              <div style={{padding:"20px 20px 0"}}>
+                <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:800,marginBottom:6}}>Payments</h4>
+              </div>
+              <div style={{padding:"12px 20px 20px"}}>
+                <div style={{background:"#f5f7fa",borderRadius:10,padding:14,border:"1px solid "+lp.border}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <div>
+                      <div style={{fontSize:10,color:lp.text3}}>Escrow Balance</div>
+                      <div style={{fontSize:22,fontWeight:800,fontFamily:"DM Serif Display,serif",color:lp.text}}>$4,200</div>
+                    </div>
+                    <div style={{padding:"5px 14px",borderRadius:99,background:"#0e7490",color:"white",fontSize:10,fontWeight:600}}>Protected</div>
+                  </div>
+                  <div style={{borderTop:"1px solid "+lp.border,paddingTop:10}}>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:lp.text2,marginBottom:4}}>
+                      <span>Funded by brand</span>
+                      <span style={{color:"#059669",fontWeight:600}}>Confirmed</span>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:lp.text2}}>
+                      <span>Release on approval</span>
+                      <span style={{color:lp.text3}}>Pending</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style={{padding:"0 20px 16px"}}>
+                <p style={{fontSize:12,color:lp.text3,lineHeight:1.5,margin:0}}>Funds held in escrow until content is approved. Safe for both sides.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Feature Deep Dives ── */}
+        <section style={{maxWidth:1000,margin:"0 auto",padding:"0 24px 80px"}}>
+          {/* Deep dive 1: Deal Room — mockup left, text right */}
+          <div className="lp-deep-dive" style={{display:"flex",gap:48,alignItems:"center",marginBottom:80}}>
+            <div style={{width:"50%",flexShrink:0}}>
+              <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
+                <div style={{padding:"10px 14px",borderBottom:"1px solid "+lp.border,display:"flex",alignItems:"center",gap:5,marginBottom:14}}>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:"#ff6059"}}/>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:"#ffbd2e"}}/>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:"#28c940"}}/>
+                  <span style={{flex:1,textAlign:"center",fontSize:10,color:lp.text3}}>Deal Room</span>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                  <div style={{background:"#f5f7fa",borderRadius:8,padding:12}}>
+                    <div style={{fontSize:10,fontWeight:700,color:lp.text,marginBottom:6}}>Brief</div>
+                    <div style={{fontSize:9,color:lp.text2,lineHeight:1.5}}>Summer campaign. Natural aesthetic. Show product in daily routine.</div>
+                    <div style={{marginTop:8,padding:"4px 8px",background:"#ecfdf5",borderRadius:4,fontSize:9,fontWeight:600,color:"#059669",display:"inline-block"}}>Acknowledged</div>
+                  </div>
+                  <div style={{background:"#f5f7fa",borderRadius:8,padding:12}}>
+                    <div style={{fontSize:10,fontWeight:700,color:lp.text,marginBottom:6}}>Contract</div>
+                    <div style={{fontSize:9,color:lp.text2,lineHeight:1.5}}>Standard creator agreement. NDA included. 30-day exclusivity.</div>
+                    <div style={{marginTop:8,padding:"4px 8px",background:"#eff6ff",borderRadius:4,fontSize:9,fontWeight:600,color:"#2563eb",display:"inline-block"}}>Signed</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={{width:"50%"}}>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:800,lineHeight:1.15,marginBottom:16,color:lp.text}}>A shared workspace for every deal</h3>
+              <p style={{fontSize:15,color:lp.text2,lineHeight:1.7,margin:0}}>The Deal Room brings everything into one place. Briefs, contracts, deliverables, messages, and approvals live side by side so nothing falls through the cracks. Both creator and brand see the same view in real time, making collaboration effortless.</p>
+            </div>
+          </div>
+
+          {/* Deep dive 2: Payments — text left, mockup right */}
+          <div className="lp-deep-dive-reverse" style={{display:"flex",flexDirection:"row-reverse",gap:48,alignItems:"center",marginBottom:80}}>
+            <div style={{width:"50%",flexShrink:0}}>
+              <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
+                <div style={{padding:"10px 14px",borderBottom:"1px solid "+lp.border,display:"flex",alignItems:"center",gap:5,marginBottom:14}}>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:"#ff6059"}}/>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:"#ffbd2e"}}/>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:"#28c940"}}/>
+                  <span style={{flex:1,textAlign:"center",fontSize:10,color:lp.text3}}>Payments</span>
+                </div>
+                <div style={{textAlign:"center",padding:"16px 0 8px"}}>
+                  <div style={{fontSize:10,color:lp.text3,marginBottom:4}}>Escrow Balance</div>
+                  <div style={{fontSize:28,fontWeight:800,fontFamily:"DM Serif Display,serif",color:lp.text}}>$3,750</div>
+                  <div style={{margin:"10px auto 0",padding:"5px 16px",borderRadius:99,background:"#0e7490",color:"white",fontSize:10,fontWeight:600,display:"inline-block"}}>Protected</div>
+                </div>
+                <div style={{margin:"16px 0 0",borderTop:"1px solid "+lp.border,paddingTop:12}}>
+                  {["Brand funded escrow","Creator delivered content","Awaiting final approval"].map((step,i)=>(
+                    <div key={i} style={{display:"flex",gap:8,alignItems:"center",fontSize:10,color:lp.text2,marginBottom:6}}>
+                      <div style={{width:14,height:14,borderRadius:"50%",background:i<2?"#059669":"#e2e8f0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,color:"white",flexShrink:0}}>{i<2?">":""}</div>
+                      <span>{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{width:"50%"}}>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:800,lineHeight:1.15,marginBottom:16,color:lp.text}}>Payments you can trust</h3>
+              <p style={{fontSize:15,color:lp.text2,lineHeight:1.7,margin:0}}>Brands fund escrow before work begins. Creators know the money is there. Once content is approved, payment releases automatically. No invoices, no awkward follow-ups, no wondering if you will get paid.</p>
+            </div>
+          </div>
+
+          {/* Deep dive 3: Messaging — mockup left, text right */}
+          <div className="lp-deep-dive" style={{display:"flex",gap:48,alignItems:"center",marginBottom:0}}>
+            <div style={{width:"50%",flexShrink:0}}>
+              <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
+                <div style={{padding:"10px 14px",borderBottom:"1px solid "+lp.border,display:"flex",alignItems:"center",gap:5,marginBottom:14}}>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:"#ff6059"}}/>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:"#ffbd2e"}}/>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:"#28c940"}}/>
+                  <span style={{flex:1,textAlign:"center",fontSize:10,color:lp.text3}}>Messages</span>
+                </div>
+                {[
+                  {from:"Alex Rivera",time:"2:14 PM",msg:"Just uploaded the final cut. Let me know if the transition works!",align:"flex-start",bg:"white"},
+                  {from:"You",time:"2:16 PM",msg:"This is perfect. Approving now and releasing payment.",align:"flex-end",bg:"#e0f2fe"},
+                  {from:"Alex Rivera",time:"2:17 PM",msg:"Amazing, thanks for the quick turnaround on reviews!",align:"flex-start",bg:"white"},
+                ].map((m,i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:m.align,marginBottom:8}}>
+                    <div style={{background:m.bg,borderRadius:10,padding:"8px 12px",maxWidth:"80%",border:"1px solid "+lp.border}}>
+                      <div style={{display:"flex",justifyContent:"space-between",gap:12,marginBottom:2}}>
+                        <span style={{fontSize:9,fontWeight:700,color:lp.text3}}>{m.from}</span>
+                        <span style={{fontSize:8,color:lp.text3}}>{m.time}</span>
+                      </div>
+                      <div style={{fontSize:10,color:lp.text2,lineHeight:1.4}}>{m.msg}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{width:"50%"}}>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:800,lineHeight:1.15,marginBottom:16,color:lp.text}}>Real conversations, not email threads</h3>
+              <p style={{fontSize:15,color:lp.text2,lineHeight:1.7,margin:0}}>Every deal has its own message thread. Discuss deliverables, share feedback, ask questions, and keep a full history. No more digging through inboxes or losing context across platforms.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── How it works — horizontal cards ── */}
+        <section style={{maxWidth:1060,margin:"0 auto",padding:"80px 24px 100px"}}>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:800,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>How it works</h2>
+          <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>Five simple steps from handshake to payment.</p>
+          <div className="lp-steps-grid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:16}}>
+            {[
+              {n:"1",t:"Create a deal",d:"Set the terms, deliverables, and deadline. Send the brand an invite link."},
+              {n:"2",t:"Share the brief",d:"Brand uploads the creative brief and contract. Creator reviews and signs."},
+              {n:"3",t:"Deliver content",d:"Upload drafts, share scripts, and submit final content in the Deal Room."},
+              {n:"4",t:"Approve & fund",d:"Brand reviews deliverables, approves, and funds the deal via escrow."},
+              {n:"5",t:"Get paid",d:"Once approved, funds transfer to the creator automatically. Done."},
+            ].map((s,i)=>(
+              <div key={i} style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 20px",backdropFilter:"blur(8px)",textAlign:"center"}}>
+                <div style={{width:36,height:36,borderRadius:"50%",background:lp.accent,color:"white",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700,marginBottom:14}}>{s.n}</div>
+                <div style={{fontSize:14,fontWeight:700,marginBottom:6,color:lp.text}}>{s.t}</div>
+                <p style={{fontSize:12,color:lp.text2,lineHeight:1.55,margin:0}}>{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Testimonials ── */}
+        <section style={{maxWidth:1000,margin:"0 auto",padding:"0 24px 100px"}}>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:800,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>What people are saying</h2>
+          <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>Creators and brands who use bridgn to manage their partnerships.</p>
+          <div className="lp-testimonial-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:20}}>
+            {[
+              {quote:"I used to spend hours chasing payments and managing contracts over email. Now everything lives in one deal room and I actually get paid on time.",name:"Jordan Nguyen",role:"Creator"},
+              {quote:"We manage a dozen creator partnerships at once. bridgn replaced our spreadsheets, email chains, and payment headaches with something that just works.",name:"Priya Sharma",role:"Brand Manager"},
+              {quote:"The escrow feature changed everything for me. I know the money is there before I start working, and it releases the moment my content is approved.",name:"Marcus Chen",role:"Creator"},
+            ].map((t,i)=>(
+              <div key={i} style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"32px 28px",backdropFilter:"blur(8px)"}}>
+                <p style={{fontSize:14,color:lp.text2,lineHeight:1.7,fontStyle:"italic",margin:"0 0 20px"}}>"{t.quote}"</p>
+                <div>
+                  <div style={{fontSize:14,fontWeight:700,color:lp.text}}>{t.name}</div>
+                  <div style={{fontSize:12,color:lp.text3}}>{t.role}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* ── Two-sided CTA ── */}
@@ -8092,10 +8320,49 @@ function LandingPage({onGetStarted,onLogin}) {
           </div>
         </section>
 
+        {/* ── FAQ Section ── */}
+        <section style={{maxWidth:700,margin:"0 auto",padding:"0 24px 100px"}}>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:800,textAlign:"center",marginBottom:48,letterSpacing:"-.3px",color:lp.text}}>Frequently asked questions</h2>
+          {[
+            {q:"Is bridgn free?",a:"Yes, creating an account is free for both creators and brands. You can start managing deals right away without any subscription or upfront cost."},
+            {q:"How do payments work?",a:"Brands fund an escrow account when a deal is agreed upon. The funds are held securely until the creator delivers content and the brand approves it. Once approved, payment releases automatically to the creator. This protects both sides."},
+            {q:"Can I use bridgn for deals I negotiate outside the platform?",a:"Yes, that is what External Deals are for. You can bring in any partnership you have already negotiated elsewhere and manage the deliverables, payments, and communication through bridgn."},
+            {q:"How does the contract process work?",a:"Brands can upload a contract or creative brief directly to the Deal Room. The creator reviews it, and both parties can sign digitally. Everything is timestamped and stored for reference."},
+            {q:"Is my payment information secure?",a:"Yes, all payments are processed through Stripe, a PCI-compliant payment processor trusted by millions of businesses. bridgn never stores your full card or bank details directly."},
+          ].map((item,i)=>(
+            <div key={i} style={{borderBottom:"1px solid "+lp.border}}>
+              <button
+                onClick={()=>setFaqOpen(faqOpen===i?null:i)}
+                style={{width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 0",background:"none",border:"none",cursor:"pointer",textAlign:"left",fontFamily:"DM Sans,sans-serif"}}
+              >
+                <span style={{fontSize:15,fontWeight:600,color:lp.text}}>{item.q}</span>
+                <span style={{fontSize:20,color:lp.text3,flexShrink:0,marginLeft:16,transform:faqOpen===i?"rotate(45deg)":"rotate(0deg)",transition:"transform .2s ease"}}>+</span>
+              </button>
+              {faqOpen===i && (
+                <div style={{padding:"0 0 20px",fontSize:14,color:lp.text2,lineHeight:1.7}}>{item.a}</div>
+              )}
+            </div>
+          ))}
+        </section>
+
+        {/* ── Final CTA Banner ── */}
+        <section style={{maxWidth:900,margin:"0 auto",padding:"0 24px 100px"}}>
+          <div style={{background:lp.accent,borderRadius:20,padding:"60px 40px",textAlign:"center"}}>
+            <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:800,color:"white",marginBottom:16,lineHeight:1.2}}>Ready to simplify your partnerships?</h2>
+            <p style={{fontSize:15,color:"rgba(255,255,255,.7)",maxWidth:420,margin:"0 auto 32px",lineHeight:1.6}}>Join creators and brands who use bridgn to manage deals, payments, and communication in one place.</p>
+            <button onClick={onGetStarted} style={{padding:"15px 40px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:16,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.15)"}}>Get started free</button>
+          </div>
+        </section>
+
         {/* ── Footer ── */}
         <footer style={{borderTop:"1px solid "+lp.border,padding:"40px 24px",textAlign:"center"}}>
-          <img src="assets/logo-dark.svg" alt="bridgn" style={{height:18,marginBottom:10,display:"inline-block"}}/>
-          <p style={{fontSize:12,color:lp.text3,margin:0}}>The creator-brand partnership platform</p>
+          <img src="assets/logo-dark.svg" alt="bridgn" style={{height:18,marginBottom:12,display:"inline-block"}}/>
+          <div style={{display:"flex",justifyContent:"center",gap:24,marginBottom:12,flexWrap:"wrap"}}>
+            <button onClick={onGetStarted} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:lp.text2,fontFamily:"DM Sans,sans-serif"}}>Get Started</button>
+            <button onClick={onLogin} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:lp.text2,fontFamily:"DM Sans,sans-serif"}}>Log In</button>
+            <span style={{fontSize:12,color:lp.text3}}>Support</span>
+          </div>
+          <p style={{fontSize:11,color:lp.text3,margin:0}}>2026 bridgn. The creator-brand partnership platform.</p>
         </footer>
       </div>
     </div>
