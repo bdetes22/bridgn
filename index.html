@@ -8279,6 +8279,8 @@ function App() {
     try { return localStorage.getItem("bridgn_stripe_connected")==="1"; } catch { return false; }
   });
   const [darkMode,setDarkMode] = useState(true);
+  const [showAuth,setShowAuth] = useState(false);
+  const [authMode,setAuthMode] = useState("signup");
 
   useEffect(()=>{
     document.documentElement.classList.toggle("light",!darkMode);
@@ -8497,9 +8499,6 @@ function App() {
       <div style={{width:28,height:28,border:"2.5px solid var(--border)",borderTop:"2.5px solid var(--accent)",borderRadius:"50%",animation:"spin .8s linear infinite"}}></div>
     </div>
   );
-
-  const [showAuth,setShowAuth] = useState(false);
-  const [authMode,setAuthMode] = useState("signup");
 
   if(!authUser) {
     if(inviteCtx) return React.createElement(InviteWelcomeScreen,{inviteCtx,onAuth:handleInviteAuth});
