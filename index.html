@@ -7942,8 +7942,127 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
   );
 }
 
-function AuthScreen({onAuth}) {
-  const [mode,setMode] = useState("login");
+// ─── LANDING PAGE ─────────────────────────────────────────────────────────────
+function LandingPage({onGetStarted,onLogin}) {
+  return (
+    <div style={{minHeight:"100vh",background:"var(--bg)",color:"var(--text)"}}>
+
+      {/* ── Nav ── */}
+      <nav style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 32px",maxWidth:1200,margin:"0 auto"}}>
+        <img src="assets/logo-white.svg" alt="bridgn" className="nav-logo" style={{height:24}}/>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={onLogin} style={{padding:"8px 18px",borderRadius:8,border:"1px solid var(--border)",background:"none",color:"var(--text)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:13,fontWeight:500}}>Log in</button>
+          <button onClick={onGetStarted} className="btn btn-primary" style={{padding:"8px 20px",fontSize:13}}>Get started free</button>
+        </div>
+      </nav>
+
+      {/* ── Hero ── */}
+      <section style={{textAlign:"center",padding:"80px 24px 60px",maxWidth:720,margin:"0 auto"}}>
+        <h1 style={{fontFamily:"Syne,sans-serif",fontSize:"clamp(36px,5vw,56px)",fontWeight:800,lineHeight:1.1,letterSpacing:"-.5px",marginBottom:20,color:"var(--text)"}}>
+          The partnership platform for creators and brands
+        </h1>
+        <p style={{fontSize:"clamp(15px,2vw,18px)",color:"var(--text2)",lineHeight:1.7,maxWidth:540,margin:"0 auto 32px"}}>
+          Manage deals, contracts, payments, and affiliate tracking — all in one place. No spreadsheets, no back-and-forth emails, no missed payments.
+        </p>
+        <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
+          <button onClick={onGetStarted} className="btn btn-primary" style={{padding:"12px 28px",fontSize:15,fontWeight:600}}>Start for free</button>
+          <button onClick={onLogin} style={{padding:"12px 28px",borderRadius:8,border:"1px solid var(--border)",background:"none",color:"var(--text)",cursor:"pointer",fontFamily:"Space Grotesk,sans-serif",fontSize:15,fontWeight:500}}>I have an account</button>
+        </div>
+      </section>
+
+      {/* ── Social proof bar ── */}
+      <div style={{textAlign:"center",padding:"0 24px 60px"}}>
+        <p style={{fontSize:12,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",fontWeight:600,marginBottom:12}}>Built for creators and brands who take partnerships seriously</p>
+      </div>
+
+      {/* ── Features ── */}
+      <section style={{maxWidth:1000,margin:"0 auto",padding:"0 24px 80px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:20}}>
+          {[
+            {
+              title:"Deal Room",
+              desc:"A shared workspace for every deal. Briefs, contracts, content uploads, messages, and approvals — both sides see everything in real time.",
+            },
+            {
+              title:"Escrow Payments",
+              desc:"Brands fund deals via ACH. Funds are held securely until content is approved. Creators get paid automatically — no invoicing, no chasing.",
+            },
+            {
+              title:"Contracts & Briefs",
+              desc:"Brands upload briefs and contracts directly in the Deal Room. Creators review, acknowledge, and sign — all tracked with timestamps.",
+            },
+            {
+              title:"Real-time Messaging",
+              desc:"Deal-specific messaging powered by Supabase Realtime. No more switching between email, DMs, and Slack to manage one partnership.",
+            },
+            {
+              title:"Affiliate Tracking",
+              desc:"Generate tracking links and promo codes. Monitor clicks, conversions, and commissions in real time. Connect Shopify or WooCommerce in minutes.",
+            },
+            {
+              title:"Email Notifications",
+              desc:"Both parties get notified instantly when something needs attention — new content, signed contracts, messages, and settled payments.",
+            },
+          ].map((f,i)=>(
+            <div key={i} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:12,padding:"28px 24px"}}>
+              <h3 style={{fontSize:16,fontWeight:700,marginBottom:8,fontFamily:"Syne,sans-serif"}}>{f.title}</h3>
+              <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.65,margin:0}}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── How it works ── */}
+      <section style={{maxWidth:800,margin:"0 auto",padding:"0 24px 80px"}}>
+        <h2 style={{fontFamily:"Syne,sans-serif",fontSize:28,fontWeight:800,textAlign:"center",marginBottom:40,letterSpacing:"-.3px"}}>How it works</h2>
+        <div style={{display:"flex",flexDirection:"column",gap:0}}>
+          {[
+            {step:"1",role:"Creator",action:"Creates a deal and sends an invite link to the brand."},
+            {step:"2",role:"Brand",action:"Joins via the link, uploads a brief and contract in the Deal Room."},
+            {step:"3",role:"Creator",action:"Reviews the brief, signs the contract, and uploads content for review."},
+            {step:"4",role:"Brand",action:"Approves deliverables and funds the deal via ACH — money goes into escrow."},
+            {step:"5",role:"Both",action:"Funds release to the creator automatically. The deal is complete."},
+          ].map((s,i)=>(
+            <div key={i} style={{display:"flex",gap:20,padding:"20px 0",borderBottom:i<4?"1px solid var(--border)":"none"}}>
+              <div style={{width:32,height:32,borderRadius:"50%",background:"var(--accent)",color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,flexShrink:0}}>{s.step}</div>
+              <div>
+                <span style={{fontSize:11,fontWeight:700,color:"var(--accent)",textTransform:"uppercase",letterSpacing:".06em"}}>{s.role}</span>
+                <p style={{fontSize:14,color:"var(--text2)",lineHeight:1.6,margin:"4px 0 0"}}>{s.action}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Two-sided CTA ── */}
+      <section style={{maxWidth:800,margin:"0 auto",padding:"0 24px 80px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+          <div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:12,padding:"32px 28px",textAlign:"center"}}>
+            <div style={{fontSize:13,fontWeight:700,color:"var(--accent)",textTransform:"uppercase",letterSpacing:".08em",marginBottom:10}}>For Creators</div>
+            <h3 style={{fontSize:18,fontWeight:700,fontFamily:"Syne,sans-serif",marginBottom:8}}>Get paid on time, every time</h3>
+            <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.6,marginBottom:20}}>No more chasing invoices. Funds are secured in escrow before you start creating. Track your affiliate earnings in real time.</p>
+            <button onClick={onGetStarted} className="btn btn-primary" style={{width:"100%"}}>Join as Creator</button>
+          </div>
+          <div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:12,padding:"32px 28px",textAlign:"center"}}>
+            <div style={{fontSize:13,fontWeight:700,color:"var(--accent)",textTransform:"uppercase",letterSpacing:".08em",marginBottom:10}}>For Brands</div>
+            <h3 style={{fontSize:18,fontWeight:700,fontFamily:"Syne,sans-serif",marginBottom:8}}>Manage partnerships, not chaos</h3>
+            <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.6,marginBottom:20}}>One place for briefs, contracts, content approvals, and payments. Track ROI with built-in affiliate analytics and conversion tracking.</p>
+            <button onClick={onGetStarted} className="btn btn-primary" style={{width:"100%"}}>Join as Brand</button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer style={{borderTop:"1px solid var(--border)",padding:"32px 24px",textAlign:"center"}}>
+        <img src="assets/logo-white.svg" alt="bridgn" className="nav-logo" style={{height:20,marginBottom:12,display:"inline-block"}}/>
+        <p style={{fontSize:12,color:"var(--text3)",margin:0}}>The creator-brand partnership platform</p>
+      </footer>
+    </div>
+  );
+}
+
+function AuthScreen({onAuth,defaultMode,onBack}) {
+  const [mode,setMode] = useState(defaultMode||"login");
   const [form,setForm] = useState({email:"",password:"",name:"",role:"creator",brands:""});
   const [loading,setLoading] = useState(false);
   const [error,setError] = useState("");
@@ -7985,12 +8104,12 @@ function AuthScreen({onAuth}) {
   };
 
   return (
-    <div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,position:"relative",overflow:"hidden"}}>
-      <div style={{position:"fixed",width:350,height:350,borderRadius:"50%",background:"radial-gradient(circle,rgba(167,139,250,.06),transparent 68%)",top:"40%",left:"30%",pointerEvents:"none"}}></div>
-      <div style={{width:"100%",maxWidth:440,position:"relative",zIndex:1,animation:"fadeIn .4s cubic-bezier(.16,1,.3,1)"}}>
-        <div style={{textAlign:"center",marginBottom:40}}>
-          <img src="assets/logo-auth.svg" alt="bridgn" style={{height:80,marginBottom:10}}/>
-          <div style={{fontSize:14,color:"var(--text2)",letterSpacing:".01em"}}>The creator &amp; brand partnership platform</div>
+    <div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div style={{width:"100%",maxWidth:440,animation:"fadeIn .3s ease"}}>
+        {onBack&&<button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--text2)",fontFamily:"Space Grotesk,sans-serif",marginBottom:20,display:"flex",alignItems:"center",gap:6}}>← Back to home</button>}
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <img src="assets/logo-auth.svg" alt="bridgn" style={{height:64,marginBottom:8}}/>
+          <div style={{fontSize:13,color:"var(--text3)"}}>The creator &amp; brand partnership platform</div>
         </div>
         <div className="card-lg" style={{padding:36,boxShadow:"var(--shadow-lg)"}}>
           {mode==="login"&&(
@@ -8379,9 +8498,16 @@ function App() {
     </div>
   );
 
+  const [showAuth,setShowAuth] = useState(false);
+  const [authMode,setAuthMode] = useState("signup");
+
   if(!authUser) {
     if(inviteCtx) return React.createElement(InviteWelcomeScreen,{inviteCtx,onAuth:handleInviteAuth});
-    return React.createElement(AuthScreen,{onAuth:u=>{setAuthUser(u);const r=u.user_metadata?.role||"creator";setRole(r);}});
+    if(!showAuth) return React.createElement(LandingPage,{
+      onGetStarted:()=>{setAuthMode("signup");setShowAuth(true);},
+      onLogin:()=>{setAuthMode("login");setShowAuth(true);},
+    });
+    return React.createElement(AuthScreen,{onAuth:u=>{setAuthUser(u);const r=u.user_metadata?.role||"creator";setRole(r);},defaultMode:authMode,onBack:()=>setShowAuth(false)});
   }
 
   const userName = authUser.user_metadata?.full_name || authUser.email.split("@")[0];
