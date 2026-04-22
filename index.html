@@ -7810,6 +7810,23 @@ function LandingPage({onGetStarted,onLogin}) {
       <style>{`
         @keyframes lpFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(1.5deg)}}
         @keyframes lpWave{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+        @keyframes lpBubble{
+          0%{transform:translateY(0) translateX(0) scale(1);opacity:0}
+          10%{opacity:.6}
+          90%{opacity:.3}
+          100%{transform:translateY(-100vh) translateX(30px) scale(.6);opacity:0}
+        }
+        @keyframes lpCaustic{
+          0%{transform:translate(0,0) rotate(0deg) scale(1)}
+          33%{transform:translate(3%,-2%) rotate(8deg) scale(1.05)}
+          66%{transform:translate(-2%,3%) rotate(-5deg) scale(.97)}
+          100%{transform:translate(0,0) rotate(0deg) scale(1)}
+        }
+        @keyframes lpShimmer{
+          0%{opacity:.03}
+          50%{opacity:.08}
+          100%{opacity:.03}
+        }
         .lp-hero-bg{position:absolute;inset:0;z-index:0;
           background:linear-gradient(180deg,
             #c8e6f0 0%,
@@ -7819,6 +7836,50 @@ function LandingPage({onGetStarted,onLogin}) {
             #0e5f82 65%,
             #0a4260 80%,
             #07293d 100%);
+        }
+        /* Caustic light ripples — pool-bottom light refraction effect */
+        .lp-caustic{
+          position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+        }
+        .lp-caustic-layer{
+          position:absolute;inset:-20%;
+          background:
+            radial-gradient(ellipse 80px 60px at 20% 30%, rgba(255,255,255,.1) 0%, transparent 70%),
+            radial-gradient(ellipse 120px 80px at 55% 45%, rgba(255,255,255,.07) 0%, transparent 70%),
+            radial-gradient(ellipse 90px 70px at 75% 25%, rgba(255,255,255,.09) 0%, transparent 70%),
+            radial-gradient(ellipse 100px 60px at 35% 70%, rgba(255,255,255,.06) 0%, transparent 70%),
+            radial-gradient(ellipse 70px 90px at 85% 65%, rgba(255,255,255,.08) 0%, transparent 70%),
+            radial-gradient(ellipse 60px 80px at 15% 80%, rgba(255,255,255,.05) 0%, transparent 70%),
+            radial-gradient(ellipse 110px 50px at 60% 85%, rgba(255,255,255,.07) 0%, transparent 70%);
+          animation:lpCaustic 8s ease-in-out infinite;
+        }
+        .lp-caustic-layer2{
+          position:absolute;inset:-20%;
+          background:
+            radial-gradient(ellipse 100px 70px at 40% 20%, rgba(255,255,255,.06) 0%, transparent 70%),
+            radial-gradient(ellipse 80px 100px at 70% 55%, rgba(255,255,255,.08) 0%, transparent 70%),
+            radial-gradient(ellipse 90px 60px at 25% 60%, rgba(255,255,255,.05) 0%, transparent 70%),
+            radial-gradient(ellipse 120px 80px at 80% 80%, rgba(255,255,255,.07) 0%, transparent 70%),
+            radial-gradient(ellipse 70px 90px at 50% 40%, rgba(255,255,255,.06) 0%, transparent 70%);
+          animation:lpCaustic 12s ease-in-out 2s infinite reverse;
+        }
+        /* Light rays from surface */
+        .lp-rays{
+          position:absolute;top:0;left:0;right:0;height:70%;z-index:0;pointer-events:none;
+          background:
+            linear-gradient(168deg, rgba(255,255,255,.06) 0%, transparent 40%),
+            linear-gradient(185deg, rgba(255,255,255,.04) 0%, transparent 35%),
+            linear-gradient(175deg, rgba(255,255,255,.05) 5%, transparent 45%);
+          animation:lpShimmer 6s ease-in-out infinite;
+        }
+        /* Bubbles */
+        .lp-bubble{
+          position:absolute;
+          border-radius:50%;
+          background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.5), rgba(255,255,255,.08) 60%, transparent);
+          border:1px solid rgba(255,255,255,.15);
+          pointer-events:none;
+          z-index:1;
         }
         .lp-wave{position:absolute;bottom:-2px;left:0;width:200%;height:60px;z-index:1;opacity:.6}
         .lp-wave path{fill:#f0f6fa}
@@ -7831,12 +7892,43 @@ function LandingPage({onGetStarted,onLogin}) {
           .lp-bento{grid-template-columns:1fr !important}
           .lp-bento>div:first-child{grid-row:auto !important}
           .lp-cta-grid{grid-template-columns:1fr !important}
+          .lp-caustic,.lp-rays{display:none}
         }
       `}</style>
 
       {/* ══════ HERO — Ocean gradient with floating cards + mockup ══════ */}
       <div style={{position:"relative",minHeight:"100vh",display:"flex",flexDirection:"column"}}>
         <div className="lp-hero-bg"/>
+
+        {/* Caustic light ripples */}
+        <div className="lp-caustic">
+          <div className="lp-caustic-layer"/>
+          <div className="lp-caustic-layer2"/>
+        </div>
+
+        {/* Light rays from surface */}
+        <div className="lp-rays"/>
+
+        {/* Bubbles */}
+        {[
+          {w:4,l:"12%",d:0,dur:14},
+          {w:6,l:"25%",d:2,dur:18},
+          {w:3,l:"38%",d:5,dur:12},
+          {w:8,l:"52%",d:1,dur:20},
+          {w:5,l:"65%",d:4,dur:16},
+          {w:3,l:"78%",d:7,dur:13},
+          {w:7,l:"88%",d:3,dur:19},
+          {w:4,l:"45%",d:6,dur:15},
+          {w:5,l:"8%",d:9,dur:17},
+          {w:3,l:"92%",d:8,dur:14},
+          {w:6,l:"32%",d:11,dur:21},
+          {w:4,l:"72%",d:10,dur:16},
+        ].map((b,i)=>(
+          <div key={i} className="lp-bubble" style={{
+            width:b.w,height:b.w,left:b.l,bottom:"-5%",
+            animation:`lpBubble ${b.dur}s ease-in ${b.d}s infinite`,
+          }}/>
+        ))}
 
         {/* Wave divider at bottom */}
         <svg className="lp-wave lp-wave2" viewBox="0 0 1440 60" preserveAspectRatio="none">
