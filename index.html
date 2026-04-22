@@ -79,7 +79,8 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
 .navbar{height:64px;background:rgba(10,11,18,.93);backdrop-filter:blur(20px) saturate(160%);border-bottom:1px solid var(--border);box-shadow:0 4px 24px rgba(0,0,0,.3);display:flex;align-items:center;padding:0 22px;gap:14px;position:sticky;top:0;z-index:100;flex-shrink:0}
 .navbar::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(91,138,245,.7) 30%,rgba(167,139,250,.8) 50%,rgba(91,138,245,.7) 70%,transparent 100%);pointer-events:none}
 .navbar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(255,255,255,.03) 1px,rgba(255,255,255,.03) 2px);pointer-events:none;z-index:0}
-.nav-logo{font-family:"Syne",sans-serif;font-size:25px;font-weight:800;letter-spacing:-.5px;margin-right:auto;cursor:pointer;user-select:none;background:linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 12px rgba(91,138,245,.55)) drop-shadow(0 0 28px rgba(91,138,245,.2))}
+.nav-logo{height:28px;cursor:pointer;user-select:none;filter:drop-shadow(0 0 12px rgba(91,138,245,.35))}
+html.light .nav-logo{content:url("assets/logo-dark.svg")}
 .role-toggle{display:flex;background:rgba(0,0,0,.5);border-radius:var(--radius-sm);padding:3px;border:1px solid var(--border)}
 .role-btn{padding:5px 16px;border-radius:7px;border:none;cursor:pointer;font-family:"Space Grotesk",sans-serif;font-size:13px;font-weight:500;transition:all .18s;background:transparent;color:var(--text2)}
 .role-btn.active{background:var(--surface2);color:var(--text);box-shadow:var(--shadow-sm)}
@@ -288,7 +289,7 @@ body::after{content:"";position:fixed;inset:-10%;pointer-events:none;z-index:0;
   .g4,.g3{grid-template-columns:1fr}
   .navbar{padding:0 10px;gap:6px}
   .content-area{padding:12px 10px 90px}
-  .nav-logo{font-size:20px !important}
+  .nav-logo{height:22px !important}
   .card-lg{border-radius:12px}
   .page-title{font-size:22px}
   .ph-row{gap:8px}
@@ -956,7 +957,7 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle,darkMode,setDa
       <div className="nav-hamburger" onClick={onMenuToggle} aria-label="Open menu">
         <span/><span/><span/>
       </div>
-      <span className="nav-logo" onClick={()=>setPage("dashboard")}>bridgn</span>
+      <img className="nav-logo" onClick={()=>setPage("dashboard")} src="assets/logo-white.svg" alt="bridgn" style={{height:28,cursor:"pointer",display:"block"}}/>
       <div style={{marginRight:"auto",marginLeft:16,flexShrink:1}} className="nav-role-badge">
         <span style={{padding:"5px 14px",borderRadius:99,fontSize:12,fontWeight:700,background:role==="creator"?"rgba(91,138,245,.15)":role==="agency"?"rgba(167,139,250,.15)":"rgba(240,160,80,.15)",color:role==="creator"?"var(--accent)":role==="agency"?"var(--purple)":"var(--accent2)",border:"1px solid "+(role==="creator"?"rgba(91,138,245,.3)":role==="agency"?"rgba(167,139,250,.3)":"rgba(240,160,80,.3)")}}>
           {role==="creator"?"✨ Creator":role==="agency"?"💼 Agency":"📋 Brand"}
@@ -1043,7 +1044,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
   return (
     <aside className={"sidebar"+(mobOpen?" mob-open":"")}>
       <div className="sidebar-mob-header" style={{alignItems:"center",justifyContent:"space-between",padding:"16px 14px 8px",borderBottom:"1px solid var(--border)",marginBottom:4}}>
-        <span style={{fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,letterSpacing:"-.4px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>bridgn</span>
+        <img src="assets/logo-white.svg" alt="bridgn" className="nav-logo" style={{height:22}}/>
         <button onClick={onClose} style={{background:"none",border:"none",color:"var(--text3)",fontSize:20,cursor:"pointer",lineHeight:1,padding:"2px 4px"}}>✕</button>
       </div>
       {nav.map((n,i)=>n.section?(
@@ -1866,7 +1867,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
               {/* Grid texture */}
               <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(255,255,255,.025) 27px,rgba(255,255,255,.025) 28px),repeating-linear-gradient(90deg,transparent,transparent 27px,rgba(255,255,255,.025) 27px,rgba(255,255,255,.025) 28px)",pointerEvents:"none"}}/>
               <div style={{position:"relative",zIndex:1}}>
-                <div style={{fontFamily:"Syne,sans-serif",fontSize:22,fontWeight:800,letterSpacing:"-1px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",marginBottom:20,display:"inline-block"}}>bridgn</div>
+                <img src="assets/logo-white.svg" alt="bridgn" style={{height:24,marginBottom:20,display:"inline-block"}}/>
                 <div style={{fontSize:28,fontWeight:800,color:"white",fontFamily:"Syne,sans-serif",letterSpacing:"-.5px",lineHeight:1.15,marginBottom:10}}>Welcome, {firstName}! 🎉</div>
                 <div style={{fontSize:14,color:"rgba(255,255,255,.55)",lineHeight:1.65}}>You're {4-doneCount} step{4-doneCount!==1?"s":""} away from your first brand deal.<br/>Let's get your profile ready to go.</div>
                 {/* Mini progress dots */}
@@ -7851,7 +7852,7 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
 
         {/* bridgn logo */}
         <div style={{textAlign:"center",marginBottom:28}}>
-          <div style={{fontFamily:"Syne,sans-serif",fontSize:36,fontWeight:800,background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",letterSpacing:"-1px"}}>bridgn</div>
+          <img src="assets/logo-auth.svg" alt="bridgn" style={{height:60}}/>
         </div>
 
         {mode===null&&(
@@ -7985,7 +7986,7 @@ function AuthScreen({onAuth}) {
       <div style={{position:"fixed",width:350,height:350,borderRadius:"50%",background:"radial-gradient(circle,rgba(167,139,250,.06),transparent 68%)",top:"40%",left:"30%",pointerEvents:"none"}}></div>
       <div style={{width:"100%",maxWidth:440,position:"relative",zIndex:1,animation:"fadeIn .4s cubic-bezier(.16,1,.3,1)"}}>
         <div style={{textAlign:"center",marginBottom:40}}>
-          <div style={{fontFamily:"Syne,sans-serif",fontSize:52,fontWeight:800,background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",marginBottom:10,letterSpacing:"-1px"}}>bridgn</div>
+          <img src="assets/logo-auth.svg" alt="bridgn" style={{height:80,marginBottom:10}}/>
           <div style={{fontSize:14,color:"var(--text2)",letterSpacing:".01em"}}>The creator &amp; brand partnership platform</div>
         </div>
         <div className="card-lg" style={{padding:36,boxShadow:"0 24px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.07)"}}>
@@ -8370,7 +8371,7 @@ function App() {
 
   if(authLoading) return (
     <div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
-      <div style={{fontFamily:"Syne,sans-serif",fontSize:40,fontWeight:800,letterSpacing:"-1px",background:"linear-gradient(135deg,var(--accent) 0%,#c084fc 48%,var(--accent2) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>bridgn</div>
+      <img src="assets/logo-auth.svg" alt="bridgn" style={{height:60}}/>
       <div style={{width:28,height:28,border:"2.5px solid var(--border)",borderTop:"2.5px solid var(--accent)",borderRadius:"50%",animation:"spin .8s linear infinite"}}></div>
     </div>
   );
