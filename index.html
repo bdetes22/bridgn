@@ -7948,7 +7948,7 @@ function LandingPage({onGetStarted,onLogin}) {
 
         {/* Nav */}
         {navDrop&&<div style={{position:"fixed",inset:0,zIndex:8}} onClick={()=>setNavDrop(null)}/>}
-        <nav style={{position:"relative",zIndex:10,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 32px",maxWidth:1100,margin:"0 auto",width:"100%"}}>
+        <nav style={{position:"relative",zIndex:10,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 24px",maxWidth:1100,margin:"12px auto 0",width:"calc(100% - 48px)",background:"rgba(0,0,0,.25)",backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)",borderRadius:99,border:"1px solid rgba(255,255,255,.1)"}}>
           <div style={{display:"flex",alignItems:"center",gap:28}}>
             <img src="assets/logo-white.svg" alt="bridgn" style={{height:22}}/>
             {/* Dropdown triggers */}
