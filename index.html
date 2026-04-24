@@ -2295,7 +2295,7 @@ function CreatorDealsPage({setPage,setSelected,deals}) {
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
         {list.map(d=>(
-          <div key={d.id} className="card card-hover" style={{padding:"15px 18px"}} onClick={()=>{setSelected(d);setPage("active-deal");}}>
+          <div key={d.id} className="card card-hover" style={{padding:"15px 18px"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
             <div style={{display:"flex",alignItems:"center",gap:14}}>
               <div className="deal-av" style={{background:bc(d.ci)}}>{d.bi}</div>
               <div style={{flex:1}}>
@@ -2326,10 +2326,11 @@ function dealRelTime(ts) {
   return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
 }
 
-function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
+function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,selected}) {
   const loading = useSkeleton();
   const [fireConfetti,confettiFiring] = useConfetti();
-  const [activeDeal,setActiveDeal] = useState(deals.find(d=>d.status==="Active")||deals.find(d=>d.status!=="Completed")||deals[0]);
+  const [dealView,setDealView] = useState(selected?"room":"list");
+  const [activeDeal,setActiveDeal] = useState(selected||deals.find(d=>!["Completed","payment_released"].includes(d.status))||deals[0]);
 
   // Keep activeDeal in sync when deals array changes (loaded from DB, refreshed, etc.)
   // Skip if poll is paused — local state is more recent than what the server returned.
@@ -2754,20 +2755,91 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   };
 
   if(loading) return <SkeletonPage layout="deal-room"/>;
-  if(!activeDeal) return (
-    <div className="fade-in">
-      <div className="ph-row"><div><div className="page-title">Deal Room</div><div className="page-subtitle">Shared workspace for managing deals.</div></div></div>
-      <div className="card" style={{padding:"40px 20px",textAlign:"center"}}>
-        <div style={{fontSize:"32px",marginBottom:12}}></div>
-        <div style={{fontSize:"15px",fontWeight:600,marginBottom:6}}>No active deals</div>
-        <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:14}}>
-          {isBrand
-            ? "When a creator invites you to a deal, it will appear here."
-            : "Create a new deal to get started. Your shared workspace with the brand will appear here."}
+
+  // ── Deal List View (overview of all deals) ──
+  if(dealView==="list" || !activeDeal) {
+    const completedStatuses = ["Completed","payment_released"];
+    const activeDeals = deals.filter(d=>!completedStatuses.includes(d.status));
+    const completedDeals = deals.filter(d=>completedStatuses.includes(d.status));
+    const selectDeal = (d) => { setActiveDeal(d); syncFromDeal(d); setDealView("room"); };
+    return (
+      <div className="fade-in">
+        <div className="ph-row">
+          <div>
+            <div className="page-title">Deal Room</div>
+            <div className="page-subtitle">Your partnership workspace. Click a deal to open it.</div>
+          </div>
+          {!isBrand&&<button className="btn btn-primary" onClick={()=>setPage("new-deal")}>+ New Deal</button>}
         </div>
-        <button className="btn btn-primary btn-sm" onClick={()=>setPage(isBrand?"deals":"new-deal")}>{isBrand?"View Deals":"+ New Deal"}</button>
+
+        {deals.length===0?(
+          <div className="card" style={{padding:"48px 20px",textAlign:"center"}}>
+            <div style={{fontSize:15,fontWeight:600,marginBottom:8}}>No deals yet</div>
+            <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.65,marginBottom:16,maxWidth:320,margin:"0 auto 16px"}}>
+              {isBrand?"When a creator invites you to a deal, it will appear here.":"Create your first deal to get started."}
+            </div>
+            <button className="btn btn-primary btn-sm" onClick={()=>setPage(isBrand?"dashboard":"new-deal")}>{isBrand?"Back to Dashboard":"Create a Deal"}</button>
+          </div>
+        ):(<>
+          {activeDeals.length>0&&(
+            <div style={{marginBottom:24}}>
+              <div style={{fontSize:13,fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>Active ({activeDeals.length})</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {activeDeals.map(d=>{
+                  const steps = [true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.every?.(Boolean),d.status==="payment_released"].filter(Boolean).length;
+                  return (
+                    <div key={d.id} className="card card-hover" style={{padding:"16px 18px",cursor:"pointer"}} onClick={()=>selectDeal(d)}>
+                      <div style={{display:"flex",gap:14,alignItems:"center"}}>
+                        <div style={{width:40,height:40,borderRadius:10,background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"white",flexShrink:0}}>{d.bi}</div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap"}}>
+                            <span style={{fontSize:14,fontWeight:600}}>{isBrand?d.creatorName||"Creator":d.brand}</span>
+                            <StatusBadge s={d.status}/>
+                          </div>
+                          <div style={{fontSize:12,color:"var(--text2)"}}>{d.campaignTitle} · {d.platform} · Due {d.deadline}</div>
+                          <div style={{marginTop:6}}>
+                            <div style={{height:3,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}>
+                              <div style={{height:"100%",borderRadius:99,background:"var(--accent)",width:((steps/6)*100)+"%",transition:"width .3s"}}/>
+                            </div>
+                            <div style={{fontSize:10,color:"var(--text3)",marginTop:3}}>{steps} of 6 steps complete</div>
+                          </div>
+                        </div>
+                        <div style={{textAlign:"right",flexShrink:0}}>
+                          <div style={{fontSize:18,fontWeight:400,fontFamily:"DM Serif Display,serif"}}>${d.amount.toLocaleString()}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {completedDeals.length>0&&(
+            <div>
+              <div style={{fontSize:13,fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>Completed ({completedDeals.length})</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {completedDeals.map(d=>(
+                  <div key={d.id} className="card card-hover" style={{padding:"14px 16px",cursor:"pointer",opacity:.7}} onClick={()=>selectDeal(d)}>
+                    <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                      <div style={{width:36,height:36,borderRadius:10,background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white",flexShrink:0}}>{d.bi}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <span style={{fontSize:13,fontWeight:600}}>{isBrand?d.creatorName||"Creator":d.brand}</span>
+                        <div style={{fontSize:11,color:"var(--text3)"}}>{d.campaignTitle} · ${d.amount.toLocaleString()}</div>
+                      </div>
+                      <StatusBadge s={d.status}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>)}
       </div>
-    </div>
+    );
+  }
+
+  // ── Deal Room View (single deal, full workspace) ──
+  if(!activeDeal) return null;
   );
   const g=bg(activeDeal.ci);
   const sendMsg=()=>{
@@ -2804,13 +2876,13 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal}) {
   const pct = Math.round((liveStepsDone/6)*100);
   return (
     <div className="fade-in">
+      {deals.length>1&&<button onClick={()=>{setDealView("list");setSelected&&setSelected(null);}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--text2)",fontFamily:"DM Sans,sans-serif",marginBottom:12,display:"flex",alignItems:"center",gap:4}}>&larr; All deals</button>}
       <div className="ph-row">
         <div>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
-            <div className="page-title">Deal Room</div>
-            <div style={{padding:"4px 12px",borderRadius:99,background:"linear-gradient(135deg,"+g[0]+"22,"+g[1]+"15)",border:"1px solid "+g[0]+"40",fontSize:"12px",fontWeight:700,color:g[0]}}>Live</div>
+            <div className="page-title">{isBrand?activeDeal.creatorName||"Deal Room":activeDeal.brand||"Deal Room"}</div>
           </div>
-          <div className="page-subtitle">Shared workspace — {isBrand?"you and the creator":"you and the brand"} see this in real time.</div>
+          <div className="page-subtitle">{activeDeal.campaignTitle} · {activeDeal.platform} · Due {activeDeal.deadline}</div>
         </div>
         <div style={{display:"flex",gap:8}}>
           <select className="fsel" style={{width:"auto",padding:"8px 12px",fontSize:"13px"}} value={activeDeal.id} onChange={e=>{const d=deals.find(x=>x.id===parseInt(e.target.value));if(d)setActiveDeal(d);}}>
@@ -3938,7 +4010,7 @@ function DisputePage({deal,setPage}) {
   );
   return (
     <div className="fade-in">
-      <button className="btn btn-secondary btn-sm" style={{marginBottom:18}} onClick={()=>setPage("active-deal")}>Back to Deal</button>
+      <button className="btn btn-secondary btn-sm" style={{marginBottom:18}} onClick={()=>setPage("deal-room")}>Back to Deal</button>
       <div style={{maxWidth:580}}>
         <div className="ph-row"><div><div className="page-title">File a Dispute</div><div className="page-subtitle">Something wrong? Let us help resolve it.</div></div></div>
         <div className="card-lg" style={{padding:"14px 18px",marginBottom:18,display:"flex",gap:12,alignItems:"center"}}>
@@ -9046,7 +9118,7 @@ function App() {
         case "campaigns":    return React.createElement(CampaignsPage,{setPage,setSelected,campaignQuestions,setCampaignQuestions,userName});
         case "campaign-detail": return React.createElement(CampaignDetail,{campaign:selected,setPage});
         case "deals":        return React.createElement(CreatorDealsPage,{setPage,setSelected,deals});
-        case "deal-room":    return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal});
+        case "deal-room":    return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal,selected});
         case "active-deal":  return React.createElement(ActiveDealPage,{deal:selected,setPage});
         case "new-deal":     return React.createElement(NewDealPage,{setPage,onDealCreated:addDeal,userName,authUser});
         case "dispute":      return React.createElement(DisputePage,{deal:selected,setPage});
@@ -9076,7 +9148,7 @@ function App() {
         case "campaigns":     return React.createElement(BrandCampaignsPage,{setPage,setSelected,campaignQuestions,setCampaignQuestions});
         case "campaign-calendar": return React.createElement(CampaignCalendarPage,{});
         case "deals":         return React.createElement(BrandDealsPage,{setPage,setSelected,deals});
-        case "deal-room":     return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal});
+        case "deal-room":     return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal,selected});
         case "content-library": return React.createElement(ContentLibraryPage,{});
         case "affiliate":     return React.createElement(AffiliateManagerPage,{authUser,deals});
         case "brief-builder": return React.createElement(BriefBuilderPage,{});
