@@ -251,17 +251,23 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 @media(max-width:768px){
   .nav-hamburger{display:flex}
   .sidebar-mob-header{display:flex}
-  .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:300;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);width:268px;padding-top:0}
-  .sidebar.mob-open{transform:translateX(0)}
-  .main-layout{overflow:auto;height:calc(100vh - 64px)}
+  /* On mobile, sidebar is always the full slide-in, never collapsed */
+  .sidebar,.sidebar.collapsed{position:fixed;top:0;left:0;height:100vh;z-index:300;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);width:268px !important;padding-top:0}
+  .sidebar.mob-open,.sidebar.collapsed.mob-open{transform:translateX(0);width:268px !important}
+  .sidebar.collapsed .sidebar-label{display:block}
+  .sidebar.collapsed .nav-item{justify-content:flex-start;padding:9px 14px;margin:1px 8px;width:calc(100% - 16px)}
+  .sidebar.collapsed .nav-item span:not(.nav-icon){display:inline}
+  .sidebar-collapse-btn{display:none !important}
+  .main-layout{overflow:auto;height:calc(100vh - 56px)}
   .content-area{padding:18px 16px 90px}
   .g4{grid-template-columns:repeat(2,1fr)}
   .g3{grid-template-columns:repeat(2,1fr)}
   .g2{grid-template-columns:1fr}
   .frow{grid-template-columns:1fr}
   .ph-row{flex-wrap:wrap;gap:12px}
-  .stat-value{font-size:26px}
-  .page-title{font-size:28px}
+  .stat-value{font-size:22px}
+  .stat-card{padding:16px}
+  .page-title{font-size:24px}
   .det-body{padding:16px}
   table.tbl{display:block;overflow-x:auto;white-space:nowrap}
   .mob-bottom-nav{display:flex}
@@ -270,20 +276,26 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
   .msg-page-threads{display:none}
   .nav-clock{display:none}
   .nav-role-badge{display:none}
+  .nav-spacer{display:none}
   .navbar{padding:0 12px;gap:8px}
   .mob-bottom-nav button span.mob-label{font-size:9px}
+  /* Cmd+K modal full width on mobile */
+  .cmdk-modal{width:calc(100% - 32px) !important;max-width:none !important}
 }
 @media(max-width:480px){
   .g4,.g3{grid-template-columns:1fr}
   .navbar{padding:0 10px;gap:6px}
   .content-area{padding:12px 10px 90px}
-  .nav-logo{height:22px !important}
-  .card-lg{border-radius:12px}
-  .page-title{font-size:22px}
+  .nav-logo{height:20px !important}
+  .card,.card-lg{border-radius:10px}
+  .page-title{font-size:20px}
+  .page-subtitle{font-size:12px}
   .ph-row{gap:8px}
   .det-stats{grid-template-columns:1fr !important}
   .btn{font-size:13px;padding:10px 16px}
   textarea,input{font-size:16px !important} /* prevent iOS zoom on focus */
+  .stat-value{font-size:20px}
+  .stat-label{font-size:10px}
 }
 /* ── MOBILE BOTTOM NAV ── */
 .mob-bottom-nav{
@@ -291,16 +303,9 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
   position:fixed;bottom:0;left:0;right:0;z-index:200;
   height:62px;
   padding-bottom:env(safe-area-inset-bottom,0px);
-  background:rgba(8,9,18,.94);
-  backdrop-filter:blur(24px) saturate(160%);
-  -webkit-backdrop-filter:blur(24px) saturate(160%);
-  border-top:1px solid rgba(255,255,255,.08);
-  box-shadow:0 -1px 0 rgba(255,255,255,.04),0 -8px 32px rgba(0,0,0,.5);
-}
-html.light .mob-bottom-nav{
-  background:rgba(248,247,244,.95);
-  border-top-color:var(--border);
-  box-shadow:0 -1px 0 var(--border),0 -4px 20px rgba(0,0,0,.06);
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  box-shadow:0 -2px 12px rgba(0,0,0,.06);
 }
 @keyframes tabIndicator{from{opacity:0;transform:translateX(-50%) scaleX(.25)}to{opacity:1;transform:translateX(-50%) scaleX(1)}}
 @keyframes tabIconPop{0%{transform:scale(.75);opacity:.4}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
@@ -7991,6 +7996,11 @@ function LandingPage({onGetStarted,onLogin}) {
           .lp-deep-dive{flex-direction:column !important}
           .lp-deep-dive-reverse{flex-direction:column !important}
           .lp-deep-dive>div,.lp-deep-dive-reverse>div{width:100% !important}
+          .lp-nav-links{display:none !important}
+          .lp-nav{padding:10px 16px !important;margin:8px 12px 0 !important;width:calc(100% - 24px) !important}
+          .lp-hero-h1{font-size:32px !important}
+          .lp-hero-sub{font-size:15px !important}
+          .lp-mockup-grid{grid-template-columns:1fr !important}
         }
         /* Hover micro-interactions */
         .lp-card{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
@@ -8045,10 +8055,11 @@ function LandingPage({onGetStarted,onLogin}) {
 
         {/* Nav */}
         {navDrop&&<div style={{position:"fixed",inset:0,zIndex:8}} onClick={()=>setNavDrop(null)}/>}
-        <nav style={{position:navSticky?"fixed":"relative",top:navSticky?12:0,left:navSticky?"50%":"auto",transform:navSticky?"translateX(-50%)":"none",zIndex:100,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 24px",maxWidth:1100,margin:navSticky?0:"12px auto 0",width:"calc(100% - 48px)",background:navSticky?"rgba(0,0,0,.65)":"rgba(0,0,0,.25)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderRadius:99,border:"1px solid rgba(255,255,255,.1)",transition:"background .3s,box-shadow .3s",boxShadow:navSticky?"0 4px 24px rgba(0,0,0,.2)":"none"}}>
+        <nav className="lp-nav" style={{position:navSticky?"fixed":"relative",top:navSticky?12:0,left:navSticky?"50%":"auto",transform:navSticky?"translateX(-50%)":"none",zIndex:100,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 24px",maxWidth:1100,margin:navSticky?0:"12px auto 0",width:"calc(100% - 48px)",background:navSticky?"rgba(0,0,0,.65)":"rgba(0,0,0,.25)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderRadius:99,border:"1px solid rgba(255,255,255,.1)",transition:"background .3s,box-shadow .3s",boxShadow:navSticky?"0 4px 24px rgba(0,0,0,.2)":"none"}}>
           <div style={{display:"flex",alignItems:"center",gap:28}}>
             <img src="assets/logo-white.svg" alt="bridgn" style={{height:22}}/>
-            {/* Dropdown triggers */}
+            {/* Dropdown triggers — hidden on mobile */}
+            <div className="lp-nav-links" style={{display:"flex",gap:20}}>
             {[["creators","For Creators"],["brands","For Brands"]].map(([key,label])=>(
               <div key={key} style={{position:"relative"}}>
                 <button onClick={()=>setNavDrop(navDrop===key?null:key)} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:500,color:"rgba(255,255,255,.85)",display:"flex",alignItems:"center",gap:4}}>
@@ -8103,6 +8114,7 @@ function LandingPage({onGetStarted,onLogin}) {
                 )}
               </div>
             ))}
+            </div>
           </div>
           <div style={{display:"flex",gap:20,alignItems:"center"}}>
             <button onClick={onLogin} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:500,color:"rgba(255,255,255,.8)"}}>Log in</button>
