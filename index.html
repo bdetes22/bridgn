@@ -1739,9 +1739,10 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
   };
 
   if(loading) return <SkeletonPage layout="dashboard"/>;
-  const active = deals.filter(d=>d.status==="Active");
+  const completedStatuses = ["payment_released","Completed"];
+  const active = deals.filter(d=>!completedStatuses.includes(d.status));
   const external = deals.filter(d=>d.source==="external");
-  const pendingEscrow = deals.filter(d=>d.escrow&&!d.escrowReleased&&d.status!=="Completed");
+  const pendingEscrow = deals.filter(d=>["payment_held","content_delivered","payment_processing"].includes(d.status));
   const escrowTotal = pendingEscrow.reduce((s,d)=>s+d.amount,0);
   const firstName = (userName||"there").split(" ")[0];
   return (
@@ -5096,7 +5097,7 @@ function ExpensesPage() {
 function BrandDashboard({setPage,setSelected,deals=[]}) {
   const loading = useSkeleton();
   if(loading) return <SkeletonPage layout="dashboard"/>;
-  const active = deals.filter(d=>d.status!=="Completed"&&d.status!=="payment_released");
+  const active = deals.filter(d=>!["Completed","payment_released"].includes(d.status));
   const escrowDeals = deals.filter(d=>["payment_held","content_delivered","payment_processing"].includes(d.status));
   const escrowTotal = escrowDeals.reduce((s,d)=>s+d.amount,0);
   const contentCount = deals.filter(d=>d.contentFile).length;
@@ -8926,7 +8927,7 @@ function App() {
 
   // Reload deals when navigating to deal-related pages so fresh data shows
   useEffect(()=>{
-    if(page==="deal-room"||page==="deals") loadDeals();
+    if(page==="dashboard"||page==="deal-room"||page==="deals") loadDeals();
   },[page]);
 
   // Recover pending invite after email verification redirect.
