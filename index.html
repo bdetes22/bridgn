@@ -61,7 +61,14 @@ body::before,body::after{display:none}
 ::-webkit-scrollbar-thumb:hover{background:var(--text3)}
 .app-shell{display:flex;flex-direction:column;min-height:100vh}
 .main-layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 64px)}
-.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);padding:10px 0 0;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);padding:10px 0 0;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:width .2s ease}
+.sidebar.collapsed{width:60px}
+.sidebar.collapsed .sidebar-label{display:none}
+.sidebar.collapsed .sidebar-divider{margin:8px 10px 4px}
+.sidebar.collapsed .nav-item{justify-content:center;padding:9px 0;margin:1px 6px;width:calc(100% - 12px)}
+.sidebar.collapsed .nav-item span:not(.nav-icon){display:none}
+.sidebar.collapsed .nav-item .nav-icon{margin:0}
+.sidebar-collapse-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:10px 0;border:none;background:none;cursor:pointer;color:var(--text3);font-size:16px;border-top:1px solid var(--border)}
 .content-area{flex:1;overflow-y:auto;overflow-x:hidden;padding:32px 36px;background:var(--bg);max-width:100%}
 .navbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 22px;gap:14px;position:sticky;top:0;z-index:100;flex-shrink:0}
 .navbar::before,.navbar::after{display:none}
@@ -1011,7 +1018,7 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle,darkMode,setDa
   );
 }
 
-function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
+function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collapsed,onToggleCollapse}) {
   const cNav = [
     {section:"Overview"},
     {k:"dashboard",l:"Dashboard",i:ICONS.home},
@@ -1054,7 +1061,10 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
   ];
   const nav = role==="creator"?cNav:bNav; // agency uses bNav
   return (
-    <aside className={"sidebar"+(mobOpen?" mob-open":"")}>
+    <aside className={"sidebar"+(mobOpen?" mob-open":"")+(collapsed?" collapsed":"")}>
+      <button className="sidebar-collapse-btn" onClick={onToggleCollapse} title={collapsed?"Expand sidebar":"Collapse sidebar"} style={{borderTop:"none",borderBottom:"1px solid var(--border)",marginBottom:4}}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{transform:collapsed?"rotate(0deg)":"rotate(180deg)",transition:"transform .2s ease"}}><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
       <div className="sidebar-mob-header" style={{alignItems:"center",justifyContent:"space-between",padding:"16px 14px 8px",borderBottom:"1px solid var(--border)",marginBottom:4}}>
         <img src="assets/logo-white.svg" alt="bridgn" className="nav-logo" style={{height:22}}/>
         <button onClick={onClose} style={{background:"none",border:"none",color:"var(--text3)",fontSize:20,cursor:"pointer",lineHeight:1,padding:"2px 4px"}}>✕</button>
@@ -1065,13 +1075,13 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
           <div className="sidebar-label">{n.section}</div>
         </React.Fragment>
       ):(
-        <button key={n.k} className={"nav-item"+(page===n.k?" active":"")} onClick={()=>{setPage(n.k);onClose&&onClose();}}>
+        <button key={n.k} className={"nav-item"+(page===n.k?" active":"")} onClick={()=>{setPage(n.k);onClose&&onClose();}} title={collapsed?n.l:undefined}>
           <span className="nav-icon">{typeof n.i==="function"?n.i(16):n.i}</span>
           <span style={{flex:1}}>{n.l}</span>
           {n.soon&&<span style={{fontSize:"9px",fontWeight:700,background:"rgba(167,139,250,.15)",color:"var(--purple)",border:"1px solid rgba(167,139,250,.3)",borderRadius:99,padding:"1px 6px",letterSpacing:".04em",flexShrink:0}}>SOON</span>}
         </button>
       ))}
-      <div className="sidebar-footer">
+      {!collapsed&&<div className="sidebar-footer">
         <div style={{display:"flex",alignItems:"center",gap:10,padding:10,borderRadius:"var(--radius-sm)",cursor:"pointer"}}>
           <div className="nav-avatar" style={{flexShrink:0}}>{userInitials||"?"}</div>
           <div style={{flex:1,minWidth:0}}>
@@ -1079,7 +1089,10 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose}) {
             <div style={{fontSize:"11px",color:"var(--text3)",marginTop:1}}>{role==="creator"?"Creator Account":role==="agency"?"Agency Account":"Brand Account"}</div>
           </div>
         </div>
-      </div>
+      </div>}
+      {collapsed&&<div style={{marginTop:"auto"}}><button className="sidebar-collapse-btn" onClick={onToggleCollapse} title="Expand sidebar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+      </button></div>}
     </aside>
   );
 }
@@ -1832,11 +1845,25 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
             <div className="section-hdr"><span className="section-title">Active Deals</span><button className="section-link" onClick={()=>setPage("deals")}>View all</button></div>
             <div className="card">
               {active.length===0?(
-                <div style={{padding:"28px 20px",textAlign:"center"}}>
-                  <EmptySVG type="deals" size={120}/>
-                  <div style={{fontSize:"14px",fontWeight:600,marginBottom:6}}>No active deals yet</div>
-                  <div style={{fontSize:"12px",color:"var(--text2)",marginBottom:16,lineHeight:1.65}}>Create your first deal to get started. You can add deals from bridgn or import ones you negotiated elsewhere.</div>
-                  <button className="btn btn-primary btn-sm" onClick={()=>setPage("new-deal")}>+ Create First Deal</button>
+                <div style={{padding:"20px",position:"relative"}}>
+                  <div style={{opacity:.35,pointerEvents:"none"}}>
+                    <div style={{display:"flex",gap:14,alignItems:"center",padding:"12px 0"}}>
+                      <div style={{width:34,height:34,borderRadius:10,background:"var(--border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"var(--text3)"}}>AB</div>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:14,fontWeight:600,color:"var(--text3)"}}>Acme Brand</div>
+                        <div style={{fontSize:12,color:"var(--text3)"}}>Instagram · Due May 15</div>
+                      </div>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:15,fontWeight:700,color:"var(--text3)"}}>$2,500</div>
+                        <div style={{padding:"2px 8px",borderRadius:99,background:"var(--surface2)",fontSize:10,color:"var(--text3)"}}>Active</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(var(--bg),.5)"}}>
+                    <div style={{fontSize:14,fontWeight:600,marginBottom:8}}>No active deals yet</div>
+                    <div style={{fontSize:12,color:"var(--text2)",marginBottom:14,textAlign:"center",maxWidth:260}}>Create your first deal to start managing partnerships here.</div>
+                    <button className="btn btn-primary btn-sm" onClick={()=>setPage("new-deal")}>Create a Deal</button>
+                  </div>
                 </div>
               ):active.map((d,i)=>(
                 <div key={d.id} className="deal-row" style={i>0?{borderTop:"1px solid var(--border)"}:{}}>
@@ -5083,10 +5110,25 @@ function BrandDashboard({setPage,setSelected,deals=[]}) {
           <div className="section">
             <div className="section-hdr"><span className="section-title">Active Deals</span><button className="section-link" onClick={()=>setPage("deals")}>View all</button></div>
             {active.length===0?(
-              <div className="card" style={{padding:"32px 20px",textAlign:"center"}}>
-                <EmptySVG type="branddeals" size={116}/>
-                <div style={{fontSize:"14px",fontWeight:600,marginBottom:5}}>No active deals</div>
-                <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.65}}>When a creator invites you to a deal, it will appear here.</div>
+              <div className="card" style={{padding:"20px",position:"relative"}}>
+                <div style={{opacity:.35,pointerEvents:"none"}}>
+                  <div style={{display:"flex",gap:14,alignItems:"center",padding:"12px 0"}}>
+                    <div style={{width:34,height:34,borderRadius:10,background:"var(--border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"var(--text3)"}}>SC</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:14,fontWeight:600,color:"var(--text3)"}}>Sample Creator</div>
+                      <div style={{fontSize:12,color:"var(--text3)"}}>TikTok · Due Jun 1</div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontSize:15,fontWeight:700,color:"var(--text3)"}}>$1,800</div>
+                      <div style={{padding:"2px 8px",borderRadius:99,background:"var(--surface2)",fontSize:10,color:"var(--text3)"}}>Active</div>
+                    </div>
+                  </div>
+                </div>
+                <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(var(--bg),.5)"}}>
+                  <div style={{fontSize:14,fontWeight:600,marginBottom:8}}>No active deals</div>
+                  <div style={{fontSize:12,color:"var(--text2)",marginBottom:14,textAlign:"center",maxWidth:280}}>When a creator invites you, your deals will appear here.</div>
+                  <button className="btn btn-primary btn-sm" onClick={()=>setPage("deals")}>View Deals</button>
+                </div>
               </div>
             ):(
               <div className="card">
@@ -8711,6 +8753,8 @@ function App() {
   const [deals,setDeals] = useState([]);
   const [availStatus,setAvailStatus] = useState("open");
   const [mobSidebar,setMobSidebar] = useState(false);
+  const [cmdkOpen,setCmdkOpen] = useState(false);
+  const [cmdkQuery,setCmdkQuery] = useState("");
   const [socialLinks,setSocialLinks] = useState({ig:"",tt:"",yt:"",tw:"",web:"",bio:"",location:""});
   const [campaignQuestions,setCampaignQuestions] = useState({});
   const [onboarding,setOnboarding] = useState({seen:false,steps:{analytics:false}});
@@ -8719,12 +8763,33 @@ function App() {
     try { return localStorage.getItem("bridgn_stripe_connected")==="1"; } catch { return false; }
   });
   const [darkMode,setDarkMode] = useState(false);
+  const [sidebarCollapsed,setSidebarCollapsed] = useState(false);
   const [showAuth,setShowAuth] = useState(false);
   const [authMode,setAuthMode] = useState("signup");
+  const [toast,setToast] = useState(null);
+
+  const showToast = (msg, type="success") => {
+    setToast({msg,type});
+    setTimeout(()=>setToast(null), 3500);
+  };
 
   useEffect(()=>{
     document.documentElement.classList.toggle("light",!darkMode);
   },[darkMode]);
+
+  // Cmd+K keyboard shortcut
+  useEffect(()=>{
+    const handler = (e) => {
+      if((e.metaKey||e.ctrlKey)&&e.key==="k") {
+        e.preventDefault();
+        setCmdkOpen(o=>!o);
+        setCmdkQuery("");
+      }
+      if(e.key==="Escape") setCmdkOpen(false);
+    };
+    window.addEventListener("keydown",handler);
+    return ()=>window.removeEventListener("keydown",handler);
+  },[]);
 
   // Load/save onboarding state from localStorage once user is known
   useEffect(()=>{
@@ -9013,7 +9078,7 @@ function App() {
       <Navbar role={role} setPage={setPage} userInitials={userInitials} onSignOut={handleSignOut} onMenuToggle={()=>setMobSidebar(o=>!o)} darkMode={darkMode} setDarkMode={setDarkMode}/>
       <div className="main-layout">
         <div className={"sidebar-overlay"+(mobSidebar?" show":"")} onClick={()=>setMobSidebar(false)}/>
-        <Sidebar role={role} page={page} setPage={setPage} userName={userName} userInitials={userInitials} mobOpen={mobSidebar} onClose={()=>setMobSidebar(false)}/>
+        <Sidebar role={role} page={page} setPage={setPage} userName={userName} userInitials={userInitials} mobOpen={mobSidebar} onClose={()=>setMobSidebar(false)} collapsed={sidebarCollapsed} onToggleCollapse={()=>setSidebarCollapsed(c=>!c)}/>
         <main className="content-area">
           <div key={page} className="page-enter">
             {render()}
@@ -9021,6 +9086,50 @@ function App() {
         </main>
       </div>
       <MobBottomNav role={role} page={page} setPage={setPage}/>
+      {toast&&<div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",padding:"12px 24px",borderRadius:99,fontSize:13,fontWeight:600,color:"white",background:toast.type==="error"?"var(--red)":"var(--green)",boxShadow:"0 4px 20px rgba(0,0,0,.15)",zIndex:9999,animation:"slideUp .25s ease",whiteSpace:"nowrap"}}>{toast.msg}</div>}
+      {/* Cmd+K Quick Navigation */}
+      {cmdkOpen&&(()=>{
+        const allPages = role==="creator"?[
+          {k:"dashboard",l:"Dashboard"},{k:"messages",l:"Messages"},{k:"deals",l:"My Deals"},
+          {k:"new-deal",l:"New Deal"},{k:"deal-room",l:"Deal Room"},{k:"calendar",l:"Content Calendar"},
+          {k:"analytics",l:"Analytics"},{k:"rate-card",l:"Rate Card"},{k:"media-kit",l:"Media Kit"},
+          {k:"contracts",l:"Contract Vault"},{k:"earnings",l:"Earnings"},{k:"public-profile",l:"My Profile"},
+          {k:"settings",l:"Settings"},
+        ]:[
+          {k:"dashboard",l:"Dashboard"},{k:"messages",l:"Messages"},{k:"deals",l:"Deals Manager"},
+          {k:"deal-room",l:"Deal Room"},{k:"browse",l:"Browse Creators"},{k:"campaigns",l:"Campaigns"},
+          {k:"campaign-calendar",l:"Campaign Calendar"},{k:"content-library",l:"Content Library"},
+          {k:"roi",l:"ROI Tracker"},{k:"invoices",l:"Payments"},{k:"team",l:"Team"},{k:"settings",l:"Settings"},
+        ];
+        const filtered = cmdkQuery?allPages.filter(p=>p.l.toLowerCase().includes(cmdkQuery.toLowerCase())):allPages;
+        return (
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.4)",zIndex:10000,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:"20vh"}} onClick={()=>setCmdkOpen(false)}>
+            <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:12,width:"100%",maxWidth:480,boxShadow:"0 20px 60px rgba(0,0,0,.2)",overflow:"hidden",animation:"fadeIn .15s ease"}}>
+              <div style={{padding:"12px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:12,color:"var(--text3)",fontWeight:600}}>Go to</span>
+                <input
+                  autoFocus
+                  value={cmdkQuery}
+                  onChange={e=>setCmdkQuery(e.target.value)}
+                  onKeyDown={e=>{if(e.key==="Enter"&&filtered.length){setPage(filtered[0].k);setCmdkOpen(false);}}}
+                  placeholder="Search pages..."
+                  style={{flex:1,border:"none",outline:"none",background:"none",color:"var(--text)",fontSize:14,fontFamily:"DM Sans,sans-serif"}}
+                />
+                <span style={{fontSize:10,color:"var(--text3)",background:"var(--surface2)",padding:"2px 6px",borderRadius:4,fontWeight:600}}>ESC</span>
+              </div>
+              <div style={{maxHeight:300,overflowY:"auto"}}>
+                {filtered.map(p=>(
+                  <button key={p.k} onClick={()=>{setPage(p.k);setCmdkOpen(false);}} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 16px",border:"none",background:page===p.k?"var(--accent-light)":"none",cursor:"pointer",fontSize:13,fontWeight:page===p.k?600:400,color:page===p.k?"var(--accent)":"var(--text)",fontFamily:"DM Sans,sans-serif"}}
+                    onMouseEnter={e=>e.currentTarget.style.background="var(--surface2)"}
+                    onMouseLeave={e=>e.currentTarget.style.background=page===p.k?"var(--accent-light)":"transparent"}
+                  >{p.l}</button>
+                ))}
+                {filtered.length===0&&<div style={{padding:"20px 16px",textAlign:"center",fontSize:13,color:"var(--text3)"}}>No pages found</div>}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
