@@ -15,6 +15,9 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{overflow-x:hidden}
 body{overflow-x:hidden;max-width:100vw;-webkit-overflow-scrolling:touch}
+img,video,svg,canvas{max-width:100%;height:auto}
+pre,code{overflow-wrap:break-word;word-break:break-all;max-width:100%}
+#root{overflow-x:hidden}
 :root{
   --bg:#060818;--surface:#13161f;--surface2:#191d2c;--border:#21273d;
   --text:#edf0f7;--text2:#8691b0;--text3:#4b5470;
@@ -259,7 +262,8 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
   .sidebar.collapsed .nav-item span:not(.nav-icon){display:inline}
   .sidebar-collapse-btn{display:none !important}
   .main-layout{overflow:auto;height:calc(100vh - 56px)}
-  .content-area{padding:18px 16px 90px}
+  .content-area{padding:16px 12px 90px}
+  .card-lg{padding:14px 14px !important}
   .g4{grid-template-columns:repeat(2,1fr)}
   .g3{grid-template-columns:repeat(2,1fr)}
   .g2{grid-template-columns:1fr}
@@ -285,17 +289,22 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 @media(max-width:480px){
   .g4,.g3{grid-template-columns:1fr}
   .navbar{padding:0 10px;gap:6px}
-  .content-area{padding:12px 10px 90px}
+  .content-area{padding:12px 8px 90px}
   .nav-logo{height:20px !important}
-  .card,.card-lg{border-radius:10px}
+  .card,.card-lg{border-radius:10px;padding:14px 12px !important}
+  .card-lg>div{max-width:100%;overflow:hidden}
   .page-title{font-size:20px}
   .page-subtitle{font-size:12px}
   .ph-row{gap:8px}
   .det-stats{grid-template-columns:1fr !important}
-  .btn{font-size:13px;padding:10px 16px}
+  .btn{font-size:13px;padding:10px 14px}
+  .btn-sm{font-size:12px;padding:8px 12px}
   textarea,input{font-size:16px !important} /* prevent iOS zoom on focus */
   .stat-value{font-size:20px}
   .stat-label{font-size:10px}
+  code{font-size:11px !important;word-break:break-all}
+  /* Force all grid children to respect container */
+  [style*="gridTemplateColumns"]{grid-template-columns:1fr !important}
 }
 /* ── MOBILE BOTTOM NAV ── */
 .mob-bottom-nav{
