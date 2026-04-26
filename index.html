@@ -2450,7 +2450,20 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
   };
 
   // ── ACH Payment + Escrow state ──────────────────────────────────────────────
-  const [achPhase,setAchPhase] = useState("idle"); // idle | creating | collecting | confirming | done | error
+  const [achPhase,setAchPhase] = useState("idle");
+  const [previewFile,setPreviewFile] = useState(null); // {name, url}
+  const openPreview = (file) => {
+    if(!file?.dataUrl) return;
+    setPreviewFile({name:file.name, url:file.dataUrl});
+  };
+  const previewUrl = (url) => {
+    if(!url) return url;
+    const ext = (url.split("?")[0].split(".").pop()||"").toLowerCase();
+    // PDFs and images render natively in iframes
+    if(["pdf","png","jpg","jpeg","gif","webp","svg"].includes(ext)) return url;
+    // DOC/DOCX/PPT use Google Docs Viewer
+    return "https://docs.google.com/gview?url="+encodeURIComponent(url)+"&embedded=true";
+  };
   const [achError,setAchError] = useState(null);
   const [releaseLoading,setReleaseLoading] = useState(false);
   const [disputeLoading,setDisputeLoading] = useState(false);
@@ -2836,6 +2849,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                         <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{briefFile.name}</div>
                         <div style={{fontSize:"11px",color:"var(--text3)"}}>{(briefFile.size/1024).toFixed(0)} KB</div>
                       </div>
+                      <button onClick={()=>openPreview(briefFile)} className="btn btn-secondary btn-sm" style={{flexShrink:0}}>Preview</button>
                       <button onClick={()=>{fetch(briefFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=briefFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{flexShrink:0}}>Download</button>
                     </div>
                   )}
@@ -2914,7 +2928,8 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                         <div style={{display:"flex",gap:8,alignItems:"center",marginTop:8,paddingTop:8,borderTop:"1px solid rgba(52,211,153,.2)"}}>
                           <span style={{fontSize:"14px"}}></span>
                           <div style={{fontSize:"12px",color:"var(--green)",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{signedFile.name}</div>
-                          <button onClick={()=>{fetch(signedFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=signedFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{fontSize:"11px",flexShrink:0}}>Download Signed Copy</button>
+                          <button onClick={()=>openPreview(signedFile)} className="btn btn-secondary btn-sm" style={{fontSize:"11px",flexShrink:0}}>Preview</button>
+                          <button onClick={()=>{fetch(signedFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=signedFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{fontSize:"11px",flexShrink:0}}>Download</button>
                         </div>
                       )}
                     </div>
@@ -2972,6 +2987,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                           <div style={{fontSize:"13px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contractFile.name}</div>
                           <div style={{fontSize:"11px",color:"var(--text3)"}}>Original from brand</div>
                         </div>
+                        <button onClick={()=>openPreview(contractFile)} className="btn btn-secondary btn-sm" style={{flexShrink:0}}>Preview</button>
                         <button onClick={()=>{fetch(contractFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=contractFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{flexShrink:0}}>Download</button>
                       </div>
                       {/* Upload signed copy */}
@@ -3015,6 +3031,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                         <div style={{fontSize:"12px",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contractFile.name}</div>
                         <div style={{fontSize:"11px",color:"var(--text3)"}}>Reference copy</div>
                       </div>
+                      <button onClick={()=>openPreview(contractFile)} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px"}}>Preview</button>
                       <button onClick={()=>{fetch(contractFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=contractFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px"}}>Download</button>
                     </div>
                   )}
@@ -3133,7 +3150,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                         <div style={{fontSize:"13px",fontWeight:600,color:"var(--green)"}}>Content submitted for review</div>
                         {contentFile&&<a href={contentFile.dataUrl} target="_blank" rel="noopener noreferrer" style={{fontSize:"11px",color:"var(--green)",opacity:.7,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block",textDecoration:"underline"}}>{contentFile.name}</a>}
                       </div>
-                      {contentFile&&<a href={contentFile.dataUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px",textDecoration:"none"}}>View</a>}
+                      {contentFile&&<button onClick={()=>openPreview(contentFile)} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px"}}>Preview</button>}
                     </div>
                   </div>
                 )}
@@ -3164,8 +3181,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{fontSize:"12px",fontWeight:600,color:"var(--green)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contentFile.name}</div>
                         </div>
+                        <button onClick={()=>openPreview(contentFile)} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px"}}>Preview</button>
                         <button onClick={()=>{fetch(contentFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=contentFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px"}}>Download</button>
-                        <a href={contentFile.dataUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px",textDecoration:"none"}}>View</a>
+                        <button onClick={()=>openPreview(contentFile)} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px"}}>Preview</button>
                       </div>
                     )}
                     <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5,marginBottom:10}}>Review the content. If it meets the brief, approve the deliverables above.</div>
@@ -3497,6 +3515,23 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       {/* Escrow toast */}
       {escrowToast&&(
         <div style={{position:"fixed",bottom:28,left:"50%",transform:"translateX(-50%)",background:escrowToast.type==="error"?"var(--red)":"var(--green)",color:"#fff",padding:"10px 20px",borderRadius:99,fontSize:13,fontWeight:600,boxShadow:"0 4px 20px rgba(0,0,0,.25)",zIndex:3000,whiteSpace:"nowrap",animation:"slideUp .25s ease"}}>{escrowToast.msg}</div>
+      )}
+      {/* File Preview Modal */}
+      {previewFile&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setPreviewFile(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",borderRadius:12,width:"100%",maxWidth:800,maxHeight:"90vh",display:"flex",flexDirection:"column",boxShadow:"var(--shadow-lg)",overflow:"hidden",border:"1px solid var(--border)"}}>
+            <div style={{padding:"12px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{fontSize:14,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{previewFile.name}</div>
+              <div style={{display:"flex",gap:8,flexShrink:0}}>
+                <button onClick={()=>{fetch(previewFile.url).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=previewFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm">Download</button>
+                <button onClick={()=>setPreviewFile(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:"var(--text3)",padding:"0 4px"}}>✕</button>
+              </div>
+            </div>
+            <div style={{flex:1,overflow:"auto",minHeight:400}}>
+              <iframe src={previewUrl(previewFile.url)} style={{width:"100%",height:"100%",minHeight:500,border:"none",background:"white"}} title="File Preview"/>
+            </div>
+          </div>
+        </div>
       )}
       <ConfettiCanvas active={confettiFiring}/>
     </div>
