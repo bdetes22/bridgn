@@ -1741,228 +1741,71 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
   if(loading) return <SkeletonPage layout="dashboard"/>;
   const completedStatuses = ["payment_released","Completed"];
   const active = deals.filter(d=>!completedStatuses.includes(d.status));
-  const external = deals.filter(d=>d.source==="external");
   const pendingEscrow = deals.filter(d=>["payment_held","content_delivered","payment_processing"].includes(d.status));
   const escrowTotal = pendingEscrow.reduce((s,d)=>s+d.amount,0);
   const firstName = (userName||"there").split(" ")[0];
   return (
     <div className="fade-in">
-      <DeadlineAlertBanner deals={deals}/>
-
-      {/* Onboarding progress bar */}
-      {!allDone&&(
-        <div style={{marginBottom:20,padding:"14px 18px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-lg)",display:"flex",gap:16,alignItems:"center"}}>
-          <div style={{flex:1}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-              <span style={{fontSize:"13px",fontWeight:700}}>Getting started</span>
-              <span style={{fontSize:"12px",color:"var(--text3)",fontWeight:600}}>{doneCount} of 4 complete</span>
-            </div>
-            <div style={{height:5,background:"var(--surface2)",borderRadius:99,overflow:"hidden",position:"relative"}}>
-              <div style={{position:"absolute",inset:"0 auto 0 0",width:(doneCount/4*100)+"%",background:"linear-gradient(90deg,var(--accent),#c084fc,var(--accent2))",borderRadius:99,transition:"width .5s cubic-bezier(.16,1,.3,1)"}}/>
-            </div>
-            <div style={{display:"flex",gap:6,marginTop:9}}>
-              {ONBOARDING_STEPS.map(s=>(
-                <div key={s.key} style={{display:"flex",alignItems:"center",gap:4,fontSize:"11px",color:stepDone[s.key]?"var(--green)":"var(--text3)",fontWeight:stepDone[s.key]?700:400}}>
-                  <span>{stepDone[s.key]?"✓":""}</span><span style={{textDecoration:stepDone[s.key]?"line-through":"none"}}>{s.label.split(" ").slice(0,2).join(" ")}</span>
-                  {ONBOARDING_STEPS.indexOf(s)<3&&<span style={{color:"var(--border)",marginLeft:2}}>·</span>}
-                </div>
-              ))}
-            </div>
-          </div>
-          <button onClick={()=>setShowModal(true)} className="btn btn-secondary btn-sm" style={{flexShrink:0}}>View checklist</button>
-        </div>
-      )}
-
       <div className="ph-row">
-        <div><div className="page-title">Good morning, {firstName}</div><div className="page-subtitle">Here is your creator overview for today.</div></div>
+        <div><div className="page-title">Welcome back, {firstName}</div><div className="page-subtitle">Here's what's happening with your deals.</div></div>
         <button className="btn btn-primary" onClick={()=>setPage("new-deal")}>+ New Deal</button>
       </div>
-      <div className="g4 section">
+
+      {/* Stat cards — only show real data */}
+      <div className="g3 section">
         {[
-          {l:"Total Earnings",v:"$0",c:"Start adding deals to track earnings",cls:"stat-neutral",spk:[0,0,0,0,0,0,0]},
-          {l:"Active Deals",v:String(active.length),c:"",cls:"stat-neutral",spk:[0,0,0,0,0,0,active.length]},
-          {l:"In Escrow",v:"$"+escrowTotal.toLocaleString(),c:pendingEscrow.length>0?pendingEscrow.length+" deals protected":"No escrow yet",cls:"stat-neutral",spk:[0,0,0,0,0,0,escrowTotal]},
-          {l:"Pending Payouts",v:"$0",c:"No pending invoices",cls:"stat-neutral",spk:[0,0,0,0,0,0,0]}
+          {l:"Active Deals",v:String(active.length)},
+          {l:"In Escrow",v:"$"+escrowTotal.toLocaleString()},
+          {l:"Total Deals",v:String(deals.length)},
         ].map((s,i)=>(
-          <StatCard key={i} label={s.l} value={s.v} change={s.c} changeClass={s.cls} sparkData={s.spk}/>
+          <StatCard key={i} label={s.l} value={s.v}/>
         ))}
       </div>
-      {/* Stripe payout connect card */}
-      {stripeConnected ? (
-        <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 18px",marginBottom:18,background:"linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.04))",border:"1.5px solid rgba(34,197,94,.3)",borderRadius:"var(--radius)"}}>
-          <div style={{width:36,height:36,borderRadius:10,background:"rgba(34,197,94,.15)",border:"1px solid rgba(34,197,94,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"17px",flexShrink:0}}>✓</div>
+
+      {/* Connect bank — only if not connected */}
+      {!stripeConnected&&(
+        <div className="card" style={{padding:"16px 18px",marginBottom:18,display:"flex",alignItems:"center",gap:12}}>
           <div style={{flex:1}}>
-            <div style={{fontSize:"13px",fontWeight:700,color:"var(--green)"}}>Payouts enabled</div>
-            <div style={{fontSize:"12px",color:"var(--text3)",marginTop:1}}>Your bank account is connected. Earnings will be deposited automatically.</div>
+            <div style={{fontSize:13,fontWeight:600,marginBottom:2}}>Connect your bank account</div>
+            <div style={{fontSize:12,color:"var(--text3)"}}>Set up payouts to receive payments from brand deals.</div>
           </div>
-          <span style={{padding:"4px 10px",borderRadius:99,fontSize:"11px",fontWeight:700,background:"rgba(34,197,94,.15)",color:"var(--green)",border:"1px solid rgba(34,197,94,.3)",flexShrink:0,whiteSpace:"nowrap"}}>✦ Connected</span>
-        </div>
-      ) : (
-        <div style={{display:"flex",alignItems:"center",gap:12,padding:"14px 18px",marginBottom:18,background:"linear-gradient(135deg,rgba(91,138,245,.08),rgba(91,138,245,.04))",border:"1.5px solid rgba(91,138,245,.25)",borderRadius:"var(--radius)"}}>
-          <div style={{width:36,height:36,borderRadius:10,background:"rgba(91,138,245,.15)",border:"1px solid rgba(91,138,245,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"17px",flexShrink:0}}></div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:"13px",fontWeight:700}}>Connect your bank account</div>
-            <div style={{fontSize:"12px",color:"var(--text3)",marginTop:1}}>Set up payouts so you can receive payments from brand deals directly.</div>
-          </div>
-          <button
-            className="btn btn-primary btn-sm"
-            style={{flexShrink:0,whiteSpace:"nowrap"}}
-            onClick={()=>{ window.location.href = `${BRIDGN_API_URL}/api/stripe/onboard?userId=${authUser?.id||""}&email=${encodeURIComponent(authUser?.email||"")}`; }}
-          >
-            Connect Bank
-          </button>
+          <button className="btn btn-primary btn-sm" style={{flexShrink:0}} onClick={()=>{window.location.href=`${BRIDGN_API_URL}/api/stripe/onboard?userId=${authUser?.id||""}&email=${encodeURIComponent(authUser?.email||"")}`;}}>Connect Bank</button>
         </div>
       )}
+
+      {/* Profile completeness — only if not 100% */}
       <ProfileCompletenessCard pct={profilePct} pcDone={pcDone} setPage={setPage}/>
-      {pendingEscrow.length>0&&(
-        <div style={{background:"linear-gradient(135deg,rgba(8,145,178,.1),rgba(8,145,178,.05))",border:"1.5px solid rgba(8,145,178,.3)",borderRadius:"var(--radius)",padding:"14px 18px",marginBottom:20,display:"flex",gap:12}}>
-          <span style={{fontSize:"22px"}}></span>
-          <div style={{flex:1}}>
-            <div style={{fontSize:"14px",fontWeight:600,color:"var(--teal)",marginBottom:2}}>${escrowTotal.toLocaleString()} held in escrow across {pendingEscrow.length} deals</div>
-            <div style={{fontSize:"12px",color:"var(--text3)"}}>Funds are secured by bridgn and release automatically upon brand approval.</div>
-          </div>
-          <button className="btn btn-teal btn-sm" onClick={()=>setPage("deals")}>View Deals</button>
-        </div>
-      )}
-      {external.length>0&&(
-        <div style={{background:"linear-gradient(135deg,var(--accent-light),rgba(91,138,245,.05))",border:"1.5px solid rgba(91,138,245,.3)",borderRadius:"var(--radius)",padding:"14px 18px",marginBottom:20,display:"flex",gap:12}}>
-          <span style={{fontSize:"22px"}}></span>
-          <div style={{flex:1}}>
-            <div style={{fontSize:"14px",fontWeight:600,color:"var(--accent)",marginBottom:2}}>You have {external.length} external deal{external.length>1?"s":""} managed here</div>
-            <div style={{fontSize:"12px",color:"var(--text3)"}}>Deals negotiated outside bridgn — tracked and managed from one place.</div>
-          </div>
-          <button className="btn btn-outline btn-sm" onClick={()=>setPage("deals")}>View All</button>
-        </div>
-      )}
-      <div className="g2" style={{gap:24,alignItems:"start"}}>
-        <div>
-          <div className="section">
-            <div className="section-hdr"><span className="section-title">Campaign Feed</span><span style={{fontSize:"10px",fontWeight:700,background:"rgba(167,139,250,.15)",color:"var(--purple)",border:"1px solid rgba(167,139,250,.3)",borderRadius:99,padding:"2px 8px"}}>COMING SOON</span></div>
-            <div className="card" style={{padding:"20px 18px",textAlign:"center"}}>
-              <div style={{fontSize:"28px",marginBottom:10}}></div>
-              <div style={{fontSize:"14px",fontWeight:600,marginBottom:6}}>Brand campaigns are on their way</div>
-              <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.65,marginBottom:14}}>A scrollable feed where brands post creative campaigns. Browse, save, and apply — all from bridgn.</div>
-              <button className="btn btn-outline btn-sm" onClick={()=>setPage("campaigns")}>Get notified when it launches</button>
-            </div>
-          </div>
-          <div className="section">
-            <div className="section-hdr"><span className="section-title">Incoming Offers</span></div>
-            <div className="card" style={{padding:"28px 20px",textAlign:"center"}}>
-              <EmptySVG type="offers" size={120}/>
-              <div style={{fontSize:"14px",fontWeight:600,marginBottom:6}}>No offers yet</div>
-              <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.65}}>When brands send you direct partnership offers they will show up here. Make sure your profile is complete so brands can find you.</div>
-              <button className="btn btn-outline btn-sm" style={{marginTop:14}} onClick={()=>setPage("public-profile")}>Complete My Profile</button>
-            </div>
-          </div>
-        </div>
-        <div>
-          <div className="section">
-            <div className="section-hdr"><span className="section-title">Active Deals</span><button className="section-link" onClick={()=>setPage("deals")}>View all</button></div>
-            <div className="card">
-              {active.length===0?(
-                <div style={{padding:"20px",position:"relative"}}>
-                  <div style={{opacity:.35,pointerEvents:"none"}}>
-                    <div style={{display:"flex",gap:14,alignItems:"center",padding:"12px 0"}}>
-                      <div style={{width:34,height:34,borderRadius:10,background:"var(--border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"var(--text3)"}}>AB</div>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:14,fontWeight:600,color:"var(--text3)"}}>Acme Brand</div>
-                        <div style={{fontSize:12,color:"var(--text3)"}}>Instagram · Due May 15</div>
-                      </div>
-                      <div style={{textAlign:"right"}}>
-                        <div style={{fontSize:15,fontWeight:700,color:"var(--text3)"}}>$2,500</div>
-                        <div style={{padding:"2px 8px",borderRadius:99,background:"var(--surface2)",fontSize:10,color:"var(--text3)"}}>Active</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(var(--bg),.5)"}}>
-                    <div style={{fontSize:14,fontWeight:600,marginBottom:8}}>No active deals yet</div>
-                    <div style={{fontSize:12,color:"var(--text2)",marginBottom:14,textAlign:"center",maxWidth:260}}>Create your first deal to start managing partnerships here.</div>
-                    <button className="btn btn-primary btn-sm" onClick={()=>setPage("new-deal")}>Create a Deal</button>
-                  </div>
-                </div>
-              ):active.map((d,i)=>(
-                <div key={d.id} className="deal-row" style={i>0?{borderTop:"1px solid var(--border)"}:{}}>
-                  <div className="deal-av" style={{background:bc(d.ci),width:34,height:34,fontSize:"11px"}}>{d.bi}</div>
-                  <div className="deal-info">
-                    <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span className="deal-name">{d.brand}</span>{d.source==="external"&&<ExtBadge/>}{d.escrow&&<EscrowBadge released={d.escrowReleased}/>}</div>
-                    <div className="deal-sub">{d.platform} · Due {d.deadline}</div>
-                    <div style={{marginTop:6}}><div className="prog-bar"><div className="prog-fill" style={{width:((d.progress/6)*100)+"%"}}></div></div></div>
-                  </div>
-                  <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}><AnimNum value={"$"+d.amount.toLocaleString()}/></div><StatusBadge s={d.status}/></div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <ActivityFeed/>
-          <div className="section">
-            <div className="section-hdr"><span className="section-title">Quick Actions</span></div>
-            <div style={{display:"flex",flexDirection:"column",gap:7}}>
-              {[["","Create External Deal","Bring a brand deal you negotiated elsewhere","new-deal"],["","Open Deal Room","View your shared deal workspace","deal-room"],["","Content Calendar","See all your deadlines at a glance","calendar"],["","Earnings & P&L","Track your income and business health","earnings"],["","Contract Vault","All your signed agreements in one place","contracts"]].map(([icon,title,desc,p])=>(
-                <button key={p} className="card card-hover" style={{padding:"11px 14px",display:"flex",alignItems:"center",gap:10,width:"100%",border:"1px solid var(--border)",cursor:"pointer",textAlign:"left",background:"var(--surface)"}} onClick={()=>setPage(p)}>
-                  <span style={{fontSize:"18px",flexShrink:0}}>{icon}</span>
-                  <div><div style={{fontSize:"13px",fontWeight:600,color:"var(--text)"}}>{title}</div><div style={{fontSize:"11px",color:"var(--text2)",marginTop:1}}>{desc}</div></div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Welcome modal */}
-      {showModal&&(
-        <div style={{position:"fixed",inset:0,zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px",background:"rgba(0,0,0,.6)",backdropFilter:"blur(10px)"}}>
-          <div style={{width:"100%",maxWidth:500,background:"var(--surface)",borderRadius:16,overflow:"hidden",border:"1px solid var(--border)",boxShadow:"var(--shadow-lg)",animation:"modalIn .3s cubic-bezier(.16,1,.3,1) both"}}>
-
-            {/* Header */}
-            <div style={{padding:"32px 28px 24px",borderBottom:"1px solid var(--border)"}}>
-              <div>
-                <img src="assets/logo-white.svg" alt="bridgn" style={{height:24,marginBottom:20,display:"inline-block"}}/>
-                <div style={{fontSize:28,fontWeight:400,color:"white",fontFamily:"DM Serif Display,serif",letterSpacing:"-.5px",lineHeight:1.15,marginBottom:10}}>Welcome, {firstName}!</div>
-                <div style={{fontSize:14,color:"rgba(255,255,255,.55)",lineHeight:1.65}}>You're {4-doneCount} step{4-doneCount!==1?"s":""} away from your first brand deal.<br/>Let's get your profile ready to go.</div>
-                {/* Mini progress dots */}
-                <div style={{display:"flex",gap:6,marginTop:20}}>
-                  {ONBOARDING_STEPS.map((s,i)=>(
-                    <div key={i} style={{height:4,flex:1,borderRadius:99,background:stepDone[s.key]?"linear-gradient(90deg,var(--accent),#c084fc)":"rgba(255,255,255,.12)",transition:"background .3s"}}/>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Checklist */}
-            <div style={{padding:"8px 0"}}>
-              {ONBOARDING_STEPS.map((s,i)=>{
-                const done = stepDone[s.key];
-                return (
-                  <div key={s.key} onClick={()=>handleStep(s)} style={{display:"flex",alignItems:"center",gap:14,padding:"13px 28px",cursor:"pointer",borderBottom:i<3?"1px solid var(--border)":"none",transition:"background .1s"}}
-                    onMouseEnter={e=>e.currentTarget.style.background="var(--surface2)"}
-                    onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-                    {/* Step icon + checkbox */}
-                    <div style={{position:"relative",flexShrink:0}}>
-                      <div style={{width:40,height:40,borderRadius:12,background:done?s.color+"22":"var(--surface2)",border:"1.5px solid "+(done?s.color+"55":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px",transition:"all .2s"}}>{s.icon}</div>
-                      {done&&<div style={{position:"absolute",top:-4,right:-4,width:16,height:16,borderRadius:8,background:s.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"9px",fontWeight:800,color:"white",boxShadow:"0 0 0 2px var(--surface)"}}>✓</div>}
-                    </div>
-                    {/* Text */}
+      {/* Your deals */}
+      <div style={{marginTop:8}}>
+        <div className="section-hdr"><span className="section-title">Your Deals</span><button className="section-link" onClick={()=>setPage("deal-room")}>Deal Room</button></div>
+        {deals.length===0?(
+          <div className="card" style={{padding:"36px 20px",textAlign:"center"}}>
+            <div style={{fontSize:15,fontWeight:600,marginBottom:8}}>No deals yet</div>
+            <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.65,marginBottom:16,maxWidth:320,margin:"0 auto 16px"}}>Create your first deal to start managing partnerships with brands.</div>
+            <button className="btn btn-primary btn-sm" onClick={()=>setPage("new-deal")}>Create a Deal</button>
+          </div>
+        ):(
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {active.map(d=>{
+              const steps = [true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.every?.(Boolean),d.status==="payment_released"].filter(Boolean).length;
+              return (
+                <div key={d.id} className="card card-hover" style={{padding:"14px 16px",cursor:"pointer"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
+                  <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                    <div style={{width:38,height:38,borderRadius:10,background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white",flexShrink:0}}>{d.bi}</div>
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:"14px",fontWeight:600,color:done?"var(--text3)":"var(--text)",textDecoration:done?"line-through":"none",marginBottom:2}}>{s.label}</div>
-                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.4}}>{s.desc}</div>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}><span style={{fontSize:14,fontWeight:600}}>{d.brand}</span><StatusBadge s={d.status}/></div>
+                      <div style={{fontSize:12,color:"var(--text2)"}}>{d.campaignTitle} · {d.platform}</div>
+                      <div style={{marginTop:6,height:3,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}><div style={{height:"100%",borderRadius:99,background:"var(--accent)",width:((steps/6)*100)+"%"}}/></div>
                     </div>
-                    {/* Arrow */}
-                    <span style={{color:"var(--text3)",fontSize:"18px",flexShrink:0,fontWeight:300}}>›</span>
+                    <div style={{fontSize:16,fontWeight:400,fontFamily:"DM Serif Display,serif",flexShrink:0}}>${d.amount.toLocaleString()}</div>
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Footer */}
-            <div style={{padding:"20px 28px 28px",display:"flex",gap:10,borderTop:"1px solid var(--border)"}}>
-              <button onClick={handleLetsGo} className="btn btn-primary btn-lg" style={{flex:1,background:"linear-gradient(135deg,var(--accent),#7c3aed)",border:"none"}}>
-                Let's go →
-              </button>
-              <button onClick={handleDismiss} className="btn btn-secondary btn-lg">Dismiss</button>
-            </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
