@@ -235,8 +235,11 @@ router.post("/create-deal-payment", async (req, res) => {
   }
 
   const releaseDays         = Math.max(1, Math.min(90, Number(escrowReleaseDays) || 14));
-  const amountCents         = Math.round(amountDollars * 100);
-  const applicationFeeCents = Math.round(amountCents * PLATFORM_FEE_PERCENT);
+  // amount = what the creator gets (the deal value they agreed to)
+  // The brand pays the deal amount + platform fee on top
+  const creatorPayoutCents  = Math.round(amountDollars * 100);
+  const applicationFeeCents = Math.round(creatorPayoutCents * PLATFORM_FEE_PERCENT);
+  const totalChargeCents    = creatorPayoutCents + applicationFeeCents;
 
   try {
     // ── 1. Get or create the Stripe Customer for this brand ──────────────────
@@ -265,7 +268,7 @@ router.post("/create-deal-payment", async (req, res) => {
 
     // ── 3. Create PaymentIntent — NO transfer_data (funds stay on platform) ──
     const paymentIntent = await stripe.paymentIntents.create({
-      amount:   amountCents,
+      amount:   totalChargeCents,
       currency: "usd",
       customer: customerId,
       payment_method_types: ["us_bank_account"],
@@ -282,7 +285,9 @@ router.post("/create-deal-payment", async (req, res) => {
         bridgn_brand_id:          brandUserId,
         bridgn_creator_id:        creatorUserId,
         creator_stripe_account:   creatorProfile.stripe_account_id,
-        amount_dollars:           String(amountDollars),
+        creator_payout_dollars:    String(amountDollars),
+        total_charge_cents:       String(totalChargeCents),
+        platform_fee_cents:       String(applicationFeeCents),
         platform_fee_pct:         String(PLATFORM_FEE_PERCENT),
         escrow_release_days:      String(releaseDays),
       },
@@ -295,7 +300,7 @@ router.post("/create-deal-payment", async (req, res) => {
     if (existingDeal) {
       await updateDealById(existingDeal.id, {
         payment_intent_id:     paymentIntent.id,
-        amount_cents:          amountCents,
+        amount_cents:          creatorPayoutCents,
         application_fee_cents: applicationFeeCents,
         auto_release_days:     releaseDays,
         status:                "payment_processing",
@@ -305,7 +310,7 @@ router.post("/create-deal-payment", async (req, res) => {
         bridgn_deal_id:        String(dealId),
         brand_user_id:         brandUserId,
         creator_user_id:       creatorUserId,
-        amount_cents:          amountCents,
+        amount_cents:          creatorPayoutCents,
         application_fee_cents: applicationFeeCents,
         auto_release_days:     releaseDays,
         status:                "payment_processing",
@@ -316,7 +321,8 @@ router.post("/create-deal-payment", async (req, res) => {
       clientSecret:        paymentIntent.client_secret,
       paymentIntentId:     paymentIntent.id,
       publishableKey:      process.env.STRIPE_PUBLISHABLE_KEY,
-      amountCents,
+      creatorPayoutCents,
+      totalChargeCents,
       applicationFeeCents,
       escrowReleaseDays:   releaseDays,
     });
@@ -372,9 +378,8 @@ router.post("/release-payment", async (req, res) => {
       return res.status(422).json({ error: "Creator's Stripe account not found." });
     }
 
-    // Calculate creator's share: total – platform fee
-    const feeCents      = deal.application_fee_cents ?? Math.round(deal.amount_cents * PLATFORM_FEE_PERCENT);
-    const transferCents = deal.amount_cents - feeCents;
+    // Creator gets the full deal amount — fee was charged on top to the brand
+    const transferCents = deal.amount_cents;
 
     // Create the Transfer to the creator's connected account
     const transfer = await stripe.transfers.create({
@@ -384,7 +389,7 @@ router.post("/release-payment", async (req, res) => {
       metadata: {
         bridgn_deal_id:   deal.bridgn_deal_id,
         payment_intent_id: deal.payment_intent_id,
-        platform_fee_cents: String(feeCents),
+        platform_fee_cents: String(deal.application_fee_cents || 0),
       },
     });
 

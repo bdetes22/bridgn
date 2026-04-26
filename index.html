@@ -3288,8 +3288,10 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           {(()=>{
             const st = activeDeal.status;
             const hasPaid = !!activeDeal.paymentIntentId;
+            // Creator gets the full deal amount. Brand pays deal + 8% fee on top.
             const feeDollars = Math.round(activeDeal.amount * 0.08);
-            const creatorNet = activeDeal.amount - feeDollars;
+            const brandTotal = activeDeal.amount + feeDollars;
+            const creatorNet = activeDeal.amount; // creator gets 100% of the deal value
 
             // ── payment_released — green success, both sides ──
             if(st==="payment_released"&&hasPaid) return (
@@ -3351,7 +3353,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                   </div>
                   {/* Mini breakdown */}
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,padding:"10px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",marginBottom:isBrand?14:0}}>
-                    {[["Brand paid","$"+activeDeal.amount.toLocaleString()],["Platform fee","$"+feeDollars.toLocaleString()],["Creator receives","$"+creatorNet.toLocaleString()]].map(([l,v],i)=>(
+                    {(isBrand?[["Deal amount","$"+activeDeal.amount.toLocaleString()],["Service fee","$"+feeDollars.toLocaleString()],["Total charged","$"+brandTotal.toLocaleString()]]:[["Deal amount","$"+activeDeal.amount.toLocaleString()],["You receive","$"+creatorNet.toLocaleString()],["Status","In escrow"]]).map(([l,v],i)=>(
                       <div key={i} style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700,color:i===2?"var(--green)":"var(--text)"}}>{v}</div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>{l}</div></div>
                     ))}
                   </div>
@@ -3445,7 +3447,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                     </div>
                   )}
                   <div style={{fontSize:"13px",fontWeight:700,marginBottom:4}}>Fund This Deal</div>
-                  <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>Pay <strong>${activeDeal.amount.toLocaleString()}</strong> via ACH Direct Debit. bridgn holds funds in escrow until you approve the content. An <strong>8% platform fee</strong> (${feeDollars.toLocaleString()}) is applied. Auto-releases in <strong>{escrowReleaseDays} days</strong> if not disputed.</div>
+                  <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>The creator receives <strong>${activeDeal.amount.toLocaleString()}</strong>. You'll be charged <strong>${brandTotal.toLocaleString()}</strong> (deal + 8% service fee). Funds are held in escrow until you approve the content. Auto-releases in <strong>{escrowReleaseDays} days</strong>.</div>
                   {achPhase==="error"&&achError&&(
                     <div style={{padding:"9px 12px",borderRadius:"var(--radius-sm)",background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",fontSize:"12px",color:"var(--red)",marginBottom:12,lineHeight:1.5}}>{achError}</div>
                   )}
@@ -3458,7 +3460,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                     {busy?(
                       <><span style={{fontSize:"14px",animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>{" "}{phaseLabel[achPhase]||"Processing…"}</>
                     ):(
-                      <>Connect Bank &amp; Pay ${activeDeal.amount.toLocaleString()}</>
+                      <>Connect Bank &amp; Pay ${brandTotal.toLocaleString()}</>
                     )}
                   </button>
                   <div style={{fontSize:"10px",color:"var(--text3)",marginTop:9,textAlign:"center",lineHeight:1.5}}>ACH payments are processed via Stripe. Your bank details are never stored on bridgn.</div>
