@@ -1036,12 +1036,10 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
   const cNav = [
     {section:"Overview"},
     {k:"dashboard",l:"Dashboard",i:ICONS.home},
-    {k:"messages",l:"Messages",i:ICONS.messages},
     {section:"Campaigns"},
     {k:"campaigns",l:"Browse Campaigns",i:ICONS.search},
-    {k:"deals",l:"My Deals",i:ICONS.handshake},
-    {k:"new-deal",l:"New Deal",i:ICONS.plus},
     {k:"deal-room",l:"Deal Room",i:ICONS.building},
+    {k:"new-deal",l:"New Deal",i:ICONS.plus},
     {section:"Content"},
     {k:"calendar",l:"Content Calendar",i:ICONS.calendar},
     {k:"analytics",l:"My Analytics",i:ICONS.chart},
@@ -1053,7 +1051,6 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
   const bNav = [
     {section:"Overview"},
     {k:"dashboard",l:"Dashboard",i:ICONS.home},
-    {k:"messages",l:"Messages",i:ICONS.messages},
     {section:"Creators"},
     {k:"browse",l:"Browse Creators",i:ICONS.search},
     {k:"ai-match",l:"AI Match",i:ICONS.bot},
@@ -1062,7 +1059,6 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
     {section:"Campaigns"},
     {k:"campaigns",l:"Campaigns",i:ICONS.clipboard},
     {k:"campaign-calendar",l:"Campaign Calendar",i:ICONS.calendar},
-    {k:"deals",l:"Deals Manager",i:ICONS.handshake},
     {k:"deal-room",l:"Deal Room",i:ICONS.building},
     {section:"Content & Analytics"},
     {k:"content-library",l:"Content Library",i:ICONS.film},
@@ -8680,8 +8676,8 @@ function MobBottomNav({role, page, setPage}) {
       icon:(a)=><IC active={a} filled
         d="M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"
         d2="M8 7V5a2 2 0 0 1 4 0v2M16 7V5a2 2 0 0 0-4 0v2M9 12h6"/>},
-    {key:"messages", label:"Messages",
-      icon:(a)=><IC active={a} filled d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H7l-4 3V5a1 1 0 0 1 1-1z"/>},
+    {key:"deal-room", label:"Deal Room",
+      icon:(a)=><IC active={a} filled d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/>},
     {key:"calendar", label:"Calendar",
       icon:(a)=><IC active={a} filled
         d="M4 5h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"
@@ -8697,8 +8693,8 @@ function MobBottomNav({role, page, setPage}) {
       icon:(a)=><IC active={a} filled d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H15v-6H9v6H4a1 1 0 0 1-1-1z"/>},
     {key:"browse", label:"Browse",
       icon:(a)=><IC active={a} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>},
-    {key:"messages", label:"Messages",
-      icon:(a)=><IC active={a} filled d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H7l-4 3V5a1 1 0 0 1 1-1z"/>},
+    {key:"deal-room", label:"Deal Room",
+      icon:(a)=><IC active={a} filled d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/>},
     {key:"campaigns", label:"Campaigns",
       icon:(a)=><IC active={a} filled
         d="M3 8h18M3 12h18M3 16h12"
@@ -9095,14 +9091,14 @@ function App() {
       {/* Cmd+K Quick Navigation */}
       {cmdkOpen&&(()=>{
         const allPages = role==="creator"?[
-          {k:"dashboard",l:"Dashboard"},{k:"messages",l:"Messages"},{k:"deals",l:"My Deals"},
-          {k:"new-deal",l:"New Deal"},{k:"deal-room",l:"Deal Room"},{k:"calendar",l:"Content Calendar"},
+          {k:"dashboard",l:"Dashboard"},{k:"deal-room",l:"Deal Room"},
+          {k:"new-deal",l:"New Deal"},{k:"calendar",l:"Content Calendar"},
           {k:"analytics",l:"Analytics"},{k:"rate-card",l:"Rate Card"},{k:"media-kit",l:"Media Kit"},
           {k:"contracts",l:"Contract Vault"},{k:"earnings",l:"Earnings"},{k:"public-profile",l:"My Profile"},
           {k:"settings",l:"Settings"},
         ]:[
-          {k:"dashboard",l:"Dashboard"},{k:"messages",l:"Messages"},{k:"deals",l:"Deals Manager"},
-          {k:"deal-room",l:"Deal Room"},{k:"browse",l:"Browse Creators"},{k:"campaigns",l:"Campaigns"},
+          {k:"dashboard",l:"Dashboard"},{k:"deal-room",l:"Deal Room"},
+          {k:"browse",l:"Browse Creators"},{k:"campaigns",l:"Campaigns"},
           {k:"campaign-calendar",l:"Campaign Calendar"},{k:"content-library",l:"Content Library"},
           {k:"roi",l:"ROI Tracker"},{k:"invoices",l:"Payments"},{k:"team",l:"Team"},{k:"settings",l:"Settings"},
         ];
