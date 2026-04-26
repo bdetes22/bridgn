@@ -2840,7 +2840,6 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
 
   // ── Deal Room View (single deal, full workspace) ──
   if(!activeDeal) return null;
-  );
   const g=bg(activeDeal.ci);
   const sendMsg=()=>{
     if(!msgInput.trim()||!activeDeal||!authUser) return;
