@@ -1049,7 +1049,6 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
     {k:"media-kit",l:"Media Kit",i:ICONS.sparkles},
     {section:"Business"},
     {k:"contracts",l:"Contract Vault",i:ICONS.folder},
-    {k:"earnings",l:"Earnings & P&L",i:ICONS.trending},
     {k:"public-profile",l:"My Public Page",i:ICONS.user},
   ];
   const bNav = [
@@ -4812,73 +4811,111 @@ function EarningsPage() {
 }
 
 // ─── CONTRACT VAULT ───────────────────────────────────────────────────────────
-function ContractVaultPage() {
+function ContractVaultPage({authUser,deals=[]}) {
   const loading = useSkeleton();
-  const [contracts] = useState([]);
-  const [search,setSearch] = useState("");const [filter,setFilter] = useState("All");const [selected,setSelected] = useState(null);
-  const list = contracts.filter(c=>(filter==="All"||c.status===filter)&&(!search||c.brand.toLowerCase().includes(search.toLowerCase())||c.campaign.toLowerCase().includes(search.toLowerCase())));
-  const statusColor = {Active:"var(--green)",Expiring:"var(--accent2)",Expired:"var(--red)"};
+  const [previewFile,setPreviewFile] = useState(null);
+
+  // Build contract list from real deal data
+  const contracts = deals.filter(d=>d.contractFile||d.signedFile||d.contractSent).map(d=>({
+    id:d.id,
+    brand:d.brand||"Brand",
+    creatorName:d.creatorName||"Creator",
+    campaign:d.campaignTitle||"Deal",
+    amount:d.amount||0,
+    contractFile:d.contractFile,
+    signedFile:d.signedFile,
+    contractSigned:d.contractSigned,
+    contractSignedAt:d.contractSignedAt,
+    contractLink:d.contractLink,
+    status:d.contractSigned?"Signed":"Pending",
+  }));
+
+  const previewUrl = (url) => {
+    if(!url) return url;
+    const ext = (url.split("?")[0].split(".").pop()||"").toLowerCase();
+    if(["pdf","png","jpg","jpeg","gif","webp","svg"].includes(ext)) return url;
+    return "https://docs.google.com/gview?url="+encodeURIComponent(url)+"&embedded=true";
+  };
+
   if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
-      <div className="ph-row"><div><div className="page-title">Contract Vault</div><div className="page-subtitle">All your signed agreements in one place with expiry tracking.</div></div></div>
-      <div className="g3 section" style={{gap:12}}>
-        {[["Active",contracts.filter(c=>c.status==="Active").length,"badge-green"],["Expiring Soon",contracts.filter(c=>c.status==="Expiring").length,"badge-orange"],["Expired",contracts.filter(c=>c.status==="Expired").length,"badge-gray"]].map(([l,v,b],i)=>(
-          <div key={i} className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}><span className={"badge "+b} style={{fontSize:"18px",padding:"6px 10px"}}>{v}</span><div style={{fontSize:"13px",fontWeight:600,color:"var(--text)"}}>{l}</div></div>
-        ))}
-      </div>
-      <div className="card" style={{padding:"12px 16px",marginBottom:16,display:"flex",gap:9,alignItems:"center"}}>
-        <div style={{position:"relative",flex:1}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"var(--text3)",pointerEvents:"none"}}></span><input className="search-input" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search brand or campaign..."/></div>
-        {["All","Active","Expiring","Expired"].map(x=><button key={x} className={"filter-btn"+(filter===x?" active":"")} onClick={()=>setFilter(x)} style={{padding:"7px 11px"}}>{x}</button>)}
-      </div>
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {list.length===0?(
-          <div className="card" style={{padding:"40px 20px",textAlign:"center"}}><EmptySVG type="contracts" size={124}/><div style={{fontSize:"15px",fontWeight:600,marginBottom:6}}>No contracts yet</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65}}>Signed agreements will appear here once you complete your first deal.</div></div>
-        ):list.map(c=>(
-          <div key={c.id} className="card card-hover" style={{padding:"15px 18px",borderLeft:"3px solid "+statusColor[c.status]}} onClick={()=>setSelected(c)}>
-            <div style={{display:"flex",gap:12,alignItems:"center"}}>
-              <div style={{width:40,height:40,borderRadius:"50%",background:bc(c.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"13px",fontWeight:700,color:"white",flexShrink:0}}>{c.bi}</div>
-              <div style={{flex:1}}>
-                <div style={{display:"flex",gap:8,marginBottom:3}}><span style={{fontSize:"14px",fontWeight:600}}>{c.brand}</span><span className={"badge "+(c.status==="Active"?"badge-green":c.status==="Expiring"?"badge-orange":"badge-red")} style={{fontSize:"11px"}}>{c.status}</span></div>
-                <div style={{fontSize:"12px",color:"var(--text2)"}}>{c.campaign} · {c.type}</div>
-              </div>
-              <div style={{textAlign:"right"}}>
-                <div style={{fontSize:"16px",fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${c.amount.toLocaleString()}</div>
-                <div style={{fontSize:"11px",color:c.status==="Expiring"?"var(--accent2)":c.status==="Expired"?"var(--red)":"var(--text3)",marginTop:3}}>
-                  {c.status==="Expired"?"Expired":c.status==="Expiring"?"Expires in "+c.daysLeft+"d":"Expires "+c.expires}
-                </div>
-              </div>
-              <div style={{color:"var(--text3)",fontSize:"18px",marginLeft:6}}>›</div>
-            </div>
-          </div>
-        ))}
-      </div>
-      {selected&&(
-        <Modal onClose={()=>setSelected(null)} maxWidth={540}>
+      <div className="ph-row"><div><div className="page-title">Contract Vault</div><div className="page-subtitle">All contracts from your deals in one place.</div></div></div>
 
-          <div>
-            <div style={{padding:"18px 22px",borderBottom:"1px solid var(--border)"}}>
-              <div style={{display:"flex",gap:12,alignItems:"center"}}>
-                <div className="deal-av" style={{background:bc(selected.ci)}}>{selected.bi}</div>
-                <div style={{flex:1}}><div style={{fontSize:"17px",fontWeight:700}}>{selected.brand}</div><div style={{fontSize:"12px",color:"var(--text2)"}}>{selected.campaign}</div></div>
-                <span className={"badge "+(selected.status==="Active"?"badge-green":selected.status==="Expiring"?"badge-orange":"badge-red")}>{selected.status}</span>
+      <div className="g2 section" style={{gap:12}}>
+        <div className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}><span className="badge badge-green" style={{fontSize:16,padding:"6px 10px"}}>{contracts.filter(c=>c.status==="Signed").length}</span><div style={{fontSize:13,fontWeight:600}}>Signed</div></div>
+        <div className="card" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"center"}}><span className="badge badge-yellow" style={{fontSize:16,padding:"6px 10px"}}>{contracts.filter(c=>c.status==="Pending").length}</span><div style={{fontSize:13,fontWeight:600}}>Pending</div></div>
+      </div>
+
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {contracts.length===0?(
+          <div className="card" style={{padding:"40px 20px",textAlign:"center"}}>
+            <div style={{fontSize:15,fontWeight:600,marginBottom:6}}>No contracts yet</div>
+            <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.65}}>When a brand sends you a contract in the Deal Room, it will appear here.</div>
+          </div>
+        ):contracts.map(c=>(
+          <div key={c.id} className="card" style={{padding:"16px 18px",borderLeft:"3px solid "+(c.status==="Signed"?"var(--green)":"var(--yellow)")}}>
+            <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:12}}>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:3}}>
+                  <span style={{fontSize:14,fontWeight:600}}>{c.brand}</span>
+                  <span className={"badge "+(c.status==="Signed"?"badge-green":"badge-yellow")} style={{fontSize:11}}>{c.status}</span>
+                </div>
+                <div style={{fontSize:12,color:"var(--text2)"}}>{c.campaign} · ${c.amount.toLocaleString()}</div>
+                {c.contractSignedAt&&<div style={{fontSize:11,color:"var(--text3)",marginTop:3}}>Signed {new Date(c.contractSignedAt).toLocaleDateString()}</div>}
               </div>
             </div>
-            <div style={{padding:"20px 22px"}}>
-              <div className="g2" style={{gap:14,marginBottom:18}}>
-                {[["Type",selected.type],["Amount","$"+selected.amount.toLocaleString()],["Signed",selected.signed],["Expires",selected.expires]].map(([l,v],i)=>(
-                  <div key={i} style={{background:"var(--surface2)",borderRadius:"var(--radius-sm)",padding:"10px 13px",border:"1px solid var(--border)"}}>
-                    <div style={{fontSize:"10px",color:"var(--text3)",fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",marginBottom:4}}>{l}</div>
-                    <div style={{fontSize:"14px",fontWeight:600}}>{v}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {/* Original contract from brand */}
+              {c.contractFile&&(
+                <div style={{display:"flex",gap:8,alignItems:"center",padding:"10px 12px",background:"var(--surface2)",borderRadius:8}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.contractFile.name}</div>
+                    <div style={{fontSize:11,color:"var(--text3)"}}>Original from brand</div>
                   </div>
-                ))}
-              </div>
-              {selected.status==="Expiring"&&<div style={{padding:"11px 14px",background:"var(--accent2-light)",border:"1px solid rgba(240,160,80,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--accent2)",marginBottom:16,display:"flex",gap:7}}>This contract expires in {selected.daysLeft} days. Consider renewing with the brand.</div>}
-              {selected.status==="Expired"&&<div style={{padding:"11px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--red)",marginBottom:16,display:"flex",gap:7}}>This contract has expired. Any new content requires a new agreement.</div>}
-              <div style={{display:"flex",gap:9}}><button className="btn btn-primary btn-sm">Download PDF</button><button className="btn btn-secondary btn-sm" onClick={()=>setSelected(null)}>Close</button></div>
+                  <button onClick={()=>setPreviewFile({name:c.contractFile.name,url:c.contractFile.dataUrl})} className="btn btn-secondary btn-sm" style={{fontSize:11,flexShrink:0}}>Preview</button>
+                  <button onClick={()=>{fetch(c.contractFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=c.contractFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{fontSize:11,flexShrink:0}}>Download</button>
+                </div>
+              )}
+              {/* Signed copy from creator */}
+              {c.signedFile&&(
+                <div style={{display:"flex",gap:8,alignItems:"center",padding:"10px 12px",background:"var(--green-bg)",borderRadius:8,border:"1px solid rgba(5,150,105,.15)"}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,fontWeight:600,color:"var(--green)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.signedFile.name}</div>
+                    <div style={{fontSize:11,color:"var(--green)",opacity:.7}}>Signed copy</div>
+                  </div>
+                  <button onClick={()=>setPreviewFile({name:c.signedFile.name,url:c.signedFile.dataUrl})} className="btn btn-secondary btn-sm" style={{fontSize:11,flexShrink:0}}>Preview</button>
+                  <button onClick={()=>{fetch(c.signedFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=c.signedFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{fontSize:11,flexShrink:0}}>Download</button>
+                </div>
+              )}
+              {/* Signing link */}
+              {c.contractLink&&(
+                <div style={{display:"flex",gap:8,alignItems:"center",padding:"10px 12px",background:"var(--surface2)",borderRadius:8}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,fontWeight:600}}>Signing link</div>
+                    <a href={c.contractLink} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"var(--accent)",textDecoration:"underline",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{c.contractLink}</a>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </Modal>
+        ))}
+      </div>
+
+      {/* Preview modal */}
+      {previewFile&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",zIndex:5000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setPreviewFile(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",borderRadius:12,width:"100%",maxWidth:800,maxHeight:"90vh",display:"flex",flexDirection:"column",boxShadow:"var(--shadow-lg)",overflow:"hidden",border:"1px solid var(--border)"}}>
+            <div style={{padding:"12px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{fontSize:14,fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{previewFile.name}</div>
+              <div style={{display:"flex",gap:8,flexShrink:0}}>
+                <button onClick={()=>{fetch(previewFile.url).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=previewFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm">Download</button>
+                <button onClick={()=>setPreviewFile(null)} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:"var(--text3)"}}>✕</button>
+              </div>
+            </div>
+            <iframe src={previewUrl(previewFile.url)} style={{width:"100%",height:"100%",minHeight:500,border:"none",background:"white"}} title="Preview"/>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -9009,7 +9046,7 @@ function App() {
         case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials});
         case "earnings":     return React.createElement(EarningsPage,{});
         case "my-affiliate": return React.createElement(AffiliateCreatorPage,{authUser});
-        case "contracts":    return React.createElement(ContractVaultPage,{});
+        case "contracts":    return React.createElement(ContractVaultPage,{authUser,deals});
         case "availability": return React.createElement(AvailabilityPage,{onAvailabilitySet:()=>updateProfileFlags({availabilitySet:true})});
         case "expenses":     return React.createElement(ExpensesPage,{});
         case "messages":     return React.createElement(MessagesPage,{setPage});
