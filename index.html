@@ -3516,10 +3516,10 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       )}
       {/* File Preview Modal */}
       {previewFile&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",zIndex:99999}} onClick={()=>setPreviewFile(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:0,left:0,right:0,bottom:0,display:"flex",flexDirection:"column"}}>
-            <div style={{padding:"10px 16px",background:"var(--surface)",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
-              <div style={{fontSize:14,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1,marginRight:12}}>{previewFile.name}</div>
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setPreviewFile(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",borderRadius:12,width:"100%",maxWidth:700,height:"80vh",display:"flex",flexDirection:"column",boxShadow:"var(--shadow-lg)",overflow:"hidden",border:"1px solid var(--border)"}}>
+            <div style={{padding:"10px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+              <div style={{fontSize:13,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1,marginRight:12}}>{previewFile.name}</div>
               <div style={{display:"flex",gap:8,flexShrink:0}}>
                 <button onClick={()=>{fetch(previewFile.url).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=previewFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm">Download</button>
                 <button onClick={()=>setPreviewFile(null)} className="btn btn-secondary btn-sm">Close</button>
@@ -4901,10 +4901,10 @@ function ContractVaultPage({authUser,deals=[]}) {
 
       {/* Preview modal */}
       {previewFile&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.7)",zIndex:99999}} onClick={()=>setPreviewFile(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:0,left:0,right:0,bottom:0,display:"flex",flexDirection:"column"}}>
-            <div style={{padding:"10px 16px",background:"var(--surface)",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
-              <div style={{fontSize:14,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1,marginRight:12}}>{previewFile.name}</div>
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:99999,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={()=>setPreviewFile(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",borderRadius:12,width:"100%",maxWidth:700,height:"80vh",display:"flex",flexDirection:"column",boxShadow:"var(--shadow-lg)",overflow:"hidden",border:"1px solid var(--border)"}}>
+            <div style={{padding:"10px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+              <div style={{fontSize:13,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1,marginRight:12}}>{previewFile.name}</div>
               <div style={{display:"flex",gap:8,flexShrink:0}}>
                 <button onClick={()=>{fetch(previewFile.url).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=previewFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm">Download</button>
                 <button onClick={()=>setPreviewFile(null)} className="btn btn-secondary btn-sm">Close</button>
