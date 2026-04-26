@@ -1036,36 +1036,19 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
   const cNav = [
     {section:"Overview"},
     {k:"dashboard",l:"Dashboard",i:ICONS.home},
-    {section:"Campaigns"},
-    {k:"campaigns",l:"Browse Campaigns",i:ICONS.search},
     {k:"deal-room",l:"Deal Room",i:ICONS.building},
     {k:"new-deal",l:"New Deal",i:ICONS.plus},
-    {section:"Content"},
-    {k:"calendar",l:"Content Calendar",i:ICONS.calendar},
-    {k:"analytics",l:"My Analytics",i:ICONS.chart},
-    {k:"media-kit",l:"Media Kit",i:ICONS.sparkles},
     {section:"Business"},
     {k:"contracts",l:"Contract Vault",i:ICONS.folder},
-    {k:"public-profile",l:"My Public Page",i:ICONS.user},
+    {k:"public-profile",l:"My Profile",i:ICONS.user},
+    {k:"settings",l:"Settings",i:ICONS.dollar},
   ];
   const bNav = [
     {section:"Overview"},
     {k:"dashboard",l:"Dashboard",i:ICONS.home},
-    {section:"Creators"},
-    {k:"browse",l:"Browse Creators",i:ICONS.search},
-    {k:"ai-match",l:"AI Match",i:ICONS.bot},
-    {k:"shortlists",l:"Shortlists",i:ICONS.star},
-    {k:"scorecards",l:"Creator Scorecards",i:ICONS.award},
-    {section:"Campaigns"},
-    {k:"campaigns",l:"Campaigns",i:ICONS.clipboard},
-    {k:"campaign-calendar",l:"Campaign Calendar",i:ICONS.calendar},
     {k:"deal-room",l:"Deal Room",i:ICONS.building},
-    {section:"Content & Analytics"},
-    {k:"content-library",l:"Content Library",i:ICONS.film},
-    {k:"roi",l:"ROI Tracker",i:ICONS.roi},
-    {section:"Business"},
-    {k:"invoices",l:"Payments",i:ICONS.creditcard},
-    {k:"team",l:"Team",i:ICONS.users},
+    {section:"Account"},
+    {k:"settings",l:"Settings",i:ICONS.dollar},
   ];
   const nav = role==="creator"?cNav:bNav; // agency uses bNav
   return (
@@ -1799,6 +1782,15 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
             })}
           </div>
         )}
+      </div>
+
+      {/* Coming soon teaser */}
+      <div style={{marginTop:24,padding:"20px 22px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+          <div style={{fontFamily:"DM Serif Display,serif",fontSize:16,fontWeight:400}}>Creator Discovery</div>
+          <span style={{fontSize:10,fontWeight:700,color:"var(--accent)",background:"var(--accent-light)",border:"1px solid var(--accent)",borderRadius:99,padding:"2px 8px",letterSpacing:".04em"}}>COMING SOON</span>
+        </div>
+        <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.6}}>A swipeable feed where brands post campaigns and creators can browse, match, and apply — like discovering opportunities on TikTok, but for brand deals.</div>
       </div>
     </div>
   );
@@ -3965,7 +3957,7 @@ function CreatorAnalyticsPage({onAnalyticsUploaded}) {
   const showToast=msg=>{setToast(msg);};
   const simulate=p=>{setUploading(p);setTimeout(()=>{
     setUploads(u=>{
-      const next={...u,[p]:{uploaded:true,date:"Mar 25, 2025",age:0,file:p.toLowerCase()+"_insights_mar25.pdf"}};
+      const next={...u,[p]:{uploaded:true,date:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),age:0,file:p.toLowerCase()+"_insights_mar25.pdf"}};
       if(!Object.values(u).some(x=>x.uploaded)) onAnalyticsUploaded?.();
       return next;
     });
@@ -4996,7 +4988,7 @@ function ExpensesPage() {
   const total=deductible+nonDeductible;
   const estimatedTax=Math.round(deductible*0.25);
   const byCat={};expenses.forEach(e=>{if(e.deductible)byCat[e.category]=(byCat[e.category]||0)+e.amount;});
-  const addExpense=()=>{setExpenses(x=>[...x,{id:Date.now(),desc:form.desc,amount:parseFloat(form.amount)||0,date:form.date||"Apr 1, 2025",category:form.category,deductible:form.deductible}]);setModal(false);setForm({desc:"",amount:"",date:"",category:"Production",deductible:true});};
+  const addExpense=()=>{setExpenses(x=>[...x,{id:Date.now(),desc:form.desc,amount:parseFloat(form.amount)||0,date:form.date||new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),category:form.category,deductible:form.deductible}]);setModal(false);setForm({desc:"",amount:"",date:"",category:"Production",deductible:true});};
   if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
@@ -6646,7 +6638,7 @@ function CreatorScorecardsPage() {
   const [modal,setModal] = useState(false);const [form,setForm] = useState({ci:-1,campaign:"",communication:0,quality:0,timeliness:0,notes:""});const [cards,setCards] = useState([]);const [submitted,setSubmitted] = useState(false);
   const up=(k,v)=>setForm(f=>({...f,[k]:v}));
   const overallColor=v=>v>=4.5?"var(--green)":v>=4?"var(--accent)":"var(--accent2)";
-  const submit=()=>{const avg=((form.communication+form.quality+form.timeliness)/3).toFixed(1);const cr=CREATORS[form.ci];if(!cr)return;setCards(c=>[...c,{id:Date.now(),creator:cr.name,ci:cr.ci,campaign:form.campaign,communication:form.communication,quality:form.quality,timeliness:form.timeliness,overall:parseFloat(avg),notes:form.notes,date:"Apr 25, 2025"}]);setSubmitted(true);};
+  const submit=()=>{const avg=((form.communication+form.quality+form.timeliness)/3).toFixed(1);const cr=CREATORS[form.ci];if(!cr)return;setCards(c=>[...c,{id:Date.now(),creator:cr.name,ci:cr.ci,campaign:form.campaign,communication:form.communication,quality:form.quality,timeliness:form.timeliness,overall:parseFloat(avg),notes:form.notes,date:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}]);setSubmitted(true);};
   if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
@@ -6906,7 +6898,7 @@ function ShortlistsPage({setPage,setSelected}) {
   const loading = useSkeleton();
   const [lists,setLists] = useState([]);
   const [modal,setModal] = useState(false);const [listName,setListName] = useState("");
-  const create=()=>{if(listName.trim()){setLists(l=>[...l,{id:Date.now(),name:listName,creators:[],created:"Apr 25, 2025"}]);setListName("");setModal(false);}};
+  const create=()=>{if(listName.trim()){setLists(l=>[...l,{id:Date.now(),name:listName,creators:[],created:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}]);setListName("");setModal(false);}};
   if(loading) return <SkeletonPage layout="simple"/>;
   return (
     <div className="fade-in">
@@ -8615,7 +8607,7 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
               <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:400,marginBottom:6,letterSpacing:"-.3px"}}>Create your account</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Join bridgn free — no credit card needed</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
-              <div className="fg"><label className="fl" htmlFor="signup-name">{form.role==="brand"?"Company Name":form.role==="agency"?"Agency Name":"Full Name"}</label><input className="fi" id="signup-name" name="name" autoComplete="name" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Halo Health, Acme Corp":form.role==="agency"?"e.g. Viral Nation, Whalar, Open Influence":"Your full name"}/></div>
+              <div className="fg"><label className="fl" htmlFor="signup-name">{form.role==="brand"?"Company Name":form.role==="agency"?"Agency Name":"Full Name"}</label><input className="fi" id="signup-name" name="name" autoComplete="name" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Glossier, Halo Health":form.role==="agency"?"e.g. Viral Nation, Whalar, Open Influence":"Your full name"}/></div>
               <div className="fg"><label className="fl" htmlFor="signup-email">Email</label><input className="fi" id="signup-email" name="email" type="email" autoComplete="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com"/></div>
               <div className="fg"><label className="fl" htmlFor="signup-password">Password</label><input className="fi" id="signup-password" name="password" type="password" autoComplete="new-password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="At least 6 characters"/></div>
               <div className="fg">
@@ -8672,16 +8664,10 @@ function MobBottomNav({role, page, setPage}) {
   const creatorTabs = [
     {key:"dashboard", label:"Home",
       icon:(a)=><IC active={a} filled d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H15v-6H9v6H4a1 1 0 0 1-1-1z"/>},
-    {key:"deals", label:"Deals",
-      icon:(a)=><IC active={a} filled
-        d="M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"
-        d2="M8 7V5a2 2 0 0 1 4 0v2M16 7V5a2 2 0 0 0-4 0v2M9 12h6"/>},
-    {key:"deal-room", label:"Deal Room",
+    {key:"deal-room", label:"Deals",
       icon:(a)=><IC active={a} filled d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/>},
-    {key:"calendar", label:"Calendar",
-      icon:(a)=><IC active={a} filled
-        d="M4 5h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"
-        d2="M8 3v4M16 3v4M3 10h18"/>},
+    {key:"contracts", label:"Contracts",
+      icon:(a)=><IC active={a} d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>},
     {key:"public-profile", label:"Profile",
       icon:(a)=><IC active={a} filled
         d="M20 21v-1a7 7 0 0 0-7-7H11a7 7 0 0 0-7 7v1"
@@ -8691,18 +8677,10 @@ function MobBottomNav({role, page, setPage}) {
   const brandTabs = [
     {key:"dashboard", label:"Home",
       icon:(a)=><IC active={a} filled d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H15v-6H9v6H4a1 1 0 0 1-1-1z"/>},
-    {key:"browse", label:"Browse",
-      icon:(a)=><IC active={a} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>},
-    {key:"deal-room", label:"Deal Room",
+    {key:"deal-room", label:"Deals",
       icon:(a)=><IC active={a} filled d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/>},
-    {key:"campaigns", label:"Campaigns",
-      icon:(a)=><IC active={a} filled
-        d="M3 8h18M3 12h18M3 16h12"
-        d2="M19 14l3 2-3 2v-4z"/>},
-    {key:"deals", label:"Deals",
-      icon:(a)=><IC active={a} filled
-        d="M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"
-        d2="M8 7V5a2 2 0 0 1 4 0v2M16 7V5a2 2 0 0-4 0v2M9 12h6"/>},
+    {key:"settings", label:"Settings",
+      icon:(a)=><IC active={a} d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>},
   ];
 
   const tabs = role==="creator" ? creatorTabs : brandTabs;
@@ -9092,15 +9070,11 @@ function App() {
       {cmdkOpen&&(()=>{
         const allPages = role==="creator"?[
           {k:"dashboard",l:"Dashboard"},{k:"deal-room",l:"Deal Room"},
-          {k:"new-deal",l:"New Deal"},{k:"calendar",l:"Content Calendar"},
-          {k:"analytics",l:"Analytics"},{k:"rate-card",l:"Rate Card"},{k:"media-kit",l:"Media Kit"},
-          {k:"contracts",l:"Contract Vault"},{k:"earnings",l:"Earnings"},{k:"public-profile",l:"My Profile"},
-          {k:"settings",l:"Settings"},
+          {k:"new-deal",l:"New Deal"},{k:"contracts",l:"Contract Vault"},
+          {k:"public-profile",l:"My Profile"},{k:"settings",l:"Settings"},
         ]:[
           {k:"dashboard",l:"Dashboard"},{k:"deal-room",l:"Deal Room"},
-          {k:"browse",l:"Browse Creators"},{k:"campaigns",l:"Campaigns"},
-          {k:"campaign-calendar",l:"Campaign Calendar"},{k:"content-library",l:"Content Library"},
-          {k:"roi",l:"ROI Tracker"},{k:"invoices",l:"Payments"},{k:"team",l:"Team"},{k:"settings",l:"Settings"},
+          {k:"settings",l:"Settings"},
         ];
         const filtered = cmdkQuery?allPages.filter(p=>p.l.toLowerCase().includes(cmdkQuery.toLowerCase())):allPages;
         return (
