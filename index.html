@@ -1765,7 +1765,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
         ):(
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {active.map(d=>{
-              const steps = [true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.every?.(Boolean),d.status==="payment_released"].filter(Boolean).length;
+              const steps = [true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length;
               return (
                 <div key={d.id} className="card card-hover" style={{padding:"14px 16px",cursor:"pointer"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
                   <div style={{display:"flex",gap:12,alignItems:"center"}}>
@@ -2130,7 +2130,7 @@ function CreatorDealsPage({setPage,setSelected,deals}) {
               <div style={{flex:1}}>
                 <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:3,flexWrap:"wrap"}}><span style={{fontSize:"14px",fontWeight:600}}>{d.brand}</span>{d.source==="external"&&<ExtBadge/>}{d.escrow&&<EscrowBadge released={d.escrowReleased}/>}</div>
                 <div style={{fontSize:"12px",color:"var(--text2)"}}>{d.platform} · Due {d.deadline}</div>
-                {d.status!=="payment_released"&&<div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:((([true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.every?.(Boolean),d.status==="payment_released"].filter(Boolean).length)/6)*100)+"%"}}></div></div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>{[true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.every?.(Boolean),d.status==="payment_released"].filter(Boolean).length} of 6 steps</div></div>}
+                {d.status!=="payment_released"&&<div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:((([true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length)/6)*100)+"%"}}></div></div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>{[true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length} of 6 steps</div></div>}
               </div>
               <div style={{textAlign:"right"}}>
                 <div style={{fontSize:"17px",fontWeight:700,fontFamily:"DM Serif Display,serif"}}><AnimNum value={"$"+d.amount.toLocaleString()}/></div>
@@ -2647,7 +2647,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               <div style={{fontSize:13,fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>Active ({activeDeals.length})</div>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {activeDeals.map(d=>{
-                  const steps = [true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.every?.(Boolean),d.status==="payment_released"].filter(Boolean).length;
+                  const steps = [true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length;
                   return (
                     <div key={d.id} className="card card-hover" style={{padding:"16px 18px",cursor:"pointer"}} onClick={()=>selectDeal(d)}>
                       <div style={{display:"flex",gap:14,alignItems:"center"}}>
@@ -2730,7 +2730,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
     });
   };
   // Compute live progress percentage from actual deal state
-  const allDeliverablesApproved = DELIVERABLES.length>0 && approved.every(Boolean);
+  const allDeliverablesApproved = DELIVERABLES.length>0 && approved.length>0 && approved.every(Boolean);
   const liveStepsDone = [true, briefSubmitted, contractSigned, contentUploaded,
     allDeliverablesApproved, activeDeal.status==="payment_released"].filter(Boolean).length;
   const pct = Math.round((liveStepsDone/6)*100);
@@ -3099,7 +3099,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
             )}
             {/* Approve All / status for brand */}
             {isBrand&&DELIVERABLES.length>0&&(
-              approved.every(Boolean)?(
+              (approved.length>0&&approved.every(Boolean))?(
                 <div style={{marginTop:12,padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",display:"flex",gap:8,alignItems:"center"}}>
                   <span>✓</span>
                   <div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>All deliverables approved</div>
@@ -3115,9 +3115,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               )
             )}
             {/* Creator sees approval status */}
-            {!isBrand&&DELIVERABLES.length>0&&approved.some(Boolean)&&(
-              <div style={{marginTop:12,padding:"10px 14px",background:approved.every(Boolean)?"var(--green-bg)":"var(--accent-light)",border:"1px solid "+(approved.every(Boolean)?"rgba(52,211,153,.3)":"rgba(91,138,245,.25)"),borderRadius:"var(--radius-sm)",fontSize:"12px",fontWeight:600,color:approved.every(Boolean)?"var(--green)":"var(--accent)"}}>
-                {approved.every(Boolean)?"All deliverables approved by the brand":""+approved.filter(Boolean).length+" of "+DELIVERABLES.length+" deliverables approved"}
+            {!isBrand&&DELIVERABLES.length>0&&approved.length>0&&approved.some(Boolean)&&(
+              <div style={{marginTop:12,padding:"10px 14px",background:(approved.length>0&&approved.every(Boolean))?"var(--green-bg)":"var(--accent-light)",border:"1px solid "+((approved.length>0&&approved.every(Boolean))?"rgba(52,211,153,.3)":"rgba(91,138,245,.25)"),borderRadius:"var(--radius-sm)",fontSize:"12px",fontWeight:600,color:(approved.length>0&&approved.every(Boolean))?"var(--green)":"var(--accent)"}}>
+                {(approved.length>0&&approved.every(Boolean))?"All deliverables approved by the brand":""+approved.filter(Boolean).length+" of "+DELIVERABLES.length+" deliverables approved"}
               </div>
             )}
 
@@ -3262,7 +3262,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           </div>
           {(()=>{
             // Compute progress from actual deal state instead of a static number
-            const allApproved = DELIVERABLES.length>0 && approved.every(Boolean);
+            const allApproved = DELIVERABLES.length>0 && approved.length>0 && approved.every(Boolean);
             const steps = [
               {label:"Deal Created",         done:true},
               {label:"Brief Sent",           done:briefSubmitted},
@@ -3456,7 +3456,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
             if(isBrand) {
               const busy = achPhase==="creating"||achPhase==="collecting"||achPhase==="confirming";
               const phaseLabel = {creating:"Creating payment…",collecting:"Connecting bank account…",confirming:"Authorizing payment…"};
-              const allApprovedNoPay = DELIVERABLES.length>0 && approved.every(Boolean);
+              const allApprovedNoPay = DELIVERABLES.length>0 && approved.length>0 && approved.every(Boolean);
               return (
                 <div className="card-lg" style={{padding:"16px 18px"}}>
                   {allApprovedNoPay&&(
