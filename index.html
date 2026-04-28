@@ -2159,6 +2159,25 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
   const loading = useSkeleton();
   const [fireConfetti,confettiFiring] = useConfetti();
   const [dealView,setDealView] = useState(selected?"room":"list");
+
+  // Brand walkthrough — shows once when arriving from an invite
+  const [walkStep,setWalkStep] = useState(()=>{
+    if(role!=="brand" || !selected) return -1;
+    try { if(localStorage.getItem("bridgn_brand_walkthrough_done")==="1") return -1; } catch {}
+    return 0;
+  });
+  const walkSteps = [
+    {title:"Welcome to your Deal Room",desc:"This is your shared workspace with the creator. Everything about this deal lives here — briefs, contracts, content, messages, and payments."},
+    {title:"Upload your brief",desc:"Start by uploading a creative brief. You can attach a document, paste a link, and add notes. The creator will review and acknowledge it before creating content."},
+    {title:"Send a contract",desc:"Upload a contract for the creator to sign, or paste a link to DocuSign or PandaDoc. You'll see when they've signed it."},
+    {title:"Review content",desc:"When the creator uploads their content, you'll see it here. Review it, approve deliverables, or request revisions — all in one place."},
+    {title:"Messages",desc:"Send messages directly in the Deal Room. Both sides see everything in real time. No more email threads."},
+    {title:"Fund & release payment",desc:"When you're ready, fund the deal via ACH. The money is held in escrow until you approve the content. Then release it to the creator with one click."},
+  ];
+  const dismissWalk = () => {
+    setWalkStep(-1);
+    try { localStorage.setItem("bridgn_brand_walkthrough_done","1"); } catch {}
+  };
   const [activeDeal,setActiveDeal] = useState(selected||deals.find(d=>!["Completed","payment_released"].includes(d.status))||deals[0]);
 
   // Keep activeDeal in sync when deals array changes (loaded from DB, refreshed, etc.)
@@ -3520,6 +3539,34 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
         </div>
       )}
       <ConfettiCanvas active={confettiFiring}/>
+      {/* Brand walkthrough overlay */}
+      {walkStep>=0&&walkStep<walkSteps.length&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:99998,display:"flex",alignItems:"center",justifyContent:"center",padding:24}}>
+          <div style={{background:"var(--surface)",borderRadius:16,maxWidth:440,width:"100%",overflow:"hidden",border:"1px solid var(--border)",boxShadow:"var(--shadow-lg)"}}>
+            <div style={{display:"flex",gap:4,padding:"16px 24px 0"}}>
+              {walkSteps.map((_,i)=>(
+                <div key={i} style={{flex:1,height:3,borderRadius:99,background:i<=walkStep?"var(--accent)":"var(--border)",transition:"background .2s"}}/>
+              ))}
+            </div>
+            <div style={{padding:"20px 24px 24px"}}>
+              <div style={{fontSize:11,fontWeight:700,color:"var(--accent)",textTransform:"uppercase",letterSpacing:".08em",marginBottom:8}}>Step {walkStep+1} of {walkSteps.length}</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:20,fontWeight:400,marginBottom:10,lineHeight:1.25}}>{walkSteps[walkStep].title}</div>
+              <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.65,marginBottom:24}}>{walkSteps[walkStep].desc}</div>
+              <div style={{display:"flex",gap:8,justifyContent:"space-between"}}>
+                <button onClick={dismissWalk} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--text3)",fontFamily:"DM Sans,sans-serif"}}>Skip</button>
+                <div style={{display:"flex",gap:8}}>
+                  {walkStep>0&&<button onClick={()=>setWalkStep(s=>s-1)} className="btn btn-secondary btn-sm">Back</button>}
+                  {walkStep<walkSteps.length-1?(
+                    <button onClick={()=>setWalkStep(s=>s+1)} className="btn btn-primary btn-sm">Next</button>
+                  ):(
+                    <button onClick={dismissWalk} className="btn btn-primary btn-sm">Get started</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
