@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <title>bridgn – Creator & Brand Platform</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -255,7 +255,6 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 @media(max-width:768px){
   .nav-hamburger{display:flex}
   .sidebar-mob-header{display:flex}
-  /* On mobile, sidebar is always the full slide-in, never collapsed */
   .sidebar,.sidebar.collapsed{position:fixed;top:0;left:0;height:100vh;z-index:300;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);width:268px !important;padding-top:0}
   .sidebar.mob-open,.sidebar.collapsed.mob-open{transform:translateX(0);width:268px !important}
   .sidebar.collapsed .sidebar-label{display:block}
@@ -263,7 +262,7 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
   .sidebar.collapsed .nav-item span:not(.nav-icon){display:inline}
   .sidebar-collapse-btn{display:none !important}
   .main-layout{overflow:auto;height:calc(100vh - 56px)}
-  .content-area{padding:16px 12px 90px}
+  .content-area{padding:16px 12px calc(90px + env(safe-area-inset-bottom,0px))}
   .card-lg{padding:14px 14px !important}
   .g4{grid-template-columns:repeat(2,1fr)}
   .g3{grid-template-columns:repeat(2,1fr)}
@@ -284,7 +283,6 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
   .nav-spacer{display:none}
   .navbar{padding:0 12px;gap:8px}
   .mob-bottom-nav button span.mob-label{font-size:9px}
-  /* Cmd+K modal full width on mobile */
   .cmdk-modal{width:calc(100% - 32px) !important;max-width:none !important}
   select,.fsel{max-width:100%}
   .deal-room-grid{gap:14px !important}
@@ -292,41 +290,48 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 @media(max-width:480px){
   .g4,.g3{grid-template-columns:1fr}
   .navbar{padding:0 10px;gap:6px}
-  .content-area{padding:12px 8px 90px}
+  .content-area{padding:14px 10px calc(86px + env(safe-area-inset-bottom,0px))}
   .nav-logo{height:20px !important}
-  .card,.card-lg{border-radius:10px;padding:14px 12px !important}
+  .card,.card-lg{border-radius:10px;padding:12px 12px !important}
   .card-lg>div{max-width:100%;overflow:hidden}
   .page-title{font-size:20px}
   .page-subtitle{font-size:12px}
-  .ph-row{gap:8px}
-  .det-stats{grid-template-columns:1fr !important}
-  .btn{font-size:13px;padding:10px 14px}
-  .btn-sm{font-size:12px;padding:8px 12px}
+  .ph-row{gap:6px}
+  .det-stats{grid-template-columns:repeat(3,1fr) !important}
+  .btn{font-size:14px;padding:12px 16px;min-height:44px}
+  .btn-sm{font-size:13px;padding:10px 14px;min-height:40px}
   textarea,input{font-size:16px !important} /* prevent iOS zoom on focus */
   .stat-value{font-size:20px}
   .stat-label{font-size:10px}
   code{font-size:11px !important;word-break:break-all}
-  /* Force all grid children to respect container */
-  [style*="gridTemplateColumns"]{grid-template-columns:1fr !important}
-  /* Prevent any element from overflowing on mobile */
-  select,.fsel{max-width:100% !important;width:100% !important;font-size:13px !important}
+  [style*="gridTemplateColumns"]:not(.det-stats){grid-template-columns:1fr !important}
+  select,.fsel{max-width:100% !important;width:100% !important;font-size:14px !important;min-height:44px}
   .card-lg,.card{max-width:100vw;overflow-x:hidden}
   .ph-row{flex-direction:column}
   .ph-row>div:last-child{width:100%}
   .ph-row .btn{width:100%}
-  /* Deal room specific */
-  .deal-room-grid{gap:12px !important}
+  .deal-room-grid{gap:10px !important}
   .page-title{word-break:break-word}
+  /* ── Mobile-first Deal Room ── */
+  .deal-room-grid .card-lg{border-radius:12px}
+  /* Bigger touch targets for message input */
+  .mob-msg-input{font-size:16px !important;padding:10px 14px !important;min-height:44px;border-radius:22px !important}
+  .mob-msg-send{min-width:56px;min-height:44px;border-radius:22px !important;font-weight:700}
+  /* Upload dropzone bigger tap area */
+  .mob-upload-zone{min-height:56px;border-radius:12px}
+  /* File list items bigger touch */
+  .mob-file-item{min-height:44px;padding:10px 12px !important}
 }
 /* ── MOBILE BOTTOM NAV ── */
 .mob-bottom-nav{
   display:none;
   position:fixed;bottom:0;left:0;right:0;z-index:200;
-  height:62px;
+  height:calc(62px + env(safe-area-inset-bottom,0px));
   padding-bottom:env(safe-area-inset-bottom,0px);
   background:var(--surface);
   border-top:1px solid var(--border);
   box-shadow:0 -2px 12px rgba(0,0,0,.06);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
 }
 @keyframes tabIndicator{from{opacity:0;transform:translateX(-50%) scaleX(.25)}to{opacity:1;transform:translateX(-50%) scaleX(1)}}
 @keyframes tabIconPop{0%{transform:scale(.75);opacity:.4}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
@@ -2793,10 +2798,10 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           <div className="card-lg" style={{overflow:"hidden"}}>
             <div style={{height:4,background:"linear-gradient(90deg,"+g[0]+","+g[1]+")"}}></div>
             <div style={{padding:"18px 22px"}}>
-              <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:16}}>
+              <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
                 <div style={{width:44,height:44,borderRadius:12,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",fontWeight:800,color:"white",flexShrink:0}}>{activeDeal.bi}</div>
-                <div style={{flex:1}}><div style={{fontSize:"16px",fontWeight:700}}>{activeDeal.brand}</div><div style={{fontSize:"13px",color:"var(--text2)"}}>{activeDeal.campaignTitle} · {activeDeal.platform}</div></div>
-                <div style={{display:"flex",gap:7}}><StatusBadge s={activeDeal.status}/>{activeDeal.escrow&&<EscrowBadge released={activeDeal.escrowReleased}/>}</div>
+                <div style={{flex:1,minWidth:0}}><div style={{fontSize:"16px",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{activeDeal.brand}</div><div style={{fontSize:"13px",color:"var(--text2)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{activeDeal.campaignTitle} · {activeDeal.platform}</div></div>
+                <div style={{display:"flex",gap:7,flexWrap:"wrap"}}><StatusBadge s={activeDeal.status}/>{activeDeal.escrow&&<EscrowBadge released={activeDeal.escrowReleased}/>}</div>
               </div>
               <div className="det-stats" style={{gridTemplateColumns:"repeat(3,1fr)",marginBottom:0}}>
                 {[["$"+activeDeal.amount.toLocaleString(),"Deal Value"],[activeDeal.deadline,"Deadline"],[pct+"%","Complete"]].map(([v,l],i)=>(
@@ -3185,7 +3190,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                 {contentFiles.length>0&&(
                   <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:10}}>
                     {contentFiles.map((cf,i)=>(
-                      <div key={i} style={{display:"flex",gap:8,alignItems:"center",padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.2)",borderRadius:8}}>
+                      <div key={i} className="mob-file-item" style={{display:"flex",gap:8,alignItems:"center",padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.2)",borderRadius:8}}>
                         <span style={{fontSize:12,color:"var(--green)"}}>✓</span>
                         <a href={cf.dataUrl} target="_blank" rel="noopener noreferrer" style={{flex:1,fontSize:12,fontWeight:500,color:"var(--green)",textDecoration:"underline",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cf.name}</a>
                         <button onClick={()=>openPreview(cf)} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:10,padding:"4px 8px"}}>Preview</button>
@@ -3200,7 +3205,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                   </div>
                 )}
                 {/* Upload button — always visible so creator can add more */}
-                <div onClick={()=>!uploadingContent&&contentFileInputRef.current?.click()} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:contentFiles.length>0?"14px":"20px",textAlign:"center",cursor:uploadingContent?"default":"pointer",opacity:uploadingContent?.6:1}} onMouseEnter={e=>{if(!uploadingContent)e.currentTarget.style.borderColor=g[0];}} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+                <div className="mob-upload-zone" onClick={()=>!uploadingContent&&contentFileInputRef.current?.click()} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:contentFiles.length>0?"14px":"20px",textAlign:"center",cursor:uploadingContent?"default":"pointer",opacity:uploadingContent?.6:1}} onMouseEnter={e=>{if(!uploadingContent)e.currentTarget.style.borderColor=g[0];}} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
                   {uploadingContent?<><div style={{fontSize:"16px",animation:"spin .9s linear infinite",display:"inline-block"}}>⟳</div><div style={{fontSize:"12px",marginTop:4}}>Uploading...</div></>:<><div style={{fontSize:contentFiles.length>0?"12px":"13px",fontWeight:600}}>{contentFiles.length>0?"+ Add more files":"Upload Content"}</div>{contentFiles.length===0&&<div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>MP4, MOV, JPG, PNG — select multiple files at once</div>}</>}
                 </div>
               </div>
@@ -3272,7 +3277,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               <div style={{fontSize:"14px",fontWeight:700}}>Deal Messages</div>
               <div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>All messages are tied to this deal</div>
             </div>
-            <div style={{flex:1,overflowY:"auto",padding:"14px",display:"flex",flexDirection:"column",gap:10,maxHeight:320}}>
+            <div style={{flex:1,overflowY:"auto",padding:"14px",display:"flex",flexDirection:"column",gap:10,maxHeight:360}}>
               {msgs.length===0?(
                 <div style={{textAlign:"center",padding:"20px 10px"}}>
                   <div style={{fontSize:"18px",marginBottom:6}}></div>
@@ -3293,9 +3298,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               ))}
               <div ref={msgEndRef}/>
             </div>
-            <div style={{padding:"10px 12px",borderTop:"1px solid var(--border)",display:"flex",gap:7}}>
-              <input className="fi" style={{flex:1,padding:"7px 11px",fontSize:"13px"}} value={msgInput} onChange={e=>setMsgInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()} placeholder={isBrand?"Message creator...":"Message brand..."}/>
-              <button onClick={sendMsg} disabled={!msgInput.trim()} className="btn btn-primary btn-sm" style={{opacity:msgInput.trim()?1:.5}}>Send</button>
+            <div style={{padding:"10px 12px",borderTop:"1px solid var(--border)",display:"flex",gap:8,alignItems:"center"}}>
+              <input className="fi mob-msg-input" style={{flex:1,padding:"9px 14px",fontSize:"14px",borderRadius:20}} value={msgInput} onChange={e=>setMsgInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMsg()} placeholder={isBrand?"Message creator...":"Message brand..."}/>
+              <button onClick={sendMsg} disabled={!msgInput.trim()} className="btn btn-primary btn-sm mob-msg-send" style={{opacity:msgInput.trim()?1:.5,borderRadius:20,padding:"9px 16px"}}>Send</button>
             </div>
           </div>
           {(()=>{
@@ -9238,7 +9243,7 @@ function App() {
         </main>
       </div>
       <MobBottomNav role={role} page={page} setPage={setPage}/>
-      {toast&&<div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",padding:"12px 24px",borderRadius:99,fontSize:13,fontWeight:600,color:"white",background:toast.type==="error"?"var(--red)":"var(--green)",boxShadow:"0 4px 20px rgba(0,0,0,.15)",zIndex:9999,animation:"slideUp .25s ease",whiteSpace:"nowrap"}}>{toast.msg}</div>}
+      {toast&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",padding:"12px 24px",borderRadius:99,fontSize:13,fontWeight:600,color:"white",background:toast.type==="error"?"var(--red)":"var(--green)",boxShadow:"0 4px 20px rgba(0,0,0,.15)",zIndex:9999,animation:"slideUp .25s ease",whiteSpace:"nowrap"}}>{toast.msg}</div>}
       {/* Cmd+K Quick Navigation */}
       {cmdkOpen&&(()=>{
         const allPages = role==="creator"?[
