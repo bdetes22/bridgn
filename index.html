@@ -7951,43 +7951,11 @@ function LandingPage({onGetStarted,onLogin}) {
     gsap.registerPlugin(window.ScrollTrigger);
     const ctx = gsap.context(()=>{
 
-      // ── Hero entrance animations (on page load) ──
+      // ── Hero entrance animations (on page load only — no scroll effects) ──
       gsap.from(".lp-hero-title",{y:50,opacity:0,duration:1,ease:"power3.out",delay:.2});
       gsap.from(".lp-hero-sub",{y:30,opacity:0,duration:.8,ease:"power3.out",delay:.5});
       gsap.from(".lp-hero-buttons",{y:20,opacity:0,duration:.7,ease:"power3.out",delay:.7});
       gsap.from(".lp-mockup",{scale:.88,y:40,opacity:0,duration:1,ease:"power3.out",delay:.9});
-
-      // ── Dive effect on scroll (no pin — just smooth parallax) ──
-      // Ocean zooms in as you scroll past
-      gsap.to(".lp-hero-bg",{
-        scale:1.2,ease:"none",
-        scrollTrigger:{trigger:".lp-hero-section",start:"top top",end:"bottom top",scrub:true}
-      });
-      // Text rises faster than scroll (stays near surface)
-      gsap.to(".lp-hero-title",{
-        y:-100,opacity:0,ease:"none",
-        scrollTrigger:{trigger:".lp-hero-section",start:"10% top",end:"50% top",scrub:true}
-      });
-      gsap.to(".lp-hero-sub",{
-        y:-70,opacity:0,ease:"none",
-        scrollTrigger:{trigger:".lp-hero-section",start:"10% top",end:"45% top",scrub:true}
-      });
-      gsap.to(".lp-hero-buttons",{
-        y:-50,opacity:0,ease:"none",
-        scrollTrigger:{trigger:".lp-hero-section",start:"10% top",end:"40% top",scrub:true}
-      });
-      // Floating cards drift apart
-      gsap.utils.toArray(".lp-float-card").forEach((el,i)=>{
-        gsap.to(el,{
-          y:-(60+i*25),opacity:0,ease:"none",
-          scrollTrigger:{trigger:".lp-hero-section",start:"top top",end:"60% top",scrub:true}
-        });
-      });
-      // Mockup grows as you scroll toward it
-      gsap.to(".lp-mockup",{
-        scale:1.08,y:-50,ease:"none",
-        scrollTrigger:{trigger:".lp-hero-section",start:"top top",end:"bottom top",scrub:true}
-      });
 
       // Sections — fade up on scroll with stagger
       gsap.utils.toArray(".lp-section").forEach((el)=>{
