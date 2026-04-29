@@ -8043,7 +8043,6 @@ function LandingPage({onGetStarted,onLogin}) {
     <div ref={lpRef} style={{minHeight:"100vh",color:lp.text,fontFamily:"DM Sans,sans-serif",overflowX:"hidden"}}>
       <style>{`
         @keyframes lpFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(1.5deg)}}
-        @keyframes lpWave{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
         @keyframes lpBubble{
           0%{transform:translateY(0) translateX(0) scale(1);opacity:0}
           10%{opacity:.6}
@@ -8115,10 +8114,6 @@ function LandingPage({onGetStarted,onLogin}) {
           pointer-events:none;
           z-index:1;
         }
-        .lp-wave{position:absolute;bottom:-2px;left:0;width:200%;height:100px;z-index:3}
-        .lp-wave path{fill:#f0f6fa}
-        .lp-wave2{animation:lpWave 12s linear infinite}
-        .lp-wave3{animation:lpWave 18s linear infinite;opacity:.5}
         .lp-float-card{background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-radius:12px;padding:12px 16px;box-shadow:0 8px 32px rgba(0,0,0,.12);border:1px solid rgba(255,255,255,.6)}
         .lp-mockup{background:rgba(255,255,255,.95);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.18),0 0 0 1px rgba(255,255,255,.5);overflow:hidden}
         @media(max-width:768px){
@@ -8187,14 +8182,9 @@ function LandingPage({onGetStarted,onLogin}) {
           }}/>
         ))}
 
-        {/* Solid fill to eliminate gap between hero and below-fold */}
-        <div style={{position:"absolute",bottom:0,left:0,right:0,height:50,background:"#f0f6fa",zIndex:2}}/>
-        {/* Wave dividers */}
-        <svg className="lp-wave lp-wave2" viewBox="0 0 1440 60" preserveAspectRatio="none">
-          <path d="M0,20 C240,55 480,0 720,30 C960,60 1200,10 1440,40 L1440,60 L0,60 Z"/>
-        </svg>
-        <svg className="lp-wave lp-wave3" viewBox="0 0 1440 60" preserveAspectRatio="none" style={{bottom:0}}>
-          <path d="M0,35 C360,5 720,55 1080,20 C1260,8 1360,35 1440,25 L1440,60 L0,60 Z"/>
+        {/* Wave divider — single static curve, no animation */}
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none" style={{position:"absolute",bottom:-1,left:0,width:"100%",height:120,zIndex:3,display:"block"}}>
+          <path d="M0,40 C320,100 620,0 960,60 C1200,100 1360,30 1440,50 L1440,120 L0,120 Z" fill="#f0f6fa"/>
         </svg>
 
         {/* Nav */}
