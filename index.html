@@ -7517,20 +7517,26 @@ function SettingsPage({authUser,darkMode,setDarkMode,onSignOut,role}) {
         </div>
       </>)}
 
-      {/* Notifications */}
+      {/* Notifications — tailored per role */}
       {sectionCard(<>
         {sectionTitle("Notifications")}
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
-          {[
-            {key:"newOffers",       label:"New offers from brands"},
+          {(role==="creator"?[
             {key:"dealUpdates",     label:"Deal status updates"},
             {key:"paymentReceived", label:"Payment received"},
-            {key:"brandMessages",   label:"Brand messages"},
-            {key:"weeklyEarnings",  label:"Weekly earnings summary"},
-          ].map(({key,label})=>(
+            {key:"brandMessages",   label:"Messages from brands"},
+            {key:"contentApproved", label:"Content approved"},
+            {key:"contractSent",    label:"New contract to review"},
+          ]:[
+            {key:"dealUpdates",     label:"Deal status updates"},
+            {key:"contentSubmitted",label:"Creator submitted content"},
+            {key:"contractSigned",  label:"Creator signed contract"},
+            {key:"creatorMessages", label:"Messages from creators"},
+            {key:"paymentSettled",  label:"Payment settled in escrow"},
+          ]).map(({key,label})=>(
             <Toggle
               key={key}
-              checked={notifPrefs[key]}
+              checked={notifPrefs[key]!==false}
               label={label}
               onChange={v=>setNotifPrefs(p=>({...p,[key]:v}))}
             />
@@ -7541,14 +7547,13 @@ function SettingsPage({authUser,darkMode,setDarkMode,onSignOut,role}) {
         </div>
       </>)}
 
-      {/* Privacy */}
-      {sectionCard(<>
+      {/* Privacy — creator only */}
+      {role==="creator"&&sectionCard(<>
         {sectionTitle("Privacy")}
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
           {[
-            {key:"showInDiscovery", label:"Show profile in brand discovery"},
+            {key:"showInDiscovery", label:"Show profile in creator discovery"},
             {key:"showAvailability",label:"Show availability to brands"},
-            {key:"showEarnings",    label:"Show earnings on public profile"},
           ].map(({key,label})=>(
             <Toggle
               key={key}
