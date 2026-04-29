@@ -263,8 +263,8 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
   .sidebar-collapse-btn{display:none !important}
   .app-shell{min-height:0;height:auto}
   #root{min-height:0;height:auto}
-  .main-layout{display:block;height:auto !important;overflow:visible;flex:none}
-  .content-area{overflow:visible;height:auto;padding:16px 12px calc(90px + env(safe-area-inset-bottom,0px))}
+  .main-layout{display:block;height:auto !important;overflow-x:hidden;overflow-y:visible;flex:none}
+  .content-area{overflow-x:hidden;overflow-y:visible;height:auto;padding:16px 12px calc(90px + env(safe-area-inset-bottom,0px));max-width:100vw;box-sizing:border-box}
   .card-lg{padding:14px 14px !important}
   .g4{grid-template-columns:repeat(2,1fr)}
   .g3{grid-template-columns:repeat(2,1fr)}
