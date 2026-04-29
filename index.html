@@ -1765,7 +1765,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
         ):(
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {active.map(d=>{
-              const steps = [true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length;
+              const steps = [true,d.briefSubmitted,d.contractSigned,(d.contentFile||d.contentFiles?.length>0),d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length;
               return (
                 <div key={d.id} className="card card-hover" style={{padding:"14px 16px",cursor:"pointer"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
                   <div style={{display:"flex",gap:12,alignItems:"center"}}>
@@ -2130,7 +2130,7 @@ function CreatorDealsPage({setPage,setSelected,deals}) {
               <div style={{flex:1}}>
                 <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:3,flexWrap:"wrap"}}><span style={{fontSize:"14px",fontWeight:600}}>{d.brand}</span>{d.source==="external"&&<ExtBadge/>}{d.escrow&&<EscrowBadge released={d.escrowReleased}/>}</div>
                 <div style={{fontSize:"12px",color:"var(--text2)"}}>{d.platform} · Due {d.deadline}</div>
-                {d.status!=="payment_released"&&<div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:((([true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length)/6)*100)+"%"}}></div></div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>{[true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length} of 6 steps</div></div>}
+                {d.status!=="payment_released"&&<div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:((([true,d.briefSubmitted,d.contractSigned,(d.contentFile||d.contentFiles?.length>0),d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length)/6)*100)+"%"}}></div></div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>{[true,d.briefSubmitted,d.contractSigned,(d.contentFile||d.contentFiles?.length>0),d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length} of 6 steps</div></div>}
               </div>
               <div style={{textAlign:"right"}}>
                 <div style={{fontSize:"17px",fontWeight:700,fontFamily:"DM Serif Display,serif"}}><AnimNum value={"$"+d.amount.toLocaleString()}/></div>
@@ -2374,8 +2374,18 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
     setContractSigned(!!deal.contractSigned);
     setContractSignedAt(deal.contractSignedAt||null);
     setSignedFile(deal.signedFile||null);
-    setContentFile(deal.contentFile||null);
-    setContentUploaded(!!deal.contentFile);
+    // Load content files — support multi-file format (names/urls separated by |||)
+    if(deal.contentFile) {
+      const names = (deal.contentFile.name||"").split("|||");
+      const urls = (deal.contentFile.dataUrl||"").split("|||");
+      if(names.length>1) {
+        setContentFiles(names.map((n,i)=>({name:n,size:0,dataUrl:urls[i]||""})));
+      } else {
+        setContentFiles([deal.contentFile]);
+      }
+    } else {
+      setContentFiles([]);
+    }
     setScriptUrl(deal.scriptUrl||"");
     setScriptSubmitted(!!deal.scriptSubmitted);
     if(Array.isArray(deal.approvedDeliverables)) setApproved(deal.approvedDeliverables);
@@ -2413,33 +2423,40 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
     return ()=>clearInterval(poll);
   },[activeDeal?.id, authUser?.id]);
 
-  const [contentFile,setContentFile] = useState(activeDeal?.contentFile||null);
-  const [contentUploaded,setContentUploaded] = useState(false);
+  const [contentFiles,setContentFiles] = useState(()=>{
+    // Load from activeDeal — support old single file and new array
+    if(activeDeal?.contentFiles?.length) return activeDeal.contentFiles;
+    if(activeDeal?.contentFile) return [activeDeal.contentFile];
+    return [];
+  });
+  const contentUploaded = contentFiles.length > 0;
   const [uploadingContent,setUploadingContent] = useState(false);
   const contentFileInputRef = React.useRef(null);
 
   const handleContentFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if(!file || !activeDeal) return;
+    const files = Array.from(e.target.files||[]);
+    if(!files.length || !activeDeal) return;
     setUploadingContent(true);
     try {
-      const path = `deals/${activeDeal.id}/content/${Date.now()}_${file.name}`;
-      const {error} = await supabase.storage.from("deal-files").upload(path, file, {upsert:true});
-      if(error) throw error;
-      const {data:urlData} = supabase.storage.from("deal-files").getPublicUrl(path);
-      const cf = {name:file.name, size:file.size, dataUrl:urlData.publicUrl};
-      setContentFile(cf);
-      setContentUploaded(true);
-      // Only change status to content_delivered if payment is in escrow (payment_held).
-      // Otherwise just save the file without touching the deal status.
+      const uploaded = [];
+      for(const file of files) {
+        const path = `deals/${activeDeal.id}/content/${Date.now()}_${file.name}`;
+        const {error} = await supabase.storage.from("deal-files").upload(path, file, {upsert:true});
+        if(error) throw error;
+        const {data:urlData} = supabase.storage.from("deal-files").getPublicUrl(path);
+        uploaded.push({name:file.name, size:file.size, dataUrl:urlData.publicUrl});
+      }
+      const allFiles = [...contentFiles, ...uploaded];
+      setContentFiles(allFiles);
       const hasPayment = !!activeDeal.paymentIntentId;
       const newStatus = (hasPayment && activeDeal.status==="payment_held") ? "content_delivered" : activeDeal.status;
-      const upd = {...activeDeal, contentFile:cf, status:newStatus};
+      const upd = {...activeDeal, contentFile:allFiles[0], status:newStatus};
       setActiveDeal(upd);
       if(newStatus!==activeDeal.status) updateDeal && updateDeal(activeDeal.id, {status:newStatus});
       pausePoll();
-      syncDealFields({content_file_name:cf.name, content_file_data:cf.dataUrl, ...(newStatus!==activeDeal.status?{status:newStatus}:{})});
-      notifyOther("content_submitted", {fileName:cf.name});
+      // Save first file to the single columns for backward compat, store all names in a metadata field
+      syncDealFields({content_file_name:allFiles.map(f=>f.name).join("|||"), content_file_data:allFiles.map(f=>f.dataUrl).join("|||"), ...(newStatus!==activeDeal.status?{status:newStatus}:{})});
+      notifyOther("content_submitted", {fileName:uploaded.map(f=>f.name).join(", ")});
     } catch(err) {
       console.error("[contentUpload]", err);
     }
@@ -2647,7 +2664,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               <div style={{fontSize:13,fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>Active ({activeDeals.length})</div>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {activeDeals.map(d=>{
-                  const steps = [true,d.briefSubmitted,d.contractSigned,!!d.contentFile,d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length;
+                  const steps = [true,d.briefSubmitted,d.contractSigned,(d.contentFile||d.contentFiles?.length>0),d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length;
                   return (
                     <div key={d.id} className="card card-hover" style={{padding:"16px 18px",cursor:"pointer"}} onClick={()=>selectDeal(d)}>
                       <div style={{display:"flex",gap:14,alignItems:"center"}}>
@@ -3142,23 +3159,29 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                     <button onClick={()=>{setScriptSubmitted(false);setScriptUrl("");syncDealFields({script_url:null,script_submitted:false});}} style={{background:"none",border:"none",cursor:"pointer",fontSize:"11px",color:"var(--text3)",textDecoration:"underline",flexShrink:0}}>Edit</button>
                   </div>
                 )}
-                <input ref={contentFileInputRef} type="file" accept=".mp4,.mov,.jpg,.jpeg,.png,.gif,.webm,.pdf" onChange={handleContentFileUpload} style={{display:"none"}}/>
-                {!contentUploaded?(
-                  <div onClick={()=>!uploadingContent&&contentFileInputRef.current?.click()} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:"20px",textAlign:"center",cursor:uploadingContent?"default":"pointer",opacity:uploadingContent?.6:1}} onMouseEnter={e=>{if(!uploadingContent)e.currentTarget.style.borderColor=g[0];}} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
-                    {uploadingContent?<><div style={{fontSize:"18px",animation:"spin .9s linear infinite",display:"inline-block"}}>⟳</div><div style={{fontSize:"13px",marginTop:6}}>Uploading...</div></>:<><div style={{fontSize:"22px",marginBottom:6}}></div><div style={{fontSize:"13px",fontWeight:600}}>Upload Final Content</div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>MP4, MOV, JPG, PNG — this goes to the brand for review</div></>}
-                  </div>
-                ):(
-                  <div style={{padding:"12px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)"}}>
-                    <div style={{display:"flex",gap:10,alignItems:"center"}}>
-                      <span>✓</span>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:"13px",fontWeight:600,color:"var(--green)"}}>Content submitted for review</div>
-                        {contentFile&&<a href={contentFile.dataUrl} target="_blank" rel="noopener noreferrer" style={{fontSize:"11px",color:"var(--green)",opacity:.7,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block",textDecoration:"underline"}}>{contentFile.name}</a>}
+                <input ref={contentFileInputRef} type="file" accept=".mp4,.mov,.jpg,.jpeg,.png,.gif,.webm,.pdf" multiple onChange={handleContentFileUpload} style={{display:"none"}}/>
+                {/* Uploaded files list */}
+                {contentFiles.length>0&&(
+                  <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:10}}>
+                    {contentFiles.map((cf,i)=>(
+                      <div key={i} style={{display:"flex",gap:8,alignItems:"center",padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.2)",borderRadius:8}}>
+                        <span style={{fontSize:12,color:"var(--green)"}}>✓</span>
+                        <a href={cf.dataUrl} target="_blank" rel="noopener noreferrer" style={{flex:1,fontSize:12,fontWeight:500,color:"var(--green)",textDecoration:"underline",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cf.name}</a>
+                        <button onClick={()=>openPreview(cf)} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:10,padding:"4px 8px"}}>Preview</button>
+                        <button onClick={()=>{
+                          const updated = contentFiles.filter((_,j)=>j!==i);
+                          setContentFiles(updated);
+                          pausePoll();
+                          syncDealFields({content_file_name:updated.map(f=>f.name).join("|||")||null, content_file_data:updated.map(f=>f.dataUrl).join("|||")||null});
+                        }} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",padding:"2px 4px"}}>✕</button>
                       </div>
-                      {contentFile&&<button onClick={()=>openPreview(contentFile)} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px"}}>Preview</button>}
-                    </div>
+                    ))}
                   </div>
                 )}
+                {/* Upload button — always visible so creator can add more */}
+                <div onClick={()=>!uploadingContent&&contentFileInputRef.current?.click()} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:contentFiles.length>0?"14px":"20px",textAlign:"center",cursor:uploadingContent?"default":"pointer",opacity:uploadingContent?.6:1}} onMouseEnter={e=>{if(!uploadingContent)e.currentTarget.style.borderColor=g[0];}} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+                  {uploadingContent?<><div style={{fontSize:"16px",animation:"spin .9s linear infinite",display:"inline-block"}}>⟳</div><div style={{fontSize:"12px",marginTop:4}}>Uploading...</div></>:<><div style={{fontSize:contentFiles.length>0?"12px":"13px",fontWeight:600}}>{contentFiles.length>0?"+ Add more files":"Upload Content"}</div>{contentFiles.length===0&&<div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>MP4, MOV, JPG, PNG — select multiple files at once</div>}</>}
+                </div>
               </div>
             )}
 
@@ -3176,22 +3199,17 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                 )}
                 {contentUploaded?(
                   <div style={{padding:"14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)"}}>
-                    <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:contentFile?8:0}}>
-                      <span></span>
-                      <div style={{fontSize:"13px",fontWeight:600,color:"var(--green)"}}>Creator has submitted content for review</div>
-                    </div>
-                    {contentFile&&(
-                      <div style={{display:"flex",gap:10,alignItems:"center",padding:"10px 12px",background:"rgba(52,211,153,.08)",borderRadius:"var(--radius-sm)",marginBottom:8}}>
-                        <span style={{fontSize:"16px"}}></span>
+                    <div style={{fontSize:"13px",fontWeight:600,color:"var(--green)",marginBottom:contentFiles.length?8:0}}>Creator has submitted {contentFiles.length} file{contentFiles.length!==1?"s":""} for review</div>
+                    {contentFiles.map((cf,i)=>(
+                      <div key={i} style={{display:"flex",gap:8,alignItems:"center",padding:"8px 12px",background:"rgba(52,211,153,.08)",borderRadius:8,marginBottom:6}}>
                         <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:"12px",fontWeight:600,color:"var(--green)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{contentFile.name}</div>
+                          <div style={{fontSize:"12px",fontWeight:600,color:"var(--green)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cf.name}</div>
                         </div>
-                        <button onClick={()=>openPreview(contentFile)} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px"}}>Preview</button>
-                        <button onClick={()=>{fetch(contentFile.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=contentFile.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px"}}>Download</button>
-                        <button onClick={()=>openPreview(contentFile)} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"11px"}}>Preview</button>
+                        <button onClick={()=>openPreview(cf)} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"10px",padding:"4px 8px"}}>Preview</button>
+                        <button onClick={()=>{fetch(cf.dataUrl).then(r=>r.blob()).then(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=cf.name;a.click();URL.revokeObjectURL(a.href);});}} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:"10px",padding:"4px 8px"}}>Download</button>
                       </div>
-                    )}
-                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5,marginBottom:10}}>Review the content. If it meets the brief, approve the deliverables above.</div>
+                    ))}
+                    <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5,marginBottom:10,marginTop:8}}>Review the content. If it meets the brief, approve the deliverables above.</div>
                     <button
                       className="btn btn-secondary btn-sm"
                       style={{width:"100%"}}
@@ -3199,8 +3217,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                         const reason = prompt("What revisions are needed?");
                         if(!reason) return;
                         // Reset content uploaded state and notify creator
-                        setContentFile(null);
-                        setContentUploaded(false);
+                        setContentFiles([]);
                         updateApproved(DELIVERABLES.map(()=>false));
                         syncDealFields({content_file_name:null,content_file_data:null,approved_deliverables:DELIVERABLES.map(()=>false)});
                         // Send revision request as a message
