@@ -7,6 +7,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
@@ -7905,6 +7907,8 @@ function useReveal(threshold=0.15) {
   return [ref,visible];
 }
 function Reveal({children,delay=0,style={}}) {
+  // GSAP handles scroll animations now — Reveal is a passthrough
+  if(window.gsap) return React.createElement(React.Fragment,null,children);
   const [ref,visible] = useReveal();
   return React.createElement("div",{ref,style:{...style,opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(24px)",transition:`opacity .6s ease ${delay}s, transform .6s ease ${delay}s`}},children);
 }
@@ -7938,6 +7942,97 @@ function LandingPage({onGetStarted,onLogin}) {
     window.addEventListener("scroll",onScroll,{passive:true});
     return ()=>window.removeEventListener("scroll",onScroll);
   },[]);
+
+  // GSAP ScrollTrigger animations
+  const lpRef = useRef(null);
+  useEffect(()=>{
+    if(!window.gsap || !window.ScrollTrigger) return;
+    const gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
+    const ctx = gsap.context(()=>{
+
+      // Hero text — fade up with stagger
+      gsap.from(".lp-hero-title",{y:60,opacity:0,duration:1,ease:"power3.out",delay:.2});
+      gsap.from(".lp-hero-sub",{y:40,opacity:0,duration:1,ease:"power3.out",delay:.5});
+      gsap.from(".lp-hero-buttons",{y:30,opacity:0,duration:.8,ease:"power3.out",delay:.7});
+
+      // Product mockup — scale up from small
+      gsap.from(".lp-mockup",{scale:.85,y:60,opacity:0,duration:1.2,ease:"power3.out",delay:.9});
+
+      // Sections — fade up on scroll with stagger
+      gsap.utils.toArray(".lp-section").forEach((el)=>{
+        gsap.from(el,{
+          y:50,opacity:0,duration:.8,ease:"power2.out",
+          scrollTrigger:{trigger:el,start:"top 85%",toggleActions:"play none none none"}
+        });
+      });
+
+      // Feature cards — stagger cascade
+      gsap.utils.toArray(".lp-card").forEach((el,i)=>{
+        gsap.from(el,{
+          y:40,opacity:0,duration:.6,delay:i*.08,ease:"power2.out",
+          scrollTrigger:{trigger:el,start:"top 88%",toggleActions:"play none none none"}
+        });
+      });
+
+      // Stats — count up effect on scroll
+      gsap.utils.toArray(".lp-stat").forEach((el)=>{
+        gsap.from(el,{
+          y:20,opacity:0,scale:.9,duration:.6,ease:"back.out(1.7)",
+          scrollTrigger:{trigger:el,start:"top 88%",toggleActions:"play none none none"}
+        });
+      });
+
+      // Deep dive sections — slide in from alternating sides
+      gsap.utils.toArray(".lp-deep-left").forEach((el)=>{
+        gsap.from(el,{
+          x:-60,opacity:0,duration:.9,ease:"power3.out",
+          scrollTrigger:{trigger:el,start:"top 80%",toggleActions:"play none none none"}
+        });
+      });
+      gsap.utils.toArray(".lp-deep-right").forEach((el)=>{
+        gsap.from(el,{
+          x:60,opacity:0,duration:.9,ease:"power3.out",
+          scrollTrigger:{trigger:el,start:"top 80%",toggleActions:"play none none none"}
+        });
+      });
+
+      // How it works steps — stagger from bottom
+      gsap.utils.toArray(".lp-step").forEach((el,i)=>{
+        gsap.from(el,{
+          y:30,opacity:0,duration:.5,delay:i*.1,ease:"power2.out",
+          scrollTrigger:{trigger:el,start:"top 90%",toggleActions:"play none none none"}
+        });
+      });
+
+      // Testimonials — scale up
+      gsap.utils.toArray(".lp-testimonial").forEach((el,i)=>{
+        gsap.from(el,{
+          scale:.9,opacity:0,duration:.6,delay:i*.1,ease:"back.out(1.4)",
+          scrollTrigger:{trigger:el,start:"top 88%",toggleActions:"play none none none"}
+        });
+      });
+
+      // Parallax on hero floating cards
+      gsap.utils.toArray(".lp-float-card").forEach((el,i)=>{
+        gsap.to(el,{
+          y:-(50+i*20),
+          ease:"none",
+          scrollTrigger:{trigger:".lp-hero-bg",start:"top top",end:"bottom top",scrub:true}
+        });
+      });
+
+      // Mockup parallax — moves slower than scroll
+      gsap.to(".lp-mockup",{
+        y:-40,
+        ease:"none",
+        scrollTrigger:{trigger:".lp-mockup",start:"top bottom",end:"bottom top",scrub:true}
+      });
+
+    }, lpRef);
+
+    return ()=>ctx.revert();
+  },[]);
   // Floating cards animation
   const float = (delay,x,y) => ({
     position:"absolute",left:x,top:y,
@@ -7945,7 +8040,7 @@ function LandingPage({onGetStarted,onLogin}) {
     pointerEvents:"none",zIndex:2,
   });
   return (
-    <div style={{minHeight:"100vh",color:lp.text,fontFamily:"DM Sans,sans-serif",overflowX:"hidden"}}>
+    <div ref={lpRef} style={{minHeight:"100vh",color:lp.text,fontFamily:"DM Sans,sans-serif",overflowX:"hidden"}}>
       <style>{`
         @keyframes lpFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(1.5deg)}}
         @keyframes lpWave{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
@@ -8171,13 +8266,13 @@ function LandingPage({onGetStarted,onLogin}) {
 
         {/* Hero content */}
         <div style={{position:"relative",zIndex:5,flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"60px 24px 140px",textAlign:"center"}}>
-          <h1 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(36px,5.5vw,56px)",fontWeight:400,lineHeight:1.08,letterSpacing:"-1px",marginBottom:20,color:"white",maxWidth:650}}>
+          <h1 className="lp-hero-title" style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(36px,5.5vw,56px)",fontWeight:400,lineHeight:1.08,letterSpacing:"-1px",marginBottom:20,color:"white",maxWidth:650}}>
             <em style={{fontStyle:"italic",fontWeight:400}}>Dive in</em> to seamless creator-brand partnerships
           </h1>
-          <p style={{fontSize:"clamp(15px,2vw,18px)",color:"rgba(255,255,255,.75)",lineHeight:1.7,maxWidth:480,margin:"0 auto 36px"}}>
+          <p className="lp-hero-sub" style={{fontSize:"clamp(15px,2vw,18px)",color:"rgba(255,255,255,.75)",lineHeight:1.7,maxWidth:480,margin:"0 auto 36px"}}>
             One place for deals, contracts, payments, and content — so you can focus on the work, not the admin.
           </p>
-          <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
+          <div className="lp-hero-buttons" style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
             <button onClick={onGetStarted} style={{padding:"14px 36px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:15,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.12)"}}>Start for free</button>
             <button onClick={onLogin} style={{padding:"14px 36px",borderRadius:99,border:"1.5px solid rgba(255,255,255,.4)",background:"rgba(255,255,255,.1)",color:"white",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:15,fontWeight:500,backdropFilter:"blur(4px)"}}>I have an account</button>
           </div>
@@ -8246,7 +8341,7 @@ function LandingPage({onGetStarted,onLogin}) {
 
         {/* ── Social Proof Bar ── */}
         <Reveal>
-        <section style={{maxWidth:960,margin:"0 auto",padding:"60px 24px 0",textAlign:"center"}}>
+        <section className="lp-section" style={{maxWidth:960,margin:"0 auto",padding:"60px 24px 0",textAlign:"center"}}>
           <p style={{fontSize:14,color:lp.text3,fontWeight:500,marginBottom:28,letterSpacing:".02em"}}>Trusted by creators and brands managing real partnerships</p>
           <div style={{display:"flex",justifyContent:"center",gap:48,flexWrap:"wrap"}}>
             {[
@@ -8254,7 +8349,7 @@ function LandingPage({onGetStarted,onLogin}) {
               {val:100,prefix:"$",suffix:"K+",label:"In payments processed"},
               {val:10,prefix:"",suffix:"K+",label:"Messages sent"},
             ].map((s,i)=>(
-              <div key={i} style={{textAlign:"center"}}>
+              <div key={i} className="lp-stat" style={{textAlign:"center"}}>
                 <div style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:400,color:lp.text}}><AnimCounter value={s.val} prefix={s.prefix} suffix={s.suffix}/></div>
                 <div style={{fontSize:12,color:lp.text3,marginTop:4}}>{s.label}</div>
               </div>
@@ -8265,7 +8360,7 @@ function LandingPage({onGetStarted,onLogin}) {
 
         {/* ── Bento feature grid ── */}
         <Reveal>
-        <section style={{maxWidth:960,margin:"0 auto",padding:"80px 24px 100px"}}>
+        <section className="lp-section" style={{maxWidth:960,margin:"0 auto",padding:"80px 24px 100px"}}>
           <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>Everything you need in one place</h2>
           <p style={{textAlign:"center",fontSize:15,color:lp.text2,marginBottom:48,maxWidth:440,margin:"0 auto 48px"}}>No more juggling emails, spreadsheets, and payment apps.</p>
           <div className="lp-bento" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gridTemplateRows:"auto auto",gap:16}}>
@@ -8299,7 +8394,7 @@ function LandingPage({onGetStarted,onLogin}) {
 
         {/* ── Product Showcase — How It Looks ── */}
         <Reveal>
-        <section style={{maxWidth:1060,margin:"0 auto",padding:"0 24px 100px"}}>
+        <section className="lp-section" style={{maxWidth:1060,margin:"0 auto",padding:"0 24px 100px"}}>
           <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>See how it looks</h2>
           <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:480,margin:"0 auto 48px"}}>Every deal gets a dedicated workspace. Here is what you will actually use.</p>
           <div className="lp-showcase-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:24}}>
@@ -8385,11 +8480,11 @@ function LandingPage({onGetStarted,onLogin}) {
         </Reveal>
 
         {/* ── Feature Deep Dives ── */}
-        <section style={{maxWidth:1000,margin:"0 auto",padding:"0 24px 80px"}}>
+        <section className="lp-section" style={{maxWidth:1000,margin:"0 auto",padding:"0 24px 80px"}}>
           {/* Deep dive 1: Deal Room — mockup left, text right */}
           <Reveal delay={0.1}>
           <div className="lp-deep-dive" style={{display:"flex",gap:48,alignItems:"center",marginBottom:80}}>
-            <div style={{width:"50%",flexShrink:0}}>
+            <div className="lp-deep-left" style={{width:"50%",flexShrink:0}}>
               <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
                 <div style={{padding:"10px 14px",borderBottom:"1px solid "+lp.border,display:"flex",alignItems:"center",gap:5,marginBottom:14}}>
                   <div style={{width:7,height:7,borderRadius:"50%",background:"#ff6059"}}/>
@@ -8411,7 +8506,7 @@ function LandingPage({onGetStarted,onLogin}) {
                 </div>
               </div>
             </div>
-            <div style={{width:"50%"}}>
+            <div className="lp-deep-right" style={{width:"50%"}}>
               <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:400,lineHeight:1.15,marginBottom:16,color:lp.text}}>A shared workspace for every deal</h3>
               <p style={{fontSize:15,color:lp.text2,lineHeight:1.7,margin:0}}>The Deal Room brings everything into one place. Briefs, contracts, deliverables, messages, and approvals live side by side so nothing falls through the cracks. Both creator and brand see the same view in real time, making collaboration effortless.</p>
             </div>
@@ -8421,7 +8516,7 @@ function LandingPage({onGetStarted,onLogin}) {
           {/* Deep dive 2: Payments — text left, mockup right */}
           <Reveal delay={0.1}>
           <div className="lp-deep-dive-reverse" style={{display:"flex",flexDirection:"row-reverse",gap:48,alignItems:"center",marginBottom:80}}>
-            <div style={{width:"50%",flexShrink:0}}>
+            <div className="lp-deep-right" style={{width:"50%",flexShrink:0}}>
               <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
                 <div style={{padding:"10px 14px",borderBottom:"1px solid "+lp.border,display:"flex",alignItems:"center",gap:5,marginBottom:14}}>
                   <div style={{width:7,height:7,borderRadius:"50%",background:"#ff6059"}}/>
@@ -8444,7 +8539,7 @@ function LandingPage({onGetStarted,onLogin}) {
                 </div>
               </div>
             </div>
-            <div style={{width:"50%"}}>
+            <div className="lp-deep-left" style={{width:"50%"}}>
               <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:400,lineHeight:1.15,marginBottom:16,color:lp.text}}>Payments you can trust</h3>
               <p style={{fontSize:15,color:lp.text2,lineHeight:1.7,margin:0}}>Brands fund escrow before work begins. Creators know the money is there. Once content is approved, payment releases automatically. No invoices, no awkward follow-ups, no wondering if you will get paid.</p>
             </div>
@@ -8454,7 +8549,7 @@ function LandingPage({onGetStarted,onLogin}) {
           {/* Deep dive 3: Messaging — mockup left, text right */}
           <Reveal delay={0.1}>
           <div className="lp-deep-dive" style={{display:"flex",gap:48,alignItems:"center",marginBottom:0}}>
-            <div style={{width:"50%",flexShrink:0}}>
+            <div className="lp-deep-left" style={{width:"50%",flexShrink:0}}>
               <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
                 <div style={{padding:"10px 14px",borderBottom:"1px solid "+lp.border,display:"flex",alignItems:"center",gap:5,marginBottom:14}}>
                   <div style={{width:7,height:7,borderRadius:"50%",background:"#ff6059"}}/>
@@ -8479,7 +8574,7 @@ function LandingPage({onGetStarted,onLogin}) {
                 ))}
               </div>
             </div>
-            <div style={{width:"50%"}}>
+            <div className="lp-deep-right" style={{width:"50%"}}>
               <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:400,lineHeight:1.15,marginBottom:16,color:lp.text}}>Real conversations, not email threads</h3>
               <p style={{fontSize:15,color:lp.text2,lineHeight:1.7,margin:0}}>Every deal has its own message thread. Discuss deliverables, share feedback, ask questions, and keep a full history. No more digging through inboxes or losing context across platforms.</p>
             </div>
@@ -8489,7 +8584,7 @@ function LandingPage({onGetStarted,onLogin}) {
 
         {/* ── How it works — horizontal cards ── */}
         <Reveal>
-        <section style={{maxWidth:1060,margin:"0 auto",padding:"80px 24px 100px"}}>
+        <section className="lp-section" style={{maxWidth:1060,margin:"0 auto",padding:"80px 24px 100px"}}>
           <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>How it works</h2>
           <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>Five simple steps from handshake to payment.</p>
           <div className="lp-steps-grid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:16}}>
@@ -8501,7 +8596,7 @@ function LandingPage({onGetStarted,onLogin}) {
               {n:"5",t:"Get paid",d:"Once approved, funds transfer to the creator automatically. Done."},
             ].map((s,i)=>(
               <Reveal key={i} delay={i*0.08}>
-              <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 20px",backdropFilter:"blur(8px)",textAlign:"center"}}>
+              <div className="lp-step" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 20px",backdropFilter:"blur(8px)",textAlign:"center"}}>
                 <div style={{width:36,height:36,borderRadius:"50%",background:lp.accent,color:"white",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700,marginBottom:14}}>{s.n}</div>
                 <div style={{fontSize:14,fontWeight:700,marginBottom:6,color:lp.text}}>{s.t}</div>
                 <p style={{fontSize:12,color:lp.text2,lineHeight:1.55,margin:0}}>{s.d}</p>
@@ -8514,7 +8609,7 @@ function LandingPage({onGetStarted,onLogin}) {
 
         {/* ── Testimonials ── */}
         <Reveal>
-        <section style={{maxWidth:1000,margin:"0 auto",padding:"0 24px 100px"}}>
+        <section className="lp-section" style={{maxWidth:1000,margin:"0 auto",padding:"0 24px 100px"}}>
           <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>What people are saying</h2>
           <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>Creators and brands who use bridgn to manage their partnerships.</p>
           <div className="lp-testimonial-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:20}}>
@@ -8523,7 +8618,7 @@ function LandingPage({onGetStarted,onLogin}) {
               {quote:"As a brand, knowing the funds are in escrow before the creator starts gives us confidence. And the Deal Room keeps everything organized — no more hunting through email.",name:"Alex Rivera",role:"Marketing Lead"},
               {quote:"The escrow feature changed everything for me. I know the money is there before I start working, and it releases the moment my content is approved.",name:"Marcus Chen",role:"Creator"},
             ].map((t,i)=>(
-              <div key={i} style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"32px 28px",backdropFilter:"blur(8px)"}}>
+              <div key={i} className="lp-testimonial" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"32px 28px",backdropFilter:"blur(8px)"}}>
                 <p style={{fontSize:14,color:lp.text2,lineHeight:1.7,fontStyle:"italic",margin:"0 0 20px"}}>"{t.quote}"</p>
                 <div>
                   <div style={{fontSize:14,fontWeight:700,color:lp.text}}>{t.name}</div>
@@ -8536,7 +8631,7 @@ function LandingPage({onGetStarted,onLogin}) {
         </Reveal>
 
         {/* ── Two-sided CTA ── */}
-        <section style={{maxWidth:800,margin:"0 auto",padding:"0 24px 100px"}}>
+        <section className="lp-section" style={{maxWidth:800,margin:"0 auto",padding:"0 24px 100px"}}>
           <div className="lp-cta-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
             <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px",backdropFilter:"blur(8px)"}}>
               <div style={{fontSize:12,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Creators</div>
@@ -8554,7 +8649,7 @@ function LandingPage({onGetStarted,onLogin}) {
         </section>
 
         {/* ── FAQ Section ── */}
-        <section style={{maxWidth:700,margin:"0 auto",padding:"0 24px 100px"}}>
+        <section className="lp-section" style={{maxWidth:700,margin:"0 auto",padding:"0 24px 100px"}}>
           <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:48,letterSpacing:"-.3px",color:lp.text}}>Frequently asked questions</h2>
           {[
             {q:"Is bridgn free?",a:"Yes, creating an account is free for both creators and brands. You can start managing deals right away without any subscription or upfront cost."},
@@ -8579,7 +8674,7 @@ function LandingPage({onGetStarted,onLogin}) {
         </section>
 
         {/* ── Final CTA Banner ── */}
-        <section style={{maxWidth:900,margin:"0 auto",padding:"0 24px 100px"}}>
+        <section className="lp-section" style={{maxWidth:900,margin:"0 auto",padding:"0 24px 100px"}}>
           <div style={{background:lp.accent,borderRadius:20,padding:"60px 40px",textAlign:"center"}}>
             <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,color:"white",marginBottom:16,lineHeight:1.2}}>Ready to simplify your partnerships?</h2>
             <p style={{fontSize:15,color:"rgba(255,255,255,.7)",maxWidth:420,margin:"0 auto 32px",lineHeight:1.6}}>Join creators and brands who use bridgn to manage deals, payments, and communication in one place.</p>
