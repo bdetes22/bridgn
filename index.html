@@ -261,7 +261,9 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
   .sidebar.collapsed .nav-item{justify-content:flex-start;padding:9px 14px;margin:1px 8px;width:calc(100% - 16px)}
   .sidebar.collapsed .nav-item span:not(.nav-icon){display:inline}
   .sidebar-collapse-btn{display:none !important}
-  .main-layout{display:block;height:auto;overflow:visible}
+  .app-shell{min-height:0;height:auto}
+  #root{min-height:0;height:auto}
+  .main-layout{display:block;height:auto !important;overflow:visible;flex:none}
   .content-area{overflow:visible;height:auto;padding:16px 12px calc(90px + env(safe-area-inset-bottom,0px))}
   .card-lg{padding:14px 14px !important}
   .g4{grid-template-columns:repeat(2,1fr)}
