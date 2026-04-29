@@ -7,8 +7,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
@@ -7907,8 +7905,6 @@ function useReveal(threshold=0.15) {
   return [ref,visible];
 }
 function Reveal({children,delay=0,style={}}) {
-  // GSAP handles scroll animations now — Reveal is a passthrough
-  if(window.gsap) return React.createElement(React.Fragment,null,children);
   const [ref,visible] = useReveal();
   return React.createElement("div",{ref,style:{...style,opacity:visible?1:0,transform:visible?"translateY(0)":"translateY(24px)",transition:`opacity .6s ease ${delay}s, transform .6s ease ${delay}s`}},children);
 }
@@ -7943,80 +7939,7 @@ function LandingPage({onGetStarted,onLogin}) {
     return ()=>window.removeEventListener("scroll",onScroll);
   },[]);
 
-  // GSAP ScrollTrigger animations
   const lpRef = useRef(null);
-  useEffect(()=>{
-    if(!window.gsap || !window.ScrollTrigger) return;
-    const gsap = window.gsap;
-    gsap.registerPlugin(window.ScrollTrigger);
-    const ctx = gsap.context(()=>{
-
-      // ── Hero entrance animations (on page load only — no scroll effects) ──
-      gsap.from(".lp-hero-title",{y:50,opacity:0,duration:1,ease:"power3.out",delay:.2});
-      gsap.from(".lp-hero-sub",{y:30,opacity:0,duration:.8,ease:"power3.out",delay:.5});
-      gsap.from(".lp-hero-buttons",{y:20,opacity:0,duration:.7,ease:"power3.out",delay:.7});
-      gsap.from(".lp-mockup",{scale:.88,y:40,opacity:0,duration:1,ease:"power3.out",delay:.9});
-
-      // Sections — fade up on scroll with stagger
-      gsap.utils.toArray(".lp-section").forEach((el)=>{
-        gsap.from(el,{
-          y:50,opacity:0,duration:.8,ease:"power2.out",
-          scrollTrigger:{trigger:el,start:"top 85%",toggleActions:"play none none none"}
-        });
-      });
-
-      // Feature cards — stagger cascade
-      gsap.utils.toArray(".lp-card").forEach((el,i)=>{
-        gsap.from(el,{
-          y:40,opacity:0,duration:.6,delay:i*.08,ease:"power2.out",
-          scrollTrigger:{trigger:el,start:"top 88%",toggleActions:"play none none none"}
-        });
-      });
-
-      // Stats — count up effect on scroll
-      gsap.utils.toArray(".lp-stat").forEach((el)=>{
-        gsap.from(el,{
-          y:20,opacity:0,scale:.9,duration:.6,ease:"back.out(1.7)",
-          scrollTrigger:{trigger:el,start:"top 88%",toggleActions:"play none none none"}
-        });
-      });
-
-      // Deep dive sections — slide in from alternating sides
-      gsap.utils.toArray(".lp-deep-left").forEach((el)=>{
-        gsap.from(el,{
-          x:-60,opacity:0,duration:.9,ease:"power3.out",
-          scrollTrigger:{trigger:el,start:"top 80%",toggleActions:"play none none none"}
-        });
-      });
-      gsap.utils.toArray(".lp-deep-right").forEach((el)=>{
-        gsap.from(el,{
-          x:60,opacity:0,duration:.9,ease:"power3.out",
-          scrollTrigger:{trigger:el,start:"top 80%",toggleActions:"play none none none"}
-        });
-      });
-
-      // How it works steps — stagger from bottom
-      gsap.utils.toArray(".lp-step").forEach((el,i)=>{
-        gsap.from(el,{
-          y:30,opacity:0,duration:.5,delay:i*.1,ease:"power2.out",
-          scrollTrigger:{trigger:el,start:"top 90%",toggleActions:"play none none none"}
-        });
-      });
-
-      // Testimonials — scale up
-      gsap.utils.toArray(".lp-testimonial").forEach((el,i)=>{
-        gsap.from(el,{
-          scale:.9,opacity:0,duration:.6,delay:i*.1,ease:"back.out(1.4)",
-          scrollTrigger:{trigger:el,start:"top 88%",toggleActions:"play none none none"}
-        });
-      });
-
-      // (parallax handled by dive timeline above)
-
-    }, lpRef);
-
-    return ()=>ctx.revert();
-  },[]);
   // Floating cards animation
   const float = (delay,x,y) => ({
     position:"absolute",left:x,top:y,
@@ -8027,6 +7950,11 @@ function LandingPage({onGetStarted,onLogin}) {
     <div ref={lpRef} style={{minHeight:"100vh",color:lp.text,fontFamily:"DM Sans,sans-serif",overflowX:"hidden"}}>
       <style>{`
         @keyframes lpFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(1.5deg)}}
+        @keyframes lpHeroIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        .lp-hero-title{animation:lpHeroIn .8s ease-out .2s both}
+        .lp-hero-sub{animation:lpHeroIn .8s ease-out .4s both}
+        .lp-hero-buttons{animation:lpHeroIn .7s ease-out .6s both}
+        .lp-mockup{animation:lpHeroIn .9s ease-out .8s both}
         @keyframes lpBubble{
           0%{transform:translateY(0) translateX(0) scale(1);opacity:0}
           10%{opacity:.6}
