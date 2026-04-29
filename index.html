@@ -8905,9 +8905,7 @@ function App() {
   const [campaignQuestions,setCampaignQuestions] = useState({});
   const [onboarding,setOnboarding] = useState({seen:false,steps:{analytics:false}});
   const [profileFlags,setProfileFlags] = useState({analyticsUploaded:false,rateCardFilled:false,availabilitySet:false});
-  const [stripeConnected,setStripeConnected] = useState(()=>{
-    try { return localStorage.getItem("bridgn_stripe_connected")==="1"; } catch { return false; }
-  });
+  const [stripeConnected,setStripeConnected] = useState(false);
   const [darkMode,setDarkMode] = useState(false);
   const [sidebarCollapsed,setSidebarCollapsed] = useState(false);
   const [showAuth,setShowAuth] = useState(false);
@@ -8992,12 +8990,18 @@ function App() {
     const stripeParam = params.get("stripe");
     if(stripeParam === "connected") {
       setStripeConnected(true);
-      try { localStorage.setItem("bridgn_stripe_connected","1"); } catch {}
-      // Clean the query param from the URL without a page reload
       const clean = window.location.pathname;
       window.history.replaceState({},"",clean);
     }
   },[]);
+
+  // Check real Stripe Connect status from Supabase on auth
+  useEffect(()=>{
+    if(!authUser) return;
+    supabase.from("creator_profiles").select("stripe_account_id,stripe_onboarded_at").eq("user_id",authUser.id).maybeSingle().then(({data})=>{
+      if(data?.stripe_account_id && data?.stripe_onboarded_at) setStripeConnected(true);
+    });
+  },[authUser]);
 
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
