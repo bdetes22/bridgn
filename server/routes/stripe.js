@@ -235,11 +235,7 @@ router.post("/create-deal-payment", async (req, res) => {
   }
 
   const releaseDays         = Math.max(1, Math.min(90, Number(escrowReleaseDays) || 14));
-  // amount = what the creator gets (the deal value they agreed to)
-  // The brand pays the deal amount + platform fee on top
   const creatorPayoutCents  = Math.round(amountDollars * 100);
-  const applicationFeeCents = Math.round(creatorPayoutCents * PLATFORM_FEE_PERCENT);
-  const totalChargeCents    = creatorPayoutCents + applicationFeeCents;
 
   try {
     // ── 1. Get or create the Stripe Customer for this brand ──────────────────
@@ -257,7 +253,12 @@ router.post("/create-deal-payment", async (req, res) => {
       await upsertBrandProfile(brandUserId, { stripe_customer_id: customer.id });
     }
 
-    // ── 2. Verify the creator has a connected account ────────────────────────
+    // ── 2. Check if this is the brand's first deal (free — no platform fee) ──
+    const isFirstDeal = !brandProfile?.first_deal_used;
+    const applicationFeeCents = isFirstDeal ? 0 : Math.round(creatorPayoutCents * PLATFORM_FEE_PERCENT);
+    const totalChargeCents    = creatorPayoutCents + applicationFeeCents;
+
+    // ── 3. Verify the creator has a connected account ────────────────────────
     const creatorProfile = await getCreatorProfile(creatorUserId);
     if (!creatorProfile?.stripe_account_id) {
       return res.status(422).json({
@@ -266,7 +267,7 @@ router.post("/create-deal-payment", async (req, res) => {
       });
     }
 
-    // ── 3. Create PaymentIntent — NO transfer_data (funds stay on platform) ──
+    // ── 4. Create PaymentIntent — NO transfer_data (funds stay on platform) ──
     const paymentIntent = await stripe.paymentIntents.create({
       amount:   totalChargeCents,
       currency: "usd",
@@ -288,7 +289,8 @@ router.post("/create-deal-payment", async (req, res) => {
         creator_payout_dollars:    String(amountDollars),
         total_charge_cents:       String(totalChargeCents),
         platform_fee_cents:       String(applicationFeeCents),
-        platform_fee_pct:         String(PLATFORM_FEE_PERCENT),
+        platform_fee_pct:         String(isFirstDeal ? 0 : PLATFORM_FEE_PERCENT),
+        first_deal_free:          isFirstDeal ? "true" : "false",
         escrow_release_days:      String(releaseDays),
       },
     });
@@ -317,6 +319,11 @@ router.post("/create-deal-payment", async (req, res) => {
       });
     }
 
+    // Mark the brand's first deal as used (for future fee calculation)
+    if (isFirstDeal) {
+      await upsertBrandProfile(brandUserId, { first_deal_used: true });
+    }
+
     res.json({
       clientSecret:        paymentIntent.client_secret,
       paymentIntentId:     paymentIntent.id,
@@ -324,6 +331,7 @@ router.post("/create-deal-payment", async (req, res) => {
       creatorPayoutCents,
       totalChargeCents,
       applicationFeeCents,
+      isFirstDealFree:     isFirstDeal,
       escrowReleaseDays:   releaseDays,
     });
   } catch (err) {

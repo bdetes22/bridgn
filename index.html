@@ -2473,6 +2473,14 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
 
   // ── ACH Payment + Escrow state ──────────────────────────────────────────────
   const [achPhase,setAchPhase] = useState("idle");
+  const [isFirstDealFree,setIsFirstDealFree] = useState(false);
+
+  // Check if brand gets their first deal free
+  useEffect(()=>{
+    if(!isBrand||!authUser) return;
+    supabase.from("brand_profiles").select("first_deal_used").eq("user_id",authUser.id).maybeSingle()
+      .then(({data})=>{ if(data && !data.first_deal_used) setIsFirstDealFree(true); });
+  },[authUser,isBrand]);
   const [previewFile,setPreviewFile] = useState(null); // {name, url}
   const openPreview = (file) => {
     if(!file?.dataUrl) return;
@@ -3325,10 +3333,10 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           {(()=>{
             const st = activeDeal.status;
             const hasPaid = !!activeDeal.paymentIntentId;
-            // Creator gets the full deal amount. Brand pays deal + 8% fee on top.
-            const feeDollars = Math.round(activeDeal.amount * 0.08);
+            // Creator gets the full deal amount. Brand pays deal + fee (waived on first deal).
+            const feeDollars = isFirstDealFree ? 0 : Math.round(activeDeal.amount * 0.08);
             const brandTotal = activeDeal.amount + feeDollars;
-            const creatorNet = activeDeal.amount; // creator gets 100% of the deal value
+            const creatorNet = activeDeal.amount;
 
             // ── payment_released — green success, both sides ──
             if(st==="payment_released"&&hasPaid) return (
@@ -3484,7 +3492,11 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                     </div>
                   )}
                   <div style={{fontSize:"13px",fontWeight:700,marginBottom:4}}>Fund This Deal</div>
-                  <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>The creator receives <strong>${activeDeal.amount.toLocaleString()}</strong>. You'll be charged <strong>${brandTotal.toLocaleString()}</strong> (deal + 8% service fee). Funds are held in escrow until you approve the content. Auto-releases in <strong>{escrowReleaseDays} days</strong>.</div>
+                  {isFirstDealFree?(
+                    <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(5,150,105,.2)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--green)",fontWeight:600,lineHeight:1.5}}>Your first deal is free — no platform fee. You'll only be charged the deal amount of ${activeDeal.amount.toLocaleString()}.</div>
+                  ):(
+                    <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>The creator receives <strong>${activeDeal.amount.toLocaleString()}</strong>. You'll be charged <strong>${brandTotal.toLocaleString()}</strong> (deal + 8% processing fee). Funds are held in escrow until you approve the content.</div>
+                  )}
                   {achPhase==="error"&&achError&&(
                     <div style={{padding:"9px 12px",borderRadius:"var(--radius-sm)",background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",fontSize:"12px",color:"var(--red)",marginBottom:12,lineHeight:1.5}}>{achError}</div>
                   )}
@@ -7907,8 +7919,13 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
 
             <DealCard/>
 
+            <div style={{padding:"12px 16px",background:"var(--green-bg)",border:"1px solid rgba(5,150,105,.2)",borderRadius:10,marginBottom:16,textAlign:"center"}}>
+              <div style={{fontSize:13,fontWeight:600,color:"var(--green)",marginBottom:2}}>Your first deal is free</div>
+              <div style={{fontSize:11,color:"var(--text3)",lineHeight:1.5}}>No platform fees on your first partnership. bridgn handles contracts, payments, and escrow — a small processing fee applies on future deals.</div>
+            </div>
+
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              <button onClick={()=>setMode("signup")} className="btn btn-primary btn-lg" style={{width:"100%",background:"linear-gradient(135deg,var(--accent),#7c3aed)",border:"none",fontSize:"15px",fontWeight:700}}>
+              <button onClick={()=>setMode("signup")} className="btn btn-primary btn-lg" style={{width:"100%",background:"var(--accent)",border:"none",fontSize:"15px",fontWeight:700}}>
                 Create Brand Account
               </button>
               <button onClick={()=>setMode("login")} style={{background:"none",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:"13px",cursor:"pointer",fontSize:"13px",color:"var(--text2)",fontFamily:"DM Sans,sans-serif",fontWeight:500,transition:"border-color .15s"}} onMouseEnter={e=>e.currentTarget.style.borderColor="var(--accent)"} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
@@ -8654,7 +8671,7 @@ function LandingPage({onGetStarted,onLogin}) {
         <section className="lp-section" style={{maxWidth:700,margin:"0 auto",padding:"0 24px 100px"}}>
           <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:48,letterSpacing:"-.3px",color:lp.text}}>Frequently asked questions</h2>
           {[
-            {q:"Is bridgn free?",a:"Yes, creating an account is free for both creators and brands. You can start managing deals right away without any subscription or upfront cost."},
+            {q:"Is bridgn free?",a:"Yes, creating an account is free for both creators and brands. Your first deal has zero platform fees. After that, a small 8% processing fee is added to the brand's payment to cover escrow, payment processing, and platform infrastructure. Creators always receive 100% of their deal amount."},
             {q:"How do payments work?",a:"Brands fund an escrow account when a deal is agreed upon. The funds are held securely until the creator delivers content and the brand approves it. Once approved, payment releases automatically to the creator. This protects both sides."},
             {q:"Can I use bridgn for deals I negotiate outside the platform?",a:"Yes, that is what External Deals are for. You can bring in any partnership you have already negotiated elsewhere and manage the deliverables, payments, and communication through bridgn."},
             {q:"How does the contract process work?",a:"Brands can upload a contract or creative brief directly to the Deal Room. The creator reviews it, and both parties can sign digitally. Everything is timestamped and stored for reference."},
