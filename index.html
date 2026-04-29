@@ -264,7 +264,7 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
   .app-shell{min-height:0;height:auto}
   #root{min-height:0;height:auto}
   .main-layout{display:block;height:auto !important;overflow-x:hidden;overflow-y:visible;flex:none}
-  .content-area{overflow-x:hidden;overflow-y:visible;height:auto;padding:16px 12px calc(90px + env(safe-area-inset-bottom,0px));max-width:100vw;box-sizing:border-box}
+  .content-area{overflow-x:hidden;overflow-y:visible;height:auto;padding:16px 12px calc(90px + env(safe-area-inset-bottom,0px));width:100%;min-width:0;max-width:100%}
   .card-lg{padding:14px 14px !important}
   .g4{grid-template-columns:repeat(2,1fr)}
   .g3{grid-template-columns:repeat(2,1fr)}
@@ -308,14 +308,16 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
   code{font-size:11px !important;word-break:break-all}
   [style*="gridTemplateColumns"]:not(.det-stats){grid-template-columns:1fr !important}
   select,.fsel{max-width:100% !important;width:100% !important;font-size:14px !important;min-height:44px}
-  .card-lg,.card{max-width:100vw;overflow-x:hidden}
+  .card-lg,.card{max-width:100%;overflow-x:hidden}
   .ph-row{flex-direction:column}
   .ph-row>div:last-child{width:100%}
   .ph-row .btn{width:100%}
-  .deal-room-grid{gap:10px !important}
+  .deal-room-grid{gap:10px !important;max-width:100%;overflow:hidden}
+  .deal-room-grid>div{max-width:100%;min-width:0}
+  .deal-room-grid .card-lg{max-width:100%;border-radius:12px}
   .page-title{word-break:break-word}
-  /* ── Mobile-first Deal Room ── */
-  .deal-room-grid .card-lg{border-radius:12px}
+  .fade-in{max-width:100%;overflow-x:hidden}
+  .page-enter{max-width:100%;overflow-x:hidden}
   /* Bigger touch targets for message input */
   .mob-msg-input{font-size:16px !important;padding:10px 14px !important;min-height:44px;border-radius:22px !important}
   .mob-msg-send{min-width:56px;min-height:44px;border-radius:22px !important;font-weight:700}
