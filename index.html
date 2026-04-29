@@ -3108,7 +3108,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
             </div>
             {DELIVERABLES.map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:i<DELIVERABLES.length-1?"1px solid var(--border)":"none"}}>
-                <div style={{width:22,height:22,borderRadius:6,background:approved[i]?"var(--green-bg)":"var(--surface2)",border:"1px solid "+(approved[i]?"rgba(52,211,153,.4)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",flexShrink:0,cursor:isBrand?"pointer":"default",transition:"all .15s"}} onClick={()=>{if(!isBrand)return;const a=[...approved];a[i]=!a[i];updateApproved(a);if(a[i])fireConfetti();}}>{approved[i]?"✓":""}</div>
+                <div style={{width:22,height:22,borderRadius:6,background:approved[i]?"var(--green-bg)":"var(--surface2)",border:"1px solid "+(approved[i]?"rgba(52,211,153,.4)":"var(--border)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",flexShrink:0,cursor:(isBrand&&contentUploaded)?"pointer":"default",opacity:(isBrand&&!contentUploaded)?.4:1,transition:"all .15s"}} onClick={()=>{if(!isBrand||!contentUploaded)return;const a=[...approved];a[i]=!a[i];updateApproved(a);if(a[i])fireConfetti();}}>{approved[i]?"✓":""}</div>
                 <div style={{flex:1}}><div style={{fontSize:"13px",fontWeight:500}}>{d}</div></div>
                 {approved[i]&&<span className="badge badge-green" style={{fontSize:"10px"}}>Approved</span>}
               </div>
@@ -3123,7 +3123,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                   <span>✓</span>
                   <div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>All deliverables approved</div>
                 </div>
-              ):(
+              ):contentUploaded?(
                 <button
                   className="btn btn-primary btn-sm"
                   style={{marginTop:12,width:"100%"}}
@@ -3131,7 +3131,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                 >
                   Approve All Deliverables
                 </button>
-              )
+              ):null
             )}
             {/* Creator sees approval status */}
             {!isBrand&&DELIVERABLES.length>0&&approved.length>0&&approved.some(Boolean)&&(
