@@ -194,6 +194,7 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 .fta{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:all .18s;resize:vertical;min-height:90px}
 .fta:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(91,138,245,.12)}
 .fsel{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:"DM Sans",sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;cursor:pointer}
+.deal-room-grid{grid-template-columns:1fr 360px}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .prog-bar{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden}
 .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),#7ba8ff)}
@@ -1360,7 +1361,7 @@ function SkeletonPage({layout="list"}){
   if(layout==="deal-room") return (
     <div className="fade-in">
       <Hdr/>
-      <div className="deal-room-grid" style={{display:"grid",gridTemplateColumns:"1fr 360px",gap:20}}>
+      <div className="deal-room-grid" style={{display:"grid",gap:20}}>
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
           <div className="card-lg" style={{padding:"20px 22px"}}>
             <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:16}}>
@@ -2782,12 +2783,12 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           <div className="page-subtitle">{activeDeal.campaignTitle} · {activeDeal.platform} · Due {activeDeal.deadline}</div>
         </div>
         <div style={{display:"flex",gap:8}}>
-          <select className="fsel" style={{width:"auto",padding:"8px 12px",fontSize:"13px"}} value={activeDeal.id} onChange={e=>{const d=deals.find(x=>x.id===parseInt(e.target.value));if(d)setActiveDeal(d);}}>
+          <select className="fsel" style={{padding:"8px 12px",fontSize:"13px"}} value={activeDeal.id} onChange={e=>{const d=deals.find(x=>x.id===parseInt(e.target.value));if(d)setActiveDeal(d);}}>
             {deals.map(d=><option key={d.id} value={d.id}>{d.brand} — {d.campaignTitle}</option>)}
           </select>
         </div>
       </div>
-      <div className="deal-room-grid" style={{display:"grid",gridTemplateColumns:"1fr 360px",gap:20,alignItems:"start"}}>
+      <div className="deal-room-grid" style={{display:"grid",gap:20,alignItems:"start"}}>
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
           <div className="card-lg" style={{overflow:"hidden"}}>
             <div style={{height:4,background:"linear-gradient(90deg,"+g[0]+","+g[1]+")"}}></div>
@@ -5815,9 +5816,9 @@ function ContentLibraryPage() {
       <div className="ph-row"><div><div className="page-title">Content Library</div><div className="page-subtitle">Every piece of delivered content, with usage rights tracking.</div></div><div style={{display:"flex",gap:7}}>{["grid","list"].map(v=><button key={v} className={"filter-btn"+(viewMode===v?" active":"")} onClick={()=>setViewMode(v)}>{v==="grid"?"⊞":"≡"}</button>)}</div></div>
       <div className="card" style={{padding:"12px 16px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
         <span style={{fontSize:"12px",color:"var(--text3)",fontWeight:600}}>Filter:</span>
-        <select className="fsel" style={{width:"auto",padding:"6px 10px",fontSize:"12px"}} value={filterCr} onChange={e=>setFilterCr(e.target.value)}><option value="All">All Creators</option>{creators.map(c=><option key={c}>{c}</option>)}</select>
-        <select className="fsel" style={{width:"auto",padding:"6px 10px",fontSize:"12px"}} value={filterCamp} onChange={e=>setFilterCamp(e.target.value)}><option value="All">All Campaigns</option>{campaigns.map(c=><option key={c}>{c}</option>)}</select>
-        <select className="fsel" style={{width:"auto",padding:"6px 10px",fontSize:"12px"}} value={filterPlat} onChange={e=>setFilterPlat(e.target.value)}><option value="All">All Platforms</option>{platforms.map(p=><option key={p}>{p}</option>)}</select>
+        <select className="fsel" style={{flex:"1 1 auto",minWidth:0,padding:"6px 10px",fontSize:"12px"}} value={filterCr} onChange={e=>setFilterCr(e.target.value)}><option value="All">All Creators</option>{creators.map(c=><option key={c}>{c}</option>)}</select>
+        <select className="fsel" style={{flex:"1 1 auto",minWidth:0,padding:"6px 10px",fontSize:"12px"}} value={filterCamp} onChange={e=>setFilterCamp(e.target.value)}><option value="All">All Campaigns</option>{campaigns.map(c=><option key={c}>{c}</option>)}</select>
+        <select className="fsel" style={{flex:"1 1 auto",minWidth:0,padding:"6px 10px",fontSize:"12px"}} value={filterPlat} onChange={e=>setFilterPlat(e.target.value)}><option value="All">All Platforms</option>{platforms.map(p=><option key={p}>{p}</option>)}</select>
         <span style={{marginLeft:"auto",fontSize:"12px",color:"var(--text3)"}}>{list.length} items</span>
       </div>
       {list.length===0?(
