@@ -285,6 +285,8 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
   .mob-bottom-nav button span.mob-label{font-size:9px}
   /* Cmd+K modal full width on mobile */
   .cmdk-modal{width:calc(100% - 32px) !important;max-width:none !important}
+  select,.fsel{max-width:100%}
+  .deal-room-grid{gap:14px !important}
 }
 @media(max-width:480px){
   .g4,.g3{grid-template-columns:1fr}
@@ -305,6 +307,15 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
   code{font-size:11px !important;word-break:break-all}
   /* Force all grid children to respect container */
   [style*="gridTemplateColumns"]{grid-template-columns:1fr !important}
+  /* Prevent any element from overflowing on mobile */
+  select,.fsel{max-width:100% !important;width:100% !important;font-size:13px !important}
+  .card-lg,.card{max-width:100vw;overflow-x:hidden}
+  .ph-row{flex-direction:column}
+  .ph-row>div:last-child{width:100%}
+  .ph-row .btn{width:100%}
+  /* Deal room specific */
+  .deal-room-grid{gap:12px !important}
+  .page-title{word-break:break-word}
 }
 /* ── MOBILE BOTTOM NAV ── */
 .mob-bottom-nav{
