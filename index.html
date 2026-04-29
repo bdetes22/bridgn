@@ -2575,6 +2575,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       setActiveDeal(updated);
       updateDeal && updateDeal(activeDeal.id, {status:"payment_released"});
       showEscrowToast("Payment released to the creator.");
+      notifyOther("content_submitted",{fileName:"Payment released — funds on the way"});
     } catch(err) {
       showEscrowToast(err.message, "error");
     }
@@ -2892,7 +2893,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                     <div style={{fontSize:"12px",color:"var(--text3)"}}>Brief submitted with no attachments or notes.</div>
                   )}
                   {!briefAcknowledged?(
-                    <button onClick={()=>{setBriefAcknowledged(true);syncDealFields({brief_acknowledged:true});}} className="btn btn-primary" style={{width:"100%",marginTop:4}}>I have read and understood the brief</button>
+                    <button onClick={()=>{setBriefAcknowledged(true);syncDealFields({brief_acknowledged:true});notifyOther("contract_signed");}} className="btn btn-primary" style={{width:"100%",marginTop:4}}>I have read and understood the brief</button>
                   ):(
                     <div style={{padding:"8px 12px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:"12px",color:"var(--green)",fontWeight:600,marginTop:4}}>✓ You acknowledged this brief</div>
                   )}
@@ -3125,7 +3126,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                 <button
                   className="btn btn-primary btn-sm"
                   style={{marginTop:12,width:"100%"}}
-                  onClick={()=>{const allTrue=DELIVERABLES.map(()=>true);updateApproved(allTrue);fireConfetti();}}
+                  onClick={()=>{const allTrue=DELIVERABLES.map(()=>true);updateApproved(allTrue);fireConfetti();notifyOther("content_submitted",{fileName:"All deliverables approved"});}}
                 >
                   Approve All Deliverables
                 </button>
