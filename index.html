@@ -8631,19 +8631,33 @@ function LandingPage({onGetStarted,onLogin}) {
         </Reveal>
 
         {/* ── Two-sided CTA ── */}
-        <section className="lp-section" style={{maxWidth:800,margin:"0 auto",padding:"0 24px 100px"}}>
-          <div className="lp-cta-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px",backdropFilter:"blur(8px)"}}>
-              <div style={{fontSize:12,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Creators</div>
-              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:20,fontWeight:400,marginBottom:10,lineHeight:1.2}}>Get paid on time, every time</h3>
-              <p style={{fontSize:13,color:lp.text2,lineHeight:1.65,marginBottom:24}}>No more chasing invoices. Funds are secured in escrow before you start creating.</p>
-              <button className="lp-cta-btn" onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Creator<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
+        <section className="lp-section" style={{maxWidth:860,margin:"0 auto",padding:"0 24px 100px"}}>
+          <div style={{textAlign:"center",marginBottom:40}}>
+            <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,marginBottom:12,color:lp.text}}>One platform, two sides, zero headaches</h2>
+            <p style={{fontSize:15,color:lp.text2,maxWidth:520,margin:"0 auto",lineHeight:1.65}}>Whether you create content or manage a brand, bridgn is the one place where every deal — from first message to final payment — lives under one roof.</p>
+          </div>
+          <div className="lp-cta-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
+            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px"}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#0e7490",textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Creators</div>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:400,marginBottom:12,lineHeight:1.2}}>Get paid on time, every time</h3>
+              <ul style={{fontSize:13,color:lp.text2,lineHeight:1.8,marginBottom:24,paddingLeft:16}}>
+                <li>Funds secured in escrow before you create</li>
+                <li>Upload content, share scripts, sign contracts — one place</li>
+                <li>Real-time messaging with your brand partner</li>
+                <li>Automatic payment release on approval</li>
+              </ul>
+              <button className="lp-cta-btn" onClick={onGetStarted} style={{width:"100%",padding:"12px 0",borderRadius:99,background:"#0e7490",color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Creator<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
             </div>
-            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px",backdropFilter:"blur(8px)"}}>
-              <div style={{fontSize:12,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Brands</div>
-              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:20,fontWeight:400,marginBottom:10,lineHeight:1.2}}>Manage partnerships, not chaos</h3>
-              <p style={{fontSize:13,color:lp.text2,lineHeight:1.65,marginBottom:24}}>One place for briefs, contracts, content approvals, and payments.</p>
-              <button className="lp-cta-btn" onClick={onGetStarted} style={{width:"100%",padding:"11px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Brand<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
+            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px"}}>
+              <div style={{fontSize:12,fontWeight:700,color:lp.accent,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Brands</div>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:400,marginBottom:12,lineHeight:1.2}}>Manage partnerships, not chaos</h3>
+              <ul style={{fontSize:13,color:lp.text2,lineHeight:1.8,marginBottom:24,paddingLeft:16}}>
+                <li>Send briefs and contracts directly in the Deal Room</li>
+                <li>Review and approve content before releasing payment</li>
+                <li>Pay securely via ACH — funds held in escrow</li>
+                <li>Everything tracked, timestamped, and organized</li>
+              </ul>
+              <button className="lp-cta-btn" onClick={onGetStarted} style={{width:"100%",padding:"12px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Brand<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
             </div>
           </div>
         </section>
