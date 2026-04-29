@@ -5150,80 +5150,52 @@ function BrandDashboard({setPage,setSelected,deals=[]}) {
   const active = deals.filter(d=>!["Completed","payment_released"].includes(d.status));
   const escrowDeals = deals.filter(d=>["payment_held","content_delivered","payment_processing"].includes(d.status));
   const escrowTotal = escrowDeals.reduce((s,d)=>s+d.amount,0);
-  const contentCount = deals.filter(d=>d.contentFile).length;
+  const contentCount = deals.filter(d=>(d.contentFile||d.contentFiles?.length>0)).length;
   const uniqueCreators = [...new Set(deals.map(d=>d.creatorUserId).filter(Boolean))].length;
   return (
     <div className="fade-in">
       <div className="ph-row">
         <div><div className="page-title">Brand Dashboard</div><div className="page-subtitle">Your creator partnership command center.</div></div>
-        <div style={{display:"flex",gap:8}}>
-          <button className="btn btn-primary" onClick={()=>setPage("campaigns")}>Launch Campaign</button>
-        </div>
       </div>
-      <div className="g4 section">
+
+      <div className="g3 section">
         {[
           {l:"Active Deals",v:String(active.length)},
-          {l:"Creators",v:String(uniqueCreators)},
           {l:"In Escrow",v:"$"+escrowTotal.toLocaleString()},
-          {l:"Content Received",v:String(contentCount)}
+          {l:"Content Received",v:String(contentCount)},
         ].map((s,i)=>(
-          <StatCard key={i} label={s.l} value={s.v} sparkData={[0,0,0,0,0,0,parseInt(s.v.replace(/\D/g,""))||0]}/>
+          <StatCard key={i} label={s.l} value={s.v}/>
         ))}
       </div>
-      <div className="g2" style={{gap:22,alignItems:"start"}}>
-        <div>
-          <div className="section">
-            <div className="section-hdr"><span className="section-title">Active Deals</span><button className="section-link" onClick={()=>setPage("deals")}>View all</button></div>
-            {active.length===0?(
-              <div className="card" style={{padding:"20px",position:"relative"}}>
-                <div style={{opacity:.35,pointerEvents:"none"}}>
-                  <div style={{display:"flex",gap:14,alignItems:"center",padding:"12px 0"}}>
-                    <div style={{width:34,height:34,borderRadius:10,background:"var(--border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"var(--text3)"}}>SC</div>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:14,fontWeight:600,color:"var(--text3)"}}>Sample Creator</div>
-                      <div style={{fontSize:12,color:"var(--text3)"}}>TikTok · Due Jun 1</div>
+
+      {/* Your Deals */}
+      <div style={{marginTop:8}}>
+        <div className="section-hdr"><span className="section-title">Your Deals</span><button className="section-link" onClick={()=>setPage("deal-room")}>Deal Room</button></div>
+        {deals.length===0?(
+          <div className="card" style={{padding:"36px 20px",textAlign:"center"}}>
+            <div style={{fontSize:15,fontWeight:600,marginBottom:8}}>No deals yet</div>
+            <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.65,marginBottom:16,maxWidth:320,margin:"0 auto 16px"}}>When a creator invites you to a deal, it will appear here.</div>
+          </div>
+        ):(
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {active.map(d=>{
+              const steps = [true,d.briefSubmitted,d.contractSigned,(d.contentFile||d.contentFiles?.length>0),d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length;
+              return (
+                <div key={d.id} className="card card-hover" style={{padding:"14px 16px",cursor:"pointer"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
+                  <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                    <div style={{width:38,height:38,borderRadius:10,background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white",flexShrink:0}}>{d.bi}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}><span style={{fontSize:14,fontWeight:600}}>{d.creatorName||"Creator"}</span><StatusBadge s={d.status}/></div>
+                      <div style={{fontSize:12,color:"var(--text2)"}}>{d.campaignTitle} · {d.platform}</div>
+                      <div style={{marginTop:6,height:3,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}><div style={{height:"100%",borderRadius:99,background:"var(--accent)",width:((steps/6)*100)+"%"}}/></div>
                     </div>
-                    <div style={{textAlign:"right"}}>
-                      <div style={{fontSize:15,fontWeight:700,color:"var(--text3)"}}>$1,800</div>
-                      <div style={{padding:"2px 8px",borderRadius:99,background:"var(--surface2)",fontSize:10,color:"var(--text3)"}}>Active</div>
-                    </div>
+                    <div style={{fontSize:16,fontWeight:400,fontFamily:"DM Serif Display,serif",flexShrink:0}}>${d.amount.toLocaleString()}</div>
                   </div>
                 </div>
-                <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"rgba(var(--bg),.5)"}}>
-                  <div style={{fontSize:14,fontWeight:600,marginBottom:8}}>No active deals</div>
-                  <div style={{fontSize:12,color:"var(--text2)",marginBottom:14,textAlign:"center",maxWidth:280}}>When a creator invites you, your deals will appear here.</div>
-                  <button className="btn btn-primary btn-sm" onClick={()=>setPage("deals")}>View Deals</button>
-                </div>
-              </div>
-            ):(
-              <div className="card">
-                {active.map((d,i)=>(
-                  <div key={d.id} className="deal-row" style={i>0?{borderTop:"1px solid var(--border)"}:{}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
-                    <div className="deal-av" style={{background:bc(d.ci),width:34,height:34,fontSize:"11px"}}>{d.bi}</div>
-                    <div className="deal-info">
-                      <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}><span className="deal-name">{d.brand}</span><span style={{fontSize:"11px",color:"var(--text3)"}}>with {d.creatorName||"Creator"}</span></div>
-                      <div className="deal-sub">{d.platform} · Due {d.deadline}</div>
-                    </div>
-                    <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${d.amount.toLocaleString()}</div><StatusBadge s={d.status}/></div>
-                  </div>
-                ))}
-              </div>
-            )}
+              );
+            })}
           </div>
-        </div>
-        <div>
-          <div className="section">
-            <div className="section-hdr"><span className="section-title">Quick Actions</span></div>
-            <div style={{display:"flex",flexDirection:"column",gap:7}}>
-              {[["","Deal Room","Open your shared workspace","deal-room"],["","Browse Creators","Find your next perfect partner","browse"],["","Content Library","View all delivered content","content-library"],["","Creator Scorecards","Rate your past partners","scorecards"],["","Team Settings","Manage who has access","team"]].map(([icon,title,desc,p])=>(
-                <button key={p} className="card card-hover" style={{padding:"11px 14px",display:"flex",alignItems:"center",gap:10,width:"100%",border:"1px solid var(--border)",cursor:"pointer",textAlign:"left",background:"var(--surface)"}} onClick={()=>setPage(p)}>
-                  <span style={{fontSize:"18px",flexShrink:0}}>{icon}</span>
-                  <div><div style={{fontSize:"13px",fontWeight:600,color:"var(--text)"}}>{title}</div><div style={{fontSize:"11px",color:"var(--text2)",marginTop:1}}>{desc}</div></div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
