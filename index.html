@@ -7233,48 +7233,78 @@ function MessagesPage({setPage}) {
 }
 
 // ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
-function NotificationsPage({setPage}) {
+function NotificationsPage({setPage,authUser}) {
   const loading = useSkeleton();
-  const [notifs,setNotifs] = useState(NOTIFS);const [filter,setFilter] = useState("All");
-  const icons={deal:"",payment:"",offer:"",analytics:"",campaign:"",escrow:""};
-  const colors={deal:"var(--accent)",payment:"var(--green)",offer:"var(--accent2)",analytics:"var(--purple)",campaign:"var(--teal)",escrow:"var(--teal)"};
-  const filtered=filter==="All"?notifs:filter==="Unread"?notifs.filter(n=>n.unread):notifs.filter(n=>!n.unread);
-  const unreadCount=notifs.filter(n=>n.unread).length;
+  const [notifs,setNotifs] = useState([]);
+  const [filter,setFilter] = useState("All");
+
+  // Load real notifications from Supabase
+  useEffect(()=>{
+    if(!authUser) return;
+    supabase.from("inbox_notifications").select("*").eq("user_id",authUser.id).order("created_at",{ascending:false}).limit(50)
+      .then(({data})=>{ if(data) setNotifs(data); });
+  },[authUser]);
+
+  const typeColors = {
+    payment_held:"var(--teal)",payment_failed:"var(--red)",payment_released:"var(--green)",
+    payout_received:"var(--green)",deal_disputed:"var(--red)",
+    brief_submitted:"var(--accent)",contract_sent:"var(--accent)",contract_signed:"var(--green)",
+    content_submitted:"var(--accent)",new_message:"var(--text2)",
+  };
+
+  const markRead = async (id) => {
+    setNotifs(ns=>ns.map(n=>n.id===id?{...n,read_at:new Date().toISOString()}:n));
+    await supabase.from("inbox_notifications").update({read_at:new Date().toISOString()}).eq("id",id);
+  };
+
+  const markAllRead = async () => {
+    const unreadIds = notifs.filter(n=>!n.read_at).map(n=>n.id);
+    setNotifs(ns=>ns.map(n=>({...n,read_at:n.read_at||new Date().toISOString()})));
+    for(const id of unreadIds) await supabase.from("inbox_notifications").update({read_at:new Date().toISOString()}).eq("id",id);
+  };
+
+  const filtered = filter==="All"?notifs:filter==="Unread"?notifs.filter(n=>!n.read_at):notifs.filter(n=>n.read_at);
+  const unreadCount = notifs.filter(n=>!n.read_at).length;
+
   if(loading) return <SkeletonPage layout="list"/>;
   return (
     <div className="fade-in">
       <div className="ph-row">
         <div>
-          <div style={{display:"flex",gap:9,alignItems:"center"}}><div className="page-title">Notifications</div>{unreadCount>0&&<span className="badge badge-orange">{unreadCount} new</span>}</div>
+          <div style={{display:"flex",gap:9,alignItems:"center"}}><div className="page-title">Notifications</div>{unreadCount>0&&<span className="badge badge-green">{unreadCount} new</span>}</div>
           <div className="page-subtitle">Stay on top of your deals and activity.</div>
         </div>
-        {unreadCount>0&&<button className="btn btn-secondary btn-sm" onClick={()=>setNotifs(n=>n.map(x=>({...x,unread:false})))}>Mark all read</button>}
+        {unreadCount>0&&<button className="btn btn-secondary btn-sm" onClick={markAllRead}>Mark all read</button>}
       </div>
       <div style={{display:"flex",gap:7,marginBottom:18}}>
         {["All","Unread","Read"].map(x=><button key={x} className={"filter-btn"+(filter===x?" active":"")} onClick={()=>setFilter(x)}>{x}</button>)}
       </div>
       {filtered.length===0?(
         <div className="card" style={{padding:"40px 20px",textAlign:"center"}}>
-          <div style={{fontSize:"32px",marginBottom:12}}></div>
-          <div style={{fontSize:"15px",fontWeight:600,marginBottom:6}}>No notifications yet</div>
-          <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65}}>When brands send offers, deals are updated, or payments come through — you will see them here.</div>
+          <div style={{fontSize:15,fontWeight:600,marginBottom:6}}>No notifications yet</div>
+          <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.65}}>When deals are updated, content is submitted, or payments come through — you'll see them here.</div>
         </div>
       ):(
-      <div style={{display:"flex",flexDirection:"column",gap:9}}>
-        {filtered.map(n=>(
-          <div key={n.id} onClick={()=>{setNotifs(ns=>ns.map(x=>x.id===n.id?{...x,unread:false}:x));if(n.page)setPage(n.page);}} className="card card-hover" style={{padding:"14px 18px",display:"flex",gap:14,alignItems:"flex-start",opacity:n.unread?1:.7,cursor:"pointer",borderLeft:"3px solid "+(n.unread?colors[n.type]:"var(--border)")}}>
-            <div style={{width:40,height:40,borderRadius:12,background:(colors[n.type]+"18"),border:"1px solid "+(colors[n.type]+"30"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:"18px",flexShrink:0}}>{icons[n.type]||"🔔"}</div>
-            <div style={{flex:1}}>
-              <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                <span style={{fontSize:"13px",fontWeight:n.unread?700:500}}>{n.title}</span>
-                <span style={{fontSize:"11px",color:"var(--text3)"}}>{n.time}</span>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {filtered.map(n=>{
+            const color = typeColors[n.type]||"var(--accent)";
+            const isUnread = !n.read_at;
+            const msg = n.payload?.message || n.type.replace(/_/g," ");
+            const time = n.created_at ? dealRelTime(new Date(n.created_at)) : "";
+            return (
+              <div key={n.id} onClick={()=>{if(isUnread)markRead(n.id);setPage("deal-room");}} className="card card-hover" style={{padding:"14px 18px",display:"flex",gap:12,alignItems:"flex-start",opacity:isUnread?1:.6,cursor:"pointer",borderLeft:"3px solid "+(isUnread?color:"var(--border)")}}>
+                <div style={{width:8,height:8,borderRadius:"50%",background:isUnread?color:"transparent",flexShrink:0,marginTop:6}}/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                    <span style={{fontSize:13,fontWeight:isUnread?600:400,textTransform:"capitalize"}}>{n.type.replace(/_/g," ")}</span>
+                    <span style={{fontSize:11,color:"var(--text3)",flexShrink:0}}>{time}</span>
+                  </div>
+                  <div style={{fontSize:12,color:"var(--text2)",lineHeight:1.5}}>{msg}</div>
+                </div>
               </div>
-              <div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.5}}>{n.body}</div>
-            </div>
-            {n.unread&&<div style={{width:8,height:8,borderRadius:"50%",background:colors[n.type],flexShrink:0,marginTop:4}}></div>}
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
@@ -7309,8 +7339,37 @@ function Toggle({checked,onChange,label}) {
   );
 }
 
-function SettingsPage({authUser,darkMode,setDarkMode,onSignOut}) {
+function SettingsPage({authUser,darkMode,setDarkMode,onSignOut,role}) {
   const loading = useSkeleton();
+
+  // Notification emails (brand accounts)
+  const [notifEmails,setNotifEmails] = useState([]);
+  const [newNotifEmail,setNewNotifEmail] = useState("");
+  const [notifEmailSaving,setNotifEmailSaving] = useState(false);
+
+  useEffect(()=>{
+    if(!authUser || role!=="brand") return;
+    supabase.from("brand_profiles").select("notification_emails").eq("user_id",authUser.id).maybeSingle()
+      .then(({data})=>{ if(data?.notification_emails) setNotifEmails(data.notification_emails); });
+  },[authUser]);
+
+  const addNotifEmail = async () => {
+    const email = newNotifEmail.trim().toLowerCase();
+    if(!email || !email.includes("@")) return;
+    if(notifEmails.includes(email)) { setNewNotifEmail(""); return; }
+    setNotifEmailSaving(true);
+    const updated = [...notifEmails, email];
+    await supabase.from("brand_profiles").upsert({user_id:authUser.id, notification_emails:updated},{onConflict:"user_id"});
+    setNotifEmails(updated);
+    setNewNotifEmail("");
+    setNotifEmailSaving(false);
+  };
+
+  const removeNotifEmail = async (email) => {
+    const updated = notifEmails.filter(e=>e!==email);
+    await supabase.from("brand_profiles").update({notification_emails:updated}).eq("user_id",authUser.id);
+    setNotifEmails(updated);
+  };
 
   // Notification prefs
   const [notifPrefs,setNotifPrefs] = useState(()=>{
@@ -7489,6 +7548,30 @@ function SettingsPage({authUser,darkMode,setDarkMode,onSignOut}) {
         </div>
         <div style={{marginTop:18,display:"flex",justifyContent:"flex-end"}}>
           <button className="btn btn-primary btn-sm" onClick={savePrivacy}>Save Privacy</button>
+        </div>
+      </>)}
+
+      {/* Notification Emails (brand only) */}
+      {role==="brand"&&sectionCard(<>
+        {sectionTitle("Notification Emails")}
+        <div style={{fontSize:12,color:"var(--text3)",marginBottom:14,lineHeight:1.5}}>Add team members who should receive deal notifications. They won't get account access — just email alerts when things happen in your deals.</div>
+        {notifEmails.map((email,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"var(--surface2)",borderRadius:8,marginBottom:6}}>
+            <span style={{flex:1,fontSize:13}}>{email}</span>
+            <button onClick={()=>removeNotifEmail(email)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--red)"}}>Remove</button>
+          </div>
+        ))}
+        <div style={{display:"flex",gap:8,marginTop:notifEmails.length?8:0}}>
+          <input
+            className="fi"
+            type="email"
+            value={newNotifEmail}
+            onChange={e=>setNewNotifEmail(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&addNotifEmail()}
+            placeholder="team@company.com"
+            style={{flex:1,padding:"8px 12px",fontSize:13}}
+          />
+          <button onClick={addNotifEmail} disabled={notifEmailSaving||!newNotifEmail.trim()} className="btn btn-primary btn-sm" style={{flexShrink:0}}>{notifEmailSaving?"Adding...":"Add"}</button>
         </div>
       </>)}
 
@@ -9105,8 +9188,8 @@ function App() {
         case "availability": return React.createElement(AvailabilityPage,{onAvailabilitySet:()=>updateProfileFlags({availabilitySet:true})});
         case "expenses":     return React.createElement(ExpensesPage,{});
         case "messages":     return React.createElement(MessagesPage,{setPage});
-        case "notifications":return React.createElement(NotificationsPage,{setPage});
-        case "settings":     return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut});
+        case "notifications":return React.createElement(NotificationsPage,{setPage,authUser});
+        case "settings":     return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role});
         default:             return React.createElement(CreatorDashboard,{setPage,setSelected,deals,availStatus,setAvailStatus,userName,profileFlags});
       }
     } else {
@@ -9128,9 +9211,9 @@ function App() {
         case "shortlists":    return React.createElement(ShortlistsPage,{setPage,setSelected});
         case "invoices":      return React.createElement(InvoicesPage,{role});
         case "messages":      return React.createElement(MessagesPage,{setPage});
-        case "notifications": return React.createElement(NotificationsPage,{setPage});
+        case "notifications": return React.createElement(NotificationsPage,{setPage,authUser});
         case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials});
-        case "settings":      return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut});
+        case "settings":      return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role});
         default:              return React.createElement(BrandDashboard,{setPage,setSelected});
       }
     }

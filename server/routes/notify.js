@@ -153,7 +153,29 @@ router.post("/", async (req, res) => {
         return res.status(400).json({ error: `Unknown notification type: ${type}` });
     }
 
+    // Send to primary email
     await sendEmail({ to: recipient.email, ...email });
+
+    // Also send to additional notification emails (brand accounts)
+    try {
+      const { data: brandProfile } = await db
+        .from("brand_profiles")
+        .select("notification_emails")
+        .eq("user_id", recipientId)
+        .maybeSingle();
+
+      if (brandProfile?.notification_emails?.length) {
+        for (const extraEmail of brandProfile.notification_emails) {
+          if (extraEmail && extraEmail !== recipient.email) {
+            await sendEmail({ to: extraEmail, ...email });
+          }
+        }
+      }
+    } catch (e) {
+      // Don't fail the response if extra emails fail
+      console.warn("[notify] Extra email send failed:", e.message);
+    }
+
     res.json({ sent: true, via: "resend-direct" });
   } catch (err) {
     console.error("[notify]", err);
