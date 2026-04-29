@@ -7951,13 +7951,44 @@ function LandingPage({onGetStarted,onLogin}) {
     gsap.registerPlugin(window.ScrollTrigger);
     const ctx = gsap.context(()=>{
 
-      // Hero text — fade up with stagger
-      gsap.from(".lp-hero-title",{y:60,opacity:0,duration:1,ease:"power3.out",delay:.2});
-      gsap.from(".lp-hero-sub",{y:40,opacity:0,duration:1,ease:"power3.out",delay:.5});
-      gsap.from(".lp-hero-buttons",{y:30,opacity:0,duration:.8,ease:"power3.out",delay:.7});
+      // ── DIVE SEQUENCE: hero pins while you "dive" into the water ──
+      // Entrance animations (on page load)
+      gsap.from(".lp-hero-title",{y:50,opacity:0,duration:1,ease:"power3.out",delay:.2});
+      gsap.from(".lp-hero-sub",{y:30,opacity:0,duration:.8,ease:"power3.out",delay:.5});
+      gsap.from(".lp-hero-buttons",{y:20,opacity:0,duration:.7,ease:"power3.out",delay:.7});
+      gsap.from(".lp-mockup",{scale:.88,y:40,opacity:0,duration:1,ease:"power3.out",delay:.9});
 
-      // Product mockup — scale up from small
-      gsap.from(".lp-mockup",{scale:.85,y:60,opacity:0,duration:1.2,ease:"power3.out",delay:.9});
+      // Pin the hero and animate the dive on scroll
+      const diveTimeline = gsap.timeline({
+        scrollTrigger:{
+          trigger:".lp-hero-section",
+          start:"top top",
+          end:"+=80%",
+          pin:true,
+          scrub:.8,
+          pinSpacing:true,
+        }
+      });
+
+      // Phase 1: Text rises and fades (you're descending, text stays at surface)
+      diveTimeline.to(".lp-hero-title",{y:-80,opacity:0,duration:.4,ease:"power2.in"},0);
+      diveTimeline.to(".lp-hero-sub",{y:-60,opacity:0,duration:.4,ease:"power2.in"},.05);
+      diveTimeline.to(".lp-hero-buttons",{y:-40,opacity:0,duration:.3,ease:"power2.in"},.1);
+      diveTimeline.to(".lp-nav",{y:-20,opacity:0,duration:.3,ease:"power2.in"},.05);
+
+      // Phase 2: Ocean zooms in (you're plunging deeper)
+      diveTimeline.to(".lp-hero-bg",{scale:1.3,duration:.8,ease:"power1.in"},0);
+
+      // Phase 3: Floating cards scatter outward (water displacement)
+      diveTimeline.to(".lp-float-card",{opacity:0,scale:.5,duration:.4,stagger:.03,ease:"power2.in"},.1);
+
+      // Phase 4: Mockup grows toward you (it's at the bottom, you're diving to it)
+      diveTimeline.to(".lp-mockup",{scale:1.15,y:-30,duration:.8,ease:"power2.inOut"},0);
+      diveTimeline.to(".lp-mockup",{opacity:0,duration:.2},.7);
+
+      // Phase 5: Caustic lights intensify then fade
+      diveTimeline.to(".lp-caustic",{opacity:1.5,duration:.4},0);
+      diveTimeline.to(".lp-caustic",{opacity:0,duration:.3},.5);
 
       // Sections — fade up on scroll with stagger
       gsap.utils.toArray(".lp-section").forEach((el)=>{
@@ -8013,21 +8044,7 @@ function LandingPage({onGetStarted,onLogin}) {
         });
       });
 
-      // Parallax on hero floating cards
-      gsap.utils.toArray(".lp-float-card").forEach((el,i)=>{
-        gsap.to(el,{
-          y:-(50+i*20),
-          ease:"none",
-          scrollTrigger:{trigger:".lp-hero-bg",start:"top top",end:"bottom top",scrub:true}
-        });
-      });
-
-      // Mockup parallax — moves slower than scroll
-      gsap.to(".lp-mockup",{
-        y:-40,
-        ease:"none",
-        scrollTrigger:{trigger:".lp-mockup",start:"top bottom",end:"bottom top",scrub:true}
-      });
+      // (parallax handled by dive timeline above)
 
     }, lpRef);
 
@@ -8149,7 +8166,7 @@ function LandingPage({onGetStarted,onLogin}) {
       `}</style>
 
       {/* ══════ HERO — Ocean gradient with floating cards + mockup ══════ */}
-      <div style={{position:"relative",display:"flex",flexDirection:"column",paddingBottom:80}}>
+      <div className="lp-hero-section" style={{position:"relative",display:"flex",flexDirection:"column",paddingBottom:80,overflow:"hidden"}}>
         <div className="lp-hero-bg"/>
 
         {/* Caustic light ripples */}
