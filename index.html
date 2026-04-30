@@ -2578,7 +2578,13 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       const { paymentIntent: pi2, error: confirmErr } = await stripeJs.confirmUsBankAccountPayment(clientSecret);
       if(confirmErr) throw new Error(confirmErr.message);
 
+      // Only now mark the deal as payment_processing — bank was confirmed
       setAchPhase("done");
+      await fetch(`${BRIDGN_API_URL}/api/deals/status`, {
+        method:"PUT",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({dealId:activeDeal.id, status:"payment_processing"}),
+      }).catch(()=>{});
       const updated = {...activeDeal, status:"payment_processing", paymentIntentId: pi2?.id};
       setActiveDeal(updated);
       updateDeal && updateDeal(activeDeal.id, {status:"payment_processing", paymentIntentId: pi2?.id});

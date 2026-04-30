@@ -298,6 +298,9 @@ router.post("/create-deal-payment", async (req, res) => {
     // ── 4. Update the existing deal row with the PaymentIntent ID ─────────────
     // If a deal already exists for this bridgn_deal_id, update it.
     // Otherwise create a new row (fallback for deals not created via the frontend).
+    // Save the PaymentIntent ID but do NOT change status yet.
+    // Status moves to "payment_processing" only after the user confirms
+    // the bank account and the frontend calls back, or via the webhook.
     const existingDeal = await getDealByBridgnDealId(String(dealId));
     if (existingDeal) {
       await updateDealById(existingDeal.id, {
@@ -305,7 +308,6 @@ router.post("/create-deal-payment", async (req, res) => {
         amount_cents:          creatorPayoutCents,
         application_fee_cents: applicationFeeCents,
         auto_release_days:     releaseDays,
-        status:                "payment_processing",
       });
     } else {
       await upsertDeal(paymentIntent.id, {
@@ -315,7 +317,7 @@ router.post("/create-deal-payment", async (req, res) => {
         amount_cents:          creatorPayoutCents,
         application_fee_cents: applicationFeeCents,
         auto_release_days:     releaseDays,
-        status:                "payment_processing",
+        status:                "pending",
       });
     }
 
