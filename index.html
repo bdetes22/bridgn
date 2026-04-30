@@ -2202,6 +2202,39 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
   };
   const [activeDeal,setActiveDeal] = useState(selected||deals.find(d=>!["Completed","payment_released"].includes(d.status))||deals[0]);
 
+  // Inline editing for deal title and deadline
+  const [editingTitle,setEditingTitle] = useState(false);
+  const [editingDeadline,setEditingDeadline] = useState(false);
+  const [editTitle,setEditTitle] = useState("");
+  const [editDeadline,setEditDeadline] = useState("");
+
+  const saveTitle = () => {
+    const newTitle = editTitle.trim();
+    if(!newTitle || newTitle===activeDeal.campaignTitle) { setEditingTitle(false); return; }
+    setActiveDeal(prev=>({...prev, campaignTitle:newTitle}));
+    syncDealFields({campaign_title:newTitle});
+    notifyOther("new_message",{messagePreview:isBrand?`${userName} renamed this deal to "${newTitle}"`:`${userName} renamed this deal to "${newTitle}"`});
+    // Also send as a deal message so it shows in chat
+    supabase.from("deal_messages").insert({
+      deal_id:String(activeDeal.id), sender_id:authUser.id, sender_role:role,
+      sender_name:userName, body:`Changed deal title to "${newTitle}"`,
+    }).then(()=>{});
+    setEditingTitle(false);
+  };
+
+  const saveDeadline = () => {
+    const newDeadline = editDeadline;
+    if(!newDeadline || newDeadline===activeDeal.deadline) { setEditingDeadline(false); return; }
+    setActiveDeal(prev=>({...prev, deadline:newDeadline}));
+    syncDealFields({deadline:newDeadline});
+    notifyOther("new_message",{messagePreview:`${userName} changed the deadline to ${newDeadline}`});
+    supabase.from("deal_messages").insert({
+      deal_id:String(activeDeal.id), sender_id:authUser.id, sender_role:role,
+      sender_name:userName, body:`Changed deadline to ${newDeadline}`,
+    }).then(()=>{});
+    setEditingDeadline(false);
+  };
+
   // Keep activeDeal in sync when deals array changes (loaded from DB, refreshed, etc.)
   // Skip if poll is paused — local state is more recent than what the server returned.
   useEffect(()=>{
@@ -2796,7 +2829,19 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
             <div className="page-title">{isBrand?activeDeal.creatorName||"Deal Room":activeDeal.brand||"Deal Room"}</div>
           </div>
-          <div className="page-subtitle">{activeDeal.campaignTitle} · {activeDeal.platform} · Due {activeDeal.deadline}</div>
+          <div className="page-subtitle" style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
+            {editingTitle?(
+              <span style={{display:"inline-flex",gap:4,alignItems:"center"}}><input className="fi" style={{padding:"3px 8px",fontSize:"12px",width:180}} value={editTitle} onChange={e=>setEditTitle(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")saveTitle();if(e.key==="Escape")setEditingTitle(false);}} autoFocus/><button onClick={saveTitle} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--accent)",fontFamily:"DM Sans,sans-serif",fontWeight:600}}>Save</button><button onClick={()=>setEditingTitle(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",fontFamily:"DM Sans,sans-serif"}}>Cancel</button></span>
+            ):(
+              <span onClick={()=>{setEditTitle(activeDeal.campaignTitle||"");setEditingTitle(true);}} style={{cursor:"pointer",borderBottom:"1px dashed var(--border)"}} title="Click to rename">{activeDeal.campaignTitle}</span>
+            )}
+            <span> · {activeDeal.platform} · Due </span>
+            {editingDeadline?(
+              <span style={{display:"inline-flex",gap:4,alignItems:"center"}}><input className="fi" type="date" style={{padding:"3px 8px",fontSize:"12px",width:140}} value={editDeadline} onChange={e=>setEditDeadline(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")saveDeadline();if(e.key==="Escape")setEditingDeadline(false);}} autoFocus/><button onClick={saveDeadline} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--accent)",fontFamily:"DM Sans,sans-serif",fontWeight:600}}>Save</button><button onClick={()=>setEditingDeadline(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",fontFamily:"DM Sans,sans-serif"}}>Cancel</button></span>
+            ):(
+              <span onClick={()=>{setEditDeadline(activeDeal.deadline||"");setEditingDeadline(true);}} style={{cursor:"pointer",borderBottom:"1px dashed var(--border)"}} title="Click to change deadline">{activeDeal.deadline}</span>
+            )}
+          </div>
         </div>
         <div style={{display:"flex",gap:8}}>
           <select className="fsel" style={{padding:"8px 12px",fontSize:"13px"}} value={activeDeal.id} onChange={e=>{const d=deals.find(x=>x.id===parseInt(e.target.value));if(d)setActiveDeal(d);}}>
@@ -2816,7 +2861,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               </div>
               <div className="det-stats" style={{gridTemplateColumns:"repeat(3,1fr)",marginBottom:0}}>
                 {[["$"+activeDeal.amount.toLocaleString(),"Deal Value"],[activeDeal.deadline,"Deadline"],[pct+"%","Complete"]].map(([v,l],i)=>(
-                  <div key={i} className="det-stat"><div className="det-stat-v" style={{color:i===0?g[0]:"var(--text)"}}><AnimNum value={v}/></div><div className="det-stat-l">{l}</div></div>
+                  <div key={i} className="det-stat" style={i===1?{cursor:"pointer"}:{}} onClick={i===1?()=>{setEditDeadline(activeDeal.deadline||"");setEditingDeadline(true);}:undefined} title={i===1?"Click to change deadline":""}><div className="det-stat-v" style={{color:i===0?g[0]:"var(--text)"}}><AnimNum value={v}/></div><div className="det-stat-l">{l}{i===1&&<span style={{marginLeft:4,fontSize:10,color:"var(--accent)"}}>edit</span>}</div></div>
                 ))}
               </div>
             </div>

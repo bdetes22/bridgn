@@ -236,6 +236,7 @@ const ALLOWED_FIELDS = [
   "script_url", "script_submitted",
   "approved_deliverables",
   "status", "progress",
+  "deadline", "campaign_title",
 ];
 
 router.put("/update", async (req, res) => {
