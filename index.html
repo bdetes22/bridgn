@@ -3961,7 +3961,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
 function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
   const loading = useSkeleton();
   const [step,setStep] = useState(1);
-  const [form,setForm] = useState({creatorName:"",creatorEmail:"",amount:"",platform:"Instagram",deadline:"",deliverables:"",notes:""});
+  const [form,setForm] = useState({creatorName:"",creatorEmail:"",campaignTitle:"",amount:"",platform:"Instagram",deadline:"",deliverables:"",notes:""});
   const [sending,setSending] = useState(false);
   const [done,setDone] = useState(false);
   const [dealId] = useState(()=>String(Date.now()));
@@ -3979,7 +3979,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
         platform: form.platform,
         deliverables: form.deliverables||"",
         deadline: form.deadline||"TBD",
-        campaignTitle: "External Deal — "+(form.creatorName||"Creator"),
+        campaignTitle: form.campaignTitle||(form.creatorName+" Campaign"),
         invitedBy: "brand",
       })));
       return `${window.location.origin}?inv=${payload}`;
@@ -4012,7 +4012,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
       </div>
       <div style={{display:"flex",gap:10,justifyContent:"center"}}>
         <button className="btn btn-primary" onClick={()=>setPage("deal-room")}>View My Deals</button>
-        <button className="btn btn-secondary" onClick={()=>{setDone(false);setStep(1);setForm({creatorName:"",creatorEmail:"",amount:"",platform:"Instagram",deadline:"",deliverables:"",notes:""});}}>Create Another</button>
+        <button className="btn btn-secondary" onClick={()=>{setDone(false);setStep(1);setForm({creatorName:"",creatorEmail:"",campaignTitle:"",amount:"",platform:"Instagram",deadline:"",deliverables:"",notes:""});}}>Create Another</button>
       </div>
     </div>
   );
@@ -4027,7 +4027,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
       amount:parseInt(form.amount)||0, platform:form.platform,
       status:"pending", deadline:form.deadline||"TBD",
       deliverables:form.deliverables, progress:0, source:"external",
-      campaignTitle:"External Deal — "+form.creatorName,
+      campaignTitle:form.campaignTitle||(form.creatorName+" Campaign"),
       escrow:false, escrowReleased:false,
       brandUserId:authUser?.id||"", brandName:userName,
     };
@@ -4045,7 +4045,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
           platform: form.platform,
           deliverables: form.deliverables||"",
           deadline: form.deadline||"TBD",
-          campaignTitle: "External Deal — "+form.creatorName,
+          campaignTitle: form.campaignTitle||(form.creatorName+" Campaign"),
           inviteLink: inviteLink,
           createdBy: "brand",
         }),
@@ -4084,6 +4084,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
         <div className="card-lg" style={{padding:28}}>
           {step===1&&(
             <>
+              <div className="fg"><label className="fl">Campaign Title</label><input className="fi" value={form.campaignTitle} onChange={e=>up("campaignTitle",e.target.value)} placeholder="e.g. Summer Launch, Product Review"/></div>
               <div className="frow"><div className="fg"><label className="fl">Creator Name</label><input className="fi" value={form.creatorName} onChange={e=>up("creatorName",e.target.value)} placeholder="e.g. Sarah Johnson"/></div><div className="fg"><label className="fl">Creator Email</label><input className="fi" type="email" value={form.creatorEmail} onChange={e=>up("creatorEmail",e.target.value)} placeholder="creator@email.com"/></div></div>
               <div className="frow"><div className="fg"><label className="fl">Agreed Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="2500"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={form.platform} onChange={e=>up("platform",e.target.value)}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Twitter</option><option>Multiple</option></select></div></div>
               <div className="fg"><label className="fl">Submission Deadline</label><input className="fi" type="date" value={form.deadline} onChange={e=>up("deadline",e.target.value)}/></div>
@@ -9303,6 +9304,37 @@ function App() {
     } catch {}
     return null;
   });
+
+  // If user is already logged in and hits an invite link, auto-join the deal
+  useEffect(()=>{
+    if(!authUser || !inviteCtx) return;
+    const dealId = inviteCtx.bridgnDealId || inviteCtx.code;
+    if(!dealId) return;
+    const invitedByBrand = inviteCtx.invitedBy === "brand";
+    const joinBody = invitedByBrand
+      ? { bridgnDealId: dealId, creatorUserId: authUser.id }
+      : { bridgnDealId: dealId, brandUserId: authUser.id };
+    fetch(`${BRIDGN_API_URL}/api/deals/join`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(joinBody),
+    })
+      .then(r=>r.ok?r.json():null)
+      .then(data=>{
+        if(data?.deal) {
+          setDeals(prev=>{
+            const exists = prev.some(d=>d.id===data.deal.id);
+            return exists ? prev.map(d=>d.id===data.deal.id?data.deal:d) : [...prev, data.deal];
+          });
+          setSelected(data.deal);
+          setPage("deal-room");
+        }
+      })
+      .catch(e=>console.error("[autoJoinInvite]", e))
+      .finally(()=>{
+        // Clean the URL so refreshing doesn't re-join
+        window.history.replaceState({}, "", window.location.pathname);
+      });
+  },[authUser, inviteCtx]);
 
   const handleInviteAuth = async (user, ctx) => {
     const invitedByBrand = ctx?.invitedBy === "brand";
