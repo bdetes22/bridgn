@@ -16,6 +16,7 @@ const {
   getDealByBridgnDealId,
   updateDealById,
 } = require("../../lib/db");
+const { sendEmail, dealInviteEmail } = require("../../lib/email");
 
 const router = express.Router();
 
@@ -78,19 +79,23 @@ function hashCode(str) {
 router.post("/", async (req, res) => {
   const {
     bridgnDealId, creatorUserId, creatorName,
-    brandName, brandEmail, amount, platform,
-    deliverables, deadline, campaignTitle,
+    brandUserId, brandName, brandEmail,
+    creatorEmail, inviteeEmail,
+    amount, platform, deliverables, deadline, campaignTitle,
+    inviteLink, createdBy,
   } = req.body;
 
-  if (!bridgnDealId || !creatorUserId) {
-    return res.status(400).json({ error: "bridgnDealId and creatorUserId are required." });
+  // Either side can create a deal
+  if (!bridgnDealId || (!creatorUserId && !brandUserId)) {
+    return res.status(400).json({ error: "bridgnDealId and either creatorUserId or brandUserId are required." });
   }
 
   try {
     const row = await insertDeal({
       bridgn_deal_id:  String(bridgnDealId),
-      creator_user_id: creatorUserId,
+      creator_user_id: creatorUserId || null,
       creator_name:    creatorName || "",
+      brand_user_id:   brandUserId || null,
       brand_name:      brandName || "",
       amount_cents:    Math.round((Number(amount) || 0) * 100),
       platform:        platform || "Instagram",
@@ -101,6 +106,27 @@ router.post("/", async (req, res) => {
       status:          "pending",
       progress:        0,
     });
+
+    // Send invite email to the other party (non-blocking)
+    const emailTo = inviteeEmail || (createdBy === "brand" ? creatorEmail : brandEmail);
+    if (emailTo && inviteLink) {
+      const senderName = createdBy === "brand" ? (brandName || "A brand") : (creatorName || "A creator");
+      const recipientName = createdBy === "brand" ? (creatorName || "") : (brandName || "");
+      const email = dealInviteEmail({
+        recipientName,
+        senderName,
+        senderRole: createdBy || "creator",
+        dealTitle: campaignTitle || "External Deal",
+        amount: Number(amount) || 0,
+        platform: platform || "Instagram",
+        deliverables: deliverables || "",
+        deadline: deadline || "TBD",
+        inviteLink,
+      });
+      sendEmail({ to: emailTo, ...email }).catch(err => {
+        console.warn("[deals/create] Invite email failed:", err.message);
+      });
+    }
 
     res.json({ deal: dealToFrontend(row) });
   } catch (err) {
@@ -127,13 +153,13 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ─── POST /api/deals/join — brand claims a deal ──────────────────────────────
+// ─── POST /api/deals/join — brand or creator claims a deal ──────────────────
 
 router.post("/join", async (req, res) => {
-  const { bridgnDealId, brandUserId } = req.body;
+  const { bridgnDealId, brandUserId, creatorUserId } = req.body;
 
-  if (!bridgnDealId || !brandUserId) {
-    return res.status(400).json({ error: "bridgnDealId and brandUserId are required." });
+  if (!bridgnDealId || (!brandUserId && !creatorUserId)) {
+    return res.status(400).json({ error: "bridgnDealId and either brandUserId or creatorUserId are required." });
   }
 
   try {
@@ -143,9 +169,20 @@ router.post("/join", async (req, res) => {
       return res.status(404).json({ error: "Deal not found." });
     }
 
-    // Only set brand if not already claimed
-    if (!deal.brand_user_id) {
-      await updateDealById(deal.id, { brand_user_id: brandUserId, status: "Active" });
+    const updates = { status: "Active" };
+
+    // Brand joining a creator-created deal
+    if (brandUserId && !deal.brand_user_id) {
+      updates.brand_user_id = brandUserId;
+    }
+
+    // Creator joining a brand-created deal
+    if (creatorUserId && !deal.creator_user_id) {
+      updates.creator_user_id = creatorUserId;
+    }
+
+    if (Object.keys(updates).length > 1) {
+      await updateDealById(deal.id, updates);
     }
 
     // Re-fetch to get updated row
