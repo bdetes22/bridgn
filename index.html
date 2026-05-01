@@ -1139,6 +1139,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
     ...(demoMode?[{k:"marketplace",l:"Marketplace",i:ICONS.compass,dot:true}]:[]),
     {k:"calendar",l:"Calendar",i:ICONS.calendar},
     {section:"Business"},
+    ...(demoMode?[{k:"creator-crm",l:"Creator CRM",i:ICONS.users}]:[]),
     {k:"content-tracker",l:"Content Tracker",i:ICONS.chart},
     {k:"spending",l:"Spending",i:ICONS.dollar},
     {section:"Account"},
@@ -10528,6 +10529,367 @@ function MarketplaceBrandPage({setPage,setSelected,deals,addDeal,showToast,userN
   );
 }
 
+// ─── CREATOR CRM — Brand's Creator Database + Pipeline ──────────────────────
+function CreatorCRMPage({setPage,setSelected,deals,addDeal,showToast,userName,authUser}) {
+  const [tab,setTab] = useState("database"); // database | pipeline
+  const [search,setSearch] = useState("");
+  const [filterNiche,setFilterNiche] = useState("All");
+  const [filterPlatform,setFilterPlatform] = useState("All");
+  const [selectedCreator,setSelectedCreator] = useState(null);
+  const [showAddModal,setShowAddModal] = useState(false);
+  const [crmCreators,setCrmCreators] = useState(()=>DEMO_CREATORS.map(c=>({
+    ...c,
+    socials:{ig:c.handle.replace("@",""),tt:"",yt:"",tw:"",web:""},
+    analytics:{followers:c.followers,engagement:c.engagement,avgViews:Math.floor(Math.random()*50000)+5000,audienceAge:"18-34",audienceGender:"60% F / 40% M",topCountry:"United States"},
+    notes:[
+      {text:["Great content quality, very responsive","Authentic feel, audience loves their stuff","Professional, delivers on time every time","Creative approach, good for lifestyle campaigns"][Math.floor(Math.random()*4)],date:"2026-04-"+(Math.floor(Math.random()*20)+5)},
+    ],
+    tags:[c.niche.split(" & ")[0],["Reliable","Top Tier","Rising Star","Budget Friendly","Premium"][Math.floor(Math.random()*5)]],
+    pipelineStage:"discovered",
+    addedDate:"2026-04-"+(Math.floor(Math.random()*25)+1).toString().padStart(2,"0"),
+  })));
+  const [newCreator,setNewCreator] = useState({name:"",handle:"",niche:"Beauty & Skincare",platforms:["TikTok"],followers:"",engagement:"",bio:"",ig:"",tt:"",yt:"",tw:"",web:""});
+  const [newNote,setNewNote] = useState("");
+  const [newTag,setNewTag] = useState("");
+
+  const niches = [...new Set(DEMO_CREATORS.map(c=>c.niche))];
+  const PIPELINE_COLS = [
+    {key:"discovered",label:"Discovered",color:"var(--text3)"},
+    {key:"reached_out",label:"Reached Out",color:"var(--accent)"},
+    {key:"negotiating",label:"Negotiating",color:"var(--purple)"},
+    {key:"active_deal",label:"Active Deal",color:"var(--green)"},
+    {key:"completed",label:"Completed",color:"var(--text3)"},
+  ];
+  const TAG_COLORS = ["#5b8af5","#34d399","#a78bfa","#f0a050","#0891b2","#f87171","#ec4899","#8b5cf6"];
+
+  const filtered = crmCreators.filter(c=>{
+    if(search && !c.name.toLowerCase().includes(search.toLowerCase()) && !c.handle.toLowerCase().includes(search.toLowerCase())) return false;
+    if(filterNiche!=="All" && c.niche!==filterNiche) return false;
+    if(filterPlatform!=="All" && !c.platforms.includes(filterPlatform)) return false;
+    return true;
+  });
+
+  const handleAddCreator = () => {
+    if(!newCreator.name) return;
+    const nc = {
+      id:"crm-"+Date.now(),
+      name:newCreator.name,
+      init:newCreator.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),
+      handle:newCreator.handle||"@"+newCreator.name.toLowerCase().replace(/\s/g,""),
+      niche:newCreator.niche,
+      platforms:newCreator.platforms,
+      followers:newCreator.followers||"–",
+      engagement:newCreator.engagement||"–",
+      rating:0,
+      loc:"",
+      bio:newCreator.bio||"",
+      gradIdx:Math.floor(Math.random()*6),
+      avgRate:"–",
+      completedDeals:0,
+      socials:{ig:newCreator.ig,tt:newCreator.tt,yt:newCreator.yt,tw:newCreator.tw,web:newCreator.web},
+      analytics:{followers:newCreator.followers||"–",engagement:newCreator.engagement||"–",avgViews:"–",audienceAge:"–",audienceGender:"–",topCountry:"–"},
+      notes:[],
+      tags:[newCreator.niche.split(" & ")[0]],
+      pipelineStage:"discovered",
+      addedDate:new Date().toISOString().split("T")[0],
+    };
+    setCrmCreators(x=>[nc,...x]);
+    setShowAddModal(false);
+    setNewCreator({name:"",handle:"",niche:"Beauty & Skincare",platforms:["TikTok"],followers:"",engagement:"",bio:"",ig:"",tt:"",yt:"",tw:"",web:""});
+    showToast("Creator added to your database!");
+  };
+
+  const updateCreator = (id,fields) => setCrmCreators(x=>x.map(c=>c.id===id?{...c,...fields}:c));
+
+  const addNote = (id) => {
+    if(!newNote.trim()) return;
+    setCrmCreators(x=>x.map(c=>c.id===id?{...c,notes:[{text:newNote,date:new Date().toISOString().split("T")[0]},...c.notes]}:c));
+    setNewNote("");
+  };
+
+  const addTag = (id) => {
+    if(!newTag.trim()) return;
+    setCrmCreators(x=>x.map(c=>c.id===id?{...c,tags:[...new Set([...c.tags,newTag.trim()])]}:c));
+    setNewTag("");
+  };
+
+  const removeTag = (id,tag) => setCrmCreators(x=>x.map(c=>c.id===id?{...c,tags:c.tags.filter(t=>t!==tag)}:c));
+
+  const renderCreatorCard = (c,compact) => {
+    const gr=bg(c.gradIdx);
+    const stageCol = PIPELINE_COLS.find(p=>p.key===c.pipelineStage);
+    return (
+      <div key={c.id} className="card card-hover" style={{padding:compact?"12px":"16px",cursor:"pointer"}} onClick={()=>setSelectedCreator(c)}>
+        <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:compact?0:10}}>
+          <div style={{width:compact?36:44,height:compact?36:44,borderRadius:compact?8:12,background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:compact?12:15,fontWeight:700,color:"#fff",flexShrink:0}}>{c.init}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:compact?13:14,fontWeight:600,color:"var(--text)",display:"flex",alignItems:"center",gap:6}}>
+              {c.name}
+              {stageCol&&<span style={{width:6,height:6,borderRadius:99,background:stageCol.color,flexShrink:0}}/>}
+            </div>
+            <div style={{fontSize:11,color:"var(--text3)"}}>{c.handle} · {c.niche}</div>
+          </div>
+          {!compact&&<div style={{display:"flex",gap:4}}>
+            {c.platforms.map(p=><span key={p} style={{padding:"2px 7px",borderRadius:4,fontSize:10,fontWeight:600,background:"var(--surface2)",color:"var(--text2)"}}>{p}</span>)}
+          </div>}
+        </div>
+        {!compact&&<>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:8}}>
+            <div style={{textAlign:"center",padding:"6px 0",background:"var(--surface2)",borderRadius:6}}>
+              <div style={{fontSize:13,fontWeight:700,color:"var(--text)"}}>{c.followers}</div>
+              <div style={{fontSize:9,color:"var(--text3)"}}>Followers</div>
+            </div>
+            <div style={{textAlign:"center",padding:"6px 0",background:"var(--surface2)",borderRadius:6}}>
+              <div style={{fontSize:13,fontWeight:700,color:"var(--green)"}}>{c.engagement}</div>
+              <div style={{fontSize:9,color:"var(--text3)"}}>Engage</div>
+            </div>
+            <div style={{textAlign:"center",padding:"6px 0",background:"var(--surface2)",borderRadius:6}}>
+              <div style={{fontSize:13,fontWeight:700,color:"var(--accent)"}}>{c.completedDeals}</div>
+              <div style={{fontSize:9,color:"var(--text3)"}}>Deals</div>
+            </div>
+          </div>
+          {c.tags.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:6}}>
+            {c.tags.map((t,i)=><span key={t} style={{padding:"2px 8px",borderRadius:4,fontSize:10,fontWeight:600,background:TAG_COLORS[i%TAG_COLORS.length]+"1a",color:TAG_COLORS[i%TAG_COLORS.length],border:"1px solid "+TAG_COLORS[i%TAG_COLORS.length]+"33"}}>{t}</span>)}
+          </div>}
+          {c.notes.length>0&&<div style={{fontSize:11,color:"var(--text3)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>📝 {c.notes[0].text}</div>}
+        </>}
+      </div>
+    );
+  };
+
+  // Creator Profile Modal
+  const renderProfile = () => {
+    if(!selectedCreator) return null;
+    const c = crmCreators.find(x=>x.id===selectedCreator.id)||selectedCreator;
+    const gr=bg(c.gradIdx);
+    const stageCol = PIPELINE_COLS.find(p=>p.key===c.pipelineStage);
+
+    return ReactDOM.createPortal(
+      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:10000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setSelectedCreator(null)}>
+        <div className="card-lg fade-in" onClick={e=>e.stopPropagation()} style={{maxWidth:540,width:"100%",maxHeight:"90vh",overflowY:"auto",padding:0}}>
+          {/* Header */}
+          <div style={{background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,padding:"24px 20px 18px",position:"relative"}}>
+            <button onClick={()=>setSelectedCreator(null)} style={{position:"absolute",top:12,right:12,background:"rgba(255,255,255,.2)",border:"none",borderRadius:99,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:18}}>×</button>
+            <div style={{display:"flex",alignItems:"center",gap:14}}>
+              <div style={{width:56,height:56,borderRadius:14,background:"rgba(255,255,255,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:700,color:"#fff"}}>{c.init}</div>
+              <div>
+                <div style={{fontSize:18,fontWeight:700,color:"#fff"}}>{c.name}</div>
+                <div style={{fontSize:13,color:"rgba(255,255,255,.75)"}}>{c.handle}</div>
+                {c.loc&&<div style={{fontSize:12,color:"rgba(255,255,255,.6)",marginTop:2}}>{c.loc}</div>}
+              </div>
+            </div>
+          </div>
+
+          {/* Pipeline stage selector */}
+          <div style={{padding:"12px 20px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:12,fontWeight:600,color:"var(--text3)"}}>Stage:</span>
+            <select className="fi" value={c.pipelineStage} onChange={e=>{updateCreator(c.id,{pipelineStage:e.target.value});setSelectedCreator({...c,pipelineStage:e.target.value});}} style={{flex:1,fontSize:13,padding:"6px 10px",minHeight:"auto",borderRadius:8}}>
+              {PIPELINE_COLS.map(p=><option key={p.key} value={p.key}>{p.label}</option>)}
+            </select>
+          </div>
+
+          {/* Stats */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",borderBottom:"1px solid var(--border)"}}>
+            <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:16,fontWeight:700,color:"var(--text)"}}>{c.analytics.followers}</div><div style={{fontSize:10,color:"var(--text3)"}}>Followers</div></div>
+            <div style={{textAlign:"center",padding:"12px 0",borderLeft:"1px solid var(--border)",borderRight:"1px solid var(--border)"}}><div style={{fontSize:16,fontWeight:700,color:"var(--green)"}}>{c.analytics.engagement}</div><div style={{fontSize:10,color:"var(--text3)"}}>Engagement</div></div>
+            <div style={{textAlign:"center",padding:"12px 0"}}><div style={{fontSize:16,fontWeight:700,color:"var(--accent)"}}>{c.analytics.avgViews?.toLocaleString?.()??c.analytics.avgViews}</div><div style={{fontSize:10,color:"var(--text3)"}}>Avg Views</div></div>
+          </div>
+
+          <div style={{padding:"16px 20px",display:"flex",flexDirection:"column",gap:16}}>
+            {/* Bio */}
+            {c.bio&&<div><div style={{fontSize:12,fontWeight:600,color:"var(--text3)",marginBottom:4,textTransform:"uppercase",letterSpacing:".5px"}}>Bio</div><div style={{fontSize:13,color:"var(--text)",lineHeight:1.5}}>{c.bio}</div></div>}
+
+            {/* Platforms */}
+            <div><div style={{fontSize:12,fontWeight:600,color:"var(--text3)",marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>Platforms</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{c.platforms.map(p=><span key={p} className="mp-platform-badge">{p}</span>)}</div>
+            </div>
+
+            {/* Social Links */}
+            <div><div style={{fontSize:12,fontWeight:600,color:"var(--text3)",marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>Social Links</div>
+              <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                {c.socials.ig&&<div style={{fontSize:12,color:"var(--text2)"}}>📸 instagram.com/{c.socials.ig}</div>}
+                {c.socials.tt&&<div style={{fontSize:12,color:"var(--text2)"}}>🎵 tiktok.com/@{c.socials.tt}</div>}
+                {c.socials.yt&&<div style={{fontSize:12,color:"var(--text2)"}}>▶️ youtube.com/@{c.socials.yt}</div>}
+                {c.socials.tw&&<div style={{fontSize:12,color:"var(--text2)"}}>🐦 x.com/{c.socials.tw}</div>}
+                {c.socials.web&&<div style={{fontSize:12,color:"var(--text2)"}}>🌐 {c.socials.web}</div>}
+                {!c.socials.ig&&!c.socials.tt&&!c.socials.yt&&<div style={{fontSize:12,color:"var(--text3)",fontStyle:"italic"}}>No social links added yet</div>}
+              </div>
+            </div>
+
+            {/* Audience Analytics */}
+            <div><div style={{fontSize:12,fontWeight:600,color:"var(--text3)",marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>Audience</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                <div style={{background:"var(--surface2)",borderRadius:8,padding:"8px",textAlign:"center"}}><div style={{fontSize:12,fontWeight:600,color:"var(--text)"}}>{c.analytics.audienceAge}</div><div style={{fontSize:9,color:"var(--text3)"}}>Age Range</div></div>
+                <div style={{background:"var(--surface2)",borderRadius:8,padding:"8px",textAlign:"center"}}><div style={{fontSize:12,fontWeight:600,color:"var(--text)"}}>{c.analytics.audienceGender}</div><div style={{fontSize:9,color:"var(--text3)"}}>Gender</div></div>
+                <div style={{background:"var(--surface2)",borderRadius:8,padding:"8px",textAlign:"center"}}><div style={{fontSize:12,fontWeight:600,color:"var(--text)"}}>{c.analytics.topCountry}</div><div style={{fontSize:9,color:"var(--text3)"}}>Top Country</div></div>
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div><div style={{fontSize:12,fontWeight:600,color:"var(--text3)",marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>Tags</div>
+              <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:6}}>
+                {c.tags.map((t,i)=><span key={t} style={{padding:"3px 8px",borderRadius:4,fontSize:11,fontWeight:600,background:TAG_COLORS[i%TAG_COLORS.length]+"1a",color:TAG_COLORS[i%TAG_COLORS.length],display:"flex",alignItems:"center",gap:4,cursor:"pointer"}} onClick={()=>{removeTag(c.id,t);setSelectedCreator({...c,tags:c.tags.filter(x=>x!==t)});}}>{t} ×</span>)}
+              </div>
+              <div style={{display:"flex",gap:6}}>
+                <input className="fi" placeholder="Add tag..." value={newTag} onChange={e=>setNewTag(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){addTag(c.id);setSelectedCreator({...c,tags:[...new Set([...c.tags,newTag.trim()])]});}}} style={{flex:1,fontSize:12,padding:"6px 10px",minHeight:"auto"}}/>
+                <button className="btn btn-primary" onClick={()=>{addTag(c.id);setSelectedCreator({...c,tags:[...new Set([...c.tags,newTag.trim()])]});}} style={{fontSize:12,padding:"6px 12px",minHeight:"auto"}}>Add</button>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div><div style={{fontSize:12,fontWeight:600,color:"var(--text3)",marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>Notes</div>
+              <div style={{display:"flex",gap:6,marginBottom:8}}>
+                <input className="fi" placeholder="Add a note..." value={newNote} onChange={e=>setNewNote(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")addNote(c.id);}} style={{flex:1,fontSize:12,padding:"6px 10px",minHeight:"auto"}}/>
+                <button className="btn btn-primary" onClick={()=>addNote(c.id)} style={{fontSize:12,padding:"6px 12px",minHeight:"auto"}}>Add</button>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {c.notes.map((n,i)=>(
+                  <div key={i} style={{background:"var(--surface2)",borderRadius:8,padding:"8px 12px"}}>
+                    <div style={{fontSize:12,color:"var(--text)",lineHeight:1.4}}>{n.text}</div>
+                    <div style={{fontSize:10,color:"var(--text3)",marginTop:3}}>{n.date}</div>
+                  </div>
+                ))}
+                {c.notes.length===0&&<div style={{fontSize:12,color:"var(--text3)",fontStyle:"italic"}}>No notes yet</div>}
+              </div>
+            </div>
+
+            {/* Deal History */}
+            <div><div style={{fontSize:12,fontWeight:600,color:"var(--text3)",marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>Deal History</div>
+              {c.completedDeals>0?(
+                <div style={{fontSize:12,color:"var(--text2)"}}>{c.completedDeals} deals completed · Avg rate: {c.avgRate}</div>
+              ):(
+                <div style={{fontSize:12,color:"var(--text3)",fontStyle:"italic"}}>No deals yet</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
+  // Add Creator Modal
+  const renderAddModal = () => {
+    if(!showAddModal) return null;
+    return ReactDOM.createPortal(
+      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:10000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setShowAddModal(false)}>
+        <div className="card-lg fade-in" onClick={e=>e.stopPropagation()} style={{maxWidth:480,width:"100%",maxHeight:"85vh",overflowY:"auto",padding:24}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+            <h3 style={{fontSize:18,fontWeight:700}}>Add Creator</h3>
+            <button onClick={()=>setShowAddModal(false)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"var(--text3)"}}>×</button>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div><label style={{fontSize:11,fontWeight:600,color:"var(--text3)",marginBottom:3,display:"block"}}>Name *</label>
+              <input className="fi" placeholder="Creator name" value={newCreator.name} onChange={e=>setNewCreator(x=>({...x,name:e.target.value}))}/></div>
+              <div><label style={{fontSize:11,fontWeight:600,color:"var(--text3)",marginBottom:3,display:"block"}}>Handle</label>
+              <input className="fi" placeholder="@handle" value={newCreator.handle} onChange={e=>setNewCreator(x=>({...x,handle:e.target.value}))}/></div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div><label style={{fontSize:11,fontWeight:600,color:"var(--text3)",marginBottom:3,display:"block"}}>Niche</label>
+              <select className="fi" value={newCreator.niche} onChange={e=>setNewCreator(x=>({...x,niche:e.target.value}))}>
+                {niches.map(n=><option key={n}>{n}</option>)}
+              </select></div>
+              <div><label style={{fontSize:11,fontWeight:600,color:"var(--text3)",marginBottom:3,display:"block"}}>Platform</label>
+              <select className="fi" value={newCreator.platforms[0]} onChange={e=>setNewCreator(x=>({...x,platforms:[e.target.value]}))}>
+                <option>TikTok</option><option>Instagram</option><option>YouTube</option>
+              </select></div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div><label style={{fontSize:11,fontWeight:600,color:"var(--text3)",marginBottom:3,display:"block"}}>Followers</label>
+              <input className="fi" placeholder="e.g. 50K" value={newCreator.followers} onChange={e=>setNewCreator(x=>({...x,followers:e.target.value}))}/></div>
+              <div><label style={{fontSize:11,fontWeight:600,color:"var(--text3)",marginBottom:3,display:"block"}}>Engagement Rate</label>
+              <input className="fi" placeholder="e.g. 4.5%" value={newCreator.engagement} onChange={e=>setNewCreator(x=>({...x,engagement:e.target.value}))}/></div>
+            </div>
+            <div><label style={{fontSize:11,fontWeight:600,color:"var(--text3)",marginBottom:3,display:"block"}}>Bio</label>
+            <textarea className="fi" rows={2} placeholder="What they're known for..." value={newCreator.bio} onChange={e=>setNewCreator(x=>({...x,bio:e.target.value}))} style={{resize:"vertical"}}/></div>
+            <div style={{fontSize:12,fontWeight:600,color:"var(--text3)",marginTop:4}}>Social Links</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <input className="fi" placeholder="📸 Instagram handle" value={newCreator.ig} onChange={e=>setNewCreator(x=>({...x,ig:e.target.value}))} style={{fontSize:12}}/>
+              <input className="fi" placeholder="🎵 TikTok handle" value={newCreator.tt} onChange={e=>setNewCreator(x=>({...x,tt:e.target.value}))} style={{fontSize:12}}/>
+              <input className="fi" placeholder="▶️ YouTube handle" value={newCreator.yt} onChange={e=>setNewCreator(x=>({...x,yt:e.target.value}))} style={{fontSize:12}}/>
+              <input className="fi" placeholder="🌐 Website" value={newCreator.web} onChange={e=>setNewCreator(x=>({...x,web:e.target.value}))} style={{fontSize:12}}/>
+            </div>
+            <button className="btn btn-primary" onClick={handleAddCreator} style={{marginTop:4}}>Add to Database</button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
+  return (
+    <div style={{maxWidth:1000,margin:"0 auto"}}>
+      <div className="ph-row" style={{marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
+        <div>
+          <h1 className="page-title" style={{fontSize:24,fontWeight:700}}>Creator CRM</h1>
+          <p style={{fontSize:13,color:"var(--text2)",marginTop:2}}>{crmCreators.length} creators in your database</p>
+        </div>
+        <button className="btn btn-primary" onClick={()=>setShowAddModal(true)}>{ICONS.plus(14)} Add Creator</button>
+      </div>
+
+      {/* Tabs */}
+      <div style={{display:"flex",gap:0,marginBottom:16,borderBottom:"1px solid var(--border)"}}>
+        {[{k:"database",l:"Database",icon:ICONS.users},{k:"pipeline",l:"Pipeline",icon:ICONS.chart}].map(t=>(
+          <button key={t.k} onClick={()=>setTab(t.k)} style={{padding:"10px 20px",fontSize:13,fontWeight:tab===t.k?700:500,color:tab===t.k?"var(--accent)":"var(--text3)",background:"none",border:"none",borderBottom:tab===t.k?"2px solid var(--accent)":"2px solid transparent",cursor:"pointer",display:"flex",gap:6,alignItems:"center"}}>{t.icon(14)} {t.l}</button>
+        ))}
+      </div>
+
+      {/* DATABASE VIEW */}
+      {tab==="database" && <>
+        {/* Search + Filters */}
+        <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+          <div style={{flex:1,minWidth:200,position:"relative"}}>
+            <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--text3)"}}>{ICONS.search(14)}</span>
+            <input className="fi" placeholder="Search creators..." value={search} onChange={e=>setSearch(e.target.value)} style={{paddingLeft:34}}/>
+          </div>
+          <select className="fi" value={filterPlatform} onChange={e=>setFilterPlatform(e.target.value)} style={{width:"auto",minWidth:100}}>
+            <option value="All">All Platforms</option>
+            <option>TikTok</option><option>Instagram</option><option>YouTube</option>
+          </select>
+          <select className="fi" value={filterNiche} onChange={e=>setFilterNiche(e.target.value)} style={{width:"auto",minWidth:120}}>
+            <option value="All">All Niches</option>
+            {niches.map(n=><option key={n} value={n}>{n}</option>)}
+          </select>
+        </div>
+
+        {/* Creator Grid */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
+          {filtered.map(c=>renderCreatorCard(c,false))}
+          {filtered.length===0&&<div className="card-lg" style={{textAlign:"center",padding:"40px 20px",gridColumn:"1/-1"}}><p style={{fontSize:14,color:"var(--text2)"}}>No creators match your search.</p></div>}
+        </div>
+      </>}
+
+      {/* PIPELINE VIEW */}
+      {tab==="pipeline" && (
+        <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:20,WebkitOverflowScrolling:"touch"}}>
+          {PIPELINE_COLS.map(col=>{
+            const colCreators = crmCreators.filter(c=>c.pipelineStage===col.key);
+            return (
+              <div key={col.key} style={{minWidth:240,flex:"0 0 240px"}}>
+                {/* Column header */}
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"0 4px"}}>
+                  <span style={{width:8,height:8,borderRadius:99,background:col.color,flexShrink:0}}/>
+                  <span style={{fontSize:13,fontWeight:700,color:"var(--text)"}}>{col.label}</span>
+                  <span style={{fontSize:11,fontWeight:600,color:"var(--text3)",background:"var(--surface2)",borderRadius:99,padding:"1px 7px"}}>{colCreators.length}</span>
+                </div>
+                {/* Column cards */}
+                <div style={{display:"flex",flexDirection:"column",gap:8,minHeight:100,padding:8,background:"var(--surface2)",borderRadius:12,border:"1px dashed var(--border)"}}>
+                  {colCreators.length===0&&<div style={{textAlign:"center",padding:"20px 0",fontSize:12,color:"var(--text3)"}}>No creators</div>}
+                  {colCreators.map(c=>renderCreatorCard(c,true))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {renderProfile()}
+      {renderAddModal()}
+    </div>
+  );
+}
+
 function MobBottomNav({role, page, setPage}) {
   const IC = ({d,d2,filled,active}) => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -10963,6 +11325,7 @@ function App() {
         case "new-deal":      return React.createElement(BrandNewDealPage,{setPage,onDealCreated:addDeal,userName,authUser});
         case "calendar":      return React.createElement(CalendarPage,{deals,role,setPage,setSelected});
         case "marketplace":   return React.createElement(MarketplaceBrandPage,{setPage,setSelected,deals,addDeal,showToast,userName,authUser});
+        case "creator-crm":   return React.createElement(CreatorCRMPage,{setPage,setSelected,deals,addDeal,showToast,userName,authUser});
         case "content-tracker": return React.createElement(ContentTrackerPage,{authUser,deals});
         case "spending":      return React.createElement(SpendingDashboard,{deals});
         case "content-library": return React.createElement(ContentLibraryPage,{});
@@ -11006,7 +11369,7 @@ function App() {
         ]:[
           {k:"dashboard",l:"Dashboard"},{k:"deal-room",l:"Deal Room"},
           {k:"settings",l:"Settings"},
-          ...(demoMode?[{k:"marketplace",l:"Marketplace"}]:[]),
+          ...(demoMode?[{k:"marketplace",l:"Marketplace"},{k:"creator-crm",l:"Creator CRM"}]:[]),
         ];
         const filtered = cmdkQuery?allPages.filter(p=>p.l.toLowerCase().includes(cmdkQuery.toLowerCase())):allPages;
         return (
