@@ -1,4 +1,4 @@
-const CACHE_NAME = "bridgn-v1";
+const CACHE_NAME = "bridgn-v2";
 const PRECACHE = [
   "/",
   "/index.html",
@@ -7,6 +7,7 @@ const PRECACHE = [
   "/assets/logo-auth.svg",
   "/assets/logo-icon-white.svg",
   "/assets/logo-icon-dark.svg",
+  "/assets/pwa-icon.png",
 ];
 
 // Install — cache core assets
