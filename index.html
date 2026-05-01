@@ -10610,6 +10610,8 @@ function CreatorCRMPage({setPage,setSelected,deals,addDeal,showToast,userName,au
   const [newCreator,setNewCreator] = useState({name:"",handle:"",niche:"Beauty & Skincare",platforms:["TikTok"],followers:"",engagement:"",bio:"",ig:"",tt:"",yt:"",tw:"",web:""});
   const [newNote,setNewNote] = useState("");
   const [newTag,setNewTag] = useState("");
+  const [dragId,setDragId] = useState(null); // creator id being dragged
+  const [dragOver,setDragOver] = useState(null); // column key being dragged over
 
   const niches = [...new Set(DEMO_CREATORS.map(c=>c.niche))];
   const PIPELINE_COLS = [
@@ -10924,8 +10926,19 @@ function CreatorCRMPage({setPage,setSelected,deals,addDeal,showToast,userName,au
         <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:20,WebkitOverflowScrolling:"touch"}}>
           {PIPELINE_COLS.map(col=>{
             const colCreators = crmCreators.filter(c=>c.pipelineStage===col.key);
+            const isOver = dragOver===col.key;
             return (
-              <div key={col.key} style={{minWidth:240,flex:"0 0 240px"}}>
+              <div key={col.key} style={{minWidth:240,flex:"0 0 240px"}}
+                onDragOver={e=>{e.preventDefault();setDragOver(col.key);}}
+                onDragLeave={()=>setDragOver(null)}
+                onDrop={e=>{
+                  e.preventDefault();
+                  if(dragId){
+                    setCrmCreators(x=>x.map(c=>c.id===dragId?{...c,pipelineStage:col.key}:c));
+                    showToast("Moved to "+col.label);
+                  }
+                  setDragId(null);setDragOver(null);
+                }}>
                 {/* Column header */}
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"0 4px"}}>
                   <span style={{width:8,height:8,borderRadius:99,background:col.color,flexShrink:0}}/>
@@ -10933,9 +10946,27 @@ function CreatorCRMPage({setPage,setSelected,deals,addDeal,showToast,userName,au
                   <span style={{fontSize:11,fontWeight:600,color:"var(--text3)",background:"var(--surface2)",borderRadius:99,padding:"1px 7px"}}>{colCreators.length}</span>
                 </div>
                 {/* Column cards */}
-                <div style={{display:"flex",flexDirection:"column",gap:8,minHeight:100,padding:8,background:"var(--surface2)",borderRadius:12,border:"1px dashed var(--border)"}}>
-                  {colCreators.length===0&&<div style={{textAlign:"center",padding:"20px 0",fontSize:12,color:"var(--text3)"}}>No creators</div>}
-                  {colCreators.map(c=>renderCreatorCard(c,true))}
+                <div style={{display:"flex",flexDirection:"column",gap:8,minHeight:100,padding:8,background:isOver?"var(--accent-light)":"var(--surface2)",borderRadius:12,border:isOver?"2px solid var(--accent)":"1px dashed var(--border)",transition:"all .15s"}}>
+                  {colCreators.length===0&&<div style={{textAlign:"center",padding:"20px 0",fontSize:12,color:isOver?"var(--accent)":"var(--text3)"}}>{isOver?"Drop here":"No creators"}</div>}
+                  {colCreators.map(c=>{
+                    const gr=bg(c.gradIdx);
+                    const isDragging = dragId===c.id;
+                    return (
+                      <div key={c.id} className="card card-hover" draggable
+                        onDragStart={()=>setDragId(c.id)}
+                        onDragEnd={()=>{setDragId(null);setDragOver(null);}}
+                        onClick={()=>setSelectedCreator(c)}
+                        style={{padding:"12px",cursor:"grab",opacity:isDragging?.5:1,transition:"opacity .15s"}}>
+                        <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                          <div style={{width:36,height:36,borderRadius:8,background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"#fff",flexShrink:0}}>{c.init}</div>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:13,fontWeight:600,color:"var(--text)"}}>{c.name}</div>
+                            <div style={{fontSize:11,color:"var(--text3)"}}>{c.handle} · {c.niche}</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
