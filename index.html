@@ -2834,30 +2834,48 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
   const pct = Math.round((liveStepsDone/6)*100);
   return (
     <div className="fade-in">
-      {deals.length>1&&<button onClick={()=>{setDealView("list");setSelected&&setSelected(null);}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--text2)",fontFamily:"DM Sans,sans-serif",marginBottom:12,display:"flex",alignItems:"center",gap:4}}>&larr; All deals</button>}
-      <div className="ph-row">
-        <div>
-          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
-            <div className="page-title">{isBrand?activeDeal.creatorName||"Deal Room":activeDeal.brand||"Deal Room"}</div>
-          </div>
-          <div className="page-subtitle" style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
-            {editingTitle?(
-              <span style={{display:"inline-flex",gap:4,alignItems:"center"}}><input className="fi" style={{padding:"3px 8px",fontSize:"12px",width:180}} value={editTitle} onChange={e=>setEditTitle(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")saveTitle();if(e.key==="Escape")setEditingTitle(false);}} autoFocus/><button onClick={saveTitle} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--accent)",fontFamily:"DM Sans,sans-serif",fontWeight:600}}>Save</button><button onClick={()=>setEditingTitle(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",fontFamily:"DM Sans,sans-serif"}}>Cancel</button></span>
-            ):(
-              <span onClick={()=>{setEditTitle(activeDeal.campaignTitle||"");setEditingTitle(true);}} style={{cursor:"pointer",borderBottom:"1px dashed var(--border)"}} title="Click to rename">{activeDeal.campaignTitle}</span>
-            )}
-            <span> · {activeDeal.platform} · Due </span>
-            {editingDeadline?(
-              <span style={{display:"inline-flex",gap:4,alignItems:"center"}}><input className="fi" type="date" style={{padding:"3px 8px",fontSize:"12px",width:140}} value={editDeadline} onChange={e=>setEditDeadline(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")saveDeadline();if(e.key==="Escape")setEditingDeadline(false);}} autoFocus/><button onClick={saveDeadline} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--accent)",fontFamily:"DM Sans,sans-serif",fontWeight:600}}>Save</button><button onClick={()=>setEditingDeadline(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",fontFamily:"DM Sans,sans-serif"}}>Cancel</button></span>
-            ):(
-              <span onClick={()=>{setEditDeadline(activeDeal.deadline||"");setEditingDeadline(true);}} style={{cursor:"pointer",borderBottom:"1px dashed var(--border)"}} title="Click to change deadline">{activeDeal.deadline}</span>
-            )}
-          </div>
+      {/* Deal switcher tabs */}
+      {deals.length>1&&(
+        <div style={{display:"flex",gap:6,marginBottom:16,overflowX:"auto",paddingBottom:2}}>
+          <button onClick={()=>{setDealView("list");setSelected&&setSelected(null);}} style={{padding:"7px 14px",borderRadius:99,border:"1px solid var(--border)",background:"var(--surface)",cursor:"pointer",fontSize:12,fontWeight:600,color:"var(--text2)",fontFamily:"DM Sans,sans-serif",whiteSpace:"nowrap",flexShrink:0}}>All Deals</button>
+          {deals.map(d=>{
+            const isActive = activeDeal?.id===d.id;
+            return <button key={d.id} onClick={()=>{setActiveDeal(d);syncFromDeal(d);setDealView("room");}} style={{padding:"7px 14px",borderRadius:99,border:"1px solid "+(isActive?"var(--accent)":"var(--border)"),background:isActive?"var(--accent-light)":"var(--surface)",cursor:"pointer",fontSize:12,fontWeight:isActive?700:500,color:isActive?"var(--accent)":"var(--text2)",fontFamily:"DM Sans,sans-serif",whiteSpace:"nowrap",flexShrink:0,transition:"all .15s"}}>{d.campaignTitle||d.brand}</button>;
+          })}
         </div>
-        <div style={{display:"flex",gap:8}}>
-          <select className="fsel" style={{padding:"8px 12px",fontSize:"13px"}} value={activeDeal.id} onChange={e=>{const d=deals.find(x=>x.id===parseInt(e.target.value));if(d)setActiveDeal(d);}}>
-            {deals.map(d=><option key={d.id} value={d.id}>{d.brand} — {d.campaignTitle}</option>)}
-          </select>
+      )}
+      {deals.length===1&&<button onClick={()=>{setDealView("list");setSelected&&setSelected(null);}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--text2)",fontFamily:"DM Sans,sans-serif",marginBottom:12,display:"flex",alignItems:"center",gap:4}}>&larr; All deals</button>}
+
+      {/* Deal header */}
+      <div style={{marginBottom:20}}>
+        {editingTitle?(
+          <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}>
+            <input className="fi" style={{padding:"6px 12px",fontSize:"20px",fontFamily:"DM Serif Display,serif",fontWeight:400,flex:1,maxWidth:400}} value={editTitle} onChange={e=>setEditTitle(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")saveTitle();if(e.key==="Escape")setEditingTitle(false);}} autoFocus/>
+            <button onClick={saveTitle} className="btn btn-primary btn-sm">Save</button>
+            <button onClick={()=>setEditingTitle(false)} className="btn btn-secondary btn-sm">Cancel</button>
+          </div>
+        ):(
+          <div className="page-title" style={{cursor:"pointer",display:"inline-flex",alignItems:"center",gap:8}} onClick={()=>{setEditTitle(activeDeal.campaignTitle||"");setEditingTitle(true);}} title="Click to rename">
+            {activeDeal.campaignTitle||"Untitled Deal"}
+            <span style={{fontSize:14,color:"var(--text3)",fontFamily:"DM Sans,sans-serif",fontWeight:500}}>{ICONS.link(14)}</span>
+          </div>
+        )}
+        <div style={{display:"flex",alignItems:"center",gap:12,marginTop:4,flexWrap:"wrap",fontSize:13,color:"var(--text2)"}}>
+          <span style={{fontWeight:500}}>{isBrand?(activeDeal.creatorName||"Creator"):(activeDeal.brand||"Brand")}</span>
+          <span style={{color:"var(--border)"}}>·</span>
+          <span>{activeDeal.platform}</span>
+          <span style={{color:"var(--border)"}}>·</span>
+          {editingDeadline?(
+            <span style={{display:"inline-flex",gap:6,alignItems:"center"}}>
+              <input className="fi" type="date" style={{padding:"3px 8px",fontSize:"12px",width:140}} value={editDeadline} onChange={e=>setEditDeadline(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")saveDeadline();if(e.key==="Escape")setEditingDeadline(false);}} autoFocus/>
+              <button onClick={saveDeadline} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--accent)",fontFamily:"DM Sans,sans-serif",fontWeight:600}}>Save</button>
+              <button onClick={()=>setEditingDeadline(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",fontFamily:"DM Sans,sans-serif"}}>Cancel</button>
+            </span>
+          ):(
+            <span onClick={()=>{setEditDeadline(activeDeal.deadline||"");setEditingDeadline(true);}} style={{cursor:"pointer",borderBottom:"1px dashed var(--border)"}} title="Click to change deadline">Due {activeDeal.deadline}</span>
+          )}
+          <span style={{color:"var(--border)"}}>·</span>
+          <span style={{fontWeight:600,color:pct===100?"var(--green)":"var(--accent)"}}>{pct}% complete</span>
         </div>
       </div>
       <div className="deal-room-grid" style={{display:"grid",gap:20,alignItems:"start"}}>
