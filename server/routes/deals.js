@@ -69,6 +69,8 @@ function dealToFrontend(row) {
     postLink:          row.post_link || "",
     postCaption:       row.post_caption || "",
     postDetailsSent:   !!row.post_details_sent,
+    // Creator workspace (private)
+    creatorWorkspace:  row.creator_workspace || {},
   };
 }
 
@@ -244,6 +246,7 @@ const ALLOWED_FIELDS = [
   "status", "progress",
   "deadline", "campaign_title", "sent_reminders",
   "post_cta", "post_link", "post_caption", "post_details_sent",
+  "creator_workspace",
 ];
 
 router.put("/update", async (req, res) => {

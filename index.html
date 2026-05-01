@@ -2181,6 +2181,215 @@ function dealRelTime(ts) {
   return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
 }
 
+// ─── CREATOR WORKSPACE (private per-deal notes, files, links, checklist) ─────
+function CreatorWorkspace({activeDeal,syncDealFields,pausePoll,authUser}) {
+  const [expanded,setExpanded] = useState(false);
+  const [tab,setTab] = useState("notes");
+  const ws = activeDeal?.creatorWorkspace || {};
+  const [notes,setNotes] = useState(ws.notes||"");
+  const [files,setFiles] = useState(ws.files||[]);
+  const [links,setLinks] = useState(ws.links||[]);
+  const [checklist,setChecklist] = useState(ws.checklist||[]);
+  const [newLink,setNewLink] = useState({title:"",url:""});
+  const [newTask,setNewTask] = useState("");
+  const fileInputRef = useRef(null);
+  const saveTimer = useRef(null);
+
+  // Re-sync when deal changes
+  useEffect(()=>{
+    const w = activeDeal?.creatorWorkspace||{};
+    setNotes(w.notes||"");
+    setFiles(w.files||[]);
+    setLinks(w.links||[]);
+    setChecklist(w.checklist||[]);
+  },[activeDeal?.id]);
+
+  const save = (override={}) => {
+    clearTimeout(saveTimer.current);
+    const data = {notes,files,links,checklist,...override};
+    saveTimer.current = setTimeout(()=>{
+      pausePoll();
+      syncDealFields({creator_workspace:data});
+    },800);
+  };
+
+  const updateNotes = (v) => { setNotes(v); save({notes:v}); };
+
+  const addFile = async (e) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+    // Upload to Supabase Storage
+    const path = `workspace/${activeDeal.id}/${Date.now()}_${file.name}`;
+    const {data} = await supabase.storage.from("deal-files").upload(path, file, {upsert:true});
+    if(data?.path) {
+      const {data:urlData} = supabase.storage.from("deal-files").getPublicUrl(data.path);
+      const updated = [...files, {name:file.name, url:urlData.publicUrl, size:file.size}];
+      setFiles(updated); save({files:updated});
+    }
+    e.target.value = "";
+  };
+
+  const removeFile = (i) => { const updated = files.filter((_,j)=>j!==i); setFiles(updated); save({files:updated}); };
+
+  const addLink = () => {
+    if(!newLink.url.trim()) return;
+    const updated = [...links, {title:newLink.title.trim()||newLink.url.trim(), url:newLink.url.trim()}];
+    setLinks(updated); setNewLink({title:"",url:""}); save({links:updated});
+  };
+
+  const removeLink = (i) => { const updated = links.filter((_,j)=>j!==i); setLinks(updated); save({links:updated}); };
+
+  const addTask = () => {
+    if(!newTask.trim()) return;
+    const updated = [...checklist, {text:newTask.trim(), done:false}];
+    setChecklist(updated); setNewTask(""); save({checklist:updated});
+  };
+
+  const toggleTask = (i) => {
+    const updated = checklist.map((t,j)=>j===i?{...t,done:!t.done}:t);
+    setChecklist(updated); save({checklist:updated});
+  };
+
+  const removeTask = (i) => { const updated = checklist.filter((_,j)=>j!==i); setChecklist(updated); save({checklist:updated}); };
+
+  const doneCount = checklist.filter(t=>t.done).length;
+  const totalItems = (notes.trim()?1:0)+files.length+links.length+checklist.length;
+
+  const tabs = [
+    {k:"notes",l:"Notes",count:notes.trim()?1:0},
+    {k:"checklist",l:"To-Do",count:checklist.length},
+    {k:"files",l:"Files",count:files.length},
+    {k:"links",l:"Links",count:links.length},
+  ];
+
+  return (
+    <div className="card-lg" style={{overflow:"hidden",border:"1.5px solid rgba(167,139,250,.2)",background:"linear-gradient(135deg,rgba(167,139,250,.03),rgba(91,138,245,.02))"}}>
+      {/* Header — always visible */}
+      <div onClick={()=>setExpanded(e=>!e)} style={{padding:"14px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:10,userSelect:"none"}}>
+        <div style={{width:28,height:28,borderRadius:8,background:"linear-gradient(135deg,#a78bfa,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          {ICONS.sparkles(14)}
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:14,fontWeight:700,display:"flex",alignItems:"center",gap:6}}>
+            My Workspace
+            <span style={{fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:99,background:"rgba(167,139,250,.15)",color:"#a78bfa"}}>Private</span>
+          </div>
+          {!expanded&&totalItems>0&&<div style={{fontSize:11,color:"var(--text3)",marginTop:2}}>{totalItems} item{totalItems!==1?"s":""}{checklist.length>0&&" · "+doneCount+"/"+checklist.length+" tasks done"}</div>}
+        </div>
+        <span style={{fontSize:14,color:"var(--text3)",transition:"transform .2s",transform:expanded?"rotate(180deg)":"rotate(0deg)"}}>▾</span>
+      </div>
+
+      {expanded&&(
+        <div style={{borderTop:"1px solid rgba(167,139,250,.15)"}}>
+          {/* Tabs */}
+          <div style={{display:"flex",gap:0,borderBottom:"1px solid var(--border)",padding:"0 18px"}}>
+            {tabs.map(t=>(
+              <button key={t.k} onClick={()=>setTab(t.k)} style={{padding:"10px 14px",border:"none",background:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:12,fontWeight:tab===t.k?700:500,color:tab===t.k?"var(--accent)":"var(--text3)",borderBottom:tab===t.k?"2px solid var(--accent)":"2px solid transparent",transition:"all .15s",display:"flex",gap:5,alignItems:"center"}}>
+                {t.l}
+                {t.count>0&&<span style={{fontSize:10,fontWeight:700,padding:"1px 6px",borderRadius:99,background:tab===t.k?"var(--accent-light)":"var(--surface2)",color:tab===t.k?"var(--accent)":"var(--text3)"}}>{t.count}</span>}
+              </button>
+            ))}
+          </div>
+
+          <div style={{padding:"16px 18px"}}>
+            {/* Notes tab */}
+            {tab==="notes"&&(
+              <textarea
+                value={notes}
+                onChange={e=>updateNotes(e.target.value)}
+                placeholder="Brainstorm ideas, write your script, plan your shots..."
+                rows={8}
+                style={{width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",color:"var(--text)",fontSize:13,fontFamily:"inherit",lineHeight:1.7,outline:"none",resize:"vertical",minHeight:160}}
+              />
+            )}
+
+            {/* Checklist tab */}
+            {tab==="checklist"&&(
+              <div>
+                {checklist.length>0&&(
+                  <div style={{marginBottom:12}}>
+                    <div style={{height:4,background:"var(--surface2)",borderRadius:99,overflow:"hidden",marginBottom:8}}>
+                      <div style={{height:"100%",borderRadius:99,background:"linear-gradient(90deg,#a78bfa,#7c3aed)",width:checklist.length?(doneCount/checklist.length*100)+"%":"0%",transition:"width .3s"}}/>
+                    </div>
+                    <div style={{fontSize:11,color:"var(--text3)"}}>{doneCount} of {checklist.length} complete</div>
+                  </div>
+                )}
+                <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:12}}>
+                  {checklist.map((t,i)=>(
+                    <div key={i} style={{display:"flex",gap:10,alignItems:"center",padding:"8px 10px",borderRadius:8,background:t.done?"rgba(52,211,153,.06)":"var(--surface2)",border:"1px solid "+(t.done?"rgba(52,211,153,.15)":"var(--border)"),transition:"all .15s"}}>
+                      <div onClick={()=>toggleTask(i)} style={{width:20,height:20,borderRadius:6,border:"2px solid "+(t.done?"var(--green)":"var(--border)"),background:t.done?"var(--green)":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,transition:"all .15s"}}>
+                        {t.done&&<span style={{color:"white",fontSize:11,fontWeight:700}}>✓</span>}
+                      </div>
+                      <span style={{flex:1,fontSize:13,textDecoration:t.done?"line-through":"none",color:t.done?"var(--text3)":"var(--text)",transition:"all .15s"}}>{t.text}</span>
+                      <button onClick={()=>removeTask(i)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",padding:"2px 4px",opacity:.5}}>✕</button>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <input className="fi" value={newTask} onChange={e=>setNewTask(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addTask()} placeholder="Add a task..." style={{flex:1,padding:"8px 12px",fontSize:13}}/>
+                  <button onClick={addTask} disabled={!newTask.trim()} className="btn btn-primary btn-sm" style={{opacity:newTask.trim()?1:.5}}>Add</button>
+                </div>
+              </div>
+            )}
+
+            {/* Files tab */}
+            {tab==="files"&&(
+              <div>
+                <input ref={fileInputRef} type="file" onChange={addFile} style={{display:"none"}}/>
+                {files.length>0&&(
+                  <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>
+                    {files.map((f,i)=>(
+                      <div key={i} style={{display:"flex",gap:8,alignItems:"center",padding:"8px 12px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:8}}>
+                        <span style={{fontSize:16,flexShrink:0}}>{/\.(jpg|jpeg|png|gif|webp)$/i.test(f.name)?"🖼":(/\.(mp4|mov|webm)$/i.test(f.name)?"🎬":"📄")}</span>
+                        <div style={{flex:1,minWidth:0}}>
+                          <a href={f.url} target="_blank" rel="noopener noreferrer" style={{fontSize:12,fontWeight:600,color:"var(--accent)",textDecoration:"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{f.name}</a>
+                          {f.size>0&&<div style={{fontSize:10,color:"var(--text3)"}}>{(f.size/1024).toFixed(0)} KB</div>}
+                        </div>
+                        <button onClick={()=>removeFile(i)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",padding:"2px 4px"}}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div onClick={()=>fileInputRef.current?.click()} style={{border:"2px dashed var(--border)",borderRadius:10,padding:16,textAlign:"center",cursor:"pointer",transition:"border-color .15s"}} onMouseEnter={e=>e.currentTarget.style.borderColor="#a78bfa"} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+                  <div style={{fontSize:13,fontWeight:600}}>Upload File</div>
+                  <div style={{fontSize:11,color:"var(--text3)",marginTop:2}}>Mood boards, reference images, rough cuts, anything</div>
+                </div>
+              </div>
+            )}
+
+            {/* Links tab */}
+            {tab==="links"&&(
+              <div>
+                {links.length>0&&(
+                  <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12}}>
+                    {links.map((l,i)=>(
+                      <div key={i} style={{display:"flex",gap:8,alignItems:"center",padding:"8px 12px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:8}}>
+                        <span style={{fontSize:14,flexShrink:0}}>{ICONS.link(14)}</span>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.title}</div>
+                          <a href={l.url} target="_blank" rel="noopener noreferrer" style={{fontSize:11,color:"var(--accent)",textDecoration:"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{l.url}</a>
+                        </div>
+                        <button onClick={()=>removeLink(i)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",padding:"2px 4px"}}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  <input className="fi" value={newLink.url} onChange={e=>setNewLink(p=>({...p,url:e.target.value}))} placeholder="Paste a URL (TikTok, YouTube, Instagram, Pinterest...)" style={{padding:"8px 12px",fontSize:13}}/>
+                  <div style={{display:"flex",gap:8}}>
+                    <input className="fi" value={newLink.title} onChange={e=>setNewLink(p=>({...p,title:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&addLink()} placeholder="Title (optional)" style={{flex:1,padding:"8px 12px",fontSize:13}}/>
+                    <button onClick={addLink} disabled={!newLink.url.trim()} className="btn btn-primary btn-sm" style={{opacity:newLink.url.trim()?1:.5}}>Add</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,selected}) {
   const loading = useSkeleton();
   const [fireConfetti,confettiFiring] = useConfetti();
@@ -3412,6 +3621,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               </div>
             )}
           </div>
+
+          {/* ── Creator Workspace (private) ── */}
+          {!isBrand&&<CreatorWorkspace activeDeal={activeDeal} syncDealFields={syncDealFields} pausePoll={pausePoll} authUser={authUser}/>}
 
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
