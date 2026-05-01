@@ -1062,6 +1062,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
     {k:"new-deal",l:"New Deal",i:ICONS.plus},
     {k:"calendar",l:"Calendar",i:ICONS.calendar},
     {section:"Business"},
+    {k:"earnings",l:"Earnings",i:ICONS.dollar},
     {k:"contracts",l:"Contract Vault",i:ICONS.folder},
     {k:"public-profile",l:"My Profile",i:ICONS.user},
     {k:"settings",l:"Settings",i:ICONS.gear},
@@ -5004,7 +5005,7 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profile
 }
 
 // ─── EARNINGS & P&L ──────────────────────────────────────────────────────────
-function EarningsPage() {
+function EarningsPage({deals=[]}) {
   const loading = useSkeleton();
   const [goal,setGoal] = useState(()=>{try{const g=parseInt(localStorage.getItem("bridgn_earnings_goal"));return g>0?g:0;}catch{return 0;}});
   const [editGoal,setEditGoal] = useState(false);
@@ -5012,11 +5013,34 @@ function EarningsPage() {
   const [fireConfetti,confettiFiring] = useConfetti();
   const firedRef = useRef(false);
 
-  const earningsMonthly = EARNINGS_MONTHLY;
-  const earningsByBrand = EARNINGS_BY_BRAND;
-  const hasEarnings = earningsMonthly.length > 0;
-  const currentMonth = hasEarnings ? earningsMonthly[earningsMonthly.length-1] : null;
-  const current = currentMonth ? currentMonth.amount : 0;
+  // Compute earnings from real deals
+  const paidDeals = deals.filter(d=>["payment_held","payment_released","content_delivered","payment_processing"].includes(d.status));
+  const releasedDeals = deals.filter(d=>d.status==="payment_released");
+
+  // Group by month
+  const monthMap = {};
+  paidDeals.forEach(d=>{
+    const monthKey = d.deadline && d.deadline!=="TBD" ? (()=>{try{const dt=new Date(d.deadline+"T00:00:00");return dt.toLocaleDateString("en-US",{month:"short",year:"numeric"});}catch{return "Unknown";}})() : "Unknown";
+    if(!monthMap[monthKey]) monthMap[monthKey]={month:monthKey,amount:0};
+    monthMap[monthKey].amount += d.amount||0;
+  });
+  const earningsMonthly = Object.values(monthMap).slice(-6);
+
+  // Group by brand
+  const brandMap = {};
+  paidDeals.forEach(d=>{
+    const brand = d.brand||"Unknown";
+    if(!brandMap[brand]) brandMap[brand]={brand,bi:(brand||"BR").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),ci:Math.abs(brand.length)%6,amount:0,deals:0};
+    brandMap[brand].amount += d.amount||0;
+    brandMap[brand].deals += 1;
+  });
+  const earningsByBrand = Object.values(brandMap).sort((a,b)=>b.amount-a.amount).map(b=>({...b,avgDeal:b.deals?Math.round(b.amount/b.deals):0}));
+
+  const hasEarnings = paidDeals.length > 0;
+  const now = new Date();
+  const currentMonthLabel = now.toLocaleDateString("en-US",{month:"short",year:"numeric"});
+  const currentMonthDeals = paidDeals.filter(d=>{try{const dt=new Date(d.deadline+"T00:00:00");return dt.getMonth()===now.getMonth()&&dt.getFullYear()===now.getFullYear();}catch{return false;}});
+  const current = currentMonthDeals.reduce((s,d)=>s+(d.amount||0),0);
   const pct = goal>0 ? current/goal : 0;
   const done = pct>=1;
 
@@ -5060,7 +5084,7 @@ function EarningsPage() {
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22}}>
           <div>
             <div style={{fontSize:"14px",fontWeight:700,color:"var(--text)"}}>Monthly Goal</div>
-            <div style={{fontSize:"12px",color:"var(--text2)",marginTop:2}}>{currentMonth?currentMonth.month+" earnings tracking":"Track your monthly income target"}</div>
+            <div style={{fontSize:"12px",color:"var(--text2)",marginTop:2}}>{currentMonthLabel+" earnings tracking"}</div>
           </div>
           {!editGoal&&(
             <button className="btn btn-secondary btn-sm" onClick={()=>{setEditGoal(true);setGoalInput(goal?String(goal):"");}}>
@@ -5120,7 +5144,7 @@ function EarningsPage() {
           <div style={{flex:1,minWidth:200}}>
             {editGoal ? (
               <div>
-                <div style={{fontSize:"12px",fontWeight:600,color:"var(--text2)",marginBottom:10}}>Set your target for {currentMonth.month}</div>
+                <div style={{fontSize:"12px",fontWeight:600,color:"var(--text2)",marginBottom:10}}>Set your target for {currentMonthLabel}</div>
                 <div style={{display:"flex",gap:8,alignItems:"center"}}>
                   <div style={{position:"relative",flex:1}}>
                     <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--text2)",fontWeight:700,fontSize:15,pointerEvents:"none"}}>$</span>
@@ -5135,7 +5159,7 @@ function EarningsPage() {
               <div style={{display:"flex",flexDirection:"column",gap:16}}>
                 <div style={{display:"flex",gap:28,flexWrap:"wrap"}}>
                   <div>
-                    <div style={{fontSize:"10px",fontWeight:800,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:5}}>Earned ({currentMonth.month})</div>
+                    <div style={{fontSize:"10px",fontWeight:800,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:5}}>Earned ({currentMonthLabel})</div>
                     <div style={{fontSize:"30px",fontWeight:400,fontFamily:"DM Serif Display,serif",color:"var(--accent)",lineHeight:1}}>${current.toLocaleString()}</div>
                   </div>
                   <div>
@@ -5169,22 +5193,22 @@ function EarningsPage() {
       </div>
 
       {/* ── Page header + stats ─────────────────────────────── */}
-      <div className="ph-row"><div><div className="page-title">Earnings & P&L</div><div className="page-subtitle">Your income, brand performance, and business health at a glance.</div></div>{hasEarnings&&<button className="btn btn-secondary">Export CSV</button>}</div>
+      <div className="ph-row"><div><div className="page-title">Earnings</div><div className="page-subtitle">Your income and deal performance at a glance.</div></div></div>
       {!hasEarnings&&(
         <div className="card" style={{padding:"48px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
-          <EmptySVG type="earnings" size={136}/>
+          <div style={{fontSize:32,marginBottom:12}}>{ICONS.dollar(32)}</div>
           <div style={{fontSize:"16px",fontWeight:600,marginBottom:8}}>No earnings yet</div>
-          <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7}}>Once you complete deals and receive payments, your income breakdown, charts, and P&L will appear here.</div>
+          <div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.7}}>Once brands fund your deals, your income breakdown and charts will appear here.</div>
         </div>
       )}
       {hasEarnings&&<><div className="g4 section" style={{gap:12}}>
         {[
-          {l:"YTD Earnings",v:"$"+ytd.toLocaleString(),spk:earningsMonthly.map(m=>m.amount),sc:"#34d399"},
-          {l:"Monthly Avg",v:"$"+avg.toLocaleString(),spk:earningsMonthly.map(m=>m.amount)},
-          {l:"Best Brand",v:best.brand,spk:earningsByBrand.map(b=>b.amount),vs:{fontSize:"18px",WebkitTextFillColor:"rgba(255,255,255,.85)"}},
-          {l:"Deals Closed",v:String(earningsByBrand.reduce((s,b)=>s+b.deals,0)),spk:earningsByBrand.map(b=>b.deals)}
+          {l:"Total Earned",v:"$"+ytd.toLocaleString(),sc:"#34d399"},
+          {l:"Monthly Avg",v:"$"+avg.toLocaleString()},
+          {l:"Released",v:"$"+releasedDeals.reduce((s,d)=>s+(d.amount||0),0).toLocaleString()},
+          {l:"Deals Funded",v:String(paidDeals.length)}
         ].map((s,i)=>(
-          <StatCard key={i} label={s.l} value={s.v} sparkData={s.spk} sparkColor={s.sc} valueStyle={s.vs}/>
+          <StatCard key={i} label={s.l} value={s.v} sparkColor={s.sc}/>
         ))}
       </div>
       <div className="g2" style={{gap:20,alignItems:"start"}}>
@@ -5223,13 +5247,20 @@ function EarningsPage() {
           <div className="section">
             <div className="section-hdr"><span className="section-title">Best Performing Deals</span></div>
             <div style={{display:"flex",flexDirection:"column",gap:9}}>
-              {CREATOR_DEALS_INIT.length===0&&<div style={{padding:"18px 16px",textAlign:"center",color:"var(--text3)",fontSize:"13px"}}>No deals yet — complete your first brand deal to see top performers here.</div>}
+              {paidDeals.length===0&&<div style={{padding:"18px 16px",textAlign:"center",color:"var(--text3)",fontSize:"13px"}}>No deals yet — complete your first brand deal to see top performers here.</div>}
+              {paidDeals.sort((a,b)=>(b.amount||0)-(a.amount||0)).slice(0,5).map((d,i)=>(
+                <div key={i} className="card" style={{padding:"12px 16px",display:"flex",gap:12,alignItems:"center",marginBottom:6}}>
+                  <div style={{width:34,height:34,borderRadius:10,background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white",flexShrink:0}}>{d.bi}</div>
+                  <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:600}}>{d.campaignTitle||d.brand}</div><div style={{fontSize:11,color:"var(--text2)",marginTop:1}}>{d.brand} · {d.platform}</div></div>
+                  <div style={{fontSize:16,fontWeight:400,fontFamily:"DM Serif Display,serif"}}>${(d.amount||0).toLocaleString()}</div>
+                </div>
+              ))}
             </div>
           </div>
           <div className="section">
             <div className="section-hdr"><span className="section-title">Quick Insights</span></div>
             <div className="card-lg" style={{padding:"16px 18px"}}>
-              {[["","Month over month growth","+38% in March"],["","Fastest growing niche","Wellness paying 1.4x average"],["","Avg days to payment","4.2 days after approval"],["","Top earning platform","Instagram (68% of revenue)"]].map(([icon,label,val],i,arr)=>(
+              {[["","Total deals",paidDeals.length+" funded"],["","In escrow","$"+paidDeals.filter(d=>["payment_held","content_delivered"].includes(d.status)).reduce((s,d)=>s+(d.amount||0),0).toLocaleString()+" held"],["","Released","$"+releasedDeals.reduce((s,d)=>s+(d.amount||0),0).toLocaleString()+" to you"],["","Top platform",(()=>{const pm={};paidDeals.forEach(d=>{pm[d.platform]=(pm[d.platform]||0)+(d.amount||0);});const top=Object.entries(pm).sort((a,b)=>b[1]-a[1])[0];return top?top[0]+" ($"+top[1].toLocaleString()+")":"—";})()]].map(([icon,label,val],i,arr)=>(
                 <div key={i} style={{display:"flex",gap:10,padding:"9px 0",borderBottom:i<arr.length-1?"1px solid var(--border)":"none",alignItems:"flex-start"}}>
                   <span style={{fontSize:"16px",flexShrink:0,marginTop:1}}>{icon}</span>
                   <div style={{flex:1}}><div style={{fontSize:"12px",fontWeight:600}}>{label}</div><div style={{fontSize:"12px",color:"var(--accent)",fontWeight:700,marginTop:1}}>{val}</div></div>
@@ -9506,7 +9537,7 @@ function App() {
 
   // Reload deals when navigating to deal-related pages so fresh data shows
   useEffect(()=>{
-    if(page==="dashboard"||page==="deal-room"||page==="deals"||page==="calendar") loadDeals();
+    if(page==="dashboard"||page==="deal-room"||page==="deals"||page==="calendar"||page==="earnings") loadDeals();
   },[page]);
 
   // Recover pending invite after email verification redirect.
@@ -9677,7 +9708,7 @@ function App() {
         case "invoices":     return React.createElement(InvoicesPage,{role});
         case "public-profile": return React.createElement(PublicProfilePage,{setPage,userName,userInitials,socialLinks,profilePct:PC_ITEMS.reduce((s,it)=>s+(({initials:true,bio:!!socialLinks.bio?.trim(),social:SOCIALS.some(x=>socialLinks[x.key]?.trim()),analytics:!!profileFlags.analyticsUploaded,ratecard:!!profileFlags.rateCardFilled,avail:!!profileFlags.availabilitySet})[it.key]?it.weight:0),0)});
         case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials});
-        case "earnings":     return React.createElement(EarningsPage,{});
+        case "earnings":     return React.createElement(EarningsPage,{deals});
         case "my-affiliate": return React.createElement(AffiliateCreatorPage,{authUser});
         case "contracts":    return React.createElement(ContractVaultPage,{authUser,deals});
         case "availability": return React.createElement(AvailabilityPage,{onAvailabilitySet:()=>updateProfileFlags({availabilitySet:true})});
