@@ -1122,7 +1122,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
     {k:"dashboard",l:"Dashboard",i:ICONS.home},
     {k:"deal-room",l:"Deal Room",i:ICONS.building},
     {k:"new-deal",l:"New Deal",i:ICONS.plus},
-    ...(demoMode?[{k:"marketplace",l:"Marketplace",i:ICONS.compass}]:[]),
+    ...(demoMode?[{k:"marketplace",l:"Marketplace",i:ICONS.compass,dot:true}]:[]),
     {k:"calendar",l:"Calendar",i:ICONS.calendar},
     {k:"workspace",l:"Workspace",i:ICONS.sparkles},
     {section:"Business"},
@@ -1136,7 +1136,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
     {k:"dashboard",l:"Dashboard",i:ICONS.home},
     {k:"deal-room",l:"Deal Room",i:ICONS.building},
     {k:"new-deal",l:"New Deal",i:ICONS.plus},
-    ...(demoMode?[{k:"marketplace",l:"Marketplace",i:ICONS.compass}]:[]),
+    ...(demoMode?[{k:"marketplace",l:"Marketplace",i:ICONS.compass,dot:true}]:[]),
     {k:"calendar",l:"Calendar",i:ICONS.calendar},
     {section:"Business"},
     {k:"content-tracker",l:"Content Tracker",i:ICONS.chart},
@@ -1160,10 +1160,11 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
           <div className="sidebar-label">{n.section}</div>
         </React.Fragment>
       ):(
-        <button key={n.k} className={"nav-item"+(page===n.k?" active":"")} onClick={()=>{setPage(n.k);onClose&&onClose();}} title={collapsed?n.l:undefined}>
+        <button key={n.k} className={"nav-item"+(page===n.k?" active":"")} onClick={()=>{setPage(n.k);onClose&&onClose();}} title={collapsed?n.l:undefined} style={{position:"relative"}}>
           <span className="nav-icon">{typeof n.i==="function"?n.i(16):n.i}</span>
           <span style={{flex:1}}>{n.l}</span>
           {n.soon&&<span style={{fontSize:"9px",fontWeight:700,background:"rgba(167,139,250,.15)",color:"var(--purple)",border:"1px solid rgba(167,139,250,.3)",borderRadius:99,padding:"1px 6px",letterSpacing:".04em",flexShrink:0}}>SOON</span>}
+          {n.dot&&page!==n.k&&<span style={{width:8,height:8,borderRadius:99,background:"var(--accent)",flexShrink:0,animation:"livePulse 2s ease-in-out infinite"}}/>}
         </button>
       ))}
       {!collapsed&&<div className="sidebar-footer">
@@ -9935,32 +9936,66 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
 // ─── MOBILE BOTTOM NAV ───────────────────────────────────────────────────────
 // ─── MARKETPLACE: Creator Social Feed ────────────────────────────────────────
 function MarketplaceCreatorPage({setPage,setSelected,deals,addDeal,showToast}) {
-  const [tab,setTab] = useState("discover"); // discover | matches
+  const [tab,setTab] = useState("foryou"); // foryou | following | applied
   const [liked,setLiked] = useState({}); // {campaignId: true}
   const [saved,setSaved] = useState({}); // {campaignId: true}
   const [expanded,setExpanded] = useState({}); // {campaignId: true}
+  const [following,setFollowing] = useState(()=>{
+    // Auto-follow brands the creator has worked with + pre-seed a couple
+    const worked = new Set(deals.map(d=>d.brand).filter(Boolean));
+    worked.add("GlowUp Skincare"); worked.add("ByteBrew Coffee"); worked.add("Apex Gaming");
+    return worked;
+  });
   const [filterPlatform,setFilterPlatform] = useState("All");
-  const [filterNiche,setFilterNiche] = useState("All");
-  const [heartAnim,setHeartAnim] = useState(null); // campaignId for double-tap
+  const [heartAnim,setHeartAnim] = useState(null);
+  const [brandProfile,setBrandProfile] = useState(null); // brand name or null
   const lastTapRef = useRef({});
 
+  // Unique brands for following bar
+  const allBrands = useRef(DEMO_CAMPAIGNS.reduce((acc,c)=>{
+    if(!acc.find(b=>b.name===c.brandName)) acc.push({name:c.brandName,init:c.brandInit,gradIdx:c.brandGradIdx});
+    return acc;
+  },[])).current;
+
+  // Trending: top 3 by engagement
+  const engagementRef = useRef(Object.fromEntries(DEMO_CAMPAIGNS.map(c=>[c.id,{
+    interested:Math.floor(Math.random()*80)+12,
+    views:Math.floor(Math.random()*2000)+200,
+  }]))).current;
+  const trendingIds = useRef(DEMO_CAMPAIGNS.sort((a,b)=>(engagementRef[b.id].interested)-(engagementRef[a.id].interested)).slice(0,3).map(c=>c.id)).current;
+
   const filtered = DEMO_CAMPAIGNS.filter(c=>{
+    if(tab==="following" && !following.has(c.brandName)) return false;
     if(filterPlatform!=="All" && !c.platforms.includes(filterPlatform)) return false;
-    if(filterNiche!=="All" && c.niche!==filterNiche) return false;
     return true;
   });
-  const matches = DEMO_CAMPAIGNS.filter(c=>liked[c.id]);
-  const niches = [...new Set(DEMO_CAMPAIGNS.map(c=>c.niche))];
+  const applied = DEMO_CAMPAIGNS.filter(c=>liked[c.id]);
+
+  // Brands with new campaigns (for glow ring)
+  const brandsWithNew = useRef(new Set(["GlowUp Skincare","Altitude Athletics","Verdant Home Co."])).current;
 
   const toggleLike = (id) => {
+    const campaign = DEMO_CAMPAIGNS.find(c=>c.id===id);
     setLiked(s=>{
       const next={...s};
       if(next[id]){delete next[id];}else{next[id]=true;}
       return next;
     });
-    if(!liked[id]) showToast("Interested! The brand will be notified.");
+    if(!liked[id]) {
+      showToast("Interested! "+campaign.brandName+" will be notified.");
+      // Auto-follow the brand when you apply
+      if(campaign) setFollowing(s=>{const n=new Set(s);n.add(campaign.brandName);return n;});
+    }
   };
   const toggleSave = (id) => setSaved(s=>{const n={...s};if(n[id])delete n[id];else n[id]=true;return n;});
+  const toggleFollow = (brandName) => {
+    setFollowing(s=>{
+      const n=new Set(s);
+      if(n.has(brandName)){n.delete(brandName);showToast("Unfollowed "+brandName);}
+      else{n.add(brandName);showToast("Following "+brandName);}
+      return n;
+    });
+  };
 
   const handleDoubleTap = (id) => {
     const now = Date.now();
@@ -9974,166 +10009,267 @@ function MarketplaceCreatorPage({setPage,setSelected,deals,addDeal,showToast}) {
     }
   };
 
-  // Simulated engagement numbers for social feel
-  const engagementRef = useRef(Object.fromEntries(DEMO_CAMPAIGNS.map(c=>[c.id,{
-    interested:Math.floor(Math.random()*80)+12,
-    views:Math.floor(Math.random()*2000)+200,
-  }]))).current;
+  // Brand profile modal
+  const renderBrandProfile = () => {
+    if(!brandProfile) return null;
+    const brandCampaigns = DEMO_CAMPAIGNS.filter(c=>c.brandName===brandProfile);
+    const brand = allBrands.find(b=>b.name===brandProfile);
+    if(!brand) return null;
+    const gr = bg(brand.gradIdx);
+    const isFollowing = following.has(brandProfile);
+    const totalInterested = brandCampaigns.reduce((s,c)=>s+(engagementRef[c.id]?.interested||0),0);
+    const followerCount = Math.floor(Math.random()*200)+50+following.size;
+
+    return ReactDOM.createPortal(
+      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:10000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setBrandProfile(null)}>
+        <div className="card-lg fade-in" onClick={e=>e.stopPropagation()} style={{maxWidth:480,width:"100%",maxHeight:"85vh",overflowY:"auto",padding:0}}>
+          {/* Brand header */}
+          <div style={{background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,padding:"28px 24px 20px",position:"relative"}}>
+            <button onClick={()=>setBrandProfile(null)} style={{position:"absolute",top:12,right:12,background:"rgba(255,255,255,.2)",border:"none",borderRadius:99,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:18}}>×</button>
+            <div style={{display:"flex",alignItems:"center",gap:16}}>
+              <div style={{width:64,height:64,borderRadius:16,background:"rgba(255,255,255,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontWeight:700,color:"#fff"}}>{brand.init}</div>
+              <div>
+                <div style={{fontSize:20,fontWeight:700,color:"#fff"}}>{brandProfile}</div>
+                <div style={{fontSize:13,color:"rgba(255,255,255,.7)",marginTop:2}}>{brandCampaigns[0]?.niche||"Brand"}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats row */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",borderBottom:"1px solid var(--border)"}}>
+            <div style={{textAlign:"center",padding:"14px 0"}}>
+              <div style={{fontSize:18,fontWeight:700,color:"var(--text)"}}>{brandCampaigns.length}</div>
+              <div style={{fontSize:11,color:"var(--text3)"}}>Campaigns</div>
+            </div>
+            <div style={{textAlign:"center",padding:"14px 0",borderLeft:"1px solid var(--border)",borderRight:"1px solid var(--border)"}}>
+              <div style={{fontSize:18,fontWeight:700,color:"var(--text)"}}>{followerCount}</div>
+              <div style={{fontSize:11,color:"var(--text3)"}}>Followers</div>
+            </div>
+            <div style={{textAlign:"center",padding:"14px 0"}}>
+              <div style={{fontSize:18,fontWeight:700,color:"var(--green)"}}>{totalInterested}</div>
+              <div style={{fontSize:11,color:"var(--text3)"}}>Interested</div>
+            </div>
+          </div>
+
+          {/* Follow button */}
+          <div style={{padding:"14px 20px",borderBottom:"1px solid var(--border)"}}>
+            <button onClick={()=>toggleFollow(brandProfile)} style={{width:"100%",padding:"10px",borderRadius:10,fontSize:13,fontWeight:700,border:isFollowing?"1px solid var(--border)":"none",background:isFollowing?"var(--surface)":"var(--accent)",color:isFollowing?"var(--text2)":"#fff",cursor:"pointer"}}>
+              {isFollowing?"Following ✓":"Follow"}
+            </button>
+          </div>
+
+          {/* Brand's campaigns */}
+          <div style={{padding:"16px 20px"}}>
+            <div style={{fontSize:14,fontWeight:600,color:"var(--text)",marginBottom:12}}>Campaigns</div>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {brandCampaigns.map(c=>(
+                <div key={c.id} className="card card-hover" style={{padding:"14px",display:"flex",gap:12,alignItems:"center"}} onClick={()=>{setBrandProfile(null);}}>
+                  <div style={{width:48,height:48,borderRadius:10,background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{c.heroEmoji}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:600,color:"var(--text)",display:"flex",alignItems:"center",gap:6}}>
+                      {c.title}
+                      {trendingIds.includes(c.id)&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:4,background:"rgba(248,113,113,.12)",color:"var(--red)",fontWeight:700}}>🔥 Trending</span>}
+                    </div>
+                    <div style={{fontSize:12,color:"var(--text2)",marginTop:2}}>{c.platforms.join(", ")} · ${c.budgetMin.toLocaleString()}–${c.budgetMax.toLocaleString()}</div>
+                  </div>
+                  {liked[c.id]&&<span style={{fontSize:11,fontWeight:600,color:"var(--green)",background:"rgba(52,211,153,.1)",padding:"3px 8px",borderRadius:6}}>Applied</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
+  const renderPost = (campaign,i) => {
+    const gr = bg(campaign.brandGradIdx);
+    const isLiked = liked[campaign.id];
+    const isSaved = saved[campaign.id];
+    const isExpanded = expanded[campaign.id];
+    const eng = engagementRef[campaign.id];
+    const isFollowing = following.has(campaign.brandName);
+    const isTrending = trendingIds.includes(campaign.id);
+
+    return (
+      <div key={campaign.id} className="card" style={{padding:0,overflow:"hidden",position:"relative",animation:`fadeInScale .35s ease ${Math.min(i,4)*0.06}s both`}} onClick={()=>handleDoubleTap(campaign.id)}>
+        {/* Post header */}
+        <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px"}}>
+          <div onClick={(e)=>{e.stopPropagation();setBrandProfile(campaign.brandName);}} style={{width:36,height:36,borderRadius:99,background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:"#fff",flexShrink:0,cursor:"pointer",border:isFollowing?"2px solid var(--accent)":"2px solid transparent"}}>{campaign.brandInit}</div>
+          <div style={{flex:1,minWidth:0}} onClick={(e)=>{e.stopPropagation();setBrandProfile(campaign.brandName);}}>
+            <div style={{fontSize:13,fontWeight:700,color:"var(--text)",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+              {campaign.brandName}
+              {isTrending&&<span style={{fontSize:9,padding:"1px 5px",borderRadius:4,background:"rgba(248,113,113,.12)",color:"var(--red)",fontWeight:700}}>🔥</span>}
+            </div>
+            <div style={{fontSize:11,color:"var(--text3)"}}>{campaign.postedAgo} · {campaign.niche}</div>
+          </div>
+          <button onClick={(e)=>{e.stopPropagation();toggleFollow(campaign.brandName);}} style={{padding:"5px 12px",borderRadius:8,fontSize:11,fontWeight:700,border:isFollowing?"1px solid var(--border)":"1px solid var(--accent)",background:isFollowing?"transparent":"var(--accent)",color:isFollowing?"var(--text2)":"#fff",cursor:"pointer"}}>
+            {isFollowing?"Following":"Follow"}
+          </button>
+        </div>
+
+        {/* Hero visual */}
+        <div style={{background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,aspectRatio:"4/3",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",cursor:"pointer"}}>
+          <div style={{position:"absolute",width:200,height:200,borderRadius:"50%",background:"rgba(255,255,255,.06)",top:"-20%",right:"-10%"}}/>
+          <div style={{position:"absolute",width:150,height:150,borderRadius:"50%",background:"rgba(255,255,255,.04)",bottom:"-15%",left:"-8%"}}/>
+          <div style={{fontSize:64,marginBottom:12,filter:"drop-shadow(0 4px 20px rgba(0,0,0,.2))"}}>{campaign.heroEmoji}</div>
+          <div style={{fontSize:28,fontWeight:800,color:"#fff",textAlign:"center",padding:"0 24px",lineHeight:1.3,fontFamily:"'DM Serif Display',serif",textShadow:"0 2px 12px rgba(0,0,0,.2)"}}>{campaign.title}</div>
+          <div style={{fontSize:14,color:"rgba(255,255,255,.8)",marginTop:8,textAlign:"center",padding:"0 32px",fontStyle:"italic"}}>{campaign.heroTagline}</div>
+          {/* Budget badge */}
+          <div style={{position:"absolute",bottom:14,right:14,background:"rgba(0,0,0,.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",borderRadius:10,padding:"6px 14px"}}>
+            <span style={{fontFamily:"'DM Serif Display',serif",fontSize:18,fontWeight:700,color:"#fff"}}>${campaign.budgetMin.toLocaleString()} – ${campaign.budgetMax.toLocaleString()}</span>
+          </div>
+          {/* Trending badge */}
+          {isTrending&&<div style={{position:"absolute",top:14,left:14,background:"rgba(0,0,0,.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",borderRadius:8,padding:"4px 10px",fontSize:12,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",gap:4}}>🔥 Trending</div>}
+          {/* Platform badges */}
+          <div style={{position:"absolute",top:14,right:14,display:"flex",gap:4}}>
+            {campaign.platforms.map(p=><span key={p} style={{padding:"3px 8px",borderRadius:6,fontSize:10,fontWeight:600,background:"rgba(0,0,0,.4)",backdropFilter:"blur(4px)",color:"#fff"}}>{p}</span>)}
+          </div>
+          {/* Double-tap heart flash */}
+          {heartAnim===campaign.id && (
+            <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:5}}>
+              <svg width="90" height="90" viewBox="0 0 24 24" fill="#fff" stroke="none" style={{animation:"heartFlash .7s ease forwards",filter:"drop-shadow(0 6px 30px rgba(255,255,255,.5))"}}>
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+              </svg>
+            </div>
+          )}
+        </div>
+
+        {/* Action bar */}
+        <div style={{display:"flex",alignItems:"center",padding:"10px 14px 4px",gap:0}}>
+          <button onClick={(e)=>{e.stopPropagation();toggleLike(campaign.id);}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 8px",background:"none",border:"none",cursor:"pointer",borderRadius:8,color:isLiked?"var(--green)":"var(--text3)"}}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill={isLiked?"var(--green)":"none"} stroke={isLiked?"var(--green)":"currentColor"} strokeWidth="2" strokeLinecap="round" style={{transition:"all .2s",transform:isLiked?"scale(1.15)":"scale(1)"}}>
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          </button>
+          <button onClick={(e)=>{e.stopPropagation();}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 8px",background:"none",border:"none",cursor:"pointer",borderRadius:8,color:"var(--text3)"}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </button>
+          <button onClick={(e)=>{e.stopPropagation();}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 8px",background:"none",border:"none",cursor:"pointer",borderRadius:8,color:"var(--text3)"}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </button>
+          <button onClick={(e)=>{e.stopPropagation();toggleSave(campaign.id);}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 8px",background:"none",border:"none",cursor:"pointer",borderRadius:8,color:isSaved?"var(--accent)":"var(--text3)",marginLeft:"auto"}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={isSaved?"var(--accent)":"none"} stroke={isSaved?"var(--accent)":"currentColor"} strokeWidth="2" strokeLinecap="round" style={{transition:"all .2s"}}>
+              <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Engagement counts */}
+        <div style={{padding:"0 16px 4px",fontSize:13,fontWeight:700,color:"var(--text)"}}>
+          {eng.interested+(isLiked?1:0)} interested · {eng.views.toLocaleString()} views
+        </div>
+
+        {/* Caption */}
+        <div style={{padding:"4px 16px 6px"}}>
+          <span style={{fontSize:13,fontWeight:700,color:"var(--text)",marginRight:6}}>{campaign.brandName}</span>
+          <span style={{fontSize:13,color:"var(--text2)",lineHeight:1.5}}>
+            {isExpanded ? campaign.brief : campaign.brief.slice(0,90)+"... "}
+            {campaign.brief.length>90 && !isExpanded && (
+              <button onClick={(e)=>{e.stopPropagation();setExpanded(s=>({...s,[campaign.id]:true}));}} style={{background:"none",border:"none",color:"var(--text3)",fontSize:13,cursor:"pointer"}}>more</button>
+            )}
+          </span>
+          {isExpanded && (
+            <div style={{marginTop:8}}>
+              <div style={{background:"var(--surface2)",borderRadius:8,padding:"8px 12px",marginBottom:8}}>
+                <div style={{fontSize:11,fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Deliverables</div>
+                <div style={{fontSize:12,color:"var(--text)",lineHeight:1.4}}>{campaign.deliverables}</div>
+              </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6}}>
+                <span style={{fontSize:12,color:"var(--text3)",display:"flex",alignItems:"center",gap:3}}>{ICONS.calendar(12)} {new Date(campaign.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</span>
+                <span style={{fontSize:12,color:"var(--text3)"}}>{campaign.requirements.split(",")[0]}</span>
+              </div>
+              <button onClick={(e)=>{e.stopPropagation();setExpanded(s=>({...s,[campaign.id]:false}));}} style={{background:"none",border:"none",color:"var(--text3)",fontSize:12,cursor:"pointer"}}>Show less</button>
+            </div>
+          )}
+        </div>
+
+        {/* Apply CTA */}
+        <div style={{padding:"6px 16px 14px"}}>
+          <button onClick={(e)=>{e.stopPropagation();if(!isLiked)toggleLike(campaign.id);else showToast("Already applied!");}} style={{width:"100%",padding:"10px",borderRadius:10,fontSize:13,fontWeight:700,border:isLiked?"1px solid var(--border)":"none",background:isLiked?"var(--surface)":"var(--accent)",color:isLiked?"var(--text2)":"#fff",cursor:"pointer",transition:"all .2s"}}>
+            {isLiked?"Applied ✓":"I'm Interested"}
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div style={{maxWidth:560,margin:"0 auto"}}>
       {/* Sticky header */}
-      <div style={{position:"sticky",top:0,zIndex:20,background:"var(--bg)",paddingBottom:8,paddingTop:4}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+      <div style={{position:"sticky",top:0,zIndex:20,background:"var(--bg)",paddingBottom:4,paddingTop:4}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
           <h1 style={{fontSize:22,fontWeight:700,color:"var(--text)",margin:0}}>Marketplace</h1>
           <div style={{display:"flex",gap:4}}>
-            {[{k:"discover",l:"Feed"},{k:"matches",l:"Applied ("+matches.length+")"}].map(t=>(
-              <button key={t.k} onClick={()=>setTab(t.k)} style={{padding:"6px 14px",borderRadius:99,fontSize:12,fontWeight:600,border:"1px solid "+(tab===t.k?"var(--accent)":"var(--border)"),background:tab===t.k?"var(--accent-light)":"none",color:tab===t.k?"var(--accent)":"var(--text3)",cursor:"pointer"}}>{t.l}</button>
-            ))}
+            <button onClick={()=>setTab("applied")} style={{padding:"5px 12px",borderRadius:99,fontSize:11,fontWeight:600,border:"1px solid "+(tab==="applied"?"var(--accent)":"var(--border)"),background:tab==="applied"?"var(--accent-light)":"none",color:tab==="applied"?"var(--accent)":"var(--text3)",cursor:"pointer"}}>Applied ({applied.length})</button>
           </div>
         </div>
 
-        {tab==="discover" && (
-          <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4,WebkitOverflowScrolling:"touch"}}>
+        {/* For You / Following tabs */}
+        <div style={{display:"flex",gap:0,marginBottom:8}}>
+          {[{k:"foryou",l:"For You"},{k:"following",l:"Following"}].map(t=>(
+            <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:"8px 0",fontSize:13,fontWeight:tab===t.k?700:500,color:tab===t.k?"var(--text)":"var(--text3)",borderBottom:tab===t.k?"2px solid var(--accent)":"1px solid var(--border)",background:"none",border:"none",borderBottom:tab===t.k?"2px solid var(--accent)":"1px solid var(--border)",cursor:"pointer"}}>{t.l}</button>
+          ))}
+        </div>
+
+        {/* Following bar — brand avatars with glow rings */}
+        {(tab==="foryou"||tab==="following") && following.size>0 && (
+          <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:8,paddingTop:4,WebkitOverflowScrolling:"touch"}}>
+            {allBrands.filter(b=>following.has(b.name)).map(b=>{
+              const gr=bg(b.gradIdx);
+              const hasNew = brandsWithNew.has(b.name);
+              return (
+                <div key={b.name} onClick={()=>setBrandProfile(b.name)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",flexShrink:0,minWidth:56}}>
+                  <div style={{width:48,height:48,borderRadius:99,padding:2,background:hasNew?"linear-gradient(135deg,var(--accent),var(--green))":"var(--border)"}}>
+                    <div style={{width:"100%",height:"100%",borderRadius:99,background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#fff",border:"2px solid var(--bg)"}}>{b.init}</div>
+                  </div>
+                  <span style={{fontSize:10,color:hasNew?"var(--text)":"var(--text3)",fontWeight:hasNew?600:400,maxWidth:56,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textAlign:"center"}}>{b.name.split(" ")[0]}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Platform filters */}
+        {(tab==="foryou"||tab==="following") && (
+          <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:6,WebkitOverflowScrolling:"touch"}}>
             {["All","TikTok","Instagram","YouTube"].map(p=>(
               <button key={p} onClick={()=>setFilterPlatform(p)} style={{padding:"5px 12px",borderRadius:99,fontSize:11,fontWeight:600,border:"1px solid "+(filterPlatform===p?"var(--accent)":"var(--border)"),background:filterPlatform===p?"var(--accent-light)":"var(--surface)",color:filterPlatform===p?"var(--accent)":"var(--text2)",cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{p}</button>
             ))}
-            <select value={filterNiche} onChange={e=>setFilterNiche(e.target.value)} style={{padding:"5px 10px",borderRadius:99,fontSize:11,fontWeight:600,border:"1px solid var(--border)",background:"var(--surface)",color:"var(--text2)",flexShrink:0,appearance:"none",paddingRight:8}}>
-              <option value="All">All Niches</option>
-              {niches.map(n=><option key={n} value={n}>{n}</option>)}
-            </select>
           </div>
         )}
       </div>
 
       {/* Feed */}
-      {tab==="discover" && (
+      {(tab==="foryou"||tab==="following") && (
         <div style={{display:"flex",flexDirection:"column",gap:16,paddingBottom:80}}>
           {filtered.length===0 ? (
             <div className="card-lg" style={{textAlign:"center",padding:"50px 20px"}}>
-              <p style={{fontSize:14,color:"var(--text2)"}}>No campaigns match your filters.</p>
-              <button className="btn btn-primary" style={{marginTop:14}} onClick={()=>{setFilterPlatform("All");setFilterNiche("All");}}>Clear Filters</button>
+              <p style={{fontSize:14,color:"var(--text2)"}}>{tab==="following"?"No campaigns from brands you follow yet.":"No campaigns match your filters."}</p>
+              {tab==="following"?<button className="btn btn-primary" style={{marginTop:14}} onClick={()=>setTab("foryou")}>Browse For You</button>
+              :<button className="btn btn-primary" style={{marginTop:14}} onClick={()=>setFilterPlatform("All")}>Clear Filters</button>}
             </div>
-          ) : filtered.map((campaign,i) => {
-            const gr = bg(campaign.brandGradIdx);
-            const isLiked = liked[campaign.id];
-            const isSaved = saved[campaign.id];
-            const isExpanded = expanded[campaign.id];
-            const eng = engagementRef[campaign.id];
-
-            return (
-              <div key={campaign.id} className="card" style={{padding:0,overflow:"hidden",position:"relative",animation:`fadeInScale .35s ease ${Math.min(i,4)*0.06}s both`}} onClick={()=>handleDoubleTap(campaign.id)}>
-                {/* Post header — brand avatar + name like IG */}
-                <div style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px"}}>
-                  <div style={{width:36,height:36,borderRadius:99,background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:"#fff",flexShrink:0}}>{campaign.brandInit}</div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:700,color:"var(--text)"}}>{campaign.brandName}</div>
-                    <div style={{fontSize:11,color:"var(--text3)"}}>{campaign.postedAgo} · {campaign.niche}</div>
-                  </div>
-                  <div style={{display:"flex",gap:4}}>
-                    {campaign.platforms.map(p=><span key={p} style={{padding:"2px 7px",borderRadius:4,fontSize:10,fontWeight:600,background:"var(--surface2)",color:"var(--text2)"}}>{p}</span>)}
-                  </div>
-                </div>
-
-                {/* Hero visual — like the image/video in a social post */}
-                <div style={{background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,aspectRatio:"4/3",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",cursor:"pointer"}}>
-                  {/* Decorative background circles */}
-                  <div style={{position:"absolute",width:200,height:200,borderRadius:"50%",background:"rgba(255,255,255,.06)",top:"-20%",right:"-10%"}}/>
-                  <div style={{position:"absolute",width:150,height:150,borderRadius:"50%",background:"rgba(255,255,255,.04)",bottom:"-15%",left:"-8%"}}/>
-                  <div style={{fontSize:64,marginBottom:12,filter:"drop-shadow(0 4px 20px rgba(0,0,0,.2))"}}>{campaign.heroEmoji}</div>
-                  <div style={{fontSize:28,fontWeight:800,color:"#fff",textAlign:"center",padding:"0 24px",lineHeight:1.3,fontFamily:"'DM Serif Display',serif",textShadow:"0 2px 12px rgba(0,0,0,.2)"}}>{campaign.title}</div>
-                  <div style={{fontSize:14,color:"rgba(255,255,255,.8)",marginTop:8,textAlign:"center",padding:"0 32px",fontStyle:"italic"}}>{campaign.heroTagline}</div>
-                  {/* Budget badge overlay */}
-                  <div style={{position:"absolute",bottom:14,right:14,background:"rgba(0,0,0,.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",borderRadius:10,padding:"6px 14px"}}>
-                    <span style={{fontFamily:"'DM Serif Display',serif",fontSize:18,fontWeight:700,color:"#fff"}}>${campaign.budgetMin.toLocaleString()} – ${campaign.budgetMax.toLocaleString()}</span>
-                  </div>
-                  {/* Double-tap heart flash */}
-                  {heartAnim===campaign.id && (
-                    <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none",zIndex:5}}>
-                      <svg width="90" height="90" viewBox="0 0 24 24" fill="#fff" stroke="none" style={{animation:"heartFlash .7s ease forwards",filter:"drop-shadow(0 6px 30px rgba(255,255,255,.5))"}}>
-                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                {/* Action bar — right under the image like IG */}
-                <div style={{display:"flex",alignItems:"center",padding:"10px 14px 4px",gap:0}}>
-                  <button onClick={(e)=>{e.stopPropagation();toggleLike(campaign.id);}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 8px",background:"none",border:"none",cursor:"pointer",borderRadius:8,color:isLiked?"var(--green)":"var(--text3)"}}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill={isLiked?"var(--green)":"none"} stroke={isLiked?"var(--green)":"currentColor"} strokeWidth="2" strokeLinecap="round" style={{transition:"all .2s",transform:isLiked?"scale(1.15)":"scale(1)"}}>
-                      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-                    </svg>
-                  </button>
-                  <button onClick={(e)=>{e.stopPropagation();}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 8px",background:"none",border:"none",cursor:"pointer",borderRadius:8,color:"var(--text3)"}}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                  </button>
-                  <button onClick={(e)=>{e.stopPropagation();}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 8px",background:"none",border:"none",cursor:"pointer",borderRadius:8,color:"var(--text3)"}}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                  </button>
-                  <button onClick={(e)=>{e.stopPropagation();toggleSave(campaign.id);}} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 8px",background:"none",border:"none",cursor:"pointer",borderRadius:8,color:isSaved?"var(--accent)":"var(--text3)",marginLeft:"auto"}}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill={isSaved?"var(--accent)":"none"} stroke={isSaved?"var(--accent)":"currentColor"} strokeWidth="2" strokeLinecap="round" style={{transition:"all .2s"}}>
-                      <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Engagement counts */}
-                <div style={{padding:"0 16px 4px",fontSize:13,fontWeight:700,color:"var(--text)"}}>
-                  {eng.interested+(isLiked?1:0)} interested · {eng.views.toLocaleString()} views
-                </div>
-
-                {/* Caption area — like IG caption */}
-                <div style={{padding:"4px 16px 6px"}}>
-                  <span style={{fontSize:13,fontWeight:700,color:"var(--text)",marginRight:6}}>{campaign.brandName}</span>
-                  <span style={{fontSize:13,color:"var(--text2)",lineHeight:1.5}}>
-                    {isExpanded ? campaign.brief : campaign.brief.slice(0,90)+"... "}
-                    {campaign.brief.length>90 && !isExpanded && (
-                      <button onClick={(e)=>{e.stopPropagation();setExpanded(s=>({...s,[campaign.id]:true}));}} style={{background:"none",border:"none",color:"var(--text3)",fontSize:13,cursor:"pointer"}}>more</button>
-                    )}
-                  </span>
-                  {isExpanded && (
-                    <div style={{marginTop:8}}>
-                      <div style={{background:"var(--surface2)",borderRadius:8,padding:"8px 12px",marginBottom:8}}>
-                        <div style={{fontSize:11,fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>Deliverables</div>
-                        <div style={{fontSize:12,color:"var(--text)",lineHeight:1.4}}>{campaign.deliverables}</div>
-                      </div>
-                      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6}}>
-                        <span style={{fontSize:12,color:"var(--text3)",display:"flex",alignItems:"center",gap:3}}>{ICONS.calendar(12)} {new Date(campaign.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</span>
-                        <span style={{fontSize:12,color:"var(--text3)"}}>{campaign.requirements.split(",")[0]}</span>
-                      </div>
-                      <button onClick={(e)=>{e.stopPropagation();setExpanded(s=>({...s,[campaign.id]:false}));}} style={{background:"none",border:"none",color:"var(--text3)",fontSize:12,cursor:"pointer"}}>Show less</button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Apply CTA */}
-                <div style={{padding:"6px 16px 14px"}}>
-                  <button onClick={(e)=>{e.stopPropagation();if(!isLiked)toggleLike(campaign.id);else showToast("Already applied!");}} style={{width:"100%",padding:"10px",borderRadius:10,fontSize:13,fontWeight:700,border:isLiked?"1px solid var(--border)":"none",background:isLiked?"var(--surface)":"var(--accent)",color:isLiked?"var(--text2)":"#fff",cursor:"pointer",transition:"all .2s"}}>
-                    {isLiked?"Applied ✓":"I'm Interested"}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          ) : filtered.map((campaign,i) => renderPost(campaign,i))}
         </div>
       )}
 
-      {/* Applied / Matches tab */}
-      {tab==="matches" && (
+      {/* Applied tab */}
+      {tab==="applied" && (
         <div style={{display:"flex",flexDirection:"column",gap:10,paddingBottom:80}}>
-          {matches.length===0 ? (
+          {applied.length===0 ? (
             <div className="card-lg" style={{textAlign:"center",padding:"40px 20px"}}>
               <p style={{fontSize:14,color:"var(--text2)"}}>No applications yet. Browse the feed and tap "I'm Interested" on campaigns you'd love to work on!</p>
-              <button className="btn btn-primary" style={{marginTop:16}} onClick={()=>setTab("discover")}>Browse Feed</button>
+              <button className="btn btn-primary" style={{marginTop:16}} onClick={()=>setTab("foryou")}>Browse Feed</button>
             </div>
-          ) : matches.map(c=>{
+          ) : applied.map(c=>{
             const gr = bg(c.brandGradIdx);
             const statuses = ["Brand reviewing your profile","Offer incoming!","Under consideration"];
             const status = statuses[c.id.charCodeAt(c.id.length-1)%statuses.length];
             const isOffer = status.includes("Offer");
             return (
               <div key={c.id} className="card card-hover" style={{padding:"16px 18px",display:"flex",gap:14,alignItems:"center"}}>
-                <div style={{width:42,height:42,borderRadius:10,background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#fff",flexShrink:0}}>{c.brandInit}</div>
+                <div onClick={(e)=>{e.stopPropagation();setBrandProfile(c.brandName);}} style={{width:42,height:42,borderRadius:10,background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#fff",flexShrink:0,cursor:"pointer"}}>{c.brandInit}</div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:14,fontWeight:600,color:"var(--text)"}}>{c.title}</div>
                   <div style={{fontSize:12,color:"var(--text2)"}}>{c.brandName} · {c.platforms.join(", ")}</div>
@@ -10147,6 +10283,9 @@ function MarketplaceCreatorPage({setPage,setSelected,deals,addDeal,showToast}) {
           })}
         </div>
       )}
+
+      {/* Brand Profile Modal */}
+      {renderBrandProfile()}
     </div>
   );
 }
