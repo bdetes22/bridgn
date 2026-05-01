@@ -453,6 +453,52 @@ const DEMO_CREATORS = [
   {id:"dcr-12",name:"Chris Nakamura",init:"CN",handle:"@chrisnaka",niche:"Tech & Gaming",platforms:["YouTube","TikTok"],followers:"220K",engagement:"4.7%",rating:4.7,loc:"San Francisco, CA",bio:"Software engineer by day, tech reviewer by night.",gradIdx:5,avgRate:"$2,500",completedDeals:19},
 ];
 
+// ─── Demo Deals — seeded when ?demo=true ────────────────────────────────────
+const DEMO_DEALS = [
+  {id:"dd-1",brand:"GlowUp Skincare",bi:"GU",ci:0,amount:1800,platform:"TikTok",status:"content_delivered",deadline:"2026-06-15",deliverables:"2x TikTok videos (30-60s) + 1 Instagram Reel",campaignTitle:"Summer Glow Launch",progress:90,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contentFiles:[{name:"glowup-tiktok-v1.mp4",url:"#",size:"14.2 MB"},{name:"glowup-reel.mp4",url:"#",size:"8.7 MB"}],source:"marketplace",creatorUserId:"demo",creatorName:"You",brandUserId:"demo-brand-1"},
+  {id:"dd-2",brand:"Altitude Athletics",bi:"AA",ci:1,amount:3200,platform:"YouTube",status:"payment_held",deadline:"2026-06-28",deliverables:"1x YouTube unboxing (5-10 min) + 1 TikTok short",campaignTitle:"New Drop Unboxing",progress:95,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contentFiles:[{name:"altitude-unboxing-final.mp4",url:"#",size:"248 MB"}],source:"direct",creatorUserId:"demo",creatorName:"You",brandUserId:"demo-brand-2"},
+  {id:"dd-3",brand:"ByteBrew Coffee",bi:"BB",ci:2,amount:750,platform:"Instagram",status:"contract_signed",deadline:"2026-07-01",deliverables:"3x Instagram Stories + 1 Reel",campaignTitle:"Morning Routine Collab",progress:50,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contentFiles:null,source:"marketplace",creatorUserId:"demo",creatorName:"You",brandUserId:"demo-brand-3"},
+  {id:"dd-4",brand:"NovaTech Gadgets",bi:"NT",ci:3,amount:4000,platform:"YouTube",status:"Active",deadline:"2026-07-10",deliverables:"1x in-depth YouTube review (8-15 min)",campaignTitle:"Product Review Series",progress:30,escrow:false,escrowReleased:false,briefSubmitted:true,contractSigned:false,contentFiles:null,source:"direct",creatorUserId:"demo",creatorName:"You",brandUserId:"demo-brand-4"},
+  {id:"dd-5",brand:"PulseWear Fitness",bi:"PW",ci:5,amount:2500,platform:"Instagram",status:"payment_released",deadline:"2026-05-20",deliverables:"Daily story updates + 4 feed posts over 30 days",campaignTitle:"30-Day Challenge",progress:100,escrow:true,escrowReleased:true,briefSubmitted:true,contractSigned:true,contentFiles:[{name:"pulsewear-stories-batch.zip",url:"#",size:"42 MB"},{name:"pulsewear-feed-posts.zip",url:"#",size:"18 MB"}],source:"marketplace",creatorUserId:"demo",creatorName:"You",brandUserId:"demo-brand-5"},
+  {id:"dd-6",brand:"CloudNine Snacks",bi:"CN",ci:1,amount:600,platform:"TikTok",status:"brief_submitted",deadline:"2026-06-20",deliverables:"2x TikTok taste test videos (15-45s each)",campaignTitle:"Taste Test Reaction",progress:20,escrow:false,escrowReleased:false,briefSubmitted:true,contractSigned:false,contentFiles:null,source:"marketplace",creatorUserId:"demo",creatorName:"You",brandUserId:"demo-brand-6"},
+  {id:"dd-7",brand:"Riviera Swimwear",bi:"RS",ci:2,amount:2800,platform:"Instagram",status:"content_submitted",deadline:"2026-07-05",deliverables:"1x Instagram carousel (8-10 photos) + 1 Reel",campaignTitle:"Summer Lookbook",progress:70,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contentFiles:[{name:"riviera-lookbook-carousel.zip",url:"#",size:"32 MB"},{name:"riviera-reel-draft.mp4",url:"#",size:"11 MB"}],source:"direct",creatorUserId:"demo",creatorName:"You",brandUserId:"demo-brand-7"},
+  {id:"dd-8",brand:"Solstice Travel",bi:"ST",ci:0,amount:4500,platform:"YouTube",status:"Completed",deadline:"2026-04-15",deliverables:"1x travel vlog (10-20 min) + 5 Instagram Stories",campaignTitle:"Travel Vlog Takeover",progress:100,escrow:true,escrowReleased:true,briefSubmitted:true,contractSigned:true,contentFiles:[{name:"solstice-vlog-final.mp4",url:"#",size:"1.2 GB"},{name:"solstice-stories.zip",url:"#",size:"28 MB"}],source:"marketplace",creatorUserId:"demo",creatorName:"You",brandUserId:"demo-brand-8"},
+];
+
+// Demo notifications
+const DEMO_NOTIFICATIONS = [
+  {id:"dn-1",type:"payment_released",payload:{message:"Payment of $2,500 released from PulseWear Fitness for 30-Day Challenge"},created_at:new Date(Date.now()-1*86400000).toISOString(),read_at:null},
+  {id:"dn-2",type:"content_submitted",payload:{message:"Your content for GlowUp Skincare — Summer Glow Launch has been approved!"},created_at:new Date(Date.now()-2*86400000).toISOString(),read_at:null},
+  {id:"dn-3",type:"contract_sent",payload:{message:"New deal offer from NovaTech Gadgets — Product Review Series ($4,000)"},created_at:new Date(Date.now()-3*86400000).toISOString(),read_at:null},
+  {id:"dn-4",type:"contract_signed",payload:{message:"Contract signed for ByteBrew Coffee — Morning Routine Collab"},created_at:new Date(Date.now()-4*86400000).toISOString(),read_at:new Date(Date.now()-3.5*86400000).toISOString()},
+  {id:"dn-5",type:"payment_held",payload:{message:"Altitude Athletics funded escrow — $3,200 for New Drop Unboxing"},created_at:new Date(Date.now()-5*86400000).toISOString(),read_at:new Date(Date.now()-4*86400000).toISOString()},
+  {id:"dn-6",type:"brief_submitted",payload:{message:"Brief submitted for CloudNine Snacks — Taste Test Reaction"},created_at:new Date(Date.now()-6*86400000).toISOString(),read_at:new Date(Date.now()-5*86400000).toISOString()},
+  {id:"dn-7",type:"new_message",payload:{message:"New message from Riviera Swimwear about Summer Lookbook"},created_at:new Date(Date.now()-7*86400000).toISOString(),read_at:new Date(Date.now()-6*86400000).toISOString()},
+  {id:"dn-8",type:"payment_released",payload:{message:"Payment of $4,500 released from Solstice Travel for Travel Vlog Takeover"},created_at:new Date(Date.now()-12*86400000).toISOString(),read_at:new Date(Date.now()-11*86400000).toISOString()},
+];
+
+// Demo message threads (from: "me" = creator/current user, "other" = other party)
+const DEMO_THREADS = [
+  {id:"dt-1",name:"GlowUp Skincare",initials:"GU",gradIdx:0,unread:1,msgs:[
+    {id:"m1",from:"other",text:"Hey! We loved your application for the Summer Glow Launch campaign. Would you be available to start filming next week?",ts:Date.now()-5*86400000},
+    {id:"m2",from:"me",text:"Yes absolutely! I'm free next week. Should I follow the brief as-is or did you want any tweaks to the concept?",ts:Date.now()-5*86400000+3600000},
+    {id:"m3",from:"other",text:"The brief is great as-is! One thing — can you make sure to show the SPF rating on the bottle? That's a key selling point for us.",ts:Date.now()-4*86400000},
+    {id:"m4",from:"me",text:"For sure, I'll make it prominent in the unboxing shot. I'll also mention it verbally. Sound good?",ts:Date.now()-4*86400000+1800000},
+    {id:"m5",from:"other",text:"Perfect! Looking forward to seeing the first draft. Take your time and keep it authentic 🙌",ts:Date.now()-3*86400000},
+  ]},
+  {id:"dt-2",name:"Altitude Athletics",initials:"AA",gradIdx:1,unread:0,msgs:[
+    {id:"m6",from:"other",text:"The unboxing video was amazing! Our team loved it. We've funded the escrow so you should see $3,200 held.",ts:Date.now()-6*86400000},
+    {id:"m7",from:"me",text:"Thank you so much! I really enjoyed the product. The moisture-wicking fabric is legit — made my workout way more comfortable.",ts:Date.now()-6*86400000+7200000},
+    {id:"m8",from:"other",text:"Love hearing that! We might have another campaign coming up in August. Would you be interested in a longer-term partnership?",ts:Date.now()-5*86400000},
+    {id:"m9",from:"me",text:"Definitely interested! Just let me know the details when you're ready and we can work something out.",ts:Date.now()-5*86400000+3600000},
+  ]},
+  {id:"dt-3",name:"ByteBrew Coffee",initials:"BB",gradIdx:2,unread:2,msgs:[
+    {id:"m10",from:"other",text:"Welcome to the Morning Routine Collab! We just sent over the contract — take a look when you get a chance.",ts:Date.now()-3*86400000},
+    {id:"m11",from:"me",text:"Got it! Just signed the contract. Quick question — do you have specific hashtags you want me to use?",ts:Date.now()-2*86400000},
+    {id:"m12",from:"other",text:"Great question! Use #ByteBrewMorning and #FuelYourDay. Also tag our main account @bytebrew in all posts.",ts:Date.now()-1*86400000},
+  ]},
+];
+
 const CONTRACT_TEMPLATES = [
   {id:"flat",label:"Flat Fee",desc:"One-time payment upon deliverable approval",icon:""},
   {id:"gifted",label:"Gifted / Product Only",desc:"No cash — product provided in exchange for content",icon:""},
@@ -8054,9 +8100,21 @@ function ShortlistsPage({setPage,setSelected}) {
 }
 
 // ─── MESSAGES ─────────────────────────────────────────────────────────────────
-function MessagesPage({setPage}) {
+function MessagesPage({setPage,demoMode}) {
   const loading = useSkeleton();
-  const [threads,setThreads] = useState([]);
+  const [threads,setThreads] = useState(()=>{
+    if(!demoMode) return [];
+    return DEMO_THREADS.map(t=>{
+      const lastMsg = t.msgs[t.msgs.length-1];
+      return {
+        id:t.id,name:t.name,initials:t.initials,ci:t.gradIdx,
+        msgs:t.msgs,
+        lastMsg:lastMsg?.text||"",
+        ts:lastMsg?.ts||Date.now(),
+        unread:t.unread,
+      };
+    });
+  });
   const [activeId,setActiveId] = useState(null);
   const [msgInput,setMsgInput] = useState("");
   const [newModal,setNewModal] = useState(false);
@@ -8275,17 +8333,18 @@ function MessagesPage({setPage}) {
 }
 
 // ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
-function NotificationsPage({setPage,authUser}) {
+function NotificationsPage({setPage,authUser,demoMode}) {
   const loading = useSkeleton();
   const [notifs,setNotifs] = useState([]);
   const [filter,setFilter] = useState("All");
 
-  // Load real notifications from Supabase
+  // Load real notifications from Supabase (or demo data)
   useEffect(()=>{
     if(!authUser) return;
+    if(demoMode) { setNotifs(DEMO_NOTIFICATIONS); return; }
     supabase.from("inbox_notifications").select("*").eq("user_id",authUser.id).order("created_at",{ascending:false}).limit(50)
       .then(({data})=>{ if(data) setNotifs(data); });
-  },[authUser]);
+  },[authUser,demoMode]);
 
   const typeColors = {
     payment_held:"var(--teal)",payment_failed:"var(--red)",payment_released:"var(--green)",
@@ -11117,14 +11176,24 @@ function App() {
 
   // Load deals from Supabase when user authenticates or navigates to a deal page
   const loadDeals = React.useCallback(()=>{
-    if(!authUser) return;
+    if(!authUser || demoMode) return;
     fetch(`${BRIDGN_API_URL}/api/deals?userId=${authUser.id}`)
       .then(r=>r.ok?r.json():null)
       .then(data=>{
         if(data?.deals?.length) setDeals(data.deals);
       })
       .catch(e=>console.error("[loadDeals] Failed:", e));
-  },[authUser]);
+  },[authUser,demoMode]);
+
+  // Seed demo data when demo mode is active
+  useEffect(()=>{
+    if(demoMode && authUser) {
+      setDeals(DEMO_DEALS.map(d=>({...d,creatorUserId:authUser.id})));
+      setProfileFlags({analyticsUploaded:true,rateCardFilled:true,availabilitySet:true});
+      setStripeConnected(true);
+      setSocialLinks({ig:"creator.demo",tt:"creator.demo",yt:"",tw:"",web:"bridgn.com",bio:"Demo creator account — showcasing the bridgn platform",location:"Los Angeles, CA"});
+    }
+  },[demoMode,authUser]);
 
   useEffect(()=>{ loadDeals(); },[authUser]);
 
@@ -11308,8 +11377,8 @@ function App() {
         case "contracts":    return React.createElement(ContractVaultPage,{authUser,deals});
         case "availability": return React.createElement(AvailabilityPage,{onAvailabilitySet:()=>updateProfileFlags({availabilitySet:true})});
         case "expenses":     return React.createElement(ExpensesPage,{});
-        case "messages":     return React.createElement(MessagesPage,{setPage});
-        case "notifications":return React.createElement(NotificationsPage,{setPage,authUser});
+        case "messages":     return React.createElement(MessagesPage,{setPage,demoMode});
+        case "notifications":return React.createElement(NotificationsPage,{setPage,authUser,demoMode});
         case "settings":     return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role});
         default:             return React.createElement(CreatorDashboard,{setPage,setSelected,deals,availStatus,setAvailStatus,userName,profileFlags});
       }
@@ -11337,8 +11406,8 @@ function App() {
         case "ai-match":      return React.createElement(AIMatchPage,{setPage,setSelected});
         case "shortlists":    return React.createElement(ShortlistsPage,{setPage,setSelected});
         case "invoices":      return React.createElement(InvoicesPage,{role});
-        case "messages":      return React.createElement(MessagesPage,{setPage});
-        case "notifications": return React.createElement(NotificationsPage,{setPage,authUser});
+        case "messages":      return React.createElement(MessagesPage,{setPage,demoMode});
+        case "notifications": return React.createElement(NotificationsPage,{setPage,authUser,demoMode});
         case "settings":      return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role,socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials});
         default:              return React.createElement(BrandDashboard,{setPage,setSelected,authUser});
       }
