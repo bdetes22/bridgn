@@ -2577,7 +2577,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           amount:             activeDeal.amount,
           brandUserId:        authUser.id,
           brandEmail:         authUser.email,
-          brandName:          authUser.user_metadata?.full_name || authUser.email,
+          brandName:          authUser.user_metadata?.full_name || authUser.user_metadata?.company_name || authUser.email,
           creatorUserId:      activeDeal.creatorUserId || "",
           escrowReleaseDays:  escrowReleaseDays,
         }),
@@ -2598,7 +2598,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           payment_method_type: "us_bank_account",
           payment_method_data: {
             billing_details: {
-              name:  authUser.user_metadata?.full_name || authUser.email,
+              name:  authUser.user_metadata?.full_name || authUser.user_metadata?.company_name || authUser.email,
               email: authUser.email,
             },
           },
@@ -2717,16 +2717,16 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
             <div className="page-title">Deal Room</div>
             <div className="page-subtitle">Your partnership workspace. Click a deal to open it.</div>
           </div>
-          {!isBrand&&<button className="btn btn-primary" onClick={()=>setPage("new-deal")}>+ New Deal</button>}
+          <button className="btn btn-primary" onClick={()=>setPage("new-deal")}>+ New Deal</button>
         </div>
 
         {deals.length===0?(
           <div className="card" style={{padding:"48px 20px",textAlign:"center"}}>
             <div style={{fontSize:15,fontWeight:600,marginBottom:8}}>No deals yet</div>
             <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.65,marginBottom:16,maxWidth:320,margin:"0 auto 16px"}}>
-              {isBrand?"When a creator invites you to a deal, it will appear here.":"Create your first deal to get started."}
+              Create your first deal to get started, or wait for an invite from {isBrand?"a creator":"a brand"}.
             </div>
-            <button className="btn btn-primary btn-sm" onClick={()=>setPage(isBrand?"dashboard":"new-deal")}>{isBrand?"Back to Dashboard":"Create a Deal"}</button>
+            <button className="btn btn-primary btn-sm" onClick={()=>setPage("new-deal")}>Create a Deal</button>
           </div>
         ):(<>
           {activeDeals.length>0&&(
@@ -2793,7 +2793,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
     if(!msgInput.trim()||!activeDeal||!authUser) return;
     const text=msgInput.trim();
     const tempId="temp-"+Date.now();
-    const userName=authUser.user_metadata?.full_name||authUser.email?.split("@")[0]||"";
+    const userName=authUser.user_metadata?.full_name||authUser.user_metadata?.company_name||authUser.email?.split("@")[0]||"";
     // Optimistic insert
     setMsgs(m=>[...m,{id:tempId,from:"me",text,time:"Just now",animate:false,senderRole:role,senderName:userName}]);
     setMsgInput("");
@@ -6668,7 +6668,7 @@ function AffiliateCreatorPage({authUser}) {
   useEffect(()=>{
     if(!authUser) return;
     // Load all links where creator_name matches this user's name
-    const name = authUser.user_metadata?.full_name||authUser.email?.split("@")[0]||"";
+    const name = authUser.user_metadata?.full_name||authUser.user_metadata?.company_name||authUser.email?.split("@")[0]||"";
     if(!name) return;
     supabase.from("affiliate_links").select("*").eq("creator_name",name).eq("is_active",true).order("created_at",{ascending:false})
       .then(({data})=>{ if(data) setLinks(data); });
@@ -7621,6 +7621,22 @@ function SettingsPage({authUser,darkMode,setDarkMode,onSignOut,role}) {
     return {showInDiscovery:true,showAvailability:true,showEarnings:false};
   });
 
+  // Display name editing
+  const currentName = authUser?.user_metadata?.full_name || authUser?.user_metadata?.company_name || "";
+  const [editName,setEditName] = useState(currentName);
+  const [nameSaving,setNameSaving] = useState(false);
+
+  const saveDisplayName = async () => {
+    const trimmed = editName.trim();
+    if(!trimmed || trimmed === currentName) return;
+    setNameSaving(true);
+    const metaKey = role === "brand" ? "company_name" : "full_name";
+    const {error} = await supabase.auth.updateUser({data:{[metaKey]:trimmed}});
+    setNameSaving(false);
+    if(error) { showToast(error.message,"error"); return; }
+    showToast("Display name updated. Refresh to see changes everywhere.");
+  };
+
   // Account section state
   const [showPwForm,setShowPwForm] = useState(false);
   const [pwNew,setPwNew] = useState("");
@@ -7693,6 +7709,13 @@ function SettingsPage({authUser,darkMode,setDarkMode,onSignOut,role}) {
       {/* Account */}
       {sectionCard(<>
         {sectionTitle("Account")}
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:11,fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:5}}>{role==="brand"?"Company Name":"Display Name"}</div>
+          <div style={{display:"flex",gap:8}}>
+            <input className="fi" value={editName} onChange={e=>setEditName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveDisplayName()} placeholder={role==="brand"?"Your company name":"Your full name"} style={{flex:1,padding:"9px 13px",fontSize:13}}/>
+            <button className="btn btn-primary btn-sm" onClick={saveDisplayName} disabled={nameSaving||!editName.trim()||editName.trim()===currentName} style={{flexShrink:0,opacity:nameSaving||!editName.trim()||editName.trim()===currentName?.5:1}}>{nameSaving?"Saving...":"Save"}</button>
+          </div>
+        </div>
         <div style={{marginBottom:14}}>
           <div style={{fontSize:11,fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:5}}>Email Address</div>
           <div style={{fontSize:13,padding:"10px 14px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",color:"var(--text2)"}}>{authUser?.email||"—"}</div>
@@ -9452,7 +9475,7 @@ function App() {
     return React.createElement(AuthScreen,{onAuth:u=>{setAuthUser(u);const r=u.user_metadata?.role||"creator";setRole(r);},defaultMode:authMode,onBack:()=>setShowAuth(false)});
   }
 
-  const userName = authUser.user_metadata?.full_name || authUser.email.split("@")[0];
+  const userName = authUser.user_metadata?.full_name || authUser.user_metadata?.company_name || authUser.email.split("@")[0];
   const userInitials = userName.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
 
   const render = () => {
