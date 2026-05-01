@@ -1186,6 +1186,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
     {k:"calendar",l:"Calendar",i:ICONS.calendar},
     {section:"Business"},
     ...(demoMode?[{k:"creator-crm",l:"Creator CRM",i:ICONS.users}]:[]),
+    {k:"review-queue",l:"Review Queue",i:ICONS.clipboard},
     {k:"content-tracker",l:"Content Tracker",i:ICONS.chart},
     {k:"spending",l:"Spending",i:ICONS.dollar},
     {section:"Account"},
@@ -10588,6 +10589,162 @@ function MarketplaceBrandPage({setPage,setSelected,deals,addDeal,showToast,userN
   );
 }
 
+// ─── CONTENT REVIEW QUEUE — Brand reviews submitted content ─────────────────
+function ReviewQueuePage({deals=[],setPage,setSelected,showToast}) {
+  const [filter,setFilter] = useState("pending"); // pending | approved | revision | all
+  const [reviewModal,setReviewModal] = useState(null); // deal object or null
+  const [revisionNote,setRevisionNote] = useState("");
+  const [localStatuses,setLocalStatuses] = useState({}); // {dealId: "approved"|"revision"|"pending"}
+
+  // Items that have content submitted
+  const withContent = deals.filter(d=>d.contentFiles?.length>0 || d.contentFile);
+  const items = withContent.map(d=>{
+    const status = localStatuses[d.id] || (d.escrowReleased?"approved":(d.status==="Completed"?"approved":"pending"));
+    return {...d,reviewStatus:status};
+  });
+
+  const filtered = filter==="all"?items:items.filter(d=>d.reviewStatus===filter);
+  const pendingCount = items.filter(d=>d.reviewStatus==="pending").length;
+  const approvedCount = items.filter(d=>d.reviewStatus==="approved").length;
+  const revisionCount = items.filter(d=>d.reviewStatus==="revision").length;
+
+  const handleApprove = (dealId) => {
+    setLocalStatuses(s=>({...s,[dealId]:"approved"}));
+    setReviewModal(null);
+    showToast("Content approved!");
+  };
+
+  const handleRequestRevision = (dealId) => {
+    if(!revisionNote.trim()) return;
+    setLocalStatuses(s=>({...s,[dealId]:"revision"}));
+    setReviewModal(null);
+    setRevisionNote("");
+    showToast("Revision requested — creator will be notified.");
+  };
+
+  const statusColors = {pending:"var(--accent)",approved:"var(--green)",revision:"#f0a050"};
+  const statusLabels = {pending:"Needs Review",approved:"Approved",revision:"Revision Requested"};
+
+  return (
+    <div style={{maxWidth:800,margin:"0 auto"}}>
+      <div className="ph-row" style={{marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
+        <div>
+          <h1 className="page-title" style={{fontSize:24,fontWeight:700}}>Review Queue</h1>
+          <p style={{fontSize:13,color:"var(--text2)",marginTop:2}}>Review submitted content from your creators</p>
+        </div>
+        {pendingCount>0&&<span className="badge badge-green" style={{fontSize:13,padding:"6px 14px"}}>{pendingCount} pending</span>}
+      </div>
+
+      {/* Stats */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:20}}>
+        <div className="card" style={{padding:"14px 18px",textAlign:"center",cursor:"pointer",border:filter==="pending"?"1px solid var(--accent)":undefined}} onClick={()=>setFilter("pending")}>
+          <div style={{fontSize:22,fontWeight:700,color:"var(--accent)",fontFamily:"'DM Serif Display',serif"}}>{pendingCount}</div>
+          <div style={{fontSize:11,color:"var(--text3)",fontWeight:600}}>Needs Review</div>
+        </div>
+        <div className="card" style={{padding:"14px 18px",textAlign:"center",cursor:"pointer",border:filter==="approved"?"1px solid var(--green)":undefined}} onClick={()=>setFilter("approved")}>
+          <div style={{fontSize:22,fontWeight:700,color:"var(--green)",fontFamily:"'DM Serif Display',serif"}}>{approvedCount}</div>
+          <div style={{fontSize:11,color:"var(--text3)",fontWeight:600}}>Approved</div>
+        </div>
+        <div className="card" style={{padding:"14px 18px",textAlign:"center",cursor:"pointer",border:filter==="revision"?"1px solid #f0a050":undefined}} onClick={()=>setFilter("revision")}>
+          <div style={{fontSize:22,fontWeight:700,color:"#f0a050",fontFamily:"'DM Serif Display',serif"}}>{revisionCount}</div>
+          <div style={{fontSize:11,color:"var(--text3)",fontWeight:600}}>Revisions</div>
+        </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{display:"flex",gap:0,marginBottom:16,borderBottom:"1px solid var(--border)"}}>
+        {[{k:"pending",l:"Pending"},{k:"approved",l:"Approved"},{k:"revision",l:"Revisions"},{k:"all",l:"All"}].map(t=>(
+          <button key={t.k} onClick={()=>setFilter(t.k)} style={{padding:"10px 18px",fontSize:13,fontWeight:filter===t.k?700:500,color:filter===t.k?"var(--accent)":"var(--text3)",background:"none",border:"none",borderBottom:filter===t.k?"2px solid var(--accent)":"2px solid transparent",cursor:"pointer"}}>{t.l}</button>
+        ))}
+      </div>
+
+      {/* Queue */}
+      {filtered.length===0?(
+        <div className="card-lg" style={{textAlign:"center",padding:"50px 20px"}}>
+          <div style={{fontSize:32,marginBottom:12}}>{filter==="pending"?"✅":"📋"}</div>
+          <h3 style={{fontSize:16,fontWeight:600,marginBottom:6,color:"var(--text)"}}>{filter==="pending"?"All caught up!":"No items"}</h3>
+          <p style={{fontSize:13,color:"var(--text2)"}}>{filter==="pending"?"No content waiting for your review.":"No content in this category yet."}</p>
+        </div>
+      ):(
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {filtered.map(d=>{
+            const gr=bg(d.ci);
+            const files = d.contentFiles || (d.contentFile?[{name:d.contentFile,url:"#",size:"—"}]:[]);
+            const color = statusColors[d.reviewStatus];
+            const label = statusLabels[d.reviewStatus];
+            const daysSinceDeadline = Math.floor((Date.now()-new Date(d.deadline).getTime())/(86400000));
+            const isOverdue = daysSinceDeadline > 0 && d.reviewStatus==="pending";
+
+            return (
+              <div key={d.id} className="card card-hover" style={{padding:0,overflow:"hidden",borderLeft:"3px solid "+color}}>
+                <div style={{padding:"16px 18px"}}>
+                  <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+                    <div style={{width:42,height:42,borderRadius:10,background:`linear-gradient(135deg,${gr[0]||bc(d.ci)},${gr[1]||bc(d.ci)})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:"#fff",flexShrink:0}}>{d.bi||(d.creatorName||"?").slice(0,2).toUpperCase()}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap"}}>
+                        <span style={{fontSize:14,fontWeight:600,color:"var(--text)"}}>{d.creatorName||"Creator"}</span>
+                        <span style={{fontSize:11,fontWeight:600,color:color,background:color+"1a",padding:"2px 8px",borderRadius:4}}>{label}</span>
+                        {isOverdue&&<span style={{fontSize:10,fontWeight:700,color:"var(--red)",background:"rgba(248,113,113,.1)",padding:"2px 6px",borderRadius:4}}>Overdue</span>}
+                      </div>
+                      <div style={{fontSize:12,color:"var(--text2)",marginBottom:8}}>{d.campaignTitle} · {d.platform} · ${d.amount.toLocaleString()}</div>
+
+                      {/* Files */}
+                      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
+                        {files.map((f,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",background:"var(--surface2)",borderRadius:8,border:"1px solid var(--border)"}}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <span style={{fontSize:11,color:"var(--text)",fontWeight:500}}>{f.name}</span>
+                            <span style={{fontSize:10,color:"var(--text3)"}}>{f.size}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Actions */}
+                      <div style={{display:"flex",gap:8}}>
+                        {d.reviewStatus==="pending"&&<>
+                          <button className="btn btn-primary" style={{fontSize:12,padding:"7px 16px",minHeight:"auto"}} onClick={()=>handleApprove(d.id)}>Approve</button>
+                          <button className="btn btn-secondary" style={{fontSize:12,padding:"7px 16px",minHeight:"auto"}} onClick={()=>setReviewModal(d)}>Request Revision</button>
+                        </>}
+                        {d.reviewStatus==="approved"&&<span style={{fontSize:12,color:"var(--green)",fontWeight:600,display:"flex",alignItems:"center",gap:4}}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg> Approved
+                        </span>}
+                        {d.reviewStatus==="revision"&&<span style={{fontSize:12,color:"#f0a050",fontWeight:600}}>Waiting for creator to resubmit</span>}
+                        <button className="btn btn-secondary" style={{fontSize:12,padding:"7px 14px",minHeight:"auto",marginLeft:"auto"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>Open Deal Room</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Revision Request Modal */}
+      {reviewModal && ReactDOM.createPortal(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:10000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setReviewModal(null)}>
+          <div className="card-lg fade-in" onClick={e=>e.stopPropagation()} style={{maxWidth:440,width:"100%",padding:24}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <h3 style={{fontSize:18,fontWeight:700}}>Request Revision</h3>
+              <button onClick={()=>setReviewModal(null)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"var(--text3)"}}>×</button>
+            </div>
+            <div style={{background:"var(--surface2)",borderRadius:10,padding:14,marginBottom:16}}>
+              <div style={{fontSize:13,fontWeight:600,color:"var(--text)"}}>{reviewModal.creatorName}</div>
+              <div style={{fontSize:12,color:"var(--text2)",marginTop:2}}>{reviewModal.campaignTitle} · {reviewModal.platform}</div>
+            </div>
+            <div style={{marginBottom:14}}>
+              <label style={{fontSize:12,fontWeight:600,color:"var(--text2)",marginBottom:4,display:"block"}}>What needs to change?</label>
+              <textarea className="fi" rows={4} value={revisionNote} onChange={e=>setRevisionNote(e.target.value)} placeholder="e.g. Please adjust the lighting in the first clip and add the product link in the caption..." style={{resize:"vertical"}}/>
+            </div>
+            <button className="btn btn-primary" onClick={()=>handleRequestRevision(reviewModal.id)} style={{width:"100%"}}>Send Revision Request</button>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
+
 // ─── CREATOR CRM — Brand's Creator Database + Pipeline ──────────────────────
 function CreatorCRMPage({setPage,setSelected,deals,addDeal,showToast,userName,authUser}) {
   const [tab,setTab] = useState("database"); // database | pipeline
@@ -11426,6 +11583,7 @@ function App() {
         case "calendar":      return React.createElement(CalendarPage,{deals,role,setPage,setSelected});
         case "marketplace":   return React.createElement(MarketplaceBrandPage,{setPage,setSelected,deals,addDeal,showToast,userName,authUser});
         case "creator-crm":   return React.createElement(CreatorCRMPage,{setPage,setSelected,deals,addDeal,showToast,userName,authUser});
+        case "review-queue":  return React.createElement(ReviewQueuePage,{deals,setPage,setSelected,showToast});
         case "content-tracker": return React.createElement(ContentTrackerPage,{authUser,deals});
         case "spending":      return React.createElement(SpendingDashboard,{deals});
         case "content-library": return React.createElement(ContentLibraryPage,{});
