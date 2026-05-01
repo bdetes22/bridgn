@@ -2316,6 +2316,12 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
     msgEndRef.current?.scrollIntoView({behavior:"smooth"});
   },[msgs.length]);
   // Brief state — initialized from deal (loaded from DB)
+  // Post details (CTA, link, caption)
+  const [postCta,setPostCta] = useState(activeDeal?.postCta||"");
+  const [postLink,setPostLink] = useState(activeDeal?.postLink||"");
+  const [postCaption,setPostCaption] = useState(activeDeal?.postCaption||"");
+  const [postDetailsSent,setPostDetailsSent] = useState(!!activeDeal?.postDetailsSent);
+
   const [briefFile,setBriefFile] = useState(activeDeal?.briefFile||null);
   const [briefLink,setBriefLink] = useState(activeDeal?.briefLink||"");
   const [briefComments,setBriefComments] = useState(activeDeal?.briefComments||"");
@@ -2458,6 +2464,10 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
     setScriptUrl(deal.scriptUrl||"");
     setScriptSubmitted(!!deal.scriptSubmitted);
     if(Array.isArray(deal.approvedDeliverables)) setApproved(deal.approvedDeliverables);
+    setPostCta(deal.postCta||"");
+    setPostLink(deal.postLink||"");
+    setPostCaption(deal.postCaption||"");
+    setPostDetailsSent(!!deal.postDetailsSent);
   };
 
   // Re-sync when activeDeal changes (switching deals or initial load)
@@ -3220,6 +3230,44 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               )
             )}
           </div>
+          {/* ── Post Details (CTA, Link, Caption) ── */}
+          <div className="card-lg" style={{padding:"18px 22px"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div style={{fontSize:"14px",fontWeight:700}}>Post Details</div>
+              {postDetailsSent?<span className="badge badge-green">Sent</span>:<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Not sent</span>}
+            </div>
+            {isBrand ? (
+              postDetailsSent ? (
+                <div>
+                  {postCta&&<div style={{marginBottom:10}}><div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:4}}>Call to Action</div><div style={{fontSize:"13px",color:"var(--text)",padding:"10px 14px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)"}}>{postCta}</div></div>}
+                  {postLink&&<div style={{marginBottom:10}}><div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:4}}>Link</div><div style={{padding:"10px 14px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.25)",borderRadius:"var(--radius-sm)"}}><a href={postLink} target="_blank" rel="noopener noreferrer" style={{fontSize:"13px",color:"var(--accent)",textDecoration:"underline",wordBreak:"break-all"}}>{postLink}</a></div></div>}
+                  {postCaption&&<div style={{marginBottom:10}}><div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:4}}>Caption</div><div style={{fontSize:"13px",color:"var(--text2)",padding:"10px 14px",background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{postCaption}</div></div>}
+                  <button onClick={()=>{setPostDetailsSent(false);syncDealFields({post_details_sent:false});}} className="btn btn-secondary btn-sm">Edit Post Details</button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.5}}>Add the CTA, tracking link, and suggested caption for the creator's post.</div>
+                  <div style={{marginBottom:10}}><label style={{fontSize:"12px",fontWeight:600,color:"var(--text3)",display:"block",marginBottom:4}}>Call to Action</label><input className="fi" value={postCta} onChange={e=>setPostCta(e.target.value)} placeholder='e.g. "Use code SAVE20 at checkout"' style={{width:"100%",boxSizing:"border-box",padding:"9px 12px",fontSize:"13px"}}/></div>
+                  <div style={{marginBottom:10}}><label style={{fontSize:"12px",fontWeight:600,color:"var(--text3)",display:"block",marginBottom:4}}>Link / URL</label><input className="fi" value={postLink} onChange={e=>setPostLink(e.target.value)} placeholder="https://brand.com/campaign?utm_source=creator" style={{width:"100%",boxSizing:"border-box",padding:"9px 12px",fontSize:"13px"}}/></div>
+                  <div style={{marginBottom:14}}><label style={{fontSize:"12px",fontWeight:600,color:"var(--text3)",display:"block",marginBottom:4}}>Suggested Caption</label><textarea value={postCaption} onChange={e=>setPostCaption(e.target.value)} placeholder="Write the caption or key talking points you'd like the creator to use..." rows={4} style={{width:"100%",boxSizing:"border-box",padding:"10px 12px",borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",color:"var(--text)",fontSize:"13px",fontFamily:"inherit",lineHeight:1.6,outline:"none",resize:"vertical"}}/></div>
+                  <button onClick={()=>{if(postCta.trim()||postLink.trim()||postCaption.trim()){setPostDetailsSent(true);syncDealFields({post_cta:postCta||null,post_link:postLink||null,post_caption:postCaption||null,post_details_sent:true});notifyOther("new_message",{messagePreview:"Post details shared: CTA, link, and caption"});supabase.from("deal_messages").insert({deal_id:String(activeDeal.id),sender_id:authUser.id,sender_role:role,sender_name:userName,body:"Shared post details (CTA, link, and caption)"}).then(()=>{});}}} className="btn btn-primary" style={{width:"100%"}} disabled={!postCta.trim()&&!postLink.trim()&&!postCaption.trim()}>Send Post Details to Creator</button>
+                </div>
+              )
+            ) : (
+              postDetailsSent ? (
+                <div>
+                  {postCta&&<div style={{marginBottom:10}}><div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:4}}>Call to Action</div><div style={{fontSize:"13px",color:"var(--text)",fontWeight:600,padding:"10px 14px",background:"var(--green-bg)",borderRadius:"var(--radius-sm)",border:"1px solid rgba(52,211,153,.2)"}}>{postCta}</div></div>}
+                  {postLink&&<div style={{marginBottom:10}}><div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:4}}>Link to Include</div><div style={{padding:"10px 14px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.25)",borderRadius:"var(--radius-sm)",display:"flex",alignItems:"center",gap:8}}><a href={postLink} target="_blank" rel="noopener noreferrer" style={{flex:1,fontSize:"13px",color:"var(--accent)",textDecoration:"underline",wordBreak:"break-all"}}>{postLink}</a><button onClick={()=>{navigator.clipboard.writeText(postLink).catch(()=>{});}} className="btn btn-secondary btn-sm" style={{flexShrink:0,fontSize:11}}>Copy</button></div></div>}
+                  {postCaption&&<div style={{marginBottom:10}}><div style={{fontSize:"11px",fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:4}}>Suggested Caption</div><div style={{fontSize:"13px",color:"var(--text2)",padding:"10px 14px",background:"var(--bg)",borderRadius:"var(--radius)",border:"1px solid var(--border)",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{postCaption}</div><button onClick={()=>{navigator.clipboard.writeText(postCaption).catch(()=>{});}} className="btn btn-secondary btn-sm" style={{marginTop:6,fontSize:11}}>Copy Caption</button></div>}
+                </div>
+              ) : (
+                <div style={{padding:"12px 16px",background:"var(--surface2)",borderRadius:"var(--radius)",textAlign:"center"}}>
+                  <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.5}}>The brand hasn't shared post details yet. CTA, tracking link, and caption will appear here.</div>
+                </div>
+              )
+            )}
+          </div>
+
           <div className="card-lg" style={{padding:"18px 22px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
               <div style={{fontSize:"14px",fontWeight:700}}>Deliverables</div>

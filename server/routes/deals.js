@@ -64,6 +64,11 @@ function dealToFrontend(row) {
     contractSent:      !!row.contract_sent,
     contractSigned:    !!row.contract_signed,
     contractSignedAt:  row.contract_signed_at,
+    // Post details
+    postCta:           row.post_cta || "",
+    postLink:          row.post_link || "",
+    postCaption:       row.post_caption || "",
+    postDetailsSent:   !!row.post_details_sent,
   };
 }
 
@@ -238,6 +243,7 @@ const ALLOWED_FIELDS = [
   "approved_deliverables",
   "status", "progress",
   "deadline", "campaign_title", "sent_reminders",
+  "post_cta", "post_link", "post_caption", "post_details_sent",
 ];
 
 router.put("/update", async (req, res) => {
