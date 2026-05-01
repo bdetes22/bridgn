@@ -11,6 +11,7 @@ const webhookRouter = require("./routes/webhook");
 const dealsRouter   = require("./routes/deals");
 const notifyRouter    = require("./routes/notify");
 const affiliateRouter = require("./routes/affiliate");
+const contentRouter   = require("./routes/content");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -48,6 +49,7 @@ app.use("/api/stripe", stripeRoutes);
 app.use("/api/deals", dealsRouter);
 app.use("/api/notify", notifyRouter);
 app.use("/api/affiliate", affiliateRouter);
+app.use("/api/content", contentRouter);
 
 // Affiliate redirect — /r/:code (must be before the catch-all)
 app.use(affiliateRouter);

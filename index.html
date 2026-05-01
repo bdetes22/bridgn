@@ -1074,6 +1074,9 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
     {k:"deal-room",l:"Deal Room",i:ICONS.building},
     {k:"new-deal",l:"New Deal",i:ICONS.plus},
     {k:"calendar",l:"Calendar",i:ICONS.calendar},
+    {section:"Business"},
+    {k:"content-tracker",l:"Content Tracker",i:ICONS.chart},
+    {k:"spending",l:"Spending",i:ICONS.dollar},
     {section:"Account"},
     {k:"settings",l:"Settings",i:ICONS.gear},
   ];
@@ -5803,6 +5806,315 @@ function ExpensesPage() {
 }
 
 // ─── BRAND DASHBOARD ──────────────────────────────────────────────────────────
+// ─── CONTENT TRACKER (brand) ────────────────────────────────────────────────
+function ContentTrackerPage({authUser,deals=[]}) {
+  const loading = useSkeleton();
+  const [entries,setEntries] = useState([]);
+  const [showAdd,setShowAdd] = useState(false);
+  const [editId,setEditId] = useState(null);
+  const [form,setForm] = useState({creatorName:"",platform:"Instagram",postUrl:"",datePosted:"",caption:"",views:"",likes:"",comments:"",shares:"",clicks:"",conversions:"",revenue:"",notes:"",campaignTitle:"",dealId:""});
+  const [filter,setFilter] = useState({creator:"All",platform:"All"});
+  const [sort,setSort] = useState("date");
+  const up = (k,v)=>setForm(f=>({...f,[k]:v}));
+
+  useEffect(()=>{
+    if(!authUser) return;
+    fetch(`${BRIDGN_API_URL}/api/content?userId=${authUser.id}`)
+      .then(r=>r.ok?r.json():null)
+      .then(data=>{ if(data?.entries) setEntries(data.entries); })
+      .catch(e=>console.error("[content]",e));
+  },[authUser]);
+
+  const resetForm = () => setForm({creatorName:"",platform:"Instagram",postUrl:"",datePosted:"",caption:"",views:"",likes:"",comments:"",shares:"",clicks:"",conversions:"",revenue:"",notes:"",campaignTitle:"",dealId:""});
+
+  const handleSave = async () => {
+    if(!form.postUrl.trim()&&!form.creatorName.trim()) return;
+    if(editId) {
+      const fields = {
+        creator_name:form.creatorName, platform:form.platform, post_url:form.postUrl,
+        date_posted:form.datePosted||null, caption:form.caption,
+        views:parseInt(form.views)||0, likes:parseInt(form.likes)||0, comments:parseInt(form.comments)||0,
+        shares:parseInt(form.shares)||0, clicks:parseInt(form.clicks)||0, conversions:parseInt(form.conversions)||0,
+        revenue_cents:Math.round((parseFloat(form.revenue)||0)*100), notes:form.notes, campaign_title:form.campaignTitle,
+      };
+      const resp = await fetch(`${BRIDGN_API_URL}/api/content/${editId}`, {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:authUser.id,fields})});
+      if(resp.ok){ const {entry}=await resp.json(); setEntries(prev=>prev.map(e=>e.id===editId?entry:e)); }
+    } else {
+      const resp = await fetch(`${BRIDGN_API_URL}/api/content`, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:authUser.id,entry:form})});
+      if(resp.ok){ const {entry}=await resp.json(); setEntries(prev=>[entry,...prev]); }
+    }
+    resetForm(); setShowAdd(false); setEditId(null);
+  };
+
+  const handleDelete = async (id) => {
+    await fetch(`${BRIDGN_API_URL}/api/content/${id}?userId=${authUser.id}`,{method:"DELETE"});
+    setEntries(prev=>prev.filter(e=>e.id!==id));
+  };
+
+  const startEdit = (e) => {
+    setForm({creatorName:e.creator_name||"",platform:e.platform||"Instagram",postUrl:e.post_url||"",datePosted:e.date_posted||"",caption:e.caption||"",views:String(e.views||""),likes:String(e.likes||""),comments:String(e.comments||""),shares:String(e.shares||""),clicks:String(e.clicks||""),conversions:String(e.conversions||""),revenue:String((e.revenue_cents||0)/100),notes:e.notes||"",campaignTitle:e.campaign_title||"",dealId:e.deal_id||""});
+    setEditId(e.id); setShowAdd(true);
+  };
+
+  // Stats
+  const totalViews = entries.reduce((s,e)=>s+(e.views||0),0);
+  const totalLikes = entries.reduce((s,e)=>s+(e.likes||0),0);
+  const totalComments = entries.reduce((s,e)=>s+(e.comments||0),0);
+  const totalClicks = entries.reduce((s,e)=>s+(e.clicks||0),0);
+  const avgEngagement = totalViews>0?((totalLikes+totalComments)/totalViews*100).toFixed(1):0;
+  const bestPost = entries.length?entries.reduce((a,b)=>(b.views||0)>(a.views||0)?b:a):null;
+
+  // Filters
+  const creators = [...new Set(entries.map(e=>e.creator_name).filter(Boolean))];
+  const platforms = [...new Set(entries.map(e=>e.platform).filter(Boolean))];
+  let filtered = entries;
+  if(filter.creator!=="All") filtered = filtered.filter(e=>e.creator_name===filter.creator);
+  if(filter.platform!=="All") filtered = filtered.filter(e=>e.platform===filter.platform);
+  if(sort==="views") filtered = [...filtered].sort((a,b)=>(b.views||0)-(a.views||0));
+  if(sort==="engagement") filtered = [...filtered].sort((a,b)=>((b.likes||0)+(b.comments||0))-((a.likes||0)+(a.comments||0)));
+  if(sort==="date") filtered = [...filtered].sort((a,b)=>new Date(b.date_posted||0)-new Date(a.date_posted||0));
+  if(sort==="clicks") filtered = [...filtered].sort((a,b)=>(b.clicks||0)-(a.clicks||0));
+
+  if(loading) return <SkeletonPage layout="list"/>;
+  return (
+    <div className="fade-in">
+      <div className="ph-row">
+        <div><div className="page-title">Content Tracker</div><div className="page-subtitle">Track performance across all your creator content.</div></div>
+        <button className="btn btn-primary" onClick={()=>{resetForm();setEditId(null);setShowAdd(true);}}>+ Add Content</button>
+      </div>
+
+      {/* Stats */}
+      <div className="g4 section" style={{gap:12}}>
+        {[
+          {l:"Total Views",v:totalViews.toLocaleString()},
+          {l:"Engagement Rate",v:avgEngagement+"%"},
+          {l:"Total Clicks",v:totalClicks.toLocaleString()},
+          {l:"Posts Tracked",v:String(entries.length)},
+        ].map((s,i)=><StatCard key={i} label={s.l} value={s.v}/>)}
+      </div>
+
+      {/* Filters + sort */}
+      {entries.length>0&&(
+        <div className="card" style={{padding:"12px 16px",marginBottom:16,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+          <span style={{fontSize:12,color:"var(--text3)",fontWeight:600}}>Filter:</span>
+          <select className="fsel" style={{flex:"1 1 auto",minWidth:0,padding:"6px 10px",fontSize:12}} value={filter.creator} onChange={e=>setFilter(p=>({...p,creator:e.target.value}))}><option value="All">All Creators</option>{creators.map(c=><option key={c}>{c}</option>)}</select>
+          <select className="fsel" style={{flex:"1 1 auto",minWidth:0,padding:"6px 10px",fontSize:12}} value={filter.platform} onChange={e=>setFilter(p=>({...p,platform:e.target.value}))}><option value="All">All Platforms</option>{platforms.map(p=><option key={p}>{p}</option>)}</select>
+          <select className="fsel" style={{flex:"1 1 auto",minWidth:0,padding:"6px 10px",fontSize:12}} value={sort} onChange={e=>setSort(e.target.value)}><option value="date">Newest</option><option value="views">Most Views</option><option value="engagement">Most Engagement</option><option value="clicks">Most Clicks</option></select>
+        </div>
+      )}
+
+      {/* Entries list */}
+      {entries.length===0&&!showAdd?(
+        <div className="card" style={{padding:"48px 24px",textAlign:"center"}}>
+          <div style={{fontSize:15,fontWeight:600,marginBottom:8}}>No content tracked yet</div>
+          <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.65,maxWidth:360,margin:"0 auto 16px"}}>Start adding links to your creator content and track views, engagement, clicks, and ROI over time.</div>
+          <button className="btn btn-primary btn-sm" onClick={()=>{resetForm();setShowAdd(true);}}>Add Your First Post</button>
+        </div>
+      ):(
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {filtered.map(e=>{
+            const eng = (e.views||0)>0?(((e.likes||0)+(e.comments||0))/(e.views||1)*100).toFixed(1):0;
+            return (
+              <div key={e.id} className="card" style={{padding:"16px 18px"}}>
+                <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
+                  <div style={{width:42,height:42,borderRadius:10,background:bc(Math.abs((e.creator_name||"").length)%6),display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"white",flexShrink:0}}>{(e.creator_name||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap"}}>
+                      <span style={{fontSize:14,fontWeight:600}}>{e.creator_name||"Creator"}</span>
+                      <span className="badge badge-blue" style={{fontSize:10}}>{e.platform}</span>
+                      {e.campaign_title&&<span style={{fontSize:11,color:"var(--text3)"}}>{e.campaign_title}</span>}
+                    </div>
+                    {e.post_url&&<a href={e.post_url} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:"var(--accent)",textDecoration:"none",display:"block",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:6}}>{e.post_url}</a>}
+                    <div style={{display:"flex",gap:16,flexWrap:"wrap",fontSize:12}}>
+                      {(e.views||0)>0&&<span><strong>{(e.views||0).toLocaleString()}</strong> <span style={{color:"var(--text3)"}}>views</span></span>}
+                      {(e.likes||0)>0&&<span><strong>{(e.likes||0).toLocaleString()}</strong> <span style={{color:"var(--text3)"}}>likes</span></span>}
+                      {(e.comments||0)>0&&<span><strong>{(e.comments||0).toLocaleString()}</strong> <span style={{color:"var(--text3)"}}>comments</span></span>}
+                      {(e.shares||0)>0&&<span><strong>{(e.shares||0).toLocaleString()}</strong> <span style={{color:"var(--text3)"}}>shares</span></span>}
+                      {(e.clicks||0)>0&&<span><strong>{(e.clicks||0).toLocaleString()}</strong> <span style={{color:"var(--text3)"}}>clicks</span></span>}
+                      {eng>0&&<span style={{color:"var(--green)",fontWeight:600}}>{eng}% eng</span>}
+                    </div>
+                    {e.date_posted&&<div style={{fontSize:11,color:"var(--text3)",marginTop:4}}>{new Date(e.date_posted+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>}
+                  </div>
+                  <div style={{display:"flex",gap:6,flexShrink:0}}>
+                    <button onClick={()=>startEdit(e)} className="btn btn-secondary btn-sm" style={{fontSize:11,padding:"5px 10px"}}>Edit</button>
+                    <button onClick={()=>handleDelete(e.id)} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--text3)",padding:"4px"}}>✕</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Add/Edit Modal */}
+      {showAdd&&(
+        <Modal onClose={()=>{setShowAdd(false);setEditId(null);resetForm();}}>
+          <div style={{padding:26}}>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:23,fontWeight:400,letterSpacing:"-.3px",marginBottom:16}}>{editId?"Edit Content":"Add Content"}</div>
+            <div className="frow"><div className="fg"><label className="fl">Creator Name</label><input className="fi" value={form.creatorName} onChange={e=>up("creatorName",e.target.value)} placeholder="Who created it?"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={form.platform} onChange={e=>up("platform",e.target.value)}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Twitter</option><option>Multiple</option></select></div></div>
+            <div className="fg"><label className="fl">Post URL</label><input className="fi" value={form.postUrl} onChange={e=>up("postUrl",e.target.value)} placeholder="https://instagram.com/p/..."/></div>
+            <div className="frow"><div className="fg"><label className="fl">Date Posted</label><input className="fi" type="date" value={form.datePosted} onChange={e=>up("datePosted",e.target.value)}/></div><div className="fg"><label className="fl">Campaign</label><select className="fsel" value={form.campaignTitle} onChange={e=>up("campaignTitle",e.target.value)}><option value="">Select a deal...</option>{deals.map(d=><option key={d.id} value={d.campaignTitle}>{d.campaignTitle||d.brand}</option>)}</select></div></div>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:10,marginTop:6}}>Performance Metrics</div>
+            <div className="frow"><div className="fg"><label className="fl">Views</label><input className="fi" type="number" value={form.views} onChange={e=>up("views",e.target.value)} placeholder="0"/></div><div className="fg"><label className="fl">Likes</label><input className="fi" type="number" value={form.likes} onChange={e=>up("likes",e.target.value)} placeholder="0"/></div></div>
+            <div className="frow"><div className="fg"><label className="fl">Comments</label><input className="fi" type="number" value={form.comments} onChange={e=>up("comments",e.target.value)} placeholder="0"/></div><div className="fg"><label className="fl">Shares</label><input className="fi" type="number" value={form.shares} onChange={e=>up("shares",e.target.value)} placeholder="0"/></div></div>
+            <div className="frow"><div className="fg"><label className="fl">Link Clicks</label><input className="fi" type="number" value={form.clicks} onChange={e=>up("clicks",e.target.value)} placeholder="0"/></div><div className="fg"><label className="fl">Conversions</label><input className="fi" type="number" value={form.conversions} onChange={e=>up("conversions",e.target.value)} placeholder="0"/></div></div>
+            <div className="fg"><label className="fl">Notes</label><textarea className="fta" value={form.notes} onChange={e=>up("notes",e.target.value)} placeholder="Any notes about this content..." style={{minHeight:60}}/></div>
+            <div style={{display:"flex",gap:9}}>
+              <button onClick={handleSave} className="btn btn-primary btn-lg" style={{flex:1}}>{editId?"Save Changes":"Add Content"}</button>
+              <button onClick={()=>{setShowAdd(false);setEditId(null);resetForm();}} className="btn btn-secondary btn-lg">Cancel</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ─── SPENDING DASHBOARD (brand) ─────────────────────────────────────────────
+function SpendingDashboard({deals=[]}) {
+  const loading = useSkeleton();
+  const paidDeals = deals.filter(d=>["payment_held","payment_released","content_delivered","payment_processing"].includes(d.status));
+  const releasedDeals = deals.filter(d=>d.status==="payment_released");
+  const escrowDeals = deals.filter(d=>["payment_held","content_delivered"].includes(d.status));
+
+  const totalSpent = paidDeals.reduce((s,d)=>s+(d.amount||0),0);
+  const escrowTotal = escrowDeals.reduce((s,d)=>s+(d.amount||0),0);
+  const releasedTotal = releasedDeals.reduce((s,d)=>s+(d.amount||0),0);
+  const avgDeal = paidDeals.length?Math.round(totalSpent/paidDeals.length):0;
+
+  // By creator
+  const creatorMap = {};
+  paidDeals.forEach(d=>{
+    const name = d.creatorName||"Unknown";
+    if(!creatorMap[name]) creatorMap[name]={name,bi:name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),ci:Math.abs(name.length)%6,amount:0,deals:0};
+    creatorMap[name].amount+=d.amount||0;
+    creatorMap[name].deals+=1;
+  });
+  const byCreator = Object.values(creatorMap).sort((a,b)=>b.amount-a.amount);
+
+  // By platform
+  const platMap = {};
+  paidDeals.forEach(d=>{
+    const p = d.platform||"Other";
+    platMap[p] = (platMap[p]||0)+(d.amount||0);
+  });
+  const byPlatform = Object.entries(platMap).sort((a,b)=>b[1]-a[1]);
+  const maxPlat = byPlatform.length?byPlatform[0][1]:1;
+
+  // Monthly
+  const monthMap = {};
+  paidDeals.forEach(d=>{
+    try {
+      const dt = d.deadline&&d.deadline!=="TBD"?new Date(d.deadline+"T00:00:00"):new Date();
+      const key = dt.toLocaleDateString("en-US",{month:"short",year:"numeric"});
+      monthMap[key]=(monthMap[key]||0)+(d.amount||0);
+    } catch{}
+  });
+  const monthly = Object.entries(monthMap).slice(-6);
+  const maxMonth = monthly.length?Math.max(...monthly.map(m=>m[1])):1;
+
+  if(loading) return <SkeletonPage layout="analytics"/>;
+  return (
+    <div className="fade-in">
+      <div className="ph-row"><div><div className="page-title">Spending</div><div className="page-subtitle">Your creator partnership spending at a glance.</div></div></div>
+
+      {!paidDeals.length?(
+        <div className="card" style={{padding:"48px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
+          <div style={{fontSize:15,fontWeight:600,marginBottom:8}}>No spending yet</div>
+          <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.7}}>Once you fund deals with creators, your spending breakdown will appear here.</div>
+        </div>
+      ):(
+        <>
+          <div className="g4 section" style={{gap:12}}>
+            {[
+              {l:"Total Spent",v:"$"+totalSpent.toLocaleString()},
+              {l:"In Escrow",v:"$"+escrowTotal.toLocaleString()},
+              {l:"Released",v:"$"+releasedTotal.toLocaleString()},
+              {l:"Avg Deal Size",v:"$"+avgDeal.toLocaleString()},
+            ].map((s,i)=><StatCard key={i} label={s.l} value={s.v}/>)}
+          </div>
+
+          <div className="g2" style={{gap:20,alignItems:"start"}}>
+            <div>
+              {/* Monthly spending chart */}
+              {monthly.length>0&&(
+                <div className="section">
+                  <div className="section-hdr"><span className="section-title">Monthly Spending</span></div>
+                  <div className="card-lg" style={{padding:"20px 22px"}}>
+                    <div style={{display:"flex",alignItems:"flex-end",gap:10,height:140}}>
+                      {monthly.map(([m,amt],i)=>{
+                        const h=Math.round((amt/maxMonth)*120);const isLast=i===monthly.length-1;
+                        return (
+                          <div key={m} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+                            <div style={{fontSize:10,color:isLast?"var(--accent)":"var(--text3)",fontWeight:isLast?700:400}}>${(amt/1000).toFixed(1)}k</div>
+                            <div style={{width:"100%",borderRadius:"5px 5px 0 0",background:isLast?"linear-gradient(180deg,var(--accent),#3d6bc9)":"var(--surface2)",height:h,border:"1px solid "+(isLast?"rgba(91,138,245,.3)":"var(--border)")}}></div>
+                            <div style={{fontSize:11,color:isLast?"var(--accent)":"var(--text3)",fontWeight:isLast?700:400}}>{m}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* By platform */}
+              {byPlatform.length>0&&(
+                <div className="section">
+                  <div className="section-hdr"><span className="section-title">By Platform</span></div>
+                  <div className="card-lg" style={{padding:"16px 18px"}}>
+                    {byPlatform.map(([p,amt],i)=>(
+                      <div key={p} style={{marginBottom:i<byPlatform.length-1?12:0}}>
+                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                          <span style={{fontSize:13,fontWeight:600}}>{p}</span>
+                          <span style={{fontSize:13,fontWeight:700,fontFamily:"DM Serif Display,serif"}}>${amt.toLocaleString()}</span>
+                        </div>
+                        <div style={{height:6,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}>
+                          <div style={{height:"100%",borderRadius:99,background:"var(--accent)",width:(amt/maxPlat*100)+"%",transition:"width .4s"}}/>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              {/* By creator */}
+              {byCreator.length>0&&(
+                <div className="section">
+                  <div className="section-hdr"><span className="section-title">By Creator</span></div>
+                  <div className="card-lg" style={{overflow:"hidden"}}>
+                    {byCreator.map((c,i)=>(
+                      <div key={i} className="deal-row" style={i>0?{borderTop:"1px solid var(--border)"}:{}}>
+                        <div className="deal-av" style={{background:bc(c.ci),width:34,height:34,fontSize:11}}>{c.bi}</div>
+                        <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600}}>{c.name}</div><div style={{fontSize:11,color:"var(--text2)",marginTop:1}}>{c.deals} deal{c.deals!==1?"s":""} · ${Math.round(c.amount/c.deals).toLocaleString()} avg</div><div style={{marginTop:7}}><div className="prog-bar"><div className="prog-fill" style={{width:(c.amount/totalSpent*100)+"%"}}></div></div></div></div>
+                        <div style={{fontWeight:700,fontFamily:"DM Serif Display,serif",fontSize:16}}>${c.amount.toLocaleString()}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent deals */}
+              <div className="section">
+                <div className="section-hdr"><span className="section-title">Recent Funded Deals</span></div>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {paidDeals.slice(0,5).map((d,i)=>(
+                    <div key={i} className="card" style={{padding:"12px 16px",display:"flex",gap:12,alignItems:"center"}}>
+                      <div style={{width:34,height:34,borderRadius:10,background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white",flexShrink:0}}>{d.bi}</div>
+                      <div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:600}}>{d.campaignTitle||d.creatorName}</div><div style={{fontSize:11,color:"var(--text2)",marginTop:1}}>{d.creatorName} · {d.platform}</div></div>
+                      <div style={{fontSize:16,fontWeight:400,fontFamily:"DM Serif Display,serif"}}>${(d.amount||0).toLocaleString()}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function BrandDashboard({setPage,setSelected,deals=[],authUser}) {
   const loading = useSkeleton();
   if(loading) return <SkeletonPage layout="dashboard"/>;
@@ -9989,6 +10301,8 @@ function App() {
         case "deal-room":     return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal,selected});
         case "new-deal":      return React.createElement(BrandNewDealPage,{setPage,onDealCreated:addDeal,userName,authUser});
         case "calendar":      return React.createElement(CalendarPage,{deals,role,setPage,setSelected});
+        case "content-tracker": return React.createElement(ContentTrackerPage,{authUser,deals});
+        case "spending":      return React.createElement(SpendingDashboard,{deals});
         case "content-library": return React.createElement(ContentLibraryPage,{});
         case "affiliate":     return React.createElement(AffiliateManagerPage,{authUser,deals});
         case "brief-builder": return React.createElement(BriefBuilderPage,{});
