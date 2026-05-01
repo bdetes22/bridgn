@@ -17,7 +17,7 @@ const {
   getDealByBridgnDealId,
   updateDealById,
 } = require("../../lib/db");
-const { sendEmail, dealInviteEmail } = require("../../lib/email");
+const { sendEmail, dealInviteEmail, deadlineReminderEmail } = require("../../lib/email");
 
 const router = express.Router();
 
@@ -237,7 +237,7 @@ const ALLOWED_FIELDS = [
   "script_url", "script_submitted",
   "approved_deliverables",
   "status", "progress",
-  "deadline", "campaign_title",
+  "deadline", "campaign_title", "sent_reminders",
 ];
 
 router.put("/update", async (req, res) => {
@@ -269,6 +269,98 @@ router.put("/update", async (req, res) => {
     res.json({ deal: dealToFrontend(updated) });
   } catch (err) {
     console.error("[deals/update]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── GET /api/deals/check-deadlines — send deadline reminder emails ──────────
+// Called by a cron job (Render Cron) once daily at 9am ET.
+// Sends reminders at 7 days, 3 days, and 1 day before deadline.
+// Tracks sent reminders via deal metadata to avoid duplicates.
+
+router.get("/check-deadlines", async (req, res) => {
+  // Only run between 8am-11am ET to avoid middle-of-night emails
+  const etHour = new Date().toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false });
+  const hour = parseInt(etHour);
+  if (hour < 8 || hour > 11) {
+    return res.json({ skipped: true, reason: `Outside notification window (${hour} ET)` });
+  }
+
+  try {
+    const { data: allDeals, error } = await db
+      .from("deals")
+      .select("*")
+      .not("deadline", "is", null)
+      .not("status", "in", '("payment_released","Completed")');
+
+    if (error) throw error;
+    if (!allDeals?.length) return res.json({ checked: 0, sent: 0 });
+
+    const now = new Date();
+    let sent = 0;
+
+    for (const deal of allDeals) {
+      if (!deal.deadline || deal.deadline === "TBD") continue;
+
+      const deadlineDate = new Date(deal.deadline + "T00:00:00");
+      const diffMs = deadlineDate - now;
+      const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+      // Determine which reminder to send (if any)
+      let reminderKey = null;
+      if (daysLeft === 7) reminderKey = "reminder_7d";
+      else if (daysLeft === 3) reminderKey = "reminder_3d";
+      else if (daysLeft === 1) reminderKey = "reminder_1d";
+      else continue;
+
+      // Check if we already sent this reminder (stored as comma-separated string in deal metadata)
+      const sentReminders = (deal.sent_reminders || "").split(",").filter(Boolean);
+      if (sentReminders.includes(reminderKey)) continue;
+
+      // Format deadline for email
+      const deadlineFormatted = deadlineDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+      const dealTitle = deal.campaign_title || "Deal";
+
+      // Look up both users
+      const getUser = async (userId) => {
+        if (!userId) return null;
+        const { data, error } = await db.auth.admin.getUserById(userId);
+        if (error || !data?.user) return null;
+        const u = data.user;
+        return { email: u.email, name: u.user_metadata?.full_name || u.user_metadata?.company_name || u.email?.split("@")[0] || "" };
+      };
+
+      const creator = await getUser(deal.creator_user_id);
+      const brand = await getUser(deal.brand_user_id);
+
+      // Send to creator
+      if (creator?.email) {
+        const email = deadlineReminderEmail({
+          recipientName: creator.name, dealTitle, deadline: deadlineFormatted,
+          daysLeft, partnerName: brand?.name || deal.brand_name || "the brand",
+        });
+        await sendEmail({ to: creator.email, ...email });
+        sent++;
+      }
+
+      // Send to brand
+      if (brand?.email) {
+        const email = deadlineReminderEmail({
+          recipientName: brand.name, dealTitle, deadline: deadlineFormatted,
+          daysLeft, partnerName: creator?.name || deal.creator_name || "the creator",
+        });
+        await sendEmail({ to: brand.email, ...email });
+        sent++;
+      }
+
+      // Mark reminder as sent
+      sentReminders.push(reminderKey);
+      await updateDealById(deal.id, { sent_reminders: sentReminders.join(",") });
+    }
+
+    res.json({ checked: allDeals.length, sent });
+  } catch (err) {
+    console.error("[check-deadlines]", err);
     res.status(500).json({ error: err.message });
   }
 });
