@@ -11,6 +11,7 @@
 
 const express = require("express");
 const {
+  db,
   insertDeal,
   getDealsForUser,
   getDealByBridgnDealId,
@@ -268,6 +269,31 @@ router.put("/update", async (req, res) => {
     res.json({ deal: dealToFrontend(updated) });
   } catch (err) {
     console.error("[deals/update]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── GET /api/deals/profile/:userId — public profile info ────────────────────
+
+router.get("/profile/:userId", async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) return res.status(400).json({ error: "userId is required." });
+
+  try {
+    const { data, error } = await db.auth.admin.getUserById(userId);
+    if (error || !data?.user) return res.json({ profile: null });
+
+    const meta = data.user.user_metadata || {};
+    res.json({
+      profile: {
+        name: meta.full_name || meta.company_name || data.user.email?.split("@")[0] || "",
+        email: data.user.email,
+        role: meta.role || "creator",
+        socials: meta.brand_socials || null,
+      },
+    });
+  } catch (err) {
+    console.error("[deals/profile]", err);
     res.status(500).json({ error: err.message });
   }
 });

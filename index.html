@@ -2203,6 +2203,16 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
   };
   const [activeDeal,setActiveDeal] = useState(selected||deals.find(d=>!["Completed","payment_released"].includes(d.status))||deals[0]);
 
+  // Brand profile info (visible to creators in the sidebar)
+  const [brandProfile,setBrandProfile] = useState(null);
+  useEffect(()=>{
+    if(role!=="creator" || !activeDeal?.brandUserId) return;
+    fetch(`${BRIDGN_API_URL}/api/deals/profile/${activeDeal.brandUserId}`)
+      .then(r=>r.ok?r.json():null)
+      .then(data=>{ if(data?.profile) setBrandProfile(data.profile); })
+      .catch(()=>{});
+  },[activeDeal?.brandUserId, role]);
+
   // Inline editing for deal title and deadline
   const [editingTitle,setEditingTitle] = useState(false);
   const [editingDeadline,setEditingDeadline] = useState(false);
@@ -3401,6 +3411,28 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                 ))}
               </div>
             </div>
+            );
+          })()}
+          {/* ── About This Brand (creator view) ── */}
+          {!isBrand&&brandProfile?.socials&&(()=>{
+            const s = brandProfile.socials;
+            const hasAnySocial = s.ig||s.tt||s.yt||s.tw||s.web;
+            if(!hasAnySocial&&!s.bio) return null;
+            return (
+              <div className="card-lg" style={{padding:"16px 18px"}}>
+                <div style={{fontSize:"13px",fontWeight:700,marginBottom:10}}>About {activeDeal.brand}</div>
+                {s.bio&&<div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.6,marginBottom:hasAnySocial?12:0}}>{s.bio}</div>}
+                {hasAnySocial&&(
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    {s.web&&<a href={s.web.startsWith("http")?s.web:"https://"+s.web} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--accent)",textDecoration:"none",display:"flex",alignItems:"center",gap:6,fontWeight:500}}>🌐 {s.web.replace(/^https?:\/\//,"")}</a>}
+                    {s.ig&&<a href={"https://instagram.com/"+(s.ig.replace("@",""))} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--text2)",textDecoration:"none",display:"flex",alignItems:"center",gap:6}}>📷 {s.ig}</a>}
+                    {s.tt&&<a href={"https://tiktok.com/@"+(s.tt.replace("@",""))} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--text2)",textDecoration:"none",display:"flex",alignItems:"center",gap:6}}>🎵 {s.tt}</a>}
+                    {s.yt&&<a href={s.yt.startsWith("http")?s.yt:"https://"+s.yt} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--text2)",textDecoration:"none",display:"flex",alignItems:"center",gap:6}}>▶️ {s.yt}</a>}
+                    {s.tw&&<a href={"https://x.com/"+(s.tw.replace("@",""))} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--text2)",textDecoration:"none",display:"flex",alignItems:"center",gap:6}}>𝕏 {s.tw}</a>}
+                    {s.location&&<div style={{fontSize:"12px",color:"var(--text3)",display:"flex",alignItems:"center",gap:6}}>📍 {s.location}</div>}
+                  </div>
+                )}
+              </div>
             );
           })()}
           {/* ── Escrow / Payment Panel ── */}
@@ -5393,7 +5425,7 @@ function ExpensesPage() {
 }
 
 // ─── BRAND DASHBOARD ──────────────────────────────────────────────────────────
-function BrandDashboard({setPage,setSelected,deals=[]}) {
+function BrandDashboard({setPage,setSelected,deals=[],authUser}) {
   const loading = useSkeleton();
   if(loading) return <SkeletonPage layout="dashboard"/>;
   const active = deals.filter(d=>!["Completed","payment_released"].includes(d.status));
@@ -5401,11 +5433,32 @@ function BrandDashboard({setPage,setSelected,deals=[]}) {
   const escrowTotal = escrowDeals.reduce((s,d)=>s+d.amount,0);
   const contentCount = deals.filter(d=>(d.contentFile||d.contentFiles?.length>0)).length;
   const uniqueCreators = [...new Set(deals.map(d=>d.creatorUserId).filter(Boolean))].length;
+
+  // Check if brand has completed their profile
+  const meta = authUser?.user_metadata||{};
+  const hasName = !!(meta.company_name || meta.full_name);
+  const hasSocials = !!(meta.brand_socials?.web || meta.brand_socials?.ig || meta.brand_socials?.bio);
+  const profileComplete = hasName && hasSocials;
+
   return (
     <div className="fade-in">
       <div className="ph-row">
         <div><div className="page-title">Brand Dashboard</div><div className="page-subtitle">Your creator partnership command center.</div></div>
       </div>
+
+      {/* Complete your profile prompt */}
+      {!profileComplete&&(
+        <div className="card" style={{padding:"16px 20px",marginBottom:18,display:"flex",alignItems:"center",gap:14,background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.2)"}}>
+          <div style={{width:40,height:40,borderRadius:10,background:"var(--accent)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0,color:"white"}}>
+            {ICONS.building(18)}
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:14,fontWeight:600,color:"var(--text)"}}>Complete your company profile</div>
+            <div style={{fontSize:12,color:"var(--text2)",marginTop:2,lineHeight:1.5}}>Add your website and socials so creators know who you are.</div>
+          </div>
+          <button className="btn btn-primary btn-sm" onClick={()=>setPage("settings")}>Set Up</button>
+        </div>
+      )}
 
       <div className="g3 section">
         {[
@@ -7575,7 +7628,12 @@ function Toggle({checked,onChange,label}) {
 function BrandCompanyProfile({socialLinks,setSocialLinks,sectionCard,sectionTitle,divider,showToast}) {
   const [bl,setBl] = useState({...socialLinks});
   const brandUp = (k,v) => setBl(p=>({...p,[k]:v}));
-  const brandSave = () => { setSocialLinks(bl); showToast("Company profile saved."); };
+  const brandSave = async () => {
+    setSocialLinks(bl);
+    // Also save to Supabase user_metadata so other users can see it
+    await supabase.auth.updateUser({data:{brand_socials:bl}});
+    showToast("Company profile saved.");
+  };
   return sectionCard(<>
     {sectionTitle("Company Profile")}
     <div style={{fontSize:12,color:"var(--text3)",marginBottom:14,lineHeight:1.5}}>Add your company's website and social profiles so creators can learn more about you.</div>
@@ -9543,7 +9601,7 @@ function App() {
       }
     } else {
       switch(page) {
-        case "dashboard":     return React.createElement(BrandDashboard,{setPage,setSelected,deals});
+        case "dashboard":     return React.createElement(BrandDashboard,{setPage,setSelected,deals,authUser});
         case "browse":        return React.createElement(BrowseCreatorsPage,{setPage});
         case "creator-profile": return React.createElement(CreatorProfilePage,{creator:selected,setPage});
         case "campaigns":     return React.createElement(BrandCampaignsPage,{setPage,setSelected,campaignQuestions,setCampaignQuestions});
@@ -9563,7 +9621,7 @@ function App() {
         case "messages":      return React.createElement(MessagesPage,{setPage});
         case "notifications": return React.createElement(NotificationsPage,{setPage,authUser});
         case "settings":      return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role,socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials});
-        default:              return React.createElement(BrandDashboard,{setPage,setSelected});
+        default:              return React.createElement(BrandDashboard,{setPage,setSelected,authUser});
       }
     }
   };
