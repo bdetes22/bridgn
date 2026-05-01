@@ -4,6 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <title>bridgn – Creator & Brand Platform</title>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#1b2951"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="bridgn"/>
+<link rel="apple-touch-icon" href="/assets/pwa-icon-192.svg"/>
+<meta name="description" content="The creator-brand partnership platform. Manage deals, contracts, payments, and content delivery in one place."/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
@@ -10381,6 +10388,13 @@ function App() {
 ReactDOM.createRoot(document.getElementById("root")).render(
   React.createElement(App)
 );
+
+// Register service worker for PWA
+if("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
