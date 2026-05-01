@@ -423,7 +423,7 @@ router.post("/release-payment", async (req, res) => {
       status:       "payment_released",
       transferId:   transfer.id,
       amountCents:  transferCents,
-      feeCents,
+      feeCents:     deal.application_fee_cents || 0,
     });
   } catch (err) {
     console.error("[stripe/release-payment]", err);
