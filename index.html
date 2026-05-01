@@ -2860,22 +2860,29 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
             <span style={{fontSize:14,color:"var(--text3)",fontFamily:"DM Sans,sans-serif",fontWeight:500}}>{ICONS.link(14)}</span>
           </div>
         )}
-        <div style={{display:"flex",alignItems:"center",gap:12,marginTop:4,flexWrap:"wrap",fontSize:13,color:"var(--text2)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginTop:8,flexWrap:"wrap",fontSize:13,color:"var(--text2)"}}>
           <span style={{fontWeight:500}}>{isBrand?(activeDeal.creatorName||"Creator"):(activeDeal.brand||"Brand")}</span>
           <span style={{color:"var(--border)"}}>·</span>
           <span>{activeDeal.platform}</span>
           <span style={{color:"var(--border)"}}>·</span>
-          {editingDeadline?(
-            <span style={{display:"inline-flex",gap:6,alignItems:"center"}}>
-              <input className="fi" type="date" style={{padding:"3px 8px",fontSize:"12px",width:140}} value={editDeadline} onChange={e=>setEditDeadline(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")saveDeadline();if(e.key==="Escape")setEditingDeadline(false);}} autoFocus/>
-              <button onClick={saveDeadline} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--accent)",fontFamily:"DM Sans,sans-serif",fontWeight:600}}>Save</button>
-              <button onClick={()=>setEditingDeadline(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",fontFamily:"DM Sans,sans-serif"}}>Cancel</button>
-            </span>
-          ):(
-            <span onClick={()=>{setEditDeadline(activeDeal.deadline||"");setEditingDeadline(true);}} style={{cursor:"pointer",borderBottom:"1px dashed var(--border)"}} title="Click to change deadline">Due {activeDeal.deadline}</span>
-          )}
-          <span style={{color:"var(--border)"}}>·</span>
           <span style={{fontWeight:600,color:pct===100?"var(--green)":"var(--accent)"}}>{pct}% complete</span>
+        </div>
+        {/* Deadline bar */}
+        <div style={{marginTop:12}}>
+          {editingDeadline?(
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <input className="fi" type="date" style={{padding:"8px 12px",fontSize:"13px",width:170}} value={editDeadline} onChange={e=>setEditDeadline(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")saveDeadline();if(e.key==="Escape")setEditingDeadline(false);}} autoFocus/>
+              <button onClick={saveDeadline} className="btn btn-primary btn-sm">Save</button>
+              <button onClick={()=>setEditingDeadline(false)} className="btn btn-secondary btn-sm">Cancel</button>
+            </div>
+          ):(
+            <div onClick={()=>{setEditDeadline(activeDeal.deadline||"");setEditingDeadline(true);}} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"8px 14px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:10,cursor:"pointer",transition:"border-color .15s"}} onMouseEnter={e=>e.currentTarget.style.borderColor="var(--accent)"} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+              {ICONS.calendar(15)}
+              <span style={{fontSize:13,fontWeight:600,color:"var(--text)"}}>{(()=>{try{const d=new Date(activeDeal.deadline+"T00:00:00");return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});}catch{return activeDeal.deadline||"No deadline";}})()}</span>
+              <span style={{fontSize:11,color:"var(--text3)",fontWeight:500}}>{(()=>{try{const d=new Date(activeDeal.deadline+"T00:00:00");const now=new Date();const diff=Math.ceil((d-now)/(1000*60*60*24));if(diff<0)return Math.abs(diff)+"d overdue";if(diff===0)return "Due today";return diff+"d left";}catch{return"";}})()}</span>
+              <span style={{fontSize:11,color:"var(--accent)",fontWeight:500,marginLeft:2}}>Edit</span>
+            </div>
+          )}
         </div>
       </div>
       <div className="deal-room-grid" style={{display:"grid",gap:20,alignItems:"start"}}>
