@@ -5366,10 +5366,6 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profile
   const g=bg(0);const handle=(userName||"you").toLowerCase().replace(/\s+/g,"");const copy=()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);};
   const activeSocials=SOCIALS.filter(s=>socialLinks[s.key]?.trim());
 
-  // Compute stats from real deal data
-  const completedDeals = deals.filter(d=>["payment_released","Completed"].includes(d.status));
-  const totalEarned = deals.filter(d=>["payment_held","payment_released","content_delivered","payment_processing"].includes(d.status)).reduce((s,d)=>s+d.amount,0);
-  const uniqueBrands = [...new Set(deals.map(d=>d.brand).filter(Boolean))].length;
   const platforms = [...new Set(deals.map(d=>d.platform).filter(Boolean))];
 
   if(loading) return <SkeletonPage layout="profile"/>;
@@ -5400,43 +5396,26 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profile
           </div>
         </div>
         <div style={{padding:"22px 26px"}}>
-          {/* Stats from real data */}
-          <div className="det-stats" style={{gridTemplateColumns:"repeat(4,1fr)"}}>
-            {[[String(completedDeals.length),"Deals Done"],[uniqueBrands>0?String(uniqueBrands):"—","Brands"],["$"+(totalEarned>0?totalEarned.toLocaleString():"—"),"Earned"],[platforms.length>0?platforms.join(", "):"—","Platforms"]].map(([v,l],i)=>(
-              <div key={i} className="det-stat"><div className="det-stat-v">{v}</div><div className="det-stat-l">{l}</div></div>
-            ))}
-          </div>
-
           {/* Bio */}
-          {socialLinks.bio&&<p style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.75,marginTop:18,marginBottom:0,paddingTop:18,borderTop:"1px solid var(--border)"}}>{socialLinks.bio}</p>}
+          {socialLinks.bio&&<p style={{fontSize:"14px",color:"var(--text)",lineHeight:1.75,marginBottom:0}}>{socialLinks.bio}</p>}
+
+          {/* Platforms */}
+          {platforms.length>0&&(
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:socialLinks.bio?16:0,paddingTop:socialLinks.bio?16:0,borderTop:socialLinks.bio?"1px solid var(--border)":"none"}}>
+              <span style={{fontSize:12,fontWeight:600,color:"var(--text3)",alignSelf:"center",marginRight:4}}>Platforms:</span>
+              {platforms.map(p=><span key={p} style={{padding:"4px 12px",borderRadius:6,fontSize:12,fontWeight:600,background:"var(--surface2)",color:"var(--text)",border:"1px solid var(--border)"}}>{p}</span>)}
+            </div>
+          )}
 
           {/* Social links */}
           {activeSocials.length>0&&(
-            <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:18,paddingTop:18,borderTop:"1px solid var(--border)"}}>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:16,paddingTop:16,borderTop:"1px solid var(--border)"}}>
               {activeSocials.map(s=>(
                 <div key={s.key} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 12px",borderRadius:99,background:s.color+"18",border:`1px solid ${s.color}33`,fontSize:"12px",fontWeight:600,color:s.color}}>
                   <span style={{fontSize:"13px"}}>{s.icon}</span>
                   <span>{socialLinks[s.key]}</span>
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* Past brand partnerships */}
-          {deals.length>0&&(
-            <div style={{marginTop:18,paddingTop:18,borderTop:"1px solid var(--border)"}}>
-              <div style={{fontSize:12,fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>Brand Partnerships</div>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                {[...new Set(deals.map(d=>d.brand).filter(Boolean))].map(brand=>{
-                  const d = deals.find(x=>x.brand===brand);
-                  return (
-                    <div key={brand} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 12px",background:"var(--surface2)",borderRadius:8,border:"1px solid var(--border)"}}>
-                      <div style={{width:24,height:24,borderRadius:6,background:bc(d?.ci||0),display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:"#fff"}}>{(d?.bi||brand.slice(0,2)).toUpperCase()}</div>
-                      <span style={{fontSize:12,fontWeight:500,color:"var(--text)"}}>{brand}</span>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           )}
         </div>
