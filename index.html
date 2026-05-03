@@ -5336,9 +5336,33 @@ function ProfileSettingsPage({socialLinks,setSocialLinks,userName,userInitials})
 }
 
 // ─── PUBLIC PROFILE ───────────────────────────────────────────────────────────
-function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profilePct=0,deals=[]}) {
+function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profilePct=0,deals=[],demoMode}) {
   const loading = useSkeleton();
   const [copied,setCopied] = useState(false);const [bookingModal,setBookingModal] = useState(false);const [bookForm,setBookForm] = useState({name:"",email:"",budget:"",platform:"Instagram",description:""});const [bookSent,setBookSent] = useState(false);
+  const [showAddCollab,setShowAddCollab] = useState(false);
+  const [newCollab,setNewCollab] = useState({title:"",brand:"",platform:"TikTok",url:""});
+  const DEMO_COLLABS = [
+    {id:"pc-1",title:"Summer Glow Routine",brand:"GlowUp Skincare",platform:"TikTok",url:"https://tiktok.com/@creator/video/123",date:"2026-05"},
+    {id:"pc-2",title:"Altitude Unboxing",brand:"Altitude Athletics",platform:"YouTube",url:"https://youtube.com/watch?v=abc",date:"2026-04"},
+    {id:"pc-3",title:"Morning Coffee Reel",brand:"ByteBrew Coffee",platform:"Instagram",url:"https://instagram.com/reel/xyz",date:"2026-04"},
+    {id:"pc-4",title:"30-Day Fitness Journey",brand:"PulseWear Fitness",platform:"Instagram",url:"https://instagram.com/p/fitness30",date:"2026-03"},
+    {id:"pc-5",title:"Travel Vlog: Costa Rica",brand:"Solstice Travel",platform:"YouTube",url:"https://youtube.com/watch?v=travel",date:"2026-02"},
+    {id:"pc-6",title:"Taste Test Challenge",brand:"CloudNine Snacks",platform:"TikTok",url:"https://tiktok.com/@creator/video/taste",date:"2026-03"},
+  ];
+  const [collabs,setCollabs] = useState(()=>{
+    if(demoMode) return DEMO_COLLABS;
+    try{const saved=localStorage.getItem("bridgn_collabs");return saved?JSON.parse(saved):[];}catch{return [];}
+  });
+  const saveCollabs = (next) => {setCollabs(next);if(!demoMode)try{localStorage.setItem("bridgn_collabs",JSON.stringify(next));}catch{}};
+  const handleAddCollab = () => {
+    if(!newCollab.title||!newCollab.url) return;
+    const nc = {id:"pc-"+Date.now(),title:newCollab.title,brand:newCollab.brand,platform:newCollab.platform,url:newCollab.url,date:new Date().toISOString().slice(0,7)};
+    saveCollabs([nc,...collabs]);
+    setNewCollab({title:"",brand:"",platform:"TikTok",url:""});
+    setShowAddCollab(false);
+  };
+  const removeCollab = (id) => saveCollabs(collabs.filter(c=>c.id!==id));
+  const platformIcons = {TikTok:"🎵",Instagram:"📸",YouTube:"▶️",Twitter:"🐦",Other:"🔗"};
   const g=bg(0);const handle=(userName||"you").toLowerCase().replace(/\s+/g,"");const copy=()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);};
   const activeSocials=SOCIALS.filter(s=>socialLinks[s.key]?.trim());
 
@@ -5417,6 +5441,62 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profile
           )}
         </div>
       </div>
+
+      {/* Past Collabs / Portfolio */}
+      <div className="card-lg" style={{overflow:"hidden",marginBottom:18}}>
+        <div style={{padding:"20px 26px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+            <div>
+              <div style={{fontSize:16,fontWeight:700,color:"var(--text)",fontFamily:"'DM Serif Display',serif"}}>Past Collabs</div>
+              <div style={{fontSize:12,color:"var(--text3)",marginTop:2}}>Content portfolio from brand partnerships</div>
+            </div>
+            <button className="btn btn-primary btn-sm" onClick={()=>setShowAddCollab(true)}>{ICONS.plus(13)} Add</button>
+          </div>
+          {collabs.length===0?(
+            <div style={{textAlign:"center",padding:"30px 0"}}>
+              <p style={{fontSize:13,color:"var(--text2)"}}>No past collabs yet. Add links to your best content to build your portfolio.</p>
+            </div>
+          ):(
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:10}}>
+              {collabs.map(c=>(
+                <a key={c.id} href={c.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{textDecoration:"none",color:"inherit"}}>
+                  <div className="card card-hover" style={{padding:"14px 16px",position:"relative",height:"100%"}}>
+                    <button onClick={e=>{e.preventDefault();e.stopPropagation();removeCollab(c.id);}} style={{position:"absolute",top:8,right:8,background:"none",border:"none",cursor:"pointer",color:"var(--text3)",fontSize:14,padding:2,lineHeight:1}}>×</button>
+                    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                      <span style={{fontSize:20}}>{platformIcons[c.platform]||"🔗"}</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:13,fontWeight:600,color:"var(--text)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.title}</div>
+                        {c.brand&&<div style={{fontSize:11,color:"var(--text3)"}}>{c.brand}</div>}
+                      </div>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontSize:11,fontWeight:600,color:"var(--accent)",background:"var(--accent-light)",padding:"2px 8px",borderRadius:4}}>{c.platform}</span>
+                      {c.date&&<span style={{fontSize:10,color:"var(--text3)"}}>{c.date}</span>}
+                    </div>
+                    <div style={{fontSize:11,color:"var(--accent)",marginTop:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}}>{ICONS.link(11)} {c.url.replace(/https?:\/\/(www\.)?/,"").slice(0,40)}{c.url.length>50?"...":""}</div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Add Collab Modal */}
+      {showAddCollab&&(
+        <Modal onClose={()=>setShowAddCollab(false)}>
+          <div style={{padding:"48px 26px 26px"}}>
+            <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:16}}>Add Past Collab</div>
+            <div className="fg"><label className="fl">Content Title</label><input className="fi" value={newCollab.title} onChange={e=>setNewCollab(f=>({...f,title:e.target.value}))} placeholder="e.g. Summer Skincare Routine"/></div>
+            <div className="fg"><label className="fl">Brand Name (optional)</label><input className="fi" value={newCollab.brand} onChange={e=>setNewCollab(f=>({...f,brand:e.target.value}))} placeholder="e.g. GlowUp Skincare"/></div>
+            <div className="frow">
+              <div className="fg"><label className="fl">Platform</label><select className="fsel" value={newCollab.platform} onChange={e=>setNewCollab(f=>({...f,platform:e.target.value}))}><option>TikTok</option><option>Instagram</option><option>YouTube</option><option>Twitter</option><option>Other</option></select></div>
+              <div className="fg"><label className="fl">Link to Content</label><input className="fi" value={newCollab.url} onChange={e=>setNewCollab(f=>({...f,url:e.target.value}))} placeholder="https://tiktok.com/..."/></div>
+            </div>
+            <div style={{display:"flex",gap:9}}><button onClick={handleAddCollab} className="btn btn-primary btn-lg" style={{flex:1}}>Add to Portfolio</button><button onClick={()=>setShowAddCollab(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
+          </div>
+        </Modal>
+      )}
 
       {/* How brands can work with this creator */}
       {bookingModal&&(
@@ -11625,7 +11705,7 @@ function App() {
         case "rate-card":    return React.createElement(RateCardPage,{onRateCardFilled:()=>updateProfileFlags({rateCardFilled:true})});
         case "media-kit":    return React.createElement(MediaKitPage,{userName,userInitials,socialLinks});
         case "invoices":     return React.createElement(InvoicesPage,{role});
-        case "public-profile": return React.createElement(PublicProfilePage,{setPage,userName,userInitials,socialLinks,deals,profilePct:PC_ITEMS.reduce((s,it)=>s+(({initials:true,bio:!!socialLinks.bio?.trim(),social:SOCIALS.some(x=>socialLinks[x.key]?.trim()),analytics:!!profileFlags.analyticsUploaded,ratecard:!!profileFlags.rateCardFilled,avail:!!profileFlags.availabilitySet})[it.key]?it.weight:0),0)});
+        case "public-profile": return React.createElement(PublicProfilePage,{setPage,userName,userInitials,socialLinks,deals,demoMode,profilePct:PC_ITEMS.reduce((s,it)=>s+(({initials:true,bio:!!socialLinks.bio?.trim(),social:SOCIALS.some(x=>socialLinks[x.key]?.trim()),analytics:!!profileFlags.analyticsUploaded,ratecard:!!profileFlags.rateCardFilled,avail:!!profileFlags.availabilitySet})[it.key]?it.weight:0),0)});
         case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials});
         case "earnings":     return React.createElement(EarningsPage,{deals});
         case "my-affiliate": return React.createElement(AffiliateCreatorPage,{authUser});
