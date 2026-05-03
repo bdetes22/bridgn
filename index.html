@@ -6039,8 +6039,17 @@ function ExpensesPage() {
 
 // ─── BRAND DASHBOARD ──────────────────────────────────────────────────────────
 // ─── CONTENT TRACKER (brand) ────────────────────────────────────────────────
-function ContentTrackerPage({authUser,deals=[]}) {
+function ContentTrackerPage({authUser,deals=[],demoMode}) {
   const loading = useSkeleton();
+  const DEMO_CONTENT = [
+    {id:"dce-1",creator_name:"Mia Chen",platform:"TikTok",post_url:"https://tiktok.com/@mia.creates/video/summer-glow",date_posted:"2026-04-28",caption:"Morning skincare routine ft. @glowupskincare SPF moisturizer",views:142000,likes:8900,comments:342,shares:1200,clicks:890,conversions:67,revenue_cents:180000,notes:"Top performing post this month",campaign_title:"Summer Glow Launch"},
+    {id:"dce-2",creator_name:"Marcus Thompson",platform:"YouTube",post_url:"https://youtube.com/watch?v=altitude-unbox",date_posted:"2026-04-22",caption:"Altitude Athletics New Drop — Full Unboxing & Workout Test",views:89000,likes:4200,comments:287,shares:540,clicks:1450,conversions:112,revenue_cents:320000,notes:"Great engagement, audience loved the workout footage",campaign_title:"New Drop Unboxing"},
+    {id:"dce-3",creator_name:"Aisha Patel",platform:"Instagram",post_url:"https://instagram.com/reel/bytebrew-morning",date_posted:"2026-04-18",caption:"My cozy morning routine starts with @bytebrew",views:67000,likes:5600,comments:198,shares:890,clicks:320,conversions:28,revenue_cents:75000,notes:"Reel outperformed stories significantly",campaign_title:"Morning Routine Collab"},
+    {id:"dce-4",creator_name:"Lily Torres",platform:"Instagram",post_url:"https://instagram.com/p/pulsewear-30day",date_posted:"2026-04-10",caption:"Day 30 complete! My @pulsewear fitness journey results",views:94000,likes:7100,comments:456,shares:1800,clicks:670,conversions:89,revenue_cents:250000,notes:"Best conversion rate across all campaigns",campaign_title:"30-Day Challenge"},
+    {id:"dce-5",creator_name:"Tyler Brooks",platform:"YouTube",post_url:"https://youtube.com/watch?v=solstice-costa-rica",date_posted:"2026-03-28",caption:"Costa Rica Travel Vlog — Packing with Solstice Travel",views:215000,likes:12400,comments:890,shares:3200,clicks:2100,conversions:156,revenue_cents:450000,notes:"Highest view count, great for brand awareness",campaign_title:"Travel Vlog Takeover"},
+    {id:"dce-6",creator_name:"Sofia Rodriguez",platform:"Instagram",post_url:"https://instagram.com/p/riviera-lookbook",date_posted:"2026-04-25",caption:"Summer lookbook ft. @rivieraswimwear new collection",views:78000,likes:6300,comments:267,shares:950,clicks:540,conversions:42,revenue_cents:280000,notes:"Carousel performed better than reel",campaign_title:"Summer Lookbook"},
+    {id:"dce-7",creator_name:"Devon Harper",platform:"TikTok",post_url:"https://tiktok.com/@devoncooks/video/cloudnine-taste",date_posted:"2026-04-15",caption:"Trying EVERY @cloudninesnacks protein bar flavor",views:312000,likes:18700,comments:1240,shares:4500,clicks:1800,conversions:95,revenue_cents:60000,notes:"Went semi-viral, great brand exposure",campaign_title:"Taste Test Reaction"},
+  ];
   const [entries,setEntries] = useState([]);
   const [showAdd,setShowAdd] = useState(false);
   const [editId,setEditId] = useState(null);
@@ -6051,11 +6060,12 @@ function ContentTrackerPage({authUser,deals=[]}) {
 
   useEffect(()=>{
     if(!authUser) return;
+    if(demoMode) { setEntries(DEMO_CONTENT); return; }
     fetch(`${BRIDGN_API_URL}/api/content?userId=${authUser.id}`)
       .then(r=>r.ok?r.json():null)
       .then(data=>{ if(data?.entries) setEntries(data.entries); })
       .catch(e=>console.error("[content]",e));
-  },[authUser]);
+  },[authUser,demoMode]);
 
   const resetForm = () => setForm({creatorName:"",platform:"Instagram",postUrl:"",datePosted:"",caption:"",views:"",likes:"",comments:"",shares:"",clicks:"",conversions:"",revenue:"",notes:"",campaignTitle:"",dealId:""});
 
@@ -11710,7 +11720,7 @@ function App() {
         case "marketplace":   return React.createElement(MarketplaceBrandPage,{setPage,setSelected,deals,addDeal,showToast,userName,authUser});
         case "creator-crm":   return React.createElement(CreatorCRMPage,{setPage,setSelected,deals,addDeal,showToast,userName,authUser});
         case "review-queue":  return React.createElement(ReviewQueuePage,{deals,setPage,setSelected,showToast});
-        case "content-tracker": return React.createElement(ContentTrackerPage,{authUser,deals});
+        case "content-tracker": return React.createElement(ContentTrackerPage,{authUser,deals,demoMode});
         case "spending":      return React.createElement(SpendingDashboard,{deals});
         case "content-library": return React.createElement(ContentLibraryPage,{});
         case "affiliate":     return React.createElement(AffiliateManagerPage,{authUser,deals});
