@@ -150,9 +150,26 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 .pb-tw{background:#162050;color:#93c5fd;border:1px solid rgba(147,197,253,.12)}
 .stat-card{padding:20px;position:relative;overflow:hidden}
 .stat-card::before,.stat-card::after{display:none}
+.stat-card .stat-icon{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;opacity:.9}
 .stat-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
 .stat-value{font-size:26px;font-weight:400;font-family:"DM Serif Display",serif;line-height:1;letter-spacing:-.3px;color:var(--text)}
 .stat-change{font-size:12px;margin-top:6px;font-weight:500;color:var(--text3)}
+/* ── Welcome Banner ── */
+.welcome-banner{border-radius:var(--radius-lg);padding:28px 28px 24px;position:relative;overflow:hidden;margin-bottom:24px}
+.welcome-banner::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.06);top:-60px;right:-40px}
+.welcome-banner::after{content:'';position:absolute;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.04);bottom:-50px;left:-30px}
+.welcome-banner h1{font-family:"DM Serif Display",serif;font-size:26px;font-weight:400;color:#fff;margin:0 0 4px;position:relative;z-index:1}
+.welcome-banner p{font-size:13px;color:rgba(255,255,255,.75);margin:0;position:relative;z-index:1}
+/* ── Deal card left border by status ── */
+.deal-card-active{border-left:3px solid var(--green)}
+.deal-card-pending{border-left:3px solid var(--yellow,#fbbf24)}
+.deal-card-completed{border-left:3px solid var(--text3)}
+/* ── Step progress indicator ── */
+.step-progress{display:flex;gap:4px;margin-top:8px}
+.step-dot{height:4px;flex:1;border-radius:99px;transition:background .3s}
+.step-dot.done{background:var(--accent)}
+.step-dot.current{background:var(--green);animation:livePulse 2s ease-in-out infinite}
+.step-dot.todo{background:var(--surface2)}
 .stat-up{color:var(--green)}.stat-neutral{color:var(--text3)}
 .page-title{font-family:"DM Serif Display",serif;font-size:32px;font-weight:400;color:var(--text);line-height:1.15;letter-spacing:-.3px}
 .page-subtitle{font-size:13px;color:var(--text2);margin-top:5px;line-height:1.5}
@@ -1302,10 +1319,11 @@ function StatSparkline({data, color="#5b8af5"}) {
   );
 }
 
-function StatCard({label, value, change, changeClass, valueStyle}) {
+function StatCard({label, value, change, changeClass, valueStyle, icon, iconBg}) {
   const displayed = useCountUp(value);
   return (
     <div className="card stat-card">
+      {icon&&<div className="stat-icon" style={{background:iconBg||"var(--accent-light)",color:iconBg?"#fff":"var(--accent)"}}>{icon}</div>}
       <div className="stat-label">{label}</div>
       <div className="stat-value" style={valueStyle||{}}>{displayed}</div>
       {change&&<div className={"stat-change "+(changeClass||"")}>{change}</div>}
@@ -1864,22 +1882,22 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
   const pendingEscrow = deals.filter(d=>["payment_held","content_delivered","payment_processing"].includes(d.status));
   const escrowTotal = pendingEscrow.reduce((s,d)=>s+d.amount,0);
   const firstName = (userName||"there").split(" ")[0];
+  const hour = new Date().getHours();
+  const greeting = hour<12?"Good morning":hour<17?"Good afternoon":"Good evening";
   return (
     <div className="fade-in">
-      <div className="ph-row">
-        <div><div className="page-title">Welcome back, {firstName}</div><div className="page-subtitle">Here's what's happening with your deals.</div></div>
-        <button className="btn btn-primary" onClick={()=>setPage("new-deal")}>+ New Deal</button>
+      {/* Welcome Banner */}
+      <div className="welcome-banner" style={{background:"linear-gradient(135deg,#0f4c81,#1a7fa8)"}}>
+        <h1>{greeting}, {firstName}</h1>
+        <p>{active.length>0?`You have ${active.length} active deal${active.length>1?"s":""} and $${escrowTotal.toLocaleString()} in escrow.`:"Start your first deal and begin earning with brands."}</p>
+        <button className="btn" onClick={()=>setPage("new-deal")} style={{marginTop:14,background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.25)",backdropFilter:"blur(4px)",position:"relative",zIndex:1}}>+ New Deal</button>
       </div>
 
-      {/* Stat cards — only show real data */}
+      {/* Stat cards with icons */}
       <div className="g3 section">
-        {[
-          {l:"Active Deals",v:String(active.length)},
-          {l:"In Escrow",v:"$"+escrowTotal.toLocaleString()},
-          {l:"Total Deals",v:String(deals.length)},
-        ].map((s,i)=>(
-          <StatCard key={i} label={s.l} value={s.v}/>
-        ))}
+        <StatCard label="Active Deals" value={String(active.length)} icon={ICONS.trending(18)} iconBg="rgba(52,211,153,.15)"/>
+        <StatCard label="In Escrow" value={"$"+escrowTotal.toLocaleString()} icon={ICONS.dollar(18)} iconBg="rgba(91,138,245,.15)"/>
+        <StatCard label="Total Deals" value={String(deals.length)} icon={ICONS.handshake(18)} iconBg="rgba(167,139,250,.15)"/>
       </div>
 
       {/* Connect bank — only if not connected */}
@@ -1908,15 +1926,17 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
         ):(
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {active.map(d=>{
-              const steps = [true,d.briefSubmitted,d.contractSigned,(d.contentFile||d.contentFiles?.length>0),d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length;
+              const stepChecks = [true,d.briefSubmitted,d.contractSigned,(d.contentFile||d.contentFiles?.length>0),d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"];
+              const doneSteps = stepChecks.filter(Boolean).length;
+              const borderClass = d.status==="Active"?"deal-card-active":d.status==="Pending"?"deal-card-pending":"deal-card-completed";
               return (
-                <div key={d.id} className="card card-hover" style={{padding:"14px 16px",cursor:"pointer"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
+                <div key={d.id} className={"card card-hover "+borderClass} style={{padding:"14px 16px",cursor:"pointer"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
                   <div style={{display:"flex",gap:12,alignItems:"center"}}>
                     <div style={{width:38,height:38,borderRadius:10,background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white",flexShrink:0}}>{d.bi}</div>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}><span style={{fontSize:14,fontWeight:600}}>{d.brand}</span><StatusBadge s={d.status}/></div>
                       <div style={{fontSize:12,color:"var(--text2)"}}>{d.campaignTitle} · {d.platform}</div>
-                      <div style={{marginTop:6,height:3,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}><div style={{height:"100%",borderRadius:99,background:"var(--accent)",width:((steps/6)*100)+"%"}}/></div>
+                      <div className="step-progress">{stepChecks.map((s,i)=><div key={i} className={"step-dot "+(s?"done":i===doneSteps?"current":"todo")}/>)}</div>
                     </div>
                     <div style={{fontSize:16,fontWeight:400,fontFamily:"DM Serif Display,serif",flexShrink:0}}>${d.amount.toLocaleString()}</div>
                   </div>
@@ -6243,10 +6263,19 @@ function BrandDashboard({setPage,setSelected,deals=[],authUser}) {
   const hasSocials = !!(meta.brand_socials?.web || meta.brand_socials?.ig || meta.brand_socials?.bio);
   const profileComplete = hasName && hasSocials;
 
+  const brandName = meta.company_name || meta.full_name || "there";
+  const brandFirst = brandName.split(" ")[0];
+  const hour = new Date().getHours();
+  const greeting = hour<12?"Good morning":hour<17?"Good afternoon":"Good evening";
+  const totalSpent = deals.filter(d=>d.escrowReleased).reduce((s,d)=>s+d.amount,0);
+
   return (
     <div className="fade-in">
-      <div className="ph-row">
-        <div><div className="page-title">Brand Dashboard</div><div className="page-subtitle">Your creator partnership command center.</div></div>
+      {/* Welcome Banner */}
+      <div className="welcome-banner" style={{background:"linear-gradient(135deg,#1b2951,#2d4a8a)"}}>
+        <h1>{greeting}, {brandFirst}</h1>
+        <p>{active.length>0?`Managing ${active.length} active deal${active.length>1?"s":""} with ${uniqueCreators} creator${uniqueCreators!==1?"s":""}.`:"Your creator partnership command center. Start your first deal to get going."}</p>
+        <button className="btn" onClick={()=>setPage("new-deal")} style={{marginTop:14,background:"rgba(255,255,255,.15)",color:"#fff",border:"1px solid rgba(255,255,255,.25)",backdropFilter:"blur(4px)",position:"relative",zIndex:1}}>+ New Deal</button>
       </div>
 
       {/* Complete your profile prompt */}
@@ -6264,13 +6293,9 @@ function BrandDashboard({setPage,setSelected,deals=[],authUser}) {
       )}
 
       <div className="g3 section">
-        {[
-          {l:"Active Deals",v:String(active.length)},
-          {l:"In Escrow",v:"$"+escrowTotal.toLocaleString()},
-          {l:"Content Received",v:String(contentCount)},
-        ].map((s,i)=>(
-          <StatCard key={i} label={s.l} value={s.v}/>
-        ))}
+        <StatCard label="Active Deals" value={String(active.length)} icon={ICONS.trending(18)} iconBg="rgba(52,211,153,.15)"/>
+        <StatCard label="In Escrow" value={"$"+escrowTotal.toLocaleString()} icon={ICONS.dollar(18)} iconBg="rgba(91,138,245,.15)"/>
+        <StatCard label="Content Received" value={String(contentCount)} icon={ICONS.film(18)} iconBg="rgba(167,139,250,.15)"/>
       </div>
 
       {/* Your Deals */}
@@ -6284,15 +6309,17 @@ function BrandDashboard({setPage,setSelected,deals=[],authUser}) {
         ):(
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {active.map(d=>{
-              const steps = [true,d.briefSubmitted,d.contractSigned,(d.contentFile||d.contentFiles?.length>0),d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"].filter(Boolean).length;
+              const stepChecks = [true,d.briefSubmitted,d.contractSigned,(d.contentFile||d.contentFiles?.length>0),d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"];
+              const doneSteps = stepChecks.filter(Boolean).length;
+              const borderClass = d.status==="Active"?"deal-card-active":d.status==="Pending"?"deal-card-pending":"deal-card-completed";
               return (
-                <div key={d.id} className="card card-hover" style={{padding:"14px 16px",cursor:"pointer"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
+                <div key={d.id} className={"card card-hover "+borderClass} style={{padding:"14px 16px",cursor:"pointer"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
                   <div style={{display:"flex",gap:12,alignItems:"center"}}>
                     <div style={{width:38,height:38,borderRadius:10,background:bc(d.ci),display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white",flexShrink:0}}>{d.bi}</div>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}><span style={{fontSize:14,fontWeight:600}}>{d.creatorName||"Creator"}</span><StatusBadge s={d.status}/></div>
                       <div style={{fontSize:12,color:"var(--text2)"}}>{d.campaignTitle} · {d.platform}</div>
-                      <div style={{marginTop:6,height:3,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}><div style={{height:"100%",borderRadius:99,background:"var(--accent)",width:((steps/6)*100)+"%"}}/></div>
+                      <div className="step-progress">{stepChecks.map((s,i)=><div key={i} className={"step-dot "+(s?"done":i===doneSteps?"current":"todo")}/>)}</div>
                     </div>
                     <div style={{fontSize:16,fontWeight:400,fontFamily:"DM Serif Display,serif",flexShrink:0}}>${d.amount.toLocaleString()}</div>
                   </div>
