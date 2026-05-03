@@ -472,14 +472,14 @@ const DEMO_CREATORS = [
 
 // ─── Demo Deals — seeded when ?demo=true ────────────────────────────────────
 const DEMO_DEALS = [
-  {id:"dd-1",brand:"GlowUp Skincare",bi:"GU",ci:0,amount:1800,platform:"TikTok",status:"Active",deadline:"2026-06-15",deliverables:"2x TikTok videos (30-60s) + 1 Instagram Reel",campaignTitle:"Summer Glow Launch",progress:90,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contentFiles:[{name:"glowup-tiktok-v1.mp4",url:"#",size:"14.2 MB"},{name:"glowup-reel.mp4",url:"#",size:"8.7 MB"}],source:"marketplace",creatorUserId:"demo",creatorName:"Mia Chen",brandUserId:"demo-brand-1"},
-  {id:"dd-2",brand:"Altitude Athletics",bi:"AA",ci:1,amount:3200,platform:"YouTube",status:"Active",deadline:"2026-06-28",deliverables:"1x YouTube unboxing (5-10 min) + 1 TikTok short",campaignTitle:"New Drop Unboxing",progress:95,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contentFiles:[{name:"altitude-unboxing-final.mp4",url:"#",size:"248 MB"}],source:"direct",creatorUserId:"demo",creatorName:"Marcus Thompson",brandUserId:"demo-brand-2"},
-  {id:"dd-3",brand:"ByteBrew Coffee",bi:"BB",ci:2,amount:750,platform:"Instagram",status:"Active",deadline:"2026-07-01",deliverables:"3x Instagram Stories + 1 Reel",campaignTitle:"Morning Routine Collab",progress:50,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contentFiles:null,source:"marketplace",creatorUserId:"demo",creatorName:"Aisha Patel",brandUserId:"demo-brand-3"},
-  {id:"dd-4",brand:"NovaTech Gadgets",bi:"NT",ci:3,amount:4000,platform:"YouTube",status:"Pending",deadline:"2026-07-10",deliverables:"1x in-depth YouTube review (8-15 min)",campaignTitle:"Product Review Series",progress:30,escrow:false,escrowReleased:false,briefSubmitted:true,contractSigned:false,contentFiles:null,source:"direct",creatorUserId:"demo",creatorName:"Jake Morrison",brandUserId:"demo-brand-4"},
-  {id:"dd-5",brand:"PulseWear Fitness",bi:"PW",ci:5,amount:2500,platform:"Instagram",status:"Completed",deadline:"2026-05-20",deliverables:"Daily story updates + 4 feed posts over 30 days",campaignTitle:"30-Day Challenge",progress:100,escrow:true,escrowReleased:true,briefSubmitted:true,contractSigned:true,contentFiles:[{name:"pulsewear-stories-batch.zip",url:"#",size:"42 MB"},{name:"pulsewear-feed-posts.zip",url:"#",size:"18 MB"}],source:"marketplace",creatorUserId:"demo",creatorName:"Lily Torres",brandUserId:"demo-brand-5"},
-  {id:"dd-6",brand:"CloudNine Snacks",bi:"CN",ci:1,amount:600,platform:"TikTok",status:"Pending",deadline:"2026-06-20",deliverables:"2x TikTok taste test videos (15-45s each)",campaignTitle:"Taste Test Reaction",progress:20,escrow:false,escrowReleased:false,briefSubmitted:true,contractSigned:false,contentFiles:null,source:"marketplace",creatorUserId:"demo",creatorName:"Devon Harper",brandUserId:"demo-brand-6"},
-  {id:"dd-7",brand:"Riviera Swimwear",bi:"RS",ci:2,amount:2800,platform:"Instagram",status:"Active",deadline:"2026-07-05",deliverables:"1x Instagram carousel (8-10 photos) + 1 Reel",campaignTitle:"Summer Lookbook",progress:70,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contentFiles:[{name:"riviera-lookbook-carousel.zip",url:"#",size:"32 MB"},{name:"riviera-reel-draft.mp4",url:"#",size:"11 MB"}],source:"direct",creatorUserId:"demo",creatorName:"Sofia Rodriguez",brandUserId:"demo-brand-7"},
-  {id:"dd-8",brand:"Solstice Travel",bi:"ST",ci:0,amount:4500,platform:"YouTube",status:"Completed",deadline:"2026-04-15",deliverables:"1x travel vlog (10-20 min) + 5 Instagram Stories",campaignTitle:"Travel Vlog Takeover",progress:100,escrow:true,escrowReleased:true,briefSubmitted:true,contractSigned:true,contentFiles:[{name:"solstice-vlog-final.mp4",url:"#",size:"1.2 GB"},{name:"solstice-stories.zip",url:"#",size:"28 MB"}],source:"marketplace",creatorUserId:"demo",creatorName:"Tyler Brooks",brandUserId:"demo-brand-8"},
+  {id:"dd-1",brand:"GlowUp Skincare",bi:"GU",ci:0,amount:1800,platform:"TikTok",status:"content_delivered",deadline:"2026-06-15",deliverables:"2x TikTok videos (30-60s) + 1 Instagram Reel",campaignTitle:"Summer Glow Launch",progress:90,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contractSent:true,contentFiles:[{name:"glowup-tiktok-v1.mp4",url:"#",size:"14.2 MB"},{name:"glowup-reel.mp4",url:"#",size:"8.7 MB"}],source:"marketplace",creatorUserId:"demo",creatorName:"Mia Chen",brandUserId:"demo-brand-1"},
+  {id:"dd-2",brand:"Altitude Athletics",bi:"AA",ci:1,amount:3200,platform:"YouTube",status:"payment_held",deadline:"2026-06-28",deliverables:"1x YouTube unboxing (5-10 min) + 1 TikTok short",campaignTitle:"New Drop Unboxing",progress:95,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contractSent:true,contentFiles:[{name:"altitude-unboxing-final.mp4",url:"#",size:"248 MB"}],source:"direct",creatorUserId:"demo",creatorName:"Marcus Thompson",brandUserId:"demo-brand-2"},
+  {id:"dd-3",brand:"ByteBrew Coffee",bi:"BB",ci:2,amount:750,platform:"Instagram",status:"Active",deadline:"2026-07-01",deliverables:"3x Instagram Stories + 1 Reel",campaignTitle:"Morning Routine Collab",progress:50,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contractSent:true,contentFiles:null,source:"marketplace",creatorUserId:"demo",creatorName:"Aisha Patel",brandUserId:"demo-brand-3"},
+  {id:"dd-4",brand:"NovaTech Gadgets",bi:"NT",ci:3,amount:4000,platform:"YouTube",status:"Active",deadline:"2026-07-10",deliverables:"1x in-depth YouTube review (8-15 min)",campaignTitle:"Product Review Series",progress:30,escrow:false,escrowReleased:false,briefSubmitted:true,contractSigned:false,contentFiles:null,source:"direct",creatorUserId:"demo",creatorName:"Jake Morrison",brandUserId:"demo-brand-4"},
+  {id:"dd-5",brand:"PulseWear Fitness",bi:"PW",ci:5,amount:2500,platform:"Instagram",status:"payment_released",deadline:"2026-05-20",deliverables:"Daily story updates + 4 feed posts over 30 days",campaignTitle:"30-Day Challenge",progress:100,escrow:true,escrowReleased:true,briefSubmitted:true,contractSigned:true,contractSent:true,contentFiles:[{name:"pulsewear-stories-batch.zip",url:"#",size:"42 MB"},{name:"pulsewear-feed-posts.zip",url:"#",size:"18 MB"}],source:"marketplace",creatorUserId:"demo",creatorName:"Lily Torres",brandUserId:"demo-brand-5"},
+  {id:"dd-6",brand:"CloudNine Snacks",bi:"CN",ci:1,amount:600,platform:"TikTok",status:"Active",deadline:"2026-06-20",deliverables:"2x TikTok taste test videos (15-45s each)",campaignTitle:"Taste Test Reaction",progress:20,escrow:false,escrowReleased:false,briefSubmitted:true,contractSigned:false,contentFiles:null,source:"marketplace",creatorUserId:"demo",creatorName:"Devon Harper",brandUserId:"demo-brand-6"},
+  {id:"dd-7",brand:"Riviera Swimwear",bi:"RS",ci:2,amount:2800,platform:"Instagram",status:"content_submitted",deadline:"2026-07-05",deliverables:"1x Instagram carousel (8-10 photos) + 1 Reel",campaignTitle:"Summer Lookbook",progress:70,escrow:true,escrowReleased:false,briefSubmitted:true,contractSigned:true,contractSent:true,contentFiles:[{name:"riviera-lookbook-carousel.zip",url:"#",size:"32 MB"},{name:"riviera-reel-draft.mp4",url:"#",size:"11 MB"}],source:"direct",creatorUserId:"demo",creatorName:"Sofia Rodriguez",brandUserId:"demo-brand-7"},
+  {id:"dd-8",brand:"Solstice Travel",bi:"ST",ci:0,amount:4500,platform:"YouTube",status:"payment_released",deadline:"2026-04-15",deliverables:"1x travel vlog (10-20 min) + 5 Instagram Stories",campaignTitle:"Travel Vlog Takeover",progress:100,escrow:true,escrowReleased:true,briefSubmitted:true,contractSigned:true,contractSent:true,contentFiles:[{name:"solstice-vlog-final.mp4",url:"#",size:"1.2 GB"},{name:"solstice-stories.zip",url:"#",size:"28 MB"}],source:"marketplace",creatorUserId:"demo",creatorName:"Tyler Brooks",brandUserId:"demo-brand-8"},
 ];
 
 // Demo notifications
@@ -987,12 +987,19 @@ function PlatformBadge({p}) {
 }
 
 function StatusBadge({s}) {
-  const cls = {Active:"badge badge-green",Pending:"badge badge-yellow",Completed:"badge badge-gray",Declined:"badge badge-red",Invited:"badge badge-blue",Expiring:"badge badge-orange",Expired:"badge badge-red",Draft:"badge badge-gray"};
-  const dot = s==="Active"?"live-dot live-dot-green":s==="Pending"?"live-dot live-dot-amber":null;
+  const cls = {Active:"badge badge-green",Pending:"badge badge-yellow",Completed:"badge badge-gray",Declined:"badge badge-red",Invited:"badge badge-blue",Expiring:"badge badge-orange",Expired:"badge badge-red",Draft:"badge badge-gray",
+    payment_held:"badge badge-green",payment_released:"badge badge-green",payment_processing:"badge badge-yellow",
+    content_delivered:"badge badge-green",content_submitted:"badge badge-blue",content_under_review:"badge badge-blue",
+    contract_signed:"badge badge-blue",contract_sent:"badge badge-yellow",brief_submitted:"badge badge-yellow",pending_brief:"badge badge-yellow"};
+  const labels = {payment_held:"In Escrow",payment_released:"Paid",payment_processing:"Processing",
+    content_delivered:"Content Approved",content_submitted:"Content Submitted",content_under_review:"Under Review",
+    contract_signed:"Contract Signed",contract_sent:"Contract Sent",brief_submitted:"Brief Sent",pending_brief:"Awaiting Brief"};
+  const dot = (s==="Active"||s==="payment_held"||s==="content_delivered")?"live-dot live-dot-green":(s==="Pending"||s==="payment_processing"||s==="brief_submitted")?"live-dot live-dot-amber":null;
+  const label = labels[s]||s;
   return (
     <span className={cls[s]||"badge badge-gray"}>
       {dot&&<span className={dot}/>}
-      {s}
+      {label}
     </span>
   );
 }
@@ -1928,7 +1935,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
             {active.map(d=>{
               const stepChecks = [true,d.briefSubmitted,d.contractSigned,(d.contentFile||d.contentFiles?.length>0),d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"];
               const doneSteps = stepChecks.filter(Boolean).length;
-              const borderClass = d.status==="Active"?"deal-card-active":d.status==="Pending"?"deal-card-pending":"deal-card-completed";
+              const borderClass = (d.status==="Active"||d.status==="payment_held"||d.status==="content_delivered"||d.status==="content_submitted")?"deal-card-active":(d.status==="Pending"||d.status==="brief_submitted"||d.status==="contract_sent"||d.status==="payment_processing")?"deal-card-pending":"deal-card-completed";
               return (
                 <div key={d.id} className={"card card-hover "+borderClass} style={{padding:"14px 16px",cursor:"pointer"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
                   <div style={{display:"flex",gap:12,alignItems:"center"}}>
@@ -6311,7 +6318,7 @@ function BrandDashboard({setPage,setSelected,deals=[],authUser}) {
             {active.map(d=>{
               const stepChecks = [true,d.briefSubmitted,d.contractSigned,(d.contentFile||d.contentFiles?.length>0),d.approvedDeliverables?.length>0&&d.approvedDeliverables.every(Boolean),d.status==="payment_released"];
               const doneSteps = stepChecks.filter(Boolean).length;
-              const borderClass = d.status==="Active"?"deal-card-active":d.status==="Pending"?"deal-card-pending":"deal-card-completed";
+              const borderClass = (d.status==="Active"||d.status==="payment_held"||d.status==="content_delivered"||d.status==="content_submitted")?"deal-card-active":(d.status==="Pending"||d.status==="brief_submitted"||d.status==="contract_sent"||d.status==="payment_processing")?"deal-card-pending":"deal-card-completed";
               return (
                 <div key={d.id} className={"card card-hover "+borderClass} style={{padding:"14px 16px",cursor:"pointer"}} onClick={()=>{setSelected(d);setPage("deal-room");}}>
                   <div style={{display:"flex",gap:12,alignItems:"center"}}>
