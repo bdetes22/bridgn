@@ -219,7 +219,7 @@ router.get("/config", (_req, res) => {
 router.post("/create-deal-payment", async (req, res) => {
   const {
     dealId, amount, brandUserId, brandEmail, brandName,
-    creatorUserId, escrowReleaseDays,
+    creatorUserId, escrowReleaseDays, upfrontPct,
   } = req.body;
 
   // ── Validate inputs ────────────────────────────────────────────────────────
@@ -235,7 +235,9 @@ router.post("/create-deal-payment", async (req, res) => {
   }
 
   const releaseDays         = Math.max(1, Math.min(90, Number(escrowReleaseDays) || 14));
+  const pct                 = Math.max(1, Math.min(100, parseInt(upfrontPct) || 100));
   const creatorPayoutCents  = Math.round(amountDollars * 100);
+  const upfrontCents        = Math.round(creatorPayoutCents * pct / 100);
 
   try {
     // ── 1. Get or create the Stripe Customer for this brand ──────────────────
@@ -255,8 +257,8 @@ router.post("/create-deal-payment", async (req, res) => {
 
     // ── 2. Check if this is the brand's first deal (free — no platform fee) ──
     const isFirstDeal = !brandProfile?.first_deal_used;
-    const applicationFeeCents = isFirstDeal ? 0 : Math.round(creatorPayoutCents * PLATFORM_FEE_PERCENT);
-    const totalChargeCents    = creatorPayoutCents + applicationFeeCents;
+    const applicationFeeCents = isFirstDeal ? 0 : Math.round(upfrontCents * PLATFORM_FEE_PERCENT);
+    const totalChargeCents    = upfrontCents + applicationFeeCents;
 
     // ── 3. Verify the creator has a connected account ────────────────────────
     const creatorProfile = await getCreatorProfile(creatorUserId);
@@ -287,6 +289,8 @@ router.post("/create-deal-payment", async (req, res) => {
         bridgn_creator_id:        creatorUserId,
         creator_stripe_account:   creatorProfile.stripe_account_id,
         creator_payout_dollars:    String(amountDollars),
+        upfront_pct:              String(pct),
+        upfront_cents:            String(upfrontCents),
         total_charge_cents:       String(totalChargeCents),
         platform_fee_cents:       String(applicationFeeCents),
         platform_fee_pct:         String(isFirstDeal ? 0 : PLATFORM_FEE_PERCENT),
@@ -308,6 +312,7 @@ router.post("/create-deal-payment", async (req, res) => {
         amount_cents:          creatorPayoutCents,
         application_fee_cents: applicationFeeCents,
         auto_release_days:     releaseDays,
+        upfront_pct:           pct,
       });
     } else {
       await upsertDeal(paymentIntent.id, {
@@ -317,6 +322,7 @@ router.post("/create-deal-payment", async (req, res) => {
         amount_cents:          creatorPayoutCents,
         application_fee_cents: applicationFeeCents,
         auto_release_days:     releaseDays,
+        upfront_pct:           pct,
         status:                "pending",
       });
     }
@@ -331,10 +337,12 @@ router.post("/create-deal-payment", async (req, res) => {
       paymentIntentId:     paymentIntent.id,
       publishableKey:      process.env.STRIPE_PUBLISHABLE_KEY,
       creatorPayoutCents,
+      upfrontCents,
       totalChargeCents,
       applicationFeeCents,
       isFirstDealFree:     isFirstDeal,
       escrowReleaseDays:   releaseDays,
+      upfrontPct:          pct,
     });
   } catch (err) {
     console.error("[stripe/create-deal-payment]", err);
@@ -492,6 +500,112 @@ router.post("/dispute-deal", async (req, res) => {
     res.json({ status: "payment_disputed", dealId: deal.bridgn_deal_id });
   } catch (err) {
     console.error("[stripe/dispute-deal]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Pay remaining balance (Net 30) ─────────────────────────────────────────
+
+/**
+ * POST /api/stripe/pay-remaining
+ *
+ * Body:
+ *   dealId        string — bridgn deal id
+ *   brandUserId   string — the brand paying
+ *   brandEmail    string
+ *   brandName     string
+ *
+ * Creates a PaymentIntent for the remaining balance (100% - upfront_pct) after
+ * content goes LIVE. Only callable when content_live_at is set.
+ */
+router.post("/pay-remaining", async (req, res) => {
+  const { dealId, brandUserId, brandEmail, brandName } = req.body;
+
+  if (!dealId || !brandUserId) {
+    return res.status(400).json({ error: "dealId and brandUserId are required." });
+  }
+
+  try {
+    const deal = await getDealByBridgnDealId(dealId);
+    if (!deal) return res.status(404).json({ error: "Deal not found." });
+
+    if (deal.brand_user_id !== brandUserId) {
+      return res.status(403).json({ error: "Only the brand on this deal can pay." });
+    }
+
+    if (!deal.content_live_at) {
+      return res.status(409).json({ error: "Content must be marked as LIVE before paying remaining balance." });
+    }
+
+    if (deal.remaining_payment_intent_id) {
+      return res.status(409).json({ error: "Remaining payment has already been initiated." });
+    }
+
+    const upPct = deal.upfront_pct || 100;
+    if (upPct >= 100) {
+      return res.status(409).json({ error: "No remaining balance — deal was funded 100% upfront." });
+    }
+
+    const remainingCents = Math.round(deal.amount_cents * (100 - upPct) / 100);
+    const brandProfile = await getBrandProfile(brandUserId);
+    const isFirstDeal = !brandProfile?.first_deal_used;
+    const feeCents = isFirstDeal ? 0 : Math.round(remainingCents * PLATFORM_FEE_PERCENT);
+    const totalChargeCents = remainingCents + feeCents;
+
+    let customerId = brandProfile?.stripe_customer_id;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: brandEmail || undefined,
+        name: brandName || undefined,
+        metadata: { bridgn_user_id: brandUserId },
+      });
+      customerId = customer.id;
+      await upsertBrandProfile(brandUserId, { stripe_customer_id: customer.id });
+    }
+
+    const creatorProfile = await getCreatorProfile(deal.creator_user_id);
+    if (!creatorProfile?.stripe_account_id) {
+      return res.status(422).json({ error: "Creator has not completed Stripe onboarding." });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: totalChargeCents,
+      currency: "usd",
+      customer: customerId,
+      payment_method_types: ["us_bank_account"],
+      payment_method_options: {
+        us_bank_account: {
+          financial_connections: { permissions: ["payment_method"] },
+        },
+      },
+      capture_method: "automatic",
+      metadata: {
+        bridgn_deal_id: String(dealId),
+        bridgn_brand_id: brandUserId,
+        bridgn_creator_id: deal.creator_user_id,
+        creator_stripe_account: creatorProfile.stripe_account_id,
+        payment_type: "remaining_balance",
+        remaining_cents: String(remainingCents),
+        upfront_pct: String(upPct),
+        total_charge_cents: String(totalChargeCents),
+        platform_fee_cents: String(feeCents),
+      },
+    });
+
+    await updateDealById(deal.id, {
+      remaining_payment_intent_id: paymentIntent.id,
+    });
+
+    res.json({
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      remainingCents,
+      totalChargeCents,
+      feeCents,
+    });
+  } catch (err) {
+    console.error("[stripe/pay-remaining]", err);
     res.status(500).json({ error: err.message });
   }
 });

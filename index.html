@@ -990,11 +990,13 @@ function StatusBadge({s}) {
   const cls = {Active:"badge badge-green",Pending:"badge badge-yellow",Completed:"badge badge-gray",Declined:"badge badge-red",Invited:"badge badge-blue",Expiring:"badge badge-orange",Expired:"badge badge-red",Draft:"badge badge-gray",
     payment_held:"badge badge-green",payment_released:"badge badge-green",payment_processing:"badge badge-yellow",
     content_delivered:"badge badge-green",content_submitted:"badge badge-blue",content_under_review:"badge badge-blue",
+    content_live:"badge badge-green",payment_overdue:"badge badge-red",
     contract_signed:"badge badge-blue",contract_sent:"badge badge-yellow",brief_submitted:"badge badge-yellow",pending_brief:"badge badge-yellow"};
   const labels = {payment_held:"In Escrow",payment_released:"Paid",payment_processing:"Processing",
     content_delivered:"Content Approved",content_submitted:"Content Submitted",content_under_review:"Under Review",
+    content_live:"LIVE",payment_overdue:"Overdue",
     contract_signed:"Contract Signed",contract_sent:"Contract Sent",brief_submitted:"Brief Sent",pending_brief:"Awaiting Brief"};
-  const dot = (s==="Active"||s==="payment_held"||s==="content_delivered")?"live-dot live-dot-green":(s==="Pending"||s==="payment_processing"||s==="brief_submitted")?"live-dot live-dot-amber":null;
+  const dot = (s==="Active"||s==="payment_held"||s==="content_delivered"||s==="content_live")?"live-dot live-dot-green":(s==="Pending"||s==="payment_processing"||s==="brief_submitted")?"live-dot live-dot-amber":(s==="payment_overdue")?"live-dot live-dot-red":null;
   const label = labels[s]||s;
   return (
     <span className={cls[s]||"badge badge-gray"}>
@@ -1197,6 +1199,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
     {k:"workspace",l:"Workspace",i:ICONS.sparkles},
     {section:"Business"},
     {k:"earnings",l:"Earnings",i:ICONS.dollar},
+    {k:"collaborators",l:"Collaborators",i:ICONS.users},
     {k:"contracts",l:"Contract Vault",i:ICONS.folder},
     {k:"public-profile",l:"My Profile",i:ICONS.user},
     {k:"settings",l:"Settings",i:ICONS.gear},
@@ -1213,6 +1216,7 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
     {k:"review-queue",l:"Review Queue",i:ICONS.clipboard},
     {k:"content-tracker",l:"Content Tracker",i:ICONS.chart},
     {k:"spending",l:"Spending",i:ICONS.dollar},
+    {k:"collaborators",l:"Collaborators",i:ICONS.users},
     {section:"Account"},
     {k:"settings",l:"Settings",i:ICONS.gear},
   ];
@@ -2920,6 +2924,60 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
   const [disputeLoading,setDisputeLoading] = useState(false);
   const [showDisputeModal,setShowDisputeModal] = useState(false);
   const [disputeReason,setDisputeReason] = useState("");
+  const [liveUrl,setLiveUrl] = useState("");
+  const [markingLive,setMarkingLive] = useState(false);
+  const [remainingPhase,setRemainingPhase] = useState("idle"); // idle|creating|collecting|confirming|done|error
+  const [remainingError,setRemainingError] = useState(null);
+  const handlePayRemaining = async () => {
+    if(!activeDeal || !authUser) return;
+    setRemainingPhase("creating");
+    setRemainingError(null);
+    try {
+      const resp = await fetch(`${BRIDGN_API_URL}/api/stripe/pay-remaining`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          dealId: activeDeal.id,
+          brandUserId: authUser.id,
+          brandEmail: authUser.email,
+          brandName: authUser.user_metadata?.full_name||authUser.user_metadata?.company_name||authUser.email,
+        }),
+      });
+      if(!resp.ok) { const err = await resp.json().catch(()=>({error:"Network error"})); throw new Error(err.error||"Server error"); }
+      const { clientSecret, publishableKey } = await resp.json();
+      if(!window.Stripe) throw new Error("Stripe.js failed to load.");
+      const stripeJs = window.Stripe(publishableKey);
+      setRemainingPhase("collecting");
+      const { paymentIntent:pi1, error:collectErr } = await stripeJs.collectBankAccountForPayment({
+        clientSecret,
+        params:{payment_method_type:"us_bank_account",payment_method_data:{billing_details:{name:authUser.user_metadata?.full_name||authUser.email,email:authUser.email}}},
+        expand:["payment_method"],
+      });
+      if(collectErr) throw new Error(collectErr.message);
+      if(pi1.status==="requires_payment_method"){setRemainingPhase("idle");return;}
+      setRemainingPhase("confirming");
+      const { paymentIntent:pi2, error:confirmErr } = await stripeJs.confirmUsBankAccountPayment(clientSecret);
+      if(confirmErr) throw new Error(confirmErr.message);
+      setRemainingPhase("done");
+      setActiveDeal(prev=>({...prev,remainingPaid:true}));
+      updateDeal&&updateDeal(activeDeal.id,{remainingPaid:true});
+    } catch(err) { console.error("[payRemaining]",err); setRemainingError(err.message); setRemainingPhase("error"); }
+  };
+  const handleMarkLive = async () => {
+    if(!activeDeal || !authUser || !liveUrl.trim()) return;
+    setMarkingLive(true);
+    try {
+      const resp = await fetch(`${BRIDGN_API_URL}/api/deals/mark-live`, {
+        method:"PUT", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({bridgnDealId:activeDeal.id, userId:authUser.id, postLink:liveUrl.trim()}),
+      });
+      if(resp.ok) {
+        const {deal} = await resp.json();
+        setActiveDeal(prev=>({...prev,...deal}));
+        updateDeal && updateDeal(activeDeal.id, deal);
+      }
+    } catch(e) { console.error("[markLive]",e); }
+    setMarkingLive(false);
+  };
   const [escrowToast,setEscrowToast] = useState(null);
 
   const isBrand = role === "brand";
@@ -2946,6 +3004,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           brandName:          authUser.user_metadata?.full_name || authUser.user_metadata?.company_name || authUser.email,
           creatorUserId:      activeDeal.creatorUserId || "",
           escrowReleaseDays:  escrowReleaseDays,
+          upfrontPct:         activeDeal.upfrontPct || 100,
         }),
       });
       if(!resp.ok) {
@@ -3693,6 +3752,30 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                 <div className="mob-upload-zone" onClick={()=>!uploadingContent&&contentFileInputRef.current?.click()} style={{border:"2px dashed var(--border)",borderRadius:"var(--radius)",padding:contentFiles.length>0?"14px":"20px",textAlign:"center",cursor:uploadingContent?"default":"pointer",opacity:uploadingContent?.6:1}} onMouseEnter={e=>{if(!uploadingContent)e.currentTarget.style.borderColor=g[0];}} onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
                   {uploadingContent?<><div style={{fontSize:"16px",animation:"spin .9s linear infinite",display:"inline-block"}}>⟳</div><div style={{fontSize:"12px",marginTop:4}}>Uploading...</div></>:<><div style={{fontSize:contentFiles.length>0?"12px":"13px",fontWeight:600}}>{contentFiles.length>0?"+ Add more files":"Upload Content"}</div>{contentFiles.length===0&&<div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>MP4, MOV, JPG, PNG — select multiple files at once</div>}</>}
                 </div>
+                {/* ── Mark as LIVE ── */}
+                {contentFiles.length>0&&(approved.length>0&&approved.every(Boolean))&&!activeDeal.contentLiveAt&&(
+                  <div style={{marginTop:14,padding:"16px 18px",background:"linear-gradient(135deg,rgba(34,197,94,.06),rgba(34,197,94,.02))",border:"1.5px solid rgba(34,197,94,.3)",borderRadius:"var(--radius)"}}>
+                    <div style={{fontSize:"13px",fontWeight:700,color:"var(--green)",marginBottom:6}}>Ready to go live?</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:10,lineHeight:1.5}}>Once your content is posted, paste the live link below and mark it as LIVE.{(activeDeal.upfrontPct||100)<100?" This will release your upfront payment and start the Net 30 countdown for the remaining balance.":""}</div>
+                    <div style={{display:"flex",gap:8}}>
+                      <input className="fi" style={{flex:1,padding:"8px 11px",fontSize:"12px"}} value={liveUrl} onChange={e=>setLiveUrl(e.target.value)} placeholder="Paste live post URL (e.g. https://tiktok.com/...)" onKeyDown={e=>e.key==="Enter"&&liveUrl.trim()&&handleMarkLive()}/>
+                      <button className="btn btn-primary btn-sm" onClick={handleMarkLive} disabled={!liveUrl.trim()||markingLive} style={{opacity:(!liveUrl.trim()||markingLive)?.5:1,whiteSpace:"nowrap"}}>
+                        {markingLive?"Marking...":"Mark as LIVE"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {/* ── Already LIVE indicator ── */}
+                {activeDeal.contentLiveAt&&(
+                  <div style={{marginTop:14,padding:"12px 16px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",display:"flex",gap:8,alignItems:"center"}}>
+                    <span style={{fontSize:"16px"}}>🟢</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"12px",fontWeight:700,color:"var(--green)"}}>Content is LIVE</div>
+                      {activeDeal.postLink&&<a href={activeDeal.postLink} target="_blank" rel="noopener noreferrer" style={{fontSize:"11px",color:"var(--green)",textDecoration:"underline"}}>{activeDeal.postLink.replace(/https?:\/\/(www\.)?/,"").slice(0,50)}{activeDeal.postLink.length>60?"...":""}</a>}
+                    </div>
+                    {activeDeal.contentLiveAt&&<span style={{fontSize:"10px",color:"var(--text3)"}}>{new Date(activeDeal.contentLiveAt).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span>}
+                  </div>
+                )}
               </div>
             )}
 
@@ -3809,6 +3892,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               {label:"Contract Signed",      done:contractSigned},
               {label:"Content Delivered",    done:contentUploaded},
               {label:"Deliverables Approved",done:allApproved},
+              {label:"Content LIVE",         done:!!activeDeal.contentLiveAt},
               {label:"Payment Released",     done:activeDeal.status==="payment_released"},
             ];
             const liveProgress = steps.filter(s=>s.done).length;
@@ -3820,8 +3904,8 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                 <span style={{fontSize:"11px",fontWeight:600,color:"var(--accent)"}}>{liveProgress} of {steps.length}</span>
               </div>
               <div style={{position:"relative"}}>
-                <svg aria-hidden="true" style={{position:"absolute",left:0,top:0,width:20,height:204,pointerEvents:"none",overflow:"visible",zIndex:0}}>
-                  {[0,1,2,3,4].map(i=>{
+                <svg aria-hidden="true" style={{position:"absolute",left:0,top:0,width:20,height:238,pointerEvents:"none",overflow:"visible",zIndex:0}}>
+                  {[0,1,2,3,4,5].map(i=>{
                     if(liveProgress<=i) return null;
                     const y1=i*34+17, y2=(i+1)*34+17, len=y2-y1;
                     return (
@@ -3869,9 +3953,13 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           {(()=>{
             const st = activeDeal.status;
             const hasPaid = !!activeDeal.paymentIntentId;
-            // Creator gets the full deal amount. Brand pays deal + fee (waived on first deal).
-            const feeDollars = isFirstDealFree ? 0 : Math.round(activeDeal.amount * 0.08);
-            const brandTotal = activeDeal.amount + feeDollars;
+            const upPct = activeDeal.upfrontPct ?? 100;
+            const isPartial = upPct < 100;
+            const upfrontAmount = Math.round(activeDeal.amount * upPct / 100);
+            const remainingAmount = activeDeal.amount - upfrontAmount;
+            // Fee calculated on upfront portion only (remaining has its own fee later)
+            const feeDollars = isFirstDealFree ? 0 : Math.round(upfrontAmount * 0.08);
+            const brandTotal = upfrontAmount + feeDollars;
             const creatorNet = activeDeal.amount;
 
             // ── payment_released — green success, both sides ──
@@ -3912,8 +4000,45 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               </div>
             );
 
+            // ── payment_overdue — brand hasn't paid remaining balance ──
+            if(st==="payment_overdue") {
+              const remainBusy = remainingPhase==="creating"||remainingPhase==="collecting"||remainingPhase==="confirming";
+              const remainFee = isFirstDealFree ? 0 : Math.round(remainingAmount*0.08);
+              const remainTotal = remainingAmount + remainFee;
+              return (
+                <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(239,68,68,.07),rgba(239,68,68,.03))",border:"1.5px solid rgba(239,68,68,.25)"}}>
+                  <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:12}}>
+                    <span style={{fontSize:"22px",flexShrink:0}}>⚠️</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:700,color:"var(--red)",marginBottom:3}}>Payment Overdue</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>
+                        {isBrand
+                          ? <span>Your remaining payment of <strong>${remainingAmount.toLocaleString()}</strong> is past due. Please pay immediately to avoid account restrictions.</span>
+                          : <span>The brand's remaining payment of <strong>${remainingAmount.toLocaleString()}</strong> is overdue. We're actively following up with them.</span>}
+                      </div>
+                      {isBrand&&<div style={{marginTop:8,padding:"6px 10px",background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.25)",borderRadius:6,fontSize:"11px",fontWeight:600,color:"var(--red)",display:"inline-flex",alignItems:"center",gap:5}}>⚠ Your account may be restricted if not paid within 15 days</div>}
+                    </div>
+                  </div>
+                  {isBrand&&(
+                    <>
+                      {remainingPhase==="error"&&remainingError&&(
+                        <div style={{padding:"8px 12px",borderRadius:"var(--radius-sm)",background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",fontSize:"12px",color:"var(--red)",marginBottom:10}}>{remainingError}</div>
+                      )}
+                      {remainingPhase==="done"?(
+                        <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:8,fontSize:12,color:"var(--green)",fontWeight:600}}>Payment submitted — processing.</div>
+                      ):(
+                        <button className="btn btn-primary" style={{width:"100%",background:"var(--red)",borderColor:"var(--red)",opacity:remainBusy?.65:1}} onClick={handlePayRemaining} disabled={remainBusy}>
+                          {remainBusy?<><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span> Processing...</>:<>Pay Now — ${remainTotal.toLocaleString()}</>}
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            }
+
             // ── payment_held or content_delivered WITH payment — escrow active ──
-            if((st==="payment_held"||st==="content_delivered")&&hasPaid) {
+            if((st==="payment_held"||st==="content_delivered"||st==="content_live")&&hasPaid) {
               const autoRelease = activeDeal.autoReleaseAt ? new Date(activeDeal.autoReleaseAt) : null;
               const daysLeft = autoRelease ? Math.max(0, Math.ceil((autoRelease - Date.now()) / (1000*60*60*24))) : escrowReleaseDays;
               return (<>
@@ -3921,11 +4046,11 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                   <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
                     <span style={{fontSize:"22px",flexShrink:0}}></span>
                     <div style={{flex:1}}>
-                      <div style={{fontSize:"13px",fontWeight:700,color:"var(--teal)",marginBottom:3}}>Escrow: ${activeDeal.amount.toLocaleString()} held</div>
+                      <div style={{fontSize:"13px",fontWeight:700,color:"var(--teal)",marginBottom:3}}>Escrow: ${isPartial?upfrontAmount.toLocaleString()+" ("+upPct+"% upfront)":activeDeal.amount.toLocaleString()} held</div>
                       <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>
                         {isBrand
-                          ? <span>Funds are secured by bridgn. Release when you approve the creator's content, or they auto-release in <strong>{daysLeft} day{daysLeft!==1?"s":""}</strong>.</span>
-                          : <span>The brand's payment is held securely by bridgn. It will be released when they approve your content, or auto-releases in <strong>{daysLeft} day{daysLeft!==1?"s":""}</strong>.</span>}
+                          ? <span>Funds are secured by bridgn. Release when you approve the creator's content, or they auto-release in <strong>{daysLeft} day{daysLeft!==1?"s":""}</strong>.{isPartial&&<span> Remaining <strong>${remainingAmount.toLocaleString()}</strong> ({100-upPct}%) due Net 30 after content goes live.</span>}</span>
+                          : <span>The brand's payment is held securely by bridgn. It will be released when they approve your content, or auto-releases in <strong>{daysLeft} day{daysLeft!==1?"s":""}</strong>.{isPartial&&<span> Remaining <strong>${remainingAmount.toLocaleString()}</strong> ({100-upPct}%) due Net 30 after content goes live.</span>}</span>}
                       </div>
                       {st==="content_delivered"&&(
                         <div style={{marginTop:8,padding:"6px 10px",background:"rgba(34,197,94,.1)",border:"1px solid rgba(34,197,94,.25)",borderRadius:6,fontSize:"11px",fontWeight:600,color:"var(--green)",display:"inline-flex",alignItems:"center",gap:5}}>Content delivered — awaiting brand approval</div>
@@ -3933,9 +4058,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                     </div>
                   </div>
                   {/* Mini breakdown */}
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,padding:"10px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",marginBottom:isBrand?14:0}}>
-                    {(isBrand?[["Deal amount","$"+activeDeal.amount.toLocaleString()],["Service fee","$"+feeDollars.toLocaleString()],["Total charged","$"+brandTotal.toLocaleString()]]:[["Deal amount","$"+activeDeal.amount.toLocaleString()],["You receive","$"+creatorNet.toLocaleString()],["Status","In escrow"]]).map(([l,v],i)=>(
-                      <div key={i} style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700,color:i===2?"var(--green)":"var(--text)"}}>{v}</div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>{l}</div></div>
+                  <div style={{display:"grid",gridTemplateColumns:isPartial?"1fr 1fr 1fr 1fr":"1fr 1fr 1fr",gap:8,padding:"10px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)",marginBottom:isBrand?14:0}}>
+                    {(isBrand?(isPartial?[["Upfront ("+upPct+"%)","$"+upfrontAmount.toLocaleString()],["Remaining","$"+remainingAmount.toLocaleString()],["Service fee","$"+feeDollars.toLocaleString()],["Charged now","$"+brandTotal.toLocaleString()]]:[["Deal amount","$"+activeDeal.amount.toLocaleString()],["Service fee","$"+feeDollars.toLocaleString()],["Total charged","$"+brandTotal.toLocaleString()]]):(isPartial?[["Total deal","$"+creatorNet.toLocaleString()],["Upfront ("+upPct+"%)","$"+upfrontAmount.toLocaleString()],["Remaining","$"+remainingAmount.toLocaleString()],["Status","In escrow"]]:[["Deal amount","$"+activeDeal.amount.toLocaleString()],["You receive","$"+creatorNet.toLocaleString()],["Status","In escrow"]])).map(([l,v],i,arr)=>(
+                      <div key={i} style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700,color:i===arr.length-1?"var(--green)":"var(--text)"}}>{v}</div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>{l}</div></div>
                     ))}
                   </div>
                   {/* Brand actions */}
@@ -3973,6 +4098,53 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                       <div style={{height:4,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}>
                         <div style={{height:"100%",borderRadius:99,background:daysLeft<=3?"var(--red)":"var(--teal)",width:pctBar+"%",transition:"width .5s"}}/>
                       </div>
+                    </div>
+                  );
+                })()}
+                {/* ── Remaining Balance (Net 30) — after content LIVE ── */}
+                {isPartial&&activeDeal.contentLiveAt&&!activeDeal.remainingPaid&&(()=>{
+                  const net30Due = activeDeal.net30DueAt ? new Date(activeDeal.net30DueAt) : null;
+                  const net30DaysLeft = net30Due ? Math.max(0,Math.ceil((net30Due-Date.now())/(1000*60*60*24))) : 30;
+                  const remainFee = isFirstDealFree ? 0 : Math.round(remainingAmount*0.08);
+                  const remainTotal = remainingAmount + remainFee;
+                  const remainBusy = remainingPhase==="creating"||remainingPhase==="collecting"||remainingPhase==="confirming";
+                  return (
+                    <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(251,146,60,.06),rgba(251,146,60,.02))",border:"1.5px solid rgba(251,146,60,.3)",marginTop:8}}>
+                      <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:12}}>
+                        <span style={{fontSize:"20px",flexShrink:0}}>⏱</span>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:"13px",fontWeight:700,color:"var(--orange, #f97316)",marginBottom:3}}>Remaining Balance: ${remainingAmount.toLocaleString()}</div>
+                          <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>
+                            {isBrand
+                              ? <span>Due by <strong>{net30Due?net30Due.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"30 days from LIVE"}</strong> ({net30DaysLeft} day{net30DaysLeft!==1?"s":""} remaining).</span>
+                              : <span>Brand has <strong>{net30DaysLeft} day{net30DaysLeft!==1?"s":""}</strong> to pay the remaining ${remainingAmount.toLocaleString()} ({100-upPct}%).</span>}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Net 30 countdown bar */}
+                      <div style={{padding:"6px 0",marginBottom:isBrand?12:0}}>
+                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                          <span style={{fontSize:"10px",fontWeight:600,color:"var(--text3)"}}>Net 30 countdown</span>
+                          <span style={{fontSize:"10px",fontWeight:700,color:net30DaysLeft<=5?"var(--red)":"var(--orange, #f97316)"}}>{net30DaysLeft} day{net30DaysLeft!==1?"s":""} left</span>
+                        </div>
+                        <div style={{height:4,background:"var(--surface2)",borderRadius:99,overflow:"hidden"}}>
+                          <div style={{height:"100%",borderRadius:99,background:net30DaysLeft<=5?"var(--red)":"var(--orange, #f97316)",width:Math.min(100,Math.round(((30-net30DaysLeft)/30)*100))+"%",transition:"width .5s"}}/>
+                        </div>
+                      </div>
+                      {isBrand&&(
+                        <>
+                          {remainingPhase==="error"&&remainingError&&(
+                            <div style={{padding:"8px 12px",borderRadius:"var(--radius-sm)",background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",fontSize:"12px",color:"var(--red)",marginBottom:10}}>{remainingError}</div>
+                          )}
+                          {remainingPhase==="done"?(
+                            <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:8,fontSize:12,color:"var(--green)",fontWeight:600}}>Remaining payment submitted — processing via ACH.</div>
+                          ):(
+                            <button className="btn btn-primary" style={{width:"100%",opacity:remainBusy?.65:1}} onClick={handlePayRemaining} disabled={remainBusy}>
+                              {remainBusy?<><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span> Processing...</>:<>Pay Remaining ${remainTotal.toLocaleString()}{!isFirstDealFree?" (incl. fee)":""}</>}
+                            </button>
+                          )}
+                        </>
+                      )}
                     </div>
                   );
                 })()}
@@ -4027,11 +4199,14 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                       <div style={{fontSize:"12px",fontWeight:600,color:"var(--green)"}}>All deliverables approved — fund the deal to release payment to the creator.</div>
                     </div>
                   )}
-                  <div style={{fontSize:"13px",fontWeight:700,marginBottom:4}}>Fund This Deal</div>
+                  <div style={{fontSize:"13px",fontWeight:700,marginBottom:4}}>Fund This Deal{isPartial?" — "+upPct+"% Upfront":""}</div>
+                  {isPartial&&(
+                    <div style={{padding:"10px 14px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.25)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--accent)",fontWeight:600,lineHeight:1.5}}>Split payment: <strong>${upfrontAmount.toLocaleString()}</strong> ({upPct}%) due now into escrow. Remaining <strong>${remainingAmount.toLocaleString()}</strong> ({100-upPct}%) due Net 30 after content goes live.</div>
+                  )}
                   {isFirstDealFree?(
-                    <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(5,150,105,.2)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--green)",fontWeight:600,lineHeight:1.5}}>Your first deal is free — no platform fee. You'll only be charged the deal amount of ${activeDeal.amount.toLocaleString()}.</div>
+                    <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(5,150,105,.2)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--green)",fontWeight:600,lineHeight:1.5}}>Your first deal is free — no platform fee. You'll only be charged {isPartial?"the upfront amount of $"+upfrontAmount.toLocaleString():"the deal amount of $"+activeDeal.amount.toLocaleString()}.</div>
                   ):(
-                    <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>The creator receives <strong>${activeDeal.amount.toLocaleString()}</strong>. You'll be charged <strong>${brandTotal.toLocaleString()}</strong> (deal + 8% processing fee). Funds are held in escrow until you approve the content.</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>The creator receives <strong>${activeDeal.amount.toLocaleString()}</strong> total. You'll be charged <strong>${brandTotal.toLocaleString()}</strong> now ({isPartial?upPct+"% upfront + ":""}8% processing fee). Funds are held in escrow until you approve the content.</div>
                   )}
                   {achPhase==="error"&&achError&&(
                     <div style={{padding:"9px 12px",borderRadius:"var(--radius-sm)",background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",fontSize:"12px",color:"var(--red)",marginBottom:12,lineHeight:1.5}}>{achError}</div>
@@ -4045,10 +4220,10 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                     {busy?(
                       <><span style={{fontSize:"14px",animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>{" "}{phaseLabel[achPhase]||"Processing…"}</>
                     ):(
-                      <>Connect Bank &amp; Pay ${brandTotal.toLocaleString()}</>
+                      <>Connect Bank &amp; Pay ${brandTotal.toLocaleString()}{isPartial?" ("+upPct+"% upfront)":""}</>
                     )}
                   </button>
-                  <div style={{fontSize:"10px",color:"var(--text3)",marginTop:9,textAlign:"center",lineHeight:1.5}}>ACH payments are processed via Stripe. Your bank details are never stored on bridgn.</div>
+                  <div style={{fontSize:"10px",color:"var(--text3)",marginTop:9,textAlign:"center",lineHeight:1.5}}>ACH payments are processed via Stripe. Your bank details are never stored on bridgn.{isPartial?" Remaining balance due Net 30 after content goes live.":""}</div>
                 </div>
               );
             }
@@ -4282,7 +4457,11 @@ function ActiveDealPage({deal:initDeal,setPage}) {
 function NewDealPage({setPage,onDealCreated,userName,authUser}) {
   const loading = useSkeleton();
   const [step,setStep] = useState(1);
-  const [form,setForm] = useState({brandName:"",brandEmail:"",amount:"",platform:"Instagram",deadline:"",deliverables:"",notes:""});
+  const [form,setForm] = useState(()=>{
+    const base = {brandName:"",brandEmail:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:""};
+    try { const pf=JSON.parse(localStorage.getItem("bridgn_prefill_deal")||"null"); if(pf){localStorage.removeItem("bridgn_prefill_deal"); base.brandName=pf.name||"";} } catch{}
+    return base;
+  });
   const [contractTypes,setContractTypes] = useState(["flat"]);
   const [sending,setSending] = useState(false);
   const [done,setDone] = useState(false);
@@ -4298,6 +4477,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
         brandName: form.brandName,
         brandEmail: form.brandEmail,
         amount: parseInt(form.amount)||0,
+        upfrontPct: parseInt(form.upfrontPct)||100,
         platform: form.platform,
         deliverables: form.deliverables||"",
         deadline: form.deadline||"TBD",
@@ -4333,7 +4513,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
       </div>
       <div style={{display:"flex",gap:10,justifyContent:"center"}}>
         <button className="btn btn-primary" onClick={()=>setPage("deals")}>View My Deals</button>
-        <button className="btn btn-secondary" onClick={()=>{setDone(false);setStep(1);setForm({brandName:"",brandEmail:"",amount:"",platform:"Instagram",deadline:"",deliverables:"",notes:""});setContractTypes(["flat"]);}}>Create Another</button>
+        <button className="btn btn-secondary" onClick={()=>{setDone(false);setStep(1);setForm({brandName:"",brandEmail:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:""});setContractTypes(["flat"]);}}>Create Another</button>
       </div>
     </div>
   );
@@ -4344,7 +4524,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
       id:dealId, brand:form.brandName,
       bi:form.brandName.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),
       ci:Math.floor(Math.random()*6),
-      amount:parseInt(form.amount)||0, platform:form.platform,
+      amount:parseInt(form.amount)||0, upfrontPct:parseInt(form.upfrontPct)||100, platform:form.platform,
       status:"pending", deadline:form.deadline||"TBD",
       deliverables:form.deliverables, progress:0, source:"external",
       campaignTitle:"External Deal — "+form.brandName,
@@ -4362,6 +4542,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
           brandEmail: form.brandEmail,
           inviteeEmail: form.brandEmail,
           amount: parseInt(form.amount)||0,
+          upfrontPct: parseInt(form.upfrontPct)||100,
           platform: form.platform,
           deliverables: form.deliverables||"",
           deadline: form.deadline||"TBD",
@@ -4406,6 +4587,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
             <>
               <div className="frow"><div className="fg"><label className="fl">Brand Name</label><input className="fi" value={form.brandName} onChange={e=>up("brandName",e.target.value)} placeholder="e.g. Nike, GlowUp Co."/></div><div className="fg"><label className="fl">Brand Email</label><input className="fi" type="email" value={form.brandEmail} onChange={e=>up("brandEmail",e.target.value)} placeholder="contact@brand.com"/></div></div>
               <div className="frow"><div className="fg"><label className="fl">Agreed Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="2500"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={form.platform} onChange={e=>up("platform",e.target.value)}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Twitter</option><option>Multiple</option></select></div></div>
+              <div className="fg"><label className="fl">Upfront % (escrow deposit)</label><div style={{display:"flex",gap:8,alignItems:"center"}}><input className="fi" type="number" min="1" max="100" value={form.upfrontPct} onChange={e=>up("upfrontPct",e.target.value)} placeholder="50" style={{maxWidth:100}}/><span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600}}>{form.amount&&form.upfrontPct?`$${Math.round((parseInt(form.amount)||0)*(parseInt(form.upfrontPct)||100)/100).toLocaleString()} upfront`:""}</span></div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>Brand deposits this % into escrow upfront. Remaining balance due Net 30 after content goes live.</div></div>
               <div className="fg"><label className="fl">Submission Deadline</label><input className="fi" type="date" value={form.deadline} onChange={e=>up("deadline",e.target.value)}/></div>
               <div className="fg"><label className="fl">Deliverables</label><input className="fi" value={form.deliverables} onChange={e=>up("deliverables",e.target.value)} placeholder="e.g. 2x Feed Posts, 1x Reel, 3x Stories"/></div>
               <div className="fg"><label className="fl">Notes (optional)</label><textarea className="fta" style={{minHeight:70}} value={form.notes} onChange={e=>up("notes",e.target.value)} placeholder="Any context about how this deal was negotiated..."></textarea></div>
@@ -4469,7 +4651,11 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
 function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
   const loading = useSkeleton();
   const [step,setStep] = useState(1);
-  const [form,setForm] = useState({creatorName:"",creatorEmail:"",campaignTitle:"",amount:"",platform:"Instagram",deadline:"",deliverables:"",notes:""});
+  const [form,setForm] = useState(()=>{
+    const base = {creatorName:"",creatorEmail:"",campaignTitle:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:""};
+    try { const pf=JSON.parse(localStorage.getItem("bridgn_prefill_deal")||"null"); if(pf){localStorage.removeItem("bridgn_prefill_deal"); base.creatorName=pf.name||"";} } catch{}
+    return base;
+  });
   const [sending,setSending] = useState(false);
   const [done,setDone] = useState(false);
   const [dealId] = useState(()=>String(Date.now()));
@@ -4484,6 +4670,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
         creatorName: form.creatorName,
         creatorEmail: form.creatorEmail,
         amount: parseInt(form.amount)||0,
+        upfrontPct: parseInt(form.upfrontPct)||100,
         platform: form.platform,
         deliverables: form.deliverables||"",
         deadline: form.deadline||"TBD",
@@ -4520,7 +4707,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
       </div>
       <div style={{display:"flex",gap:10,justifyContent:"center"}}>
         <button className="btn btn-primary" onClick={()=>setPage("deal-room")}>View My Deals</button>
-        <button className="btn btn-secondary" onClick={()=>{setDone(false);setStep(1);setForm({creatorName:"",creatorEmail:"",campaignTitle:"",amount:"",platform:"Instagram",deadline:"",deliverables:"",notes:""});}}>Create Another</button>
+        <button className="btn btn-secondary" onClick={()=>{setDone(false);setStep(1);setForm({creatorName:"",creatorEmail:"",campaignTitle:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:""});}}>Create Another</button>
       </div>
     </div>
   );
@@ -4532,7 +4719,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
       creatorName:form.creatorName,
       bi:(userName||"BR").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),
       ci:Math.floor(Math.random()*6),
-      amount:parseInt(form.amount)||0, platform:form.platform,
+      amount:parseInt(form.amount)||0, upfrontPct:parseInt(form.upfrontPct)||100, platform:form.platform,
       status:"pending", deadline:form.deadline||"TBD",
       deliverables:form.deliverables, progress:0, source:"external",
       campaignTitle:form.campaignTitle||(form.creatorName+" Campaign"),
@@ -4550,6 +4737,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
           creatorEmail: form.creatorEmail,
           inviteeEmail: form.creatorEmail,
           amount: parseInt(form.amount)||0,
+          upfrontPct: parseInt(form.upfrontPct)||100,
           platform: form.platform,
           deliverables: form.deliverables||"",
           deadline: form.deadline||"TBD",
@@ -4595,6 +4783,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
               <div className="fg"><label className="fl">Campaign Title</label><input className="fi" value={form.campaignTitle} onChange={e=>up("campaignTitle",e.target.value)} placeholder="e.g. Summer Launch, Product Review"/></div>
               <div className="frow"><div className="fg"><label className="fl">Creator Name</label><input className="fi" value={form.creatorName} onChange={e=>up("creatorName",e.target.value)} placeholder="e.g. Sarah Johnson"/></div><div className="fg"><label className="fl">Creator Email</label><input className="fi" type="email" value={form.creatorEmail} onChange={e=>up("creatorEmail",e.target.value)} placeholder="creator@email.com"/></div></div>
               <div className="frow"><div className="fg"><label className="fl">Agreed Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="2500"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={form.platform} onChange={e=>up("platform",e.target.value)}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Twitter</option><option>Multiple</option></select></div></div>
+              <div className="fg"><label className="fl">Upfront % (escrow deposit)</label><div style={{display:"flex",gap:8,alignItems:"center"}}><input className="fi" type="number" min="1" max="100" value={form.upfrontPct} onChange={e=>up("upfrontPct",e.target.value)} placeholder="50" style={{maxWidth:100}}/><span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600}}>{form.amount&&form.upfrontPct?`$${Math.round((parseInt(form.amount)||0)*(parseInt(form.upfrontPct)||100)/100).toLocaleString()} upfront`:""}</span></div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>Deposit this % into escrow upfront. Remaining balance due Net 30 after content goes live.</div></div>
               <div className="fg"><label className="fl">Submission Deadline</label><input className="fi" type="date" value={form.deadline} onChange={e=>up("deadline",e.target.value)}/></div>
               <div className="fg"><label className="fl">Deliverables</label><input className="fi" value={form.deliverables} onChange={e=>up("deliverables",e.target.value)} placeholder="e.g. 2x Feed Posts, 1x Reel, 3x Stories"/></div>
               <div className="fg"><label className="fl">Notes (optional)</label><textarea className="fta" style={{minHeight:70}} value={form.notes} onChange={e=>up("notes",e.target.value)} placeholder="Any context about the campaign..."></textarea></div>
@@ -5477,19 +5666,41 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profile
         </Modal>
       )}
 
-      {/* How brands can work with this creator */}
+      {/* Work With Me — Deal Offer Funnel with Signup Gate */}
       {bookingModal&&(
         <Modal onClose={()=>{setBookingModal(false);setBookSent(false);}}>
           {bookSent?(
-            <div style={{padding:"48px 26px 26px",textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}></div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:7}}>Inquiry Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}><strong>{userName}</strong> will review and reply within 48 hours.</div><button onClick={()=>{setBookingModal(false);setBookSent(false);}} className="btn btn-primary">Got it</button></div>
+            <div style={{padding:"48px 26px 26px",textAlign:"center"}}><div style={{fontSize:"40px",marginBottom:12}}>🎉</div><div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:7}}>Deal Offer Sent!</div><div style={{fontSize:"13px",color:"var(--text2)",lineHeight:1.65,marginBottom:18}}>Your deal offer has been sent to <strong>{userName}</strong>. They'll receive an email and you'll be able to manage everything in your Deal Room.</div><button onClick={()=>{setBookingModal(false);setBookSent(false);}} className="btn btn-primary">Got it</button></div>
           ):(
             <div style={{padding:"48px 26px 26px"}}>
-              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:16}}>Work with {(userName||"me").split(" ")[0]}</div>
+              <div style={{fontFamily:"DM Serif Display,serif",fontSize:"23px",fontWeight:400,letterSpacing:"-.3px",marginBottom:6}}>Work with {(userName||"me").split(" ")[0]}</div>
+              <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:18,lineHeight:1.5}}>Fill out your deal details below. You'll need a free bridgn account to send the offer.</div>
               <div className="fg"><label className="fl">Your Brand Name</label><input className="fi" value={bookForm.name} onChange={e=>setBookForm(f=>({...f,name:e.target.value}))} placeholder="Luxara Skincare"/></div>
               <div className="fg"><label className="fl">Email</label><input className="fi" type="email" value={bookForm.email} onChange={e=>setBookForm(f=>({...f,email:e.target.value}))} placeholder="your@brand.com"/></div>
-              <div className="frow"><div className="fg"><label className="fl">Budget</label><input className="fi" value={bookForm.budget} onChange={e=>setBookForm(f=>({...f,budget:e.target.value}))} placeholder="$2,000"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={bookForm.platform} onChange={e=>setBookForm(f=>({...f,platform:e.target.value}))}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Multiple</option></select></div></div>
+              <div className="frow"><div className="fg"><label className="fl">Deal Amount ($)</label><input className="fi" type="number" value={bookForm.budget} onChange={e=>setBookForm(f=>({...f,budget:e.target.value}))} placeholder="2500"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={bookForm.platform} onChange={e=>setBookForm(f=>({...f,platform:e.target.value}))}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Multiple</option></select></div></div>
+              <div className="frow"><div className="fg"><label className="fl">Upfront % (escrow)</label><input className="fi" type="number" min="1" max="100" value={bookForm.upfrontPct||"50"} onChange={e=>setBookForm(f=>({...f,upfrontPct:e.target.value}))} placeholder="50"/></div><div className="fg"><label className="fl">Deliverables</label><input className="fi" value={bookForm.deliverables||""} onChange={e=>setBookForm(f=>({...f,deliverables:e.target.value}))} placeholder="e.g. 2x Reels, 1x Story"/></div></div>
               <div className="fg"><label className="fl">Campaign Description</label><textarea className="fta" value={bookForm.description} onChange={e=>setBookForm(f=>({...f,description:e.target.value}))} placeholder="Describe your campaign, what you need, timeline, etc."></textarea></div>
-              <div style={{display:"flex",gap:9}}><button onClick={()=>setBookSent(true)} className="btn btn-primary btn-lg" style={{flex:1}}>Send Inquiry</button><button onClick={()=>setBookingModal(false)} className="btn btn-secondary btn-lg">Cancel</button></div>
+              <div style={{padding:"12px 16px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.25)",borderRadius:"var(--radius-sm)",marginBottom:14,fontSize:"12px",color:"var(--accent)",lineHeight:1.5,fontWeight:500}}>
+                To send this deal offer, you'll need to create a free bridgn account. Your details will be saved and the offer sent automatically after signup.
+              </div>
+              <div style={{display:"flex",gap:9}}>
+                <button onClick={()=>{
+                  if(!bookForm.name||!bookForm.email||!bookForm.budget) return;
+                  // Store deal offer for post-signup creation
+                  localStorage.setItem("bridgn_pending_offer", JSON.stringify({
+                    creatorName: userName,
+                    brandName: bookForm.name,
+                    brandEmail: bookForm.email,
+                    amount: parseInt(bookForm.budget)||0,
+                    upfrontPct: parseInt(bookForm.upfrontPct)||50,
+                    platform: bookForm.platform,
+                    deliverables: bookForm.deliverables||"",
+                    description: bookForm.description||"",
+                  }));
+                  setBookSent(true);
+                }} className="btn btn-primary btn-lg" style={{flex:1}} disabled={!bookForm.name||!bookForm.email||!bookForm.budget}>Create Account & Send Offer</button>
+                <button onClick={()=>setBookingModal(false)} className="btn btn-secondary btn-lg">Cancel</button>
+              </div>
             </div>
           )}
         </Modal>
@@ -5764,6 +5975,75 @@ function EarningsPage({deals=[]}) {
           </div>
         </div>
       </div></>}
+    </div>
+  );
+}
+
+// ─── COLLABORATORS ───────────────────────────────────────────────────────────
+function CollaboratorsPage({authUser,role,setPage,deals=[]}) {
+  const loading = useSkeleton();
+  const [collaborators,setCollaborators] = useState([]);
+  const [loadingCollabs,setLoadingCollabs] = useState(true);
+
+  useEffect(()=>{
+    if(!authUser?.id) return;
+    fetch(`${BRIDGN_API_URL}/api/deals/collaborators?userId=${authUser.id}`)
+      .then(r=>r.json())
+      .then(d=>setCollaborators(d.collaborators||[]))
+      .catch(()=>{})
+      .finally(()=>setLoadingCollabs(false));
+  },[authUser?.id]);
+
+  if(loading) return <SkeletonPage layout="list"/>;
+
+  const handleNewDeal = (collab) => {
+    // Store pre-fill data for the deal form
+    localStorage.setItem("bridgn_prefill_deal", JSON.stringify({
+      name: collab.name,
+      userId: collab.userId,
+    }));
+    setPage("new-deal");
+  };
+
+  return (
+    <div className="fade-in">
+      <div className="ph-row"><div><div className="page-title">Collaborators</div><div className="page-subtitle">People you've worked with on completed deals.</div></div></div>
+      {loadingCollabs?(
+        <div style={{textAlign:"center",padding:"60px 0",color:"var(--text3)"}}>
+          <div style={{fontSize:"16px",animation:"spin .9s linear infinite",display:"inline-block",marginBottom:8}}>⟳</div>
+          <div style={{fontSize:"13px"}}>Loading collaborators...</div>
+        </div>
+      ):collaborators.length===0?(
+        <div className="card-lg" style={{padding:"60px 28px",textAlign:"center"}}>
+          <div style={{fontSize:"40px",marginBottom:12}}>🤝</div>
+          <div style={{fontSize:"15px",fontWeight:600,color:"var(--text)",marginBottom:6}}>No collaborators yet</div>
+          <div style={{fontSize:"13px",color:"var(--text3)",lineHeight:1.6,maxWidth:380,margin:"0 auto"}}>Complete your first deal and your partners will appear here. You'll be able to quickly send them new deals.</div>
+        </div>
+      ):(
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
+          {collaborators.map(c=>{
+            const ci = Math.abs(c.name.length)%6;
+            const g = bg(ci);
+            return (
+              <div key={c.userId} className="card card-hover" style={{padding:"18px 20px"}}>
+                <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:12}}>
+                  <div style={{width:42,height:42,borderRadius:12,background:`linear-gradient(135deg,${g[0]},${g[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",fontWeight:700,color:"white",flexShrink:0}}>{c.initials}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:"14px",fontWeight:600,color:"var(--text)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.name}</div>
+                    <div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>{c.dealCount} deal{c.dealCount!==1?"s":""} completed</div>
+                  </div>
+                </div>
+                <div style={{display:"flex",gap:8,justifyContent:"space-between",alignItems:"center",paddingTop:10,borderTop:"1px solid var(--border)"}}>
+                  <div style={{fontSize:"11px",color:"var(--text3)"}}>
+                    ${c.totalAmount.toLocaleString()} total · Last: {c.lastDealDate?new Date(c.lastDealDate).toLocaleDateString("en-US",{month:"short",year:"numeric"}):"—"}
+                  </div>
+                  <button className="btn btn-primary btn-sm" onClick={()=>handleNewDeal(c)}>New Deal</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -11523,7 +11803,7 @@ function App() {
 
   // Reload deals when navigating to deal-related pages so fresh data shows
   useEffect(()=>{
-    if(page==="dashboard"||page==="deal-room"||page==="deals"||page==="calendar"||page==="earnings"||page==="workspace") loadDeals();
+    if(page==="dashboard"||page==="deal-room"||page==="deals"||page==="calendar"||page==="earnings"||page==="workspace"||page==="collaborators") loadDeals();
   },[page]);
 
   // Recover pending invite after email verification redirect.
@@ -11697,6 +11977,7 @@ function App() {
         case "public-profile": return React.createElement(PublicProfilePage,{setPage,userName,userInitials,socialLinks,deals,demoMode,profilePct:PC_ITEMS.reduce((s,it)=>s+(({initials:true,bio:!!socialLinks.bio?.trim(),social:SOCIALS.some(x=>socialLinks[x.key]?.trim()),analytics:!!profileFlags.analyticsUploaded,ratecard:!!profileFlags.rateCardFilled,avail:!!profileFlags.availabilitySet})[it.key]?it.weight:0),0)});
         case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials});
         case "earnings":     return React.createElement(EarningsPage,{deals});
+        case "collaborators": return React.createElement(CollaboratorsPage,{authUser,role,setPage,deals});
         case "my-affiliate": return React.createElement(AffiliateCreatorPage,{authUser});
         case "contracts":    return React.createElement(ContractVaultPage,{authUser,deals});
         case "availability": return React.createElement(AvailabilityPage,{onAvailabilitySet:()=>updateProfileFlags({availabilitySet:true})});
@@ -11722,6 +12003,7 @@ function App() {
         case "review-queue":  return React.createElement(ReviewQueuePage,{deals,setPage,setSelected,showToast});
         case "content-tracker": return React.createElement(ContentTrackerPage,{authUser,deals,demoMode});
         case "spending":      return React.createElement(SpendingDashboard,{deals});
+        case "collaborators": return React.createElement(CollaboratorsPage,{authUser,role,setPage,deals});
         case "content-library": return React.createElement(ContentLibraryPage,{});
         case "affiliate":     return React.createElement(AffiliateManagerPage,{authUser,deals});
         case "brief-builder": return React.createElement(BriefBuilderPage,{});
