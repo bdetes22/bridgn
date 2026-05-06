@@ -3319,9 +3319,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               </div>
             </div>
           </div>
-          <div className="card-lg" style={{padding:"18px 22px",borderLeft:"3px solid var(--accent)"}}>
+          <div className="card-lg" style={{padding:"20px 24px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}>📋 Creative Brief</div>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(91,138,245,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>📋</span> Creative Brief</div>
               {briefSubmitted?(briefAcknowledged?<span className="badge badge-green">Acknowledged</span>:<span className="badge badge-yellow">Awaiting creator</span>):<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Not submitted</span>}
             </div>
             {isBrand ? (
@@ -3442,9 +3442,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
             )}
           </div>
           {/* ── Contract ── */}
-          <div className="card-lg" style={{padding:"18px 22px",borderLeft:"3px solid var(--purple)"}}>
+          <div className="card-lg" style={{padding:"20px 24px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}>📄 Contract</div>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(167,139,250,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>📄</span> Contract</div>
               {contractSigned?<span className="badge badge-green">Signed</span>:contractSent?<span className="badge badge-yellow">{isBrand?"Awaiting signature":"Needs your signature"}</span>:<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Not sent</span>}
             </div>
             {isBrand ? (
@@ -3672,9 +3672,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
             )}
           </div>
 
-          <div className="card-lg" style={{padding:"18px 22px",borderLeft:"3px solid var(--green)"}}>
+          <div className="card-lg" style={{padding:"20px 24px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}>🎬 Deliverables</div>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(52,211,153,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>🎬</span> Deliverables</div>
               {contentUploaded?<span className="badge badge-green">Submitted</span>:isBrand?<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Awaiting creator</span>:null}
             </div>
             {DELIVERABLES.map((d,i)=>(
@@ -3855,9 +3855,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
 
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
-          <div className="card-lg" style={{overflow:"hidden",display:"flex",flexDirection:"column",borderLeft:"3px solid var(--accent)"}}>
-            <div style={{padding:"14px 18px",borderBottom:"1px solid var(--border)",background:"var(--accent-light)"}}>
-              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}>💬 Deal Messages</div>
+          <div className="card-lg" style={{overflow:"hidden",display:"flex",flexDirection:"column"}}>
+            <div style={{padding:"14px 18px",borderBottom:"1px solid var(--border)"}}>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(91,138,245,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>💬</span> Deal Messages</div>
               <div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>All messages are tied to this deal</div>
             </div>
             <div style={{flex:1,overflowY:"auto",padding:"14px",display:"flex",flexDirection:"column",gap:10,maxHeight:360}}>
