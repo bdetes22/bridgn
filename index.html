@@ -1214,7 +1214,7 @@ function Sidebar({role,page,setPage,userName,userInitials,profileImageUrl,mobOpe
     ...(demoMode?[{k:"marketplace",l:"Marketplace",i:ICONS.compass,dot:true}]:[]),
     {k:"calendar",l:"Calendar",i:ICONS.calendar},
     {section:"Business"},
-    ...(demoMode?[{k:"creator-crm",l:"Creator CRM",i:ICONS.users}]:[]),
+    {k:"creator-crm",l:"Creator CRM",i:ICONS.users},
     {k:"review-queue",l:"Review Queue",i:ICONS.clipboard},
     {k:"content-tracker",l:"Content Tracker",i:ICONS.chart},
     {k:"spending",l:"Spending",i:ICONS.dollar},
@@ -11351,24 +11351,62 @@ function CreatorCRMPage({setPage,setSelected,deals,addDeal,showToast,userName,au
   const [filterPlatform,setFilterPlatform] = useState("All");
   const [selectedCreator,setSelectedCreator] = useState(null);
   const [showAddModal,setShowAddModal] = useState(false);
-  const [crmCreators,setCrmCreators] = useState(()=>DEMO_CREATORS.map(c=>({
-    ...c,
-    socials:{ig:c.handle.replace("@",""),tt:"",yt:"",tw:"",web:""},
-    analytics:{followers:c.followers,engagement:c.engagement,avgViews:Math.floor(Math.random()*50000)+5000,audienceAge:"18-34",audienceGender:"60% F / 40% M",topCountry:"United States"},
-    notes:[
-      {text:["Great content quality, very responsive","Authentic feel, audience loves their stuff","Professional, delivers on time every time","Creative approach, good for lifestyle campaigns"][Math.floor(Math.random()*4)],date:"2026-04-"+(Math.floor(Math.random()*20)+5)},
-    ],
-    tags:[c.niche.split(" & ")[0],["Reliable","Top Tier","Rising Star","Budget Friendly","Premium"][Math.floor(Math.random()*5)]],
-    pipelineStage:"discovered",
-    addedDate:"2026-04-"+(Math.floor(Math.random()*25)+1).toString().padStart(2,"0"),
-  })));
-  const [newCreator,setNewCreator] = useState({name:"",handle:"",niche:"Beauty & Skincare",platforms:["TikTok"],followers:"",engagement:"",bio:"",ig:"",tt:"",yt:"",tw:"",web:""});
+  // Build CRM entries from real deals + any saved manual additions
+  const [manualCreators,setManualCreators] = useState(()=>{
+    try { const raw=localStorage.getItem("bridgn_crm_"+(authUser?.id||"")); return raw?JSON.parse(raw):[]; } catch { return []; }
+  });
+  const saveManual = (list) => { setManualCreators(list); try{localStorage.setItem("bridgn_crm_"+(authUser?.id||""),JSON.stringify(list));}catch{} };
+
+  const dealCreators = React.useMemo(()=>{
+    const map = {};
+    (deals||[]).forEach(d=>{
+      const cId = d.creatorUserId;
+      const cName = d.creatorName || "Creator";
+      if(!cId || !cName) return;
+      if(!map[cId]) {
+        const isActive = ["Active","payment_held","content_delivered","content_live","payment_processing"].includes(d.status);
+        const isCompleted = ["payment_released","Completed"].includes(d.status);
+        map[cId] = {
+          id:"deal-"+cId, name:cName,
+          init:cName.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),
+          handle:"",
+          niche:"",
+          platforms:[d.platform].filter(Boolean),
+          followers:"—", engagement:"—",
+          gradIdx:Math.abs(cName.length)%6,
+          socials:{ig:"",tt:"",yt:"",tw:"",web:""},
+          analytics:{followers:"—",engagement:"—"},
+          notes:[], tags:[],
+          pipelineStage: isCompleted?"completed":isActive?"active_deal":"reached_out",
+          addedDate: d.deadline!=="TBD"?d.deadline:new Date().toISOString().slice(0,10),
+          dealCount:0, totalAmount:0, lastDeal:null,
+          fromDeals:true,
+        };
+      }
+      map[cId].dealCount++;
+      map[cId].totalAmount += d.amount||0;
+      if(!map[cId].platforms.includes(d.platform) && d.platform) map[cId].platforms.push(d.platform);
+      const dealDate = d.deadline!=="TBD"?d.deadline:null;
+      if(dealDate && (!map[cId].lastDeal || dealDate > map[cId].lastDeal)) map[cId].lastDeal = dealDate;
+    });
+    return Object.values(map);
+  },[deals]);
+
+  const [crmCreators,setCrmCreators] = useState([]);
+  useEffect(()=>{
+    // Merge deal-based creators with manually added ones (avoid dupes by id)
+    const manualIds = new Set(manualCreators.map(c=>c.id));
+    const merged = [...dealCreators.filter(c=>!manualIds.has(c.id)), ...manualCreators];
+    setCrmCreators(merged);
+  },[dealCreators,manualCreators]);
+
+  const [newCreator,setNewCreator] = useState({name:"",handle:"",niche:"",platforms:["TikTok"],followers:"",engagement:"",bio:"",ig:"",tt:"",yt:"",tw:"",web:""});
   const [newNote,setNewNote] = useState("");
   const [newTag,setNewTag] = useState("");
-  const [dragId,setDragId] = useState(null); // creator id being dragged
-  const [dragOver,setDragOver] = useState(null); // column key being dragged over
+  const [dragId,setDragId] = useState(null);
+  const [dragOver,setDragOver] = useState(null);
 
-  const niches = [...new Set(DEMO_CREATORS.map(c=>c.niche))];
+  const niches = [...new Set(crmCreators.map(c=>c.niche).filter(Boolean))];
   const PIPELINE_COLS = [
     {key:"discovered",label:"Discovered",color:"var(--text3)"},
     {key:"reached_out",label:"Reached Out",color:"var(--accent)"},
@@ -11409,13 +11447,19 @@ function CreatorCRMPage({setPage,setSelected,deals,addDeal,showToast,userName,au
       pipelineStage:"discovered",
       addedDate:new Date().toISOString().split("T")[0],
     };
-    setCrmCreators(x=>[nc,...x]);
+    saveManual([nc,...manualCreators]);
     setShowAddModal(false);
-    setNewCreator({name:"",handle:"",niche:"Beauty & Skincare",platforms:["TikTok"],followers:"",engagement:"",bio:"",ig:"",tt:"",yt:"",tw:"",web:""});
+    setNewCreator({name:"",handle:"",niche:"",platforms:["TikTok"],followers:"",engagement:"",bio:"",ig:"",tt:"",yt:"",tw:"",web:""});
     showToast("Creator added to your database!");
   };
 
-  const updateCreator = (id,fields) => setCrmCreators(x=>x.map(c=>c.id===id?{...c,...fields}:c));
+  const updateCreator = (id,fields) => {
+    // If it's a manual creator, persist changes
+    if(manualCreators.some(c=>c.id===id)) {
+      saveManual(manualCreators.map(c=>c.id===id?{...c,...fields}:c));
+    }
+    setCrmCreators(x=>x.map(c=>c.id===id?{...c,...fields}:c));
+  };
 
   const addNote = (id) => {
     if(!newNote.trim()) return;
@@ -12334,7 +12378,8 @@ function App() {
         ]:[
           {k:"dashboard",l:"Dashboard"},{k:"deal-room",l:"Deal Room"},
           {k:"settings",l:"Settings"},
-          ...(demoMode?[{k:"marketplace",l:"Marketplace"},{k:"creator-crm",l:"Creator CRM"}]:[]),
+          ...(demoMode?[{k:"marketplace",l:"Marketplace"}]:[]),
+          {k:"creator-crm",l:"Creator CRM"},
         ];
         const filtered = cmdkQuery?allPages.filter(p=>p.l.toLowerCase().includes(cmdkQuery.toLowerCase())):allPages;
         return (
