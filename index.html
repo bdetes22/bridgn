@@ -10475,12 +10475,12 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
 
   const handleSignup=async()=>{
     setError("");setSuccess("");
-    if(!form.name.trim()){setError(form.role==="brand"?"Please enter your company name.":form.role==="agency"?"Please enter your agency name.":"Please enter your name.");return;}
+    if(!form.name.trim()){setError(form.role==="brand"?"Please enter your company name.":"Please enter your name.");return;}
     if(form.password.length<6){setError("Password must be at least 6 characters.");return;}
     setLoading(true);
     const {data,error:e}=await supabase.auth.signUp({
       email:form.email,password:form.password,
-      options:{data:form.role==="brand"?{company_name:form.name,role:"brand"}:form.role==="agency"?{company_name:form.name,role:"agency",...(form.brands.trim()?{brands_managed:form.brands.trim()}:{})}:{full_name:form.name,role:"creator"}}
+      options:{data:form.role==="brand"?{company_name:form.name,role:"brand"}:{full_name:form.name,role:"creator"}}
     });
     setLoading(false);
     if(e){setError(e.message);return;}
@@ -10533,7 +10533,7 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
               <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:400,marginBottom:6,letterSpacing:"-.3px"}}>Create your account</div>
               <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Join bridgn free — no credit card needed</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
-              <div className="fg"><label className="fl" htmlFor="signup-name">{form.role==="brand"?"Company Name":form.role==="agency"?"Agency Name":"Full Name"}</label><input className="fi" id="signup-name" name="name" autoComplete="name" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Glossier, Halo Health":form.role==="agency"?"e.g. Viral Nation, Whalar, Open Influence":"Your full name"}/></div>
+              <div className="fg"><label className="fl" htmlFor="signup-name">{form.role==="brand"?"Company Name":"Full Name"}</label><input className="fi" id="signup-name" name="name" autoComplete="name" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Glossier, Halo Health":"Your full name"}/></div>
               <div className="fg"><label className="fl" htmlFor="signup-email">Email</label><input className="fi" id="signup-email" name="email" type="email" autoComplete="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com"/></div>
               <div className="fg"><label className="fl" htmlFor="signup-password">Password</label><input className="fi" id="signup-password" name="password" type="password" autoComplete="new-password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="At least 6 characters"/></div>
               <div className="fg">
@@ -10550,17 +10550,7 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
                     <div style={{fontSize:11,color:"var(--text3)",marginTop:2,lineHeight:1.4}}>I hire creators for campaigns</div>
                   </button>
                 </div>
-                <button onClick={()=>up("role","agency")} style={{marginTop:8,padding:"10px 14px",width:"100%",borderRadius:"var(--radius)",border:"2px solid "+(form.role==="agency"?"var(--purple)":"var(--border)"),background:form.role==="agency"?"rgba(167,139,250,.12)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",textAlign:"left",transition:"all .12s",display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontSize:16}}>🏛</span>
-                  <div><span style={{fontSize:13,fontWeight:700,color:form.role==="agency"?"var(--purple)":"var(--text)"}}>Agency</span><span style={{fontSize:11,color:"var(--text3)",marginLeft:8}}>I manage multiple creators or brands</span></div>
-                </button>
               </div>
-              {form.role==="agency"&&(
-                <div className="fg" style={{marginTop:2}}>
-                  <label className="fl">Brands you manage <span style={{color:"var(--text3)",fontWeight:400}}>(optional)</span></label>
-                  <input className="fi" value={form.brands} onChange={e=>up("brands",e.target.value)} placeholder="e.g. Nike, Adidas, Halo Health"/>
-                </div>
-              )}
               <button onClick={handleSignup} disabled={loading||!form.email||!form.password||!form.name} className="btn btn-primary btn-lg" style={{width:"100%",marginTop:8,opacity:loading||!form.email||!form.password||!form.name?.6:1}}>
                 {loading?<span style={{display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span>Creating account...</span>:"Create Account"}
               </button>
