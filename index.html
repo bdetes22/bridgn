@@ -4458,7 +4458,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
   const loading = useSkeleton();
   const [step,setStep] = useState(1);
   const [form,setForm] = useState(()=>{
-    const base = {brandName:"",brandEmail:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:""};
+    const base = {dealName:"",brandName:"",brandEmail:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:""};
     try { const pf=JSON.parse(localStorage.getItem("bridgn_prefill_deal")||"null"); if(pf){localStorage.removeItem("bridgn_prefill_deal"); base.brandName=pf.name||"";} } catch{}
     return base;
   });
