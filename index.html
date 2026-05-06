@@ -1141,8 +1141,19 @@ function NavClock() {
   );
 }
 
-function Navbar({role,setPage,userInitials,profileImageUrl,onSignOut,onMenuToggle,darkMode,setDarkMode}) {
+function Navbar({role,setPage,userInitials,profileImageUrl,onSignOut,onMenuToggle,darkMode,setDarkMode,authUser}) {
   const [showMenu,setShowMenu] = useState(false);
+  const [unreadCount,setUnreadCount] = useState(0);
+  useEffect(()=>{
+    if(!authUser) return;
+    supabase.from("inbox_notifications").select("id",{count:"exact",head:true}).eq("user_id",authUser.id).is("read_at",null)
+      .then(({count})=>{ if(typeof count==="number") setUnreadCount(count); });
+    const interval = setInterval(()=>{
+      supabase.from("inbox_notifications").select("id",{count:"exact",head:true}).eq("user_id",authUser.id).is("read_at",null)
+        .then(({count})=>{ if(typeof count==="number") setUnreadCount(count); });
+    },30000);
+    return ()=>clearInterval(interval);
+  },[authUser]);
   return (
     <nav className="navbar">
       <div className="nav-hamburger" onClick={onMenuToggle} aria-label="Open menu">
@@ -1165,7 +1176,7 @@ function Navbar({role,setPage,userInitials,profileImageUrl,onSignOut,onMenuToggl
           {darkMode?"🌙":"☀️"}
         </span>
       </button>
-      <div className="nav-notif" onClick={()=>setPage("notifications")} style={{position:"relative",zIndex:1}}>🔔</div>
+      <div className="nav-notif" onClick={()=>setPage("notifications")} style={{position:"relative",zIndex:1}}>🔔{unreadCount>0&&<span style={{position:"absolute",top:-4,right:-4,minWidth:18,height:18,borderRadius:99,background:"var(--red)",color:"white",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px",border:"2px solid var(--bg)"}}>{unreadCount>99?"99+":unreadCount}</span>}</div>
       <div style={{position:"relative",zIndex:1}}>
         {profileImageUrl?<img src={profileImageUrl} alt="" onClick={()=>setShowMenu(m=>!m)} style={{width:34,height:34,borderRadius:"50%",objectFit:"cover",cursor:"pointer"}}/>:<div className="nav-avatar" onClick={()=>setShowMenu(m=>!m)} style={{cursor:"pointer"}}>{userInitials||"?"}</div>}
         {showMenu&&(
@@ -2759,10 +2770,30 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
   // then sends via the Supabase Edge Function.
   const notifyOther = (type, extra={}) => {
     if(!activeDeal?.id || !authUser?.id) return;
+    // Send email notification
     fetch(`${BRIDGN_API_URL}/api/notify`, {
       method:"POST", headers:{"Content-Type":"application/json"},
       body:JSON.stringify({type, dealId:String(activeDeal.id), senderUserId:authUser.id, ...extra}),
     }).catch(e=>console.error("[notify]",e));
+    // Also insert in-app notification for the other party
+    const recipientId = isBrand ? activeDeal.creatorUserId : activeDeal.brandUserId;
+    if(recipientId) {
+      const senderName = authUser.user_metadata?.full_name||authUser.user_metadata?.company_name||"";
+      const dealTitle = activeDeal.campaignTitle||activeDeal.brand||"Deal";
+      const messages = {
+        brief_submitted: `${senderName} sent a creative brief for "${dealTitle}"`,
+        contract_sent: `${senderName} sent a contract for "${dealTitle}"`,
+        contract_signed: `${senderName} signed the contract for "${dealTitle}"`,
+        content_submitted: extra.fileName ? `${senderName}: ${extra.fileName}` : `${senderName} submitted content for "${dealTitle}"`,
+        script_shared: `${senderName} shared a script for "${dealTitle}"`,
+        new_message: extra.messagePreview ? `${senderName}: ${extra.messagePreview.slice(0,100)}` : `New message from ${senderName}`,
+      };
+      supabase.from("inbox_notifications").insert({
+        user_id: recipientId,
+        type: type,
+        payload: { bridgn_deal_id: activeDeal.id, message: messages[type]||`Update on "${dealTitle}"` },
+      }).then(()=>{}).catch(()=>{});
+    }
   };
 
   const syncDealFields = (fields) => {
@@ -8886,6 +8917,8 @@ function NotificationsPage({setPage,authUser,demoMode}) {
     payout_received:"var(--green)",deal_disputed:"var(--red)",
     brief_submitted:"var(--accent)",contract_sent:"var(--accent)",contract_signed:"var(--green)",
     content_submitted:"var(--accent)",new_message:"var(--text2)",
+    content_live:"var(--green)",payment_overdue:"var(--red)",payment_reminder:"var(--orange, #f97316)",
+    payment_warning:"var(--red)",account_flagged:"var(--red)",script_shared:"var(--accent)",
   };
 
   const markRead = async (id) => {
@@ -12356,7 +12389,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Navbar role={role} setPage={setPage} userInitials={userInitials} profileImageUrl={profileImageUrl} onSignOut={handleSignOut} onMenuToggle={()=>setMobSidebar(o=>!o)} darkMode={darkMode} setDarkMode={setDarkMode}/>
+      <Navbar role={role} setPage={setPage} userInitials={userInitials} profileImageUrl={profileImageUrl} onSignOut={handleSignOut} onMenuToggle={()=>setMobSidebar(o=>!o)} darkMode={darkMode} setDarkMode={setDarkMode} authUser={authUser}/>
       <div className="main-layout">
         <div className={"sidebar-overlay"+(mobSidebar?" show":"")} onClick={()=>setMobSidebar(false)}/>
         <Sidebar role={role} page={page} setPage={setPage} userName={userName} userInitials={userInitials} profileImageUrl={profileImageUrl} mobOpen={mobSidebar} onClose={()=>setMobSidebar(false)} collapsed={sidebarCollapsed} onToggleCollapse={()=>setSidebarCollapsed(c=>!c)} demoMode={demoMode} deals={deals}/>

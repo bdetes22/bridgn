@@ -21,7 +21,7 @@ const {
   getBrandProfile,
   upsertBrandProfile,
 } = require("../../lib/db");
-const { sendEmail, dealInviteEmail, deadlineReminderEmail } = require("../../lib/email");
+const { sendEmail, dealInviteEmail, deadlineReminderEmail, contentLiveEmail, paymentOverdueEmail } = require("../../lib/email");
 const { stripe } = require("../../lib/stripe");
 
 const router = express.Router();
@@ -350,16 +350,32 @@ router.put("/mark-live", async (req, res) => {
       }
     }
 
-    // Notify brand about content going LIVE
+    // Notify brand about content going LIVE (in-app + email)
     if (deal.brand_user_id) {
       const remainingCents = isPartial ? deal.amount_cents - Math.round(deal.amount_cents * upPct / 100) : 0;
+      const notifMsg = isPartial
+        ? `Content is LIVE! Remaining balance of $${(remainingCents / 100).toFixed(2)} is due by ${net30Due.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}.`
+        : `Content is LIVE! ${postLink ? "View it here: " + postLink : ""}`;
       await insertNotification(deal.brand_user_id, "content_live", {
         bridgn_deal_id: deal.bridgn_deal_id,
         post_link: postLink || "",
-        message: isPartial
-          ? `Content is LIVE! Remaining balance of $${(remainingCents / 100).toFixed(2)} is due by ${net30Due.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}.`
-          : `Content is LIVE! ${postLink ? "View it here: " + postLink : ""}`,
+        message: notifMsg,
       });
+      // Send email
+      const getUser = async (uid) => { const {data}=await db.auth.admin.getUserById(uid); return data?.user?{email:data.user.email,name:data.user.user_metadata?.full_name||data.user.user_metadata?.company_name||""}:null; };
+      const brandUser = await getUser(deal.brand_user_id);
+      const creatorUser = await getUser(deal.creator_user_id);
+      if (brandUser?.email) {
+        const email = contentLiveEmail({
+          brandName: brandUser.name,
+          creatorName: creatorUser?.name || deal.creator_name || "Creator",
+          dealTitle: deal.campaign_title || "Deal",
+          postLink: postLink || "",
+          remainingAmount: isPartial ? (remainingCents / 100).toFixed(0) : null,
+          dueDate: net30Due.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        });
+        sendEmail({ to: brandUser.email, ...email }).catch(() => {});
+      }
     }
 
     const updated = await updateDealById(deal.id, updates);
@@ -541,13 +557,24 @@ router.get("/check-deadlines", async (req, res) => {
       // Day 30: status → payment_overdue
       if (daysSinceLive >= 30 && deal.status !== "payment_overdue") {
         await updateDealById(deal.id, { status: "payment_overdue" });
+        const remainCents = Math.round(deal.amount_cents * (100 - upPct) / 100);
         if (deal.brand_user_id) {
-          const remainCents = Math.round(deal.amount_cents * (100 - upPct) / 100);
           await insertNotification(deal.brand_user_id, "payment_overdue", {
             bridgn_deal_id: deal.bridgn_deal_id,
             amount_cents: remainCents,
             message: `Payment of $${(remainCents / 100).toFixed(2)} is now overdue. Please pay immediately to avoid account restrictions.`,
           });
+          // Send overdue email
+          const brandUser = await getUser(deal.brand_user_id);
+          if (brandUser?.email) {
+            const email = paymentOverdueEmail({
+              brandName: brandUser.name,
+              dealTitle: deal.campaign_title || "Deal",
+              amount: (remainCents / 100).toFixed(0),
+              daysOverdue: daysSinceLive - 30,
+            });
+            sendEmail({ to: brandUser.email, ...email }).catch(() => {});
+          }
         }
         if (deal.creator_user_id) {
           await insertNotification(deal.creator_user_id, "payment_overdue", {
