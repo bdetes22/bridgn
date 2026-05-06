@@ -1188,12 +1188,14 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle,darkMode,setDa
   );
 }
 
-function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collapsed,onToggleCollapse,demoMode}) {
+function Sidebar({role,page,setPage,userName,userInitials,profileImageUrl,mobOpen,onClose,collapsed,onToggleCollapse,demoMode,deals=[]}) {
+  const pendingOffers = deals.filter(d=>d.status==="pending").length;
   const cNav = [
     {section:"Overview"},
     {k:"dashboard",l:"Dashboard",i:ICONS.home},
     {k:"deal-room",l:"Deal Room",i:ICONS.building},
     {k:"new-deal",l:"New Deal",i:ICONS.plus},
+    {k:"offers",l:"Offers",i:ICONS.handshake,badge:pendingOffers||0},
     ...(demoMode?[{k:"marketplace",l:"Marketplace",i:ICONS.compass,dot:true}]:[]),
     {k:"calendar",l:"Calendar",i:ICONS.calendar},
     {k:"workspace",l:"Workspace",i:ICONS.sparkles},
@@ -1241,11 +1243,12 @@ function Sidebar({role,page,setPage,userName,userInitials,mobOpen,onClose,collap
           <span style={{flex:1}}>{n.l}</span>
           {n.soon&&<span style={{fontSize:"9px",fontWeight:700,background:"rgba(167,139,250,.15)",color:"var(--purple)",border:"1px solid rgba(167,139,250,.3)",borderRadius:99,padding:"1px 6px",letterSpacing:".04em",flexShrink:0}}>SOON</span>}
           {n.dot&&page!==n.k&&<span style={{width:8,height:8,borderRadius:99,background:"var(--accent)",flexShrink:0,animation:"livePulse 2s ease-in-out infinite"}}/>}
+          {n.badge>0&&<span style={{minWidth:18,height:18,borderRadius:99,background:"var(--accent)",color:"white",fontSize:"10px",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",flexShrink:0}}>{n.badge}</span>}
         </button>
       ))}
       {!collapsed&&<div className="sidebar-footer">
         <div style={{display:"flex",alignItems:"center",gap:10,padding:10,borderRadius:"var(--radius-sm)",cursor:"pointer"}}>
-          <div className="nav-avatar" style={{flexShrink:0}}>{userInitials||"?"}</div>
+          {profileImageUrl?<img src={profileImageUrl} alt="" style={{width:34,height:34,borderRadius:"50%",objectFit:"cover",flexShrink:0}}/>:<div className="nav-avatar" style={{flexShrink:0}}>{userInitials||"?"}</div>}
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontSize:"13px",fontWeight:600}}>{userName||"My Account"}</div>
             <div style={{fontSize:"11px",color:"var(--text3)",marginTop:1}}>{role==="creator"?"Creator Account":role==="agency"?"Agency Account":"Brand Account"}</div>
@@ -5457,26 +5460,54 @@ function InvoicesPage({role}) {
 }
 
 // ─── PROFILE SETTINGS ─────────────────────────────────────────────────────────
-function ProfileSettingsPage({socialLinks,setSocialLinks,userName,userInitials}) {
+function ProfileSettingsPage({socialLinks,setSocialLinks,userName,userInitials,authUser,role,profileImageUrl,setProfileImageUrl}) {
   const loading = useSkeleton();
   const [local,setLocal] = useState(socialLinks);
   const [verified,setVerified] = useState({ig:false,tt:false,yt:false,tw:false,web:false});
   const [toast,setToast] = useState(null);
+  const [uploadingPic,setUploadingPic] = useState(false);
+  const picInputRef = useRef(null);
   const up=(k,v)=>{setLocal(l=>({...l,[k]:v}));if(verified[k])setVerified(p=>({...p,[k]:false}));};
   const verify=(k)=>{if(local[k].trim())setVerified(p=>({...p,[k]:true}));};
   const save=()=>{setSocialLinks(local);setToast({m:"Profile saved",e:"✓"});};
   const g=bg(0);
+  const handlePicUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if(!file||!authUser) return;
+    if(file.size > 2*1024*1024) { setToast({m:"Image must be under 2MB",e:""}); return; }
+    setUploadingPic(true);
+    try {
+      const ext = file.name.split(".").pop().toLowerCase();
+      const path = `profile-pictures/${authUser.id}/avatar.${ext}`;
+      const {error:upErr} = await supabase.storage.from("deal-files").upload(path, file, {upsert:true, contentType:file.type});
+      if(upErr) throw upErr;
+      const {data:urlData} = supabase.storage.from("deal-files").getPublicUrl(path);
+      const publicUrl = urlData.publicUrl + "?t=" + Date.now();
+      const table = role==="brand" ? "brand_profiles" : "creator_profiles";
+      await supabase.from(table).upsert({user_id:authUser.id, profile_image_url:publicUrl},{onConflict:"user_id"});
+      setProfileImageUrl(publicUrl);
+      setToast({m:"Profile picture updated",e:"✓"});
+    } catch(err) { console.error("[picUpload]",err); setToast({m:"Upload failed: "+err.message,e:""}); }
+    setUploadingPic(false);
+  };
   if(loading) return <SkeletonPage layout="form"/>;
   return (
     <div className="fade-in">
       <div className="ph-row"><div><div className="page-title">Profile Settings</div><div className="page-subtitle">Manage your public profile, social links, and bio.</div></div></div>
 
       {/* Avatar + name preview */}
+      <input ref={picInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePicUpload} style={{display:"none"}}/>
       <div className="card-lg" style={{padding:20,marginBottom:20,display:"flex",alignItems:"center",gap:16}}>
-        <div style={{width:60,height:60,borderRadius:16,background:`linear-gradient(135deg,${g[0]},${g[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"22px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>
+        <div style={{position:"relative",cursor:"pointer"}} onClick={()=>!uploadingPic&&picInputRef.current?.click()}>
+          {profileImageUrl
+            ? <img src={profileImageUrl} alt="" style={{width:60,height:60,borderRadius:16,objectFit:"cover"}}/>
+            : <div style={{width:60,height:60,borderRadius:16,background:`linear-gradient(135deg,${g[0]},${g[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"22px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>}
+          <div style={{position:"absolute",bottom:-2,right:-2,width:22,height:22,borderRadius:"50%",background:"var(--accent)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"11px",color:"white",border:"2px solid var(--bg)"}}>{uploadingPic?"⟳":"✎"}</div>
+        </div>
         <div>
           <div style={{fontSize:"16px",fontWeight:700}}>{userName}</div>
           <div style={{fontSize:"12px",color:"var(--text3)",marginTop:3}}>bridgn.com/{(userName||"you").toLowerCase().replace(/\s+/g,"")}</div>
+          <div style={{fontSize:"11px",color:"var(--accent)",marginTop:2,cursor:"pointer"}} onClick={()=>!uploadingPic&&picInputRef.current?.click()}>{profileImageUrl?"Change photo":"Upload photo"}</div>
         </div>
       </div>
 
@@ -5529,7 +5560,7 @@ function ProfileSettingsPage({socialLinks,setSocialLinks,userName,userInitials})
 }
 
 // ─── PUBLIC PROFILE ───────────────────────────────────────────────────────────
-function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profilePct=0,deals=[],demoMode}) {
+function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profilePct=0,deals=[],demoMode,profileImageUrl}) {
   const loading = useSkeleton();
   const [copied,setCopied] = useState(false);const [bookingModal,setBookingModal] = useState(false);const [bookForm,setBookForm] = useState({name:"",email:"",budget:"",platform:"Instagram",description:""});const [bookSent,setBookSent] = useState(false);
   const [showAddCollab,setShowAddCollab] = useState(false);
@@ -5573,7 +5604,7 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profile
         <div style={{height:180,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",position:"relative"}}>
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(0,0,0,.6),transparent)"}}></div>
           <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"22px 26px",display:"flex",gap:16,alignItems:"flex-end"}}>
-            <div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2.5px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>
+            {profileImageUrl?<img src={profileImageUrl} alt="" style={{width:76,height:76,borderRadius:18,objectFit:"cover",border:"2.5px solid rgba(255,255,255,.3)",flexShrink:0}}/>:<div style={{width:76,height:76,borderRadius:18,background:"rgba(255,255,255,.15)",border:"2.5px solid rgba(255,255,255,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"26px",fontWeight:800,color:"white",flexShrink:0}}>{userInitials}</div>}
             <div style={{flex:1}}>
               <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                 <span style={{fontSize:"22px",fontWeight:700,color:"white",fontFamily:"DM Serif Display,serif"}}>{userName}</span>
@@ -5979,6 +6010,89 @@ function EarningsPage({deals=[]}) {
           </div>
         </div>
       </div></>}
+    </div>
+  );
+}
+
+// ─── OFFERS PAGE ─────────────────────────────────────────────────────────────
+function OffersPage({authUser,deals=[],setPage,setSelected,updateDeal}) {
+  const loading = useSkeleton();
+  const pendingDeals = deals.filter(d=>d.status==="pending");
+
+  const handleAccept = async (deal) => {
+    try {
+      const resp = await fetch(`${BRIDGN_API_URL}/api/deals/status`, {
+        method:"PUT", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({bridgnDealId:deal.id, status:"Active", userId:authUser?.id}),
+      });
+      if(resp.ok) {
+        const {deal:updated} = await resp.json();
+        updateDeal&&updateDeal(deal.id, {status:"Active",...updated});
+        setSelected(updated||{...deal,status:"Active"});
+        setPage("deal-room");
+      }
+    } catch(e) { console.error("[acceptOffer]",e); }
+  };
+
+  const handleDecline = async (deal) => {
+    if(!confirm("Decline this offer? This cannot be undone.")) return;
+    try {
+      await fetch(`${BRIDGN_API_URL}/api/deals/status`, {
+        method:"PUT", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({bridgnDealId:deal.id, status:"Declined", userId:authUser?.id}),
+      });
+      updateDeal&&updateDeal(deal.id, {status:"Declined"});
+    } catch(e) { console.error("[declineOffer]",e); }
+  };
+
+  if(loading) return <SkeletonPage layout="list"/>;
+
+  return (
+    <div className="fade-in">
+      <div className="ph-row"><div><div className="page-title">Offers</div><div className="page-subtitle">Incoming deal offers from brands. Accept to start working together.</div></div></div>
+      {pendingDeals.length===0?(
+        <div className="card-lg" style={{padding:"60px 28px",textAlign:"center"}}>
+          <div style={{fontSize:"40px",marginBottom:12}}>📬</div>
+          <div style={{fontSize:"15px",fontWeight:600,color:"var(--text)",marginBottom:6}}>No offers yet</div>
+          <div style={{fontSize:"13px",color:"var(--text3)",lineHeight:1.6,maxWidth:380,margin:"0 auto"}}>When brands send you deal offers or find you through your profile, they'll appear here. Share your profile to start getting offers!</div>
+          <button className="btn btn-primary" style={{marginTop:16}} onClick={()=>setPage("public-profile")}>View My Profile</button>
+        </div>
+      ):(
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {pendingDeals.map(deal=>{
+            const ci = Math.abs((deal.brand||"").length)%6;
+            const g = bg(ci);
+            const upPct = deal.upfrontPct||100;
+            const isPartial = upPct < 100;
+            const upfrontAmount = Math.round((deal.amount||0)*upPct/100);
+            return (
+              <div key={deal.id} className="card-lg" style={{padding:"20px 24px"}}>
+                <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
+                  <div style={{width:46,height:46,borderRadius:12,background:`linear-gradient(135deg,${g[0]},${g[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"15px",fontWeight:700,color:"white",flexShrink:0}}>{deal.bi||"?"}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                      <span style={{fontSize:"15px",fontWeight:700,color:"var(--text)"}}>{deal.campaignTitle||deal.brand+" Campaign"}</span>
+                      <span className="badge badge-yellow">New Offer</span>
+                    </div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:10}}>from <strong>{deal.brand}</strong> · {deal.platform}</div>
+                    <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:12}}>
+                      <div><div style={{fontSize:"18px",fontWeight:700,color:"var(--text)"}}>${(deal.amount||0).toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Deal Value</div></div>
+                      {isPartial&&<div><div style={{fontSize:"18px",fontWeight:700,color:"var(--accent)"}}>{upPct}%</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Upfront (${upfrontAmount.toLocaleString()})</div></div>}
+                      {deal.deadline&&deal.deadline!=="TBD"&&<div><div style={{fontSize:"14px",fontWeight:600,color:"var(--text)"}}>{deal.deadline}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Deadline</div></div>}
+                    </div>
+                    {deal.deliverables&&<div style={{fontSize:"12px",color:"var(--text2)",marginBottom:12,lineHeight:1.5}}>Deliverables: {deal.deliverables}</div>}
+                    {isPartial&&<div style={{fontSize:"11px",color:"var(--accent)",marginBottom:12,padding:"6px 10px",background:"var(--accent-light)",borderRadius:6,display:"inline-block"}}>Split payment: {upPct}% upfront into escrow, remaining {100-upPct}% due Net 30 after content goes live</div>}
+                    <div style={{display:"flex",gap:8}}>
+                      <button className="btn btn-primary" onClick={()=>handleAccept(deal)}>Accept Offer</button>
+                      <button className="btn btn-secondary" onClick={()=>handleDecline(deal)}>Decline</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -11647,6 +11761,7 @@ function App() {
   const [onboarding,setOnboarding] = useState({seen:false,steps:{analytics:false}});
   const [profileFlags,setProfileFlags] = useState({analyticsUploaded:false,rateCardFilled:false,availabilitySet:false});
   const [stripeConnected,setStripeConnected] = useState(false);
+  const [profileImageUrl,setProfileImageUrl] = useState(null);
   const [darkMode,setDarkMode] = useState(false);
   const [sidebarCollapsed,setSidebarCollapsed] = useState(false);
   const [showAuth,setShowAuth] = useState(false);
@@ -11737,12 +11852,19 @@ function App() {
     }
   },[]);
 
-  // Check real Stripe Connect status from Supabase on auth
+  // Check real Stripe Connect status and load profile image from Supabase on auth
   useEffect(()=>{
     if(!authUser) return;
-    supabase.from("creator_profiles").select("stripe_account_id,stripe_onboarded_at").eq("user_id",authUser.id).maybeSingle().then(({data})=>{
+    const r = authUser.user_metadata?.role || "creator";
+    supabase.from("creator_profiles").select("stripe_account_id,stripe_onboarded_at,profile_image_url").eq("user_id",authUser.id).maybeSingle().then(({data})=>{
       if(data?.stripe_account_id && data?.stripe_onboarded_at) setStripeConnected(true);
+      if(data?.profile_image_url) setProfileImageUrl(data.profile_image_url);
     });
+    if(r==="brand") {
+      supabase.from("brand_profiles").select("profile_image_url").eq("user_id",authUser.id).maybeSingle().then(({data})=>{
+        if(data?.profile_image_url) setProfileImageUrl(data.profile_image_url);
+      });
+    }
   },[authUser]);
 
   useEffect(()=>{
@@ -11807,7 +11929,7 @@ function App() {
 
   // Reload deals when navigating to deal-related pages so fresh data shows
   useEffect(()=>{
-    if(page==="dashboard"||page==="deal-room"||page==="deals"||page==="calendar"||page==="earnings"||page==="workspace"||page==="collaborators") loadDeals();
+    if(page==="dashboard"||page==="deal-room"||page==="deals"||page==="calendar"||page==="earnings"||page==="workspace"||page==="collaborators"||page==="offers") loadDeals();
   },[page]);
 
   // Recover pending invite after email verification redirect.
@@ -11842,6 +11964,40 @@ function App() {
         }
       })
       .catch(e=>console.error("[pendingInvite] Join failed:", e));
+  },[authUser]);
+
+  // Recover pending offer from Work With Me modal (brand signed up via creator profile)
+  useEffect(()=>{
+    if(!authUser) return;
+    let raw;
+    try { raw = localStorage.getItem("bridgn_pending_offer"); } catch {}
+    if(!raw) return;
+    try { localStorage.removeItem("bridgn_pending_offer"); } catch {}
+    const offer = JSON.parse(raw);
+    if(!offer?.creatorName) return;
+    const dealId = String(Date.now());
+    fetch(`${BRIDGN_API_URL}/api/deals`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        bridgnDealId: dealId,
+        brandUserId: authUser.id,
+        brandName: offer.brandName || authUser.user_metadata?.company_name || authUser.email?.split("@")[0] || "Brand",
+        creatorName: offer.creatorName,
+        amount: offer.amount||0,
+        upfrontPct: offer.upfrontPct||50,
+        platform: offer.platform||"Instagram",
+        deliverables: offer.deliverables||"",
+        deadline: "TBD",
+        campaignTitle: offer.description||(offer.creatorName+" Campaign"),
+        createdBy: "brand",
+      }),
+    }).then(r=>r.ok?r.json():null).then(data=>{
+      if(data?.deal) {
+        setDeals(prev=>[...prev,data.deal]);
+        setSelected(data.deal);
+        setPage("deal-room");
+      }
+    }).catch(e=>console.error("[pendingOffer] Create failed:", e));
   },[authUser]);
 
   // Parse invite context from URL query string once on mount
@@ -12007,10 +12163,11 @@ function App() {
         case "rate-card":    return React.createElement(RateCardPage,{onRateCardFilled:()=>updateProfileFlags({rateCardFilled:true})});
         case "media-kit":    return React.createElement(MediaKitPage,{userName,userInitials,socialLinks});
         case "invoices":     return React.createElement(InvoicesPage,{role});
-        case "public-profile": return React.createElement(PublicProfilePage,{setPage,userName,userInitials,socialLinks,deals,demoMode,profilePct:PC_ITEMS.reduce((s,it)=>s+(({initials:true,bio:!!socialLinks.bio?.trim(),social:SOCIALS.some(x=>socialLinks[x.key]?.trim()),analytics:!!profileFlags.analyticsUploaded,ratecard:!!profileFlags.rateCardFilled,avail:!!profileFlags.availabilitySet})[it.key]?it.weight:0),0)});
-        case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials});
+        case "public-profile": return React.createElement(PublicProfilePage,{setPage,userName,userInitials,socialLinks,deals,demoMode,profileImageUrl,profilePct:PC_ITEMS.reduce((s,it)=>s+(({initials:true,bio:!!socialLinks.bio?.trim(),social:SOCIALS.some(x=>socialLinks[x.key]?.trim()),analytics:!!profileFlags.analyticsUploaded,ratecard:!!profileFlags.rateCardFilled,avail:!!profileFlags.availabilitySet})[it.key]?it.weight:0),0)});
+        case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials,authUser,role,profileImageUrl,setProfileImageUrl});
         case "earnings":     return React.createElement(EarningsPage,{deals});
         case "collaborators": return React.createElement(CollaboratorsPage,{authUser,role,setPage,deals});
+        case "offers":       return React.createElement(OffersPage,{authUser,deals,setPage,setSelected,updateDeal});
         case "my-affiliate": return React.createElement(AffiliateCreatorPage,{authUser});
         case "contracts":    return React.createElement(ContractVaultPage,{authUser,deals});
         case "availability": return React.createElement(AvailabilityPage,{onAvailabilitySet:()=>updateProfileFlags({availabilitySet:true})});
@@ -12048,7 +12205,7 @@ function App() {
         case "invoices":      return React.createElement(InvoicesPage,{role});
         case "messages":      return React.createElement(MessagesPage,{setPage,demoMode});
         case "notifications": return React.createElement(NotificationsPage,{setPage,authUser,demoMode});
-        case "settings":      return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role,socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials});
+        case "settings":      return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role,socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials,profileImageUrl,setProfileImageUrl});
         default:              return React.createElement(BrandDashboard,{setPage,setSelected,authUser});
       }
     }
@@ -12059,7 +12216,7 @@ function App() {
       <Navbar role={role} setPage={setPage} userInitials={userInitials} onSignOut={handleSignOut} onMenuToggle={()=>setMobSidebar(o=>!o)} darkMode={darkMode} setDarkMode={setDarkMode}/>
       <div className="main-layout">
         <div className={"sidebar-overlay"+(mobSidebar?" show":"")} onClick={()=>setMobSidebar(false)}/>
-        <Sidebar role={role} page={page} setPage={setPage} userName={userName} userInitials={userInitials} mobOpen={mobSidebar} onClose={()=>setMobSidebar(false)} collapsed={sidebarCollapsed} onToggleCollapse={()=>setSidebarCollapsed(c=>!c)} demoMode={demoMode}/>
+        <Sidebar role={role} page={page} setPage={setPage} userName={userName} userInitials={userInitials} profileImageUrl={profileImageUrl} mobOpen={mobSidebar} onClose={()=>setMobSidebar(false)} collapsed={sidebarCollapsed} onToggleCollapse={()=>setSidebarCollapsed(c=>!c)} demoMode={demoMode} deals={deals}/>
         <main className="content-area">
           <div key={page} className="page-enter">
             {render()}
