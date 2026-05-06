@@ -9010,7 +9010,7 @@ function BrandCompanyProfile({socialLinks,setSocialLinks,sectionCard,sectionTitl
   </>);
 }
 
-function SettingsPage({authUser,darkMode,setDarkMode,onSignOut,role,socialLinks={},setSocialLinks,userName:passedName,userInitials:passedInitials}) {
+function SettingsPage({authUser,darkMode,setDarkMode,onSignOut,role,setRole,socialLinks={},setSocialLinks,userName:passedName,userInitials:passedInitials}) {
   const loading = useSkeleton();
 
   // Notification emails (brand accounts)
@@ -9276,6 +9276,38 @@ function SettingsPage({authUser,darkMode,setDarkMode,onSignOut,role,socialLinks=
 
       {/* Brand: Company Profile (socials, website, bio) */}
       {role==="brand"&&setSocialLinks&&<BrandCompanyProfile socialLinks={socialLinks} setSocialLinks={setSocialLinks} sectionCard={sectionCard} sectionTitle={sectionTitle} divider={divider} showToast={showToast}/>}
+
+      {/* Switch Account Type */}
+      {setRole&&sectionCard(<>
+        {sectionTitle("Account Type")}
+        <div style={{fontSize:12,color:"var(--text3)",marginBottom:14,lineHeight:1.5}}>You're currently using bridgn as a <strong>{role==="creator"?"Creator":role==="brand"?"Brand":"Agency"}</strong>. Switch if you need to change your account type.</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <button onClick={async()=>{
+            if(role==="creator") return;
+            if(!confirm("Switch to Creator account? Your deals and data stay the same.")) return;
+            await supabase.auth.updateUser({data:{role:"creator",full_name:authUser?.user_metadata?.full_name||authUser?.user_metadata?.company_name||""}});
+            setRole("creator");
+            showToast("Switched to Creator account. Refresh to see all changes.");
+          }} style={{padding:"14px",borderRadius:"var(--radius)",border:"2.5px solid "+(role==="creator"?"var(--accent)":"var(--border)"),background:role==="creator"?"var(--accent-light)":"var(--surface2)",cursor:role==="creator"?"default":"pointer",fontFamily:"DM Sans,sans-serif",textAlign:"left",opacity:role==="creator"?.7:1}}>
+            <div style={{fontSize:18,marginBottom:2}}>🎨</div>
+            <div style={{fontSize:13,fontWeight:700,color:role==="creator"?"var(--accent)":"var(--text)"}}>Creator</div>
+            <div style={{fontSize:11,color:"var(--text3)",marginTop:1}}>I create content</div>
+            {role==="creator"&&<div style={{fontSize:10,fontWeight:700,color:"var(--accent)",marginTop:4}}>CURRENT</div>}
+          </button>
+          <button onClick={async()=>{
+            if(role==="brand") return;
+            if(!confirm("Switch to Brand account? Your deals and data stay the same.")) return;
+            await supabase.auth.updateUser({data:{role:"brand",company_name:authUser?.user_metadata?.company_name||authUser?.user_metadata?.full_name||""}});
+            setRole("brand");
+            showToast("Switched to Brand account. Refresh to see all changes.");
+          }} style={{padding:"14px",borderRadius:"var(--radius)",border:"2.5px solid "+(role==="brand"?"var(--accent2)":"var(--border)"),background:role==="brand"?"var(--accent2-light)":"var(--surface2)",cursor:role==="brand"?"default":"pointer",fontFamily:"DM Sans,sans-serif",textAlign:"left",opacity:role==="brand"?.7:1}}>
+            <div style={{fontSize:18,marginBottom:2}}>🏢</div>
+            <div style={{fontSize:13,fontWeight:700,color:role==="brand"?"var(--accent2)":"var(--text)"}}>Brand</div>
+            <div style={{fontSize:11,color:"var(--text3)",marginTop:1}}>I hire creators</div>
+            {role==="brand"&&<div style={{fontSize:10,fontWeight:700,color:"var(--accent2)",marginTop:4}}>CURRENT</div>}
+          </button>
+        </div>
+      </>)}
 
       {/* Appearance */}
       {sectionCard(<>
@@ -10505,12 +10537,23 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
               <div className="fg"><label className="fl" htmlFor="signup-email">Email</label><input className="fi" id="signup-email" name="email" type="email" autoComplete="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com"/></div>
               <div className="fg"><label className="fl" htmlFor="signup-password">Password</label><input className="fi" id="signup-password" name="password" type="password" autoComplete="new-password" value={form.password} onChange={e=>up("password",e.target.value)} placeholder="At least 6 characters"/></div>
               <div className="fg">
-                <label className="fl">I am joining as a...</label>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:9,marginTop:4}}>
-                  <button onClick={()=>up("role","creator")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="creator"?"var(--accent)":"var(--border)"),background:form.role==="creator"?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:500,color:form.role==="creator"?"var(--accent)":"var(--text2)",transition:"all .12s"}}>Creator</button>
-                  <button onClick={()=>up("role","brand")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="brand"?"var(--accent2)":"var(--border)"),background:form.role==="brand"?"var(--accent2-light)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:500,color:form.role==="brand"?"var(--accent2)":"var(--text2)",transition:"all .12s"}}>Brand</button>
-                  <button onClick={()=>up("role","agency")} style={{padding:"11px",borderRadius:"var(--radius-sm)",border:"2px solid "+(form.role==="agency"?"var(--purple)":"var(--border)"),background:form.role==="agency"?"rgba(167,139,250,.12)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:500,color:form.role==="agency"?"var(--purple)":"var(--text2)",transition:"all .12s"}}>Agency</button>
+                <label className="fl" style={{fontSize:14,fontWeight:700,marginBottom:6}}>I am joining as a...</label>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:6}}>
+                  <button onClick={()=>up("role","creator")} style={{padding:"16px 14px",borderRadius:"var(--radius)",border:"2.5px solid "+(form.role==="creator"?"var(--accent)":"var(--border)"),background:form.role==="creator"?"var(--accent-light)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",textAlign:"left",transition:"all .12s"}}>
+                    <div style={{fontSize:20,marginBottom:4}}>🎨</div>
+                    <div style={{fontSize:14,fontWeight:700,color:form.role==="creator"?"var(--accent)":"var(--text)"}}>Creator</div>
+                    <div style={{fontSize:11,color:"var(--text3)",marginTop:2,lineHeight:1.4}}>I create content and work with brands</div>
+                  </button>
+                  <button onClick={()=>up("role","brand")} style={{padding:"16px 14px",borderRadius:"var(--radius)",border:"2.5px solid "+(form.role==="brand"?"var(--accent2)":"var(--border)"),background:form.role==="brand"?"var(--accent2-light)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",textAlign:"left",transition:"all .12s"}}>
+                    <div style={{fontSize:20,marginBottom:4}}>🏢</div>
+                    <div style={{fontSize:14,fontWeight:700,color:form.role==="brand"?"var(--accent2)":"var(--text)"}}>Brand</div>
+                    <div style={{fontSize:11,color:"var(--text3)",marginTop:2,lineHeight:1.4}}>I hire creators for campaigns</div>
+                  </button>
                 </div>
+                <button onClick={()=>up("role","agency")} style={{marginTop:8,padding:"10px 14px",width:"100%",borderRadius:"var(--radius)",border:"2px solid "+(form.role==="agency"?"var(--purple)":"var(--border)"),background:form.role==="agency"?"rgba(167,139,250,.12)":"var(--surface2)",cursor:"pointer",fontFamily:"DM Sans,sans-serif",textAlign:"left",transition:"all .12s",display:"flex",alignItems:"center",gap:10}}>
+                  <span style={{fontSize:16}}>🏛</span>
+                  <div><span style={{fontSize:13,fontWeight:700,color:form.role==="agency"?"var(--purple)":"var(--text)"}}>Agency</span><span style={{fontSize:11,color:"var(--text3)",marginLeft:8}}>I manage multiple creators or brands</span></div>
+                </button>
               </div>
               {form.role==="agency"&&(
                 <div className="fg" style={{marginTop:2}}>
@@ -12214,7 +12257,7 @@ function App() {
         case "expenses":     return React.createElement(ExpensesPage,{});
         case "messages":     return React.createElement(MessagesPage,{setPage,demoMode});
         case "notifications":return React.createElement(NotificationsPage,{setPage,authUser,demoMode});
-        case "settings":     return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role});
+        case "settings":     return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role,setRole});
         default:             return React.createElement(CreatorDashboard,{setPage,setSelected,deals,availStatus,setAvailStatus,userName,profileFlags});
       }
     } else {
@@ -12245,7 +12288,7 @@ function App() {
         case "invoices":      return React.createElement(InvoicesPage,{role});
         case "messages":      return React.createElement(MessagesPage,{setPage,demoMode});
         case "notifications": return React.createElement(NotificationsPage,{setPage,authUser,demoMode});
-        case "settings":      return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role,socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials,profileImageUrl,setProfileImageUrl});
+        case "settings":      return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role,setRole,socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials,profileImageUrl,setProfileImageUrl});
         default:              return React.createElement(BrandDashboard,{setPage,setSelected,authUser});
       }
     }
