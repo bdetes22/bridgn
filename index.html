@@ -3304,24 +3304,24 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       </div>
       <div className="deal-room-grid" style={{display:"grid",gap:20,alignItems:"start"}}>
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
-          <div className="card-lg" style={{overflow:"hidden"}}>
+          <div className="card-lg" style={{overflow:"hidden",background:`linear-gradient(135deg,${g[0]}12,${g[1]}08)`,border:`1.5px solid ${g[0]}30`}}>
             <div style={{height:4,background:"linear-gradient(90deg,"+g[0]+","+g[1]+")"}}></div>
-            <div style={{padding:"18px 22px"}}>
-              <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
-                <div style={{width:44,height:44,borderRadius:12,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px",fontWeight:800,color:"white",flexShrink:0}}>{activeDeal.bi}</div>
-                <div style={{flex:1,minWidth:0}}><div style={{fontSize:"16px",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{activeDeal.brand}</div><div style={{fontSize:"13px",color:"var(--text2)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{activeDeal.campaignTitle} · {activeDeal.platform}</div></div>
+            <div style={{padding:"20px 24px"}}>
+              <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:18,flexWrap:"wrap"}}>
+                <div style={{width:50,height:50,borderRadius:14,background:"linear-gradient(135deg,"+g[0]+","+g[1]+")",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"16px",fontWeight:800,color:"white",flexShrink:0,boxShadow:`0 4px 14px ${g[0]}40`}}>{activeDeal.bi}</div>
+                <div style={{flex:1,minWidth:0}}><div style={{fontSize:"17px",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{activeDeal.brand}</div><div style={{fontSize:"13px",color:"var(--text2)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{activeDeal.campaignTitle} · {activeDeal.platform}</div></div>
                 <div style={{display:"flex",gap:7,flexWrap:"wrap"}}><StatusBadge s={activeDeal.status}/>{activeDeal.escrow&&<EscrowBadge released={activeDeal.escrowReleased}/>}</div>
               </div>
-              <div className="det-stats" style={{gridTemplateColumns:"repeat(3,1fr)",marginBottom:0}}>
+              <div className="det-stats" style={{gridTemplateColumns:"repeat(3,1fr)",marginBottom:0,background:"var(--surface)",borderRadius:"var(--radius-sm)",padding:"14px 0",border:"1px solid var(--border)"}}>
                 {[["$"+activeDeal.amount.toLocaleString(),"Deal Value"],[activeDeal.deadline,"Deadline"],[pct+"%","Complete"]].map(([v,l],i)=>(
-                  <div key={i} className="det-stat" style={i===1?{cursor:"pointer"}:{}} onClick={i===1?()=>{setEditDeadline(activeDeal.deadline||"");setEditingDeadline(true);}:undefined} title={i===1?"Click to change deadline":""}><div className="det-stat-v" style={{color:i===0?g[0]:"var(--text)"}}><AnimNum value={v}/></div><div className="det-stat-l">{l}{i===1&&<span style={{marginLeft:4,fontSize:10,color:"var(--accent)"}}>edit</span>}</div></div>
+                  <div key={i} className="det-stat" style={{...(i===1?{cursor:"pointer"}:{}),borderRight:i<2?"1px solid var(--border)":"none"}} onClick={i===1?()=>{setEditDeadline(activeDeal.deadline||"");setEditingDeadline(true);}:undefined} title={i===1?"Click to change deadline":""}><div className="det-stat-v" style={{color:i===0?g[0]:i===2?(pct===100?"var(--green)":"var(--accent)"):"var(--text)",fontSize:"20px"}}><AnimNum value={v}/></div><div className="det-stat-l">{l}{i===1&&<span style={{marginLeft:4,fontSize:10,color:"var(--accent)"}}>edit</span>}</div></div>
                 ))}
               </div>
             </div>
           </div>
-          <div className="card-lg" style={{padding:"18px 22px"}}>
+          <div className="card-lg" style={{padding:"18px 22px",borderLeft:"3px solid var(--accent)"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-              <div style={{fontSize:"14px",fontWeight:700}}>Creative Brief</div>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}>📋 Creative Brief</div>
               {briefSubmitted?(briefAcknowledged?<span className="badge badge-green">Acknowledged</span>:<span className="badge badge-yellow">Awaiting creator</span>):<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Not submitted</span>}
             </div>
             {isBrand ? (
@@ -3442,9 +3442,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
             )}
           </div>
           {/* ── Contract ── */}
-          <div className="card-lg" style={{padding:"18px 22px"}}>
+          <div className="card-lg" style={{padding:"18px 22px",borderLeft:"3px solid var(--purple)"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-              <div style={{fontSize:"14px",fontWeight:700}}>Contract</div>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}>📄 Contract</div>
               {contractSigned?<span className="badge badge-green">Signed</span>:contractSent?<span className="badge badge-yellow">{isBrand?"Awaiting signature":"Needs your signature"}</span>:<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Not sent</span>}
             </div>
             {isBrand ? (
@@ -3672,9 +3672,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
             )}
           </div>
 
-          <div className="card-lg" style={{padding:"18px 22px"}}>
+          <div className="card-lg" style={{padding:"18px 22px",borderLeft:"3px solid var(--green)"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-              <div style={{fontSize:"14px",fontWeight:700}}>Deliverables</div>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}>🎬 Deliverables</div>
               {contentUploaded?<span className="badge badge-green">Submitted</span>:isBrand?<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Awaiting creator</span>:null}
             </div>
             {DELIVERABLES.map((d,i)=>(
@@ -3855,9 +3855,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
 
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
-          <div className="card-lg" style={{overflow:"hidden",display:"flex",flexDirection:"column"}}>
-            <div style={{padding:"14px 18px",borderBottom:"1px solid var(--border)"}}>
-              <div style={{fontSize:"14px",fontWeight:700}}>Deal Messages</div>
+          <div className="card-lg" style={{overflow:"hidden",display:"flex",flexDirection:"column",borderLeft:"3px solid var(--accent)"}}>
+            <div style={{padding:"14px 18px",borderBottom:"1px solid var(--border)",background:"var(--accent-light)"}}>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}>💬 Deal Messages</div>
               <div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>All messages are tied to this deal</div>
             </div>
             <div style={{flex:1,overflowY:"auto",padding:"14px",display:"flex",flexDirection:"column",gap:10,maxHeight:360}}>
@@ -3901,9 +3901,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
             const liveProgress = steps.filter(s=>s.done).length;
             const currentStep = Math.min(liveProgress, steps.length-1);
             return (
-            <div className="card-lg" style={{padding:"16px 18px"}}>
+            <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(91,138,245,.04),rgba(167,139,250,.04))",border:"1.5px solid rgba(91,138,245,.15)"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-                <div style={{fontSize:"13px",fontWeight:700}}>Deal Progress</div>
+                <div style={{fontSize:"13px",fontWeight:700,display:"flex",alignItems:"center",gap:6}}>📍 Deal Progress</div>
                 <span style={{fontSize:"11px",fontWeight:600,color:"var(--accent)"}}>{liveProgress} of {steps.length}</span>
               </div>
               <div style={{position:"relative"}}>
