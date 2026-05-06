@@ -4481,7 +4481,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
         platform: form.platform,
         deliverables: form.deliverables||"",
         deadline: form.deadline||"TBD",
-        campaignTitle: "External Deal — "+(form.brandName||"Brand"),
+        campaignTitle: form.dealName||(form.brandName+" Campaign"),
       })));
       return `${window.location.origin}?inv=${payload}`;
     } catch { return `${window.location.origin}?inv=${dealId}`; }
@@ -4513,7 +4513,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
       </div>
       <div style={{display:"flex",gap:10,justifyContent:"center"}}>
         <button className="btn btn-primary" onClick={()=>setPage("deals")}>View My Deals</button>
-        <button className="btn btn-secondary" onClick={()=>{setDone(false);setStep(1);setForm({brandName:"",brandEmail:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:""});setContractTypes(["flat"]);}}>Create Another</button>
+        <button className="btn btn-secondary" onClick={()=>{setDone(false);setStep(1);setForm({dealName:"",brandName:"",brandEmail:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:""});setContractTypes(["flat"]);}}>Create Another</button>
       </div>
     </div>
   );
@@ -4527,7 +4527,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
       amount:parseInt(form.amount)||0, upfrontPct:parseInt(form.upfrontPct)||100, platform:form.platform,
       status:"pending", deadline:form.deadline||"TBD",
       deliverables:form.deliverables, progress:0, source:"external",
-      campaignTitle:"External Deal — "+form.brandName,
+      campaignTitle:form.dealName||(form.brandName+" Campaign"),
       escrow:false, escrowReleased:false,
       creatorUserId:authUser?.id||"", creatorName:userName,
     };
@@ -4546,7 +4546,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
           platform: form.platform,
           deliverables: form.deliverables||"",
           deadline: form.deadline||"TBD",
-          campaignTitle: "External Deal — "+form.brandName,
+          campaignTitle: form.dealName||(form.brandName+" Campaign"),
           inviteLink: inviteLink,
           createdBy: "creator",
         }),
@@ -4587,6 +4587,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
         <div className="card-lg" style={{padding:28}}>
           {step===1&&(
             <>
+              <div className="fg"><label className="fl">Deal Name</label><input className="fi" value={form.dealName} onChange={e=>up("dealName",e.target.value)} placeholder="e.g. Summer Campaign, Product Review"/></div>
               <div className="frow"><div className="fg"><label className="fl">Brand Name</label><input className="fi" value={form.brandName} onChange={e=>up("brandName",e.target.value)} placeholder="e.g. Nike, GlowUp Co."/></div><div className="fg"><label className="fl">Brand Email</label><input className="fi" type="email" value={form.brandEmail} onChange={e=>up("brandEmail",e.target.value)} placeholder="contact@brand.com"/></div></div>
               <div className="frow"><div className="fg"><label className="fl">Agreed Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="2500"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={form.platform} onChange={e=>up("platform",e.target.value)}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Twitter</option><option>Multiple</option></select></div></div>
               <div className="fg"><label className="fl">Upfront % (escrow deposit)</label><div style={{display:"flex",gap:8,alignItems:"center"}}><input className="fi" type="number" min="1" max="100" value={form.upfrontPct} onChange={e=>up("upfrontPct",e.target.value)} placeholder="50" style={{maxWidth:100}}/><span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600}}>{form.amount&&form.upfrontPct?`$${Math.round((parseInt(form.amount)||0)*(parseInt(form.upfrontPct)||100)/100).toLocaleString()} upfront`:""}</span></div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>Brand deposits this % into escrow upfront. Remaining balance due Net 30 after content goes live.</div></div>
@@ -4621,6 +4622,7 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
                 Hi there,<br/><br/>
                 <strong>{userName}</strong> has set up your partnership deal on bridgn.<br/><br/>
                 <strong>Deal summary:</strong><br/>
+                Campaign: {form.dealName||(form.brandName+" Campaign")}<br/>
                 Deliverables: {form.deliverables||"TBD"}<br/>
                 Value: ${parseInt(form.amount||0).toLocaleString()} on {form.platform}<br/>
                 Due: {form.deadline||"TBD"}<br/><br/>
