@@ -9947,44 +9947,44 @@ function LandingPage({onGetStarted,onLogin}) {
                     {key==="creators"?(<>
                       <div style={{padding:"0 20px 14px",borderBottom:"1px solid #f0f0f0"}}>
                         <div style={{fontSize:11,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".08em",marginBottom:12}}>Platform</div>
-                        <button onClick={()=>{setNavDrop(null);onGetStarted();}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
+                        <button onClick={()=>{setNavDrop(null);onGetStarted("creator");}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
                           <div style={{fontSize:14,fontWeight:600,color:lp.text}}>Deal Room</div>
                           <div style={{fontSize:12,color:lp.text2,marginTop:2}}>Manage briefs, contracts, and content delivery in one place.</div>
                         </button>
-                        <button onClick={()=>{setNavDrop(null);onGetStarted();}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
+                        <button onClick={()=>{setNavDrop(null);onGetStarted("creator");}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
                           <div style={{fontSize:14,fontWeight:600,color:lp.text}}>Escrow Payments</div>
                           <div style={{fontSize:12,color:lp.text2,marginTop:2}}>Get paid securely. Funds held until your content is approved.</div>
                         </button>
-                        <button onClick={()=>{setNavDrop(null);onGetStarted();}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
+                        <button onClick={()=>{setNavDrop(null);onGetStarted("creator");}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
                           <div style={{fontSize:14,fontWeight:600,color:lp.text}}>Contracts</div>
                           <div style={{fontSize:12,color:lp.text2,marginTop:2}}>Review, sign, and manage partnership agreements.</div>
                         </button>
                       </div>
                       <div style={{padding:"14px 20px 0"}}>
                         <div style={{fontSize:11,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".08em",marginBottom:10}}>Resources</div>
-                        <button onClick={()=>{setNavDrop(null);onGetStarted();}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"6px 0",fontFamily:"DM Sans,sans-serif",fontSize:13,color:lp.text2}}>Getting Started Guide</button>
-                        <button onClick={()=>{setNavDrop(null);onGetStarted();}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"6px 0",fontFamily:"DM Sans,sans-serif",fontSize:13,color:lp.text2}}>Creator FAQ</button>
+                        <button onClick={()=>{setNavDrop(null);onGetStarted("creator");}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"6px 0",fontFamily:"DM Sans,sans-serif",fontSize:13,color:lp.text2}}>Getting Started Guide</button>
+                        <button onClick={()=>{setNavDrop(null);onGetStarted("creator");}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"6px 0",fontFamily:"DM Sans,sans-serif",fontSize:13,color:lp.text2}}>Creator FAQ</button>
                       </div>
                     </>):(<>
                       <div style={{padding:"0 20px 14px",borderBottom:"1px solid #f0f0f0"}}>
                         <div style={{fontSize:11,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".08em",marginBottom:12}}>Platform</div>
-                        <button onClick={()=>{setNavDrop(null);onGetStarted();}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
+                        <button onClick={()=>{setNavDrop(null);onGetStarted("brand");}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
                           <div style={{fontSize:14,fontWeight:600,color:lp.text}}>Deal Management</div>
                           <div style={{fontSize:12,color:lp.text2,marginTop:2}}>Manage creator partnerships from brief to payment.</div>
                         </button>
-                        <button onClick={()=>{setNavDrop(null);onGetStarted();}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
+                        <button onClick={()=>{setNavDrop(null);onGetStarted("brand");}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
                           <div style={{fontSize:14,fontWeight:600,color:lp.text}}>Secure Payments</div>
                           <div style={{fontSize:12,color:lp.text2,marginTop:2}}>Fund deals via ACH. Only release when content is approved.</div>
                         </button>
-                        <button onClick={()=>{setNavDrop(null);onGetStarted();}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
+                        <button onClick={()=>{setNavDrop(null);onGetStarted("brand");}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"8px 0",fontFamily:"DM Sans,sans-serif"}}>
                           <div style={{fontSize:14,fontWeight:600,color:lp.text}}>Content Review</div>
                           <div style={{fontSize:12,color:lp.text2,marginTop:2}}>Review deliverables, request revisions, approve in one click.</div>
                         </button>
                       </div>
                       <div style={{padding:"14px 20px 0"}}>
                         <div style={{fontSize:11,fontWeight:700,color:lp.text3,textTransform:"uppercase",letterSpacing:".08em",marginBottom:10}}>Resources</div>
-                        <button onClick={()=>{setNavDrop(null);onGetStarted();}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"6px 0",fontFamily:"DM Sans,sans-serif",fontSize:13,color:lp.text2}}>How It Works</button>
-                        <button onClick={()=>{setNavDrop(null);onGetStarted();}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"6px 0",fontFamily:"DM Sans,sans-serif",fontSize:13,color:lp.text2}}>Brand FAQ</button>
+                        <button onClick={()=>{setNavDrop(null);onGetStarted("brand");}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"6px 0",fontFamily:"DM Sans,sans-serif",fontSize:13,color:lp.text2}}>How It Works</button>
+                        <button onClick={()=>{setNavDrop(null);onGetStarted("brand");}} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"6px 0",fontFamily:"DM Sans,sans-serif",fontSize:13,color:lp.text2}}>Brand FAQ</button>
                       </div>
                     </>)}
                   </div>
@@ -9995,7 +9995,7 @@ function LandingPage({onGetStarted,onLogin}) {
           </div>
           <div style={{display:"flex",gap:20,alignItems:"center"}}>
             <button onClick={onLogin} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:500,color:"rgba(255,255,255,.8)"}}>Log in</button>
-            <button className="lp-cta-btn" onClick={onGetStarted} style={{padding:"9px 22px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:600}}>Get started free<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
+            <button className="lp-cta-btn" onClick={()=>onGetStarted("creator")} style={{padding:"9px 22px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:600}}>Join as Creator<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
           </div>
         </nav>
 
@@ -10008,9 +10008,10 @@ function LandingPage({onGetStarted,onLogin}) {
             One place for deals, contracts, payments, and content — so you can focus on the work, not the admin.
           </p>
           <div className="lp-hero-buttons" style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-            <button onClick={onGetStarted} style={{padding:"14px 36px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:15,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.12)"}}>Start for free</button>
-            <button onClick={onLogin} style={{padding:"14px 36px",borderRadius:99,border:"1.5px solid rgba(255,255,255,.4)",background:"rgba(255,255,255,.1)",color:"white",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:15,fontWeight:500,backdropFilter:"blur(4px)"}}>I have an account</button>
+            <button onClick={()=>onGetStarted("creator")} style={{padding:"14px 36px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:15,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.12)"}}>Join as Creator</button>
+            <button onClick={()=>onGetStarted("brand")} style={{padding:"14px 36px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:15,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.12)"}}>Join as Brand</button>
           </div>
+          <div style={{marginTop:12}}><button onClick={onLogin} style={{background:"none",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:500,color:"rgba(255,255,255,.7)"}}>Already have an account? Log in</button></div>
 
           {/* Floating cards */}
           <div className="lp-floating" style={{position:"absolute",inset:0,pointerEvents:"none"}}>
@@ -10427,7 +10428,10 @@ function LandingPage({onGetStarted,onLogin}) {
           <div style={{background:lp.accent,borderRadius:20,padding:"60px 40px",textAlign:"center"}}>
             <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,color:"white",marginBottom:16,lineHeight:1.2}}>Ready to simplify your partnerships?</h2>
             <p style={{fontSize:15,color:"rgba(255,255,255,.7)",maxWidth:420,margin:"0 auto 32px",lineHeight:1.6}}>Join creators and brands who use bridgn to manage deals, payments, and communication in one place.</p>
-            <button className="lp-cta-btn" onClick={onGetStarted} style={{padding:"15px 40px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:16,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.15)"}}>Get started free<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
+            <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
+              <button className="lp-cta-btn" onClick={()=>onGetStarted("creator")} style={{padding:"15px 36px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:16,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.15)"}}>Join as Creator<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
+              <button className="lp-cta-btn" onClick={()=>onGetStarted("brand")} style={{padding:"15px 36px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:16,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.15)"}}>Join as Brand<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
+            </div>
           </div>
         </section>
 
@@ -10435,7 +10439,7 @@ function LandingPage({onGetStarted,onLogin}) {
         <footer style={{borderTop:"1px solid "+lp.border,padding:"40px 24px",textAlign:"center"}}>
           <img src="assets/logo-dark.svg" alt="bridgn" style={{height:18,marginBottom:12,display:"inline-block"}}/>
           <div style={{display:"flex",justifyContent:"center",gap:24,marginBottom:12,flexWrap:"wrap"}}>
-            <button onClick={onGetStarted} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:lp.text2,fontFamily:"DM Sans,sans-serif"}}>Get Started</button>
+            <button onClick={()=>onGetStarted("creator")} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:lp.text2,fontFamily:"DM Sans,sans-serif"}}>Get Started</button>
             <button onClick={onLogin} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:lp.text2,fontFamily:"DM Sans,sans-serif"}}>Log In</button>
             <span style={{fontSize:12,color:lp.text3}}>Support</span>
           </div>
@@ -10446,9 +10450,9 @@ function LandingPage({onGetStarted,onLogin}) {
   );
 }
 
-function AuthScreen({onAuth,defaultMode,onBack}) {
+function AuthScreen({onAuth,defaultMode,defaultRole,onBack}) {
   const [mode,setMode] = useState(defaultMode||"login");
-  const [form,setForm] = useState({email:"",password:"",name:"",role:"creator",brands:""});
+  const [form,setForm] = useState({email:"",password:"",name:"",role:defaultRole||"creator",brands:""});
   const [loading,setLoading] = useState(false);
   const [error,setError] = useState("");
   const [success,setSuccess] = useState("");
@@ -11821,6 +11825,7 @@ function App() {
   const [sidebarCollapsed,setSidebarCollapsed] = useState(false);
   const [showAuth,setShowAuth] = useState(false);
   const [authMode,setAuthMode] = useState("signup");
+  const [preSelectedRole,setPreSelectedRole] = useState("creator");
   const [toast,setToast] = useState(null);
   const [demoMode] = useState(()=>{try{return new URLSearchParams(window.location.search).get("demo")==="true";}catch(e){return false;}});
 
@@ -12209,10 +12214,10 @@ function App() {
   if(!authUser) {
     if(inviteCtx) return React.createElement(InviteWelcomeScreen,{inviteCtx,onAuth:handleInviteAuth});
     if(!showAuth) return React.createElement(LandingPage,{
-      onGetStarted:()=>{setAuthMode("signup");setShowAuth(true);},
+      onGetStarted:(preRole)=>{setAuthMode("signup");setPreSelectedRole(preRole||"creator");setShowAuth(true);},
       onLogin:()=>{setAuthMode("login");setShowAuth(true);},
     });
-    return React.createElement(AuthScreen,{onAuth:u=>{setAuthUser(u);const r=u.user_metadata?.role||"creator";setRole(r);},defaultMode:authMode,onBack:()=>setShowAuth(false)});
+    return React.createElement(AuthScreen,{onAuth:u=>{setAuthUser(u);const r=u.user_metadata?.role||"creator";setRole(r);},defaultMode:authMode,defaultRole:preSelectedRole,onBack:()=>setShowAuth(false)});
   }
 
   const userName = authUser.user_metadata?.full_name || authUser.user_metadata?.company_name || authUser.email.split("@")[0];
