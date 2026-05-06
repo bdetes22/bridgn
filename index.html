@@ -1141,7 +1141,7 @@ function NavClock() {
   );
 }
 
-function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle,darkMode,setDarkMode}) {
+function Navbar({role,setPage,userInitials,profileImageUrl,onSignOut,onMenuToggle,darkMode,setDarkMode}) {
   const [showMenu,setShowMenu] = useState(false);
   return (
     <nav className="navbar">
@@ -1167,7 +1167,7 @@ function Navbar({role,setPage,userInitials,onSignOut,onMenuToggle,darkMode,setDa
       </button>
       <div className="nav-notif" onClick={()=>setPage("notifications")} style={{position:"relative",zIndex:1}}>🔔</div>
       <div style={{position:"relative",zIndex:1}}>
-        <div className="nav-avatar" onClick={()=>setShowMenu(m=>!m)} style={{cursor:"pointer"}}>{userInitials||"?"}</div>
+        {profileImageUrl?<img src={profileImageUrl} alt="" onClick={()=>setShowMenu(m=>!m)} style={{width:34,height:34,borderRadius:"50%",objectFit:"cover",cursor:"pointer"}}/>:<div className="nav-avatar" onClick={()=>setShowMenu(m=>!m)} style={{cursor:"pointer"}}>{userInitials||"?"}</div>}
         {showMenu&&(
           <div style={{position:"absolute",top:42,right:0,background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",boxShadow:"var(--shadow-lg)",minWidth:180,zIndex:200,overflow:"hidden"}}>
             <div style={{padding:"12px 16px",borderBottom:"1px solid var(--border)"}}>
@@ -12304,7 +12304,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Navbar role={role} setPage={setPage} userInitials={userInitials} onSignOut={handleSignOut} onMenuToggle={()=>setMobSidebar(o=>!o)} darkMode={darkMode} setDarkMode={setDarkMode}/>
+      <Navbar role={role} setPage={setPage} userInitials={userInitials} profileImageUrl={profileImageUrl} onSignOut={handleSignOut} onMenuToggle={()=>setMobSidebar(o=>!o)} darkMode={darkMode} setDarkMode={setDarkMode}/>
       <div className="main-layout">
         <div className={"sidebar-overlay"+(mobSidebar?" show":"")} onClick={()=>setMobSidebar(false)}/>
         <Sidebar role={role} page={page} setPage={setPage} userName={userName} userInitials={userInitials} profileImageUrl={profileImageUrl} mobOpen={mobSidebar} onClose={()=>setMobSidebar(false)} collapsed={sidebarCollapsed} onToggleCollapse={()=>setSidebarCollapsed(c=>!c)} demoMode={demoMode} deals={deals}/>
