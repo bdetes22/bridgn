@@ -11916,13 +11916,25 @@ function App() {
   useEffect(()=>{
     if(!authUser) return;
     const r = authUser.user_metadata?.role || "creator";
+    const googleAvatar = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || null;
+    const table = r==="brand" ? "brand_profiles" : "creator_profiles";
+
     supabase.from("creator_profiles").select("stripe_account_id,stripe_onboarded_at,profile_image_url").eq("user_id",authUser.id).maybeSingle().then(({data})=>{
       if(data?.stripe_account_id && data?.stripe_onboarded_at) setStripeConnected(true);
-      if(data?.profile_image_url) setProfileImageUrl(data.profile_image_url);
+      if(data?.profile_image_url) { setProfileImageUrl(data.profile_image_url); return; }
+      // Auto-save Google avatar if no profile pic set yet
+      if(googleAvatar && !data?.profile_image_url) {
+        setProfileImageUrl(googleAvatar);
+        supabase.from(table).upsert({user_id:authUser.id, profile_image_url:googleAvatar},{onConflict:"user_id"}).then(()=>{});
+      }
     });
     if(r==="brand") {
       supabase.from("brand_profiles").select("profile_image_url").eq("user_id",authUser.id).maybeSingle().then(({data})=>{
-        if(data?.profile_image_url) setProfileImageUrl(data.profile_image_url);
+        if(data?.profile_image_url) { setProfileImageUrl(data.profile_image_url); return; }
+        if(googleAvatar && !data?.profile_image_url) {
+          setProfileImageUrl(googleAvatar);
+          supabase.from("brand_profiles").upsert({user_id:authUser.id, profile_image_url:googleAvatar},{onConflict:"user_id"}).then(()=>{});
+        }
       });
     }
   },[authUser]);
