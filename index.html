@@ -10531,7 +10531,7 @@ function AuthScreen({onAuth,defaultMode,onBack}) {
           {mode==="signup"&&(
             <>
               <div style={{fontFamily:"DM Serif Display,serif",fontSize:26,fontWeight:400,marginBottom:6,letterSpacing:"-.3px"}}>Create your account</div>
-              <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Join bridgn free — no credit card needed</div>
+              <div style={{fontSize:13,color:"var(--text2)",marginBottom:24}}>Create your free bridgn account</div>
               {error&&<div style={{padding:"10px 14px",background:"var(--red-bg)",border:"1px solid rgba(248,113,113,.3)",borderRadius:"var(--radius-sm)",fontSize:13,color:"var(--red)",marginBottom:16}}>{error}</div>}
               <div className="fg"><label className="fl" htmlFor="signup-name">{form.role==="brand"?"Company Name":"Full Name"}</label><input className="fi" id="signup-name" name="name" autoComplete="name" value={form.name} onChange={e=>up("name",e.target.value)} placeholder={form.role==="brand"?"e.g. Nike, Glossier, Halo Health":"Your full name"}/></div>
               <div className="fg"><label className="fl" htmlFor="signup-email">Email</label><input className="fi" id="signup-email" name="email" type="email" autoComplete="email" value={form.email} onChange={e=>up("email",e.target.value)} placeholder="you@example.com"/></div>
