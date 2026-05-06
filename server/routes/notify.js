@@ -183,4 +183,22 @@ router.post("/", async (req, res) => {
   }
 });
 
+// ─── POST /api/notify/welcome — send welcome email on signup ────────────────
+
+const { welcomeEmail } = require("../../lib/email");
+
+router.post("/welcome", async (req, res) => {
+  const { email, name, role } = req.body;
+  if (!email) return res.status(400).json({ error: "email is required." });
+
+  try {
+    const emailContent = welcomeEmail({ name: name || "", role: role || "creator" });
+    await sendEmail({ to: email, ...emailContent });
+    res.json({ sent: true });
+  } catch (err) {
+    console.error("[notify/welcome]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

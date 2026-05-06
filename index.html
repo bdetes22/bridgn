@@ -9584,6 +9584,9 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
     if(data.user&&data.user.identities&&data.user.identities.length===0){
       setError("An account with this email already exists. Please sign in.");return;
     }
+    // Send welcome email (non-blocking)
+    const welcomeRole = invitedByBrand ? "creator" : "brand";
+    fetch(`${BRIDGN_API_URL}/api/notify/welcome`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:form.email,name:form.name,role:welcomeRole})}).catch(()=>{});
     setSuccess("Account created! Check your email to confirm, then sign in to access your Deal Room.");
     setMode("login");
   };
@@ -10491,6 +10494,8 @@ function AuthScreen({onAuth,defaultMode,defaultRole,onBack}) {
     if(data.user&&data.user.identities&&data.user.identities.length===0){
       setError("An account with this email already exists. Please log in.");return;
     }
+    // Send welcome email (non-blocking)
+    fetch(`${BRIDGN_API_URL}/api/notify/welcome`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:form.email,name:form.name,role:form.role})}).catch(()=>{});
     setSuccess("Account created! Check your email to confirm your account, then log in.");
     setMode("login");
   };
@@ -11946,11 +11951,14 @@ function App() {
         let r=session.user.user_metadata?.role;
         if(!r) {
           try { r = localStorage.getItem("bridgn_oauth_role"); localStorage.removeItem("bridgn_oauth_role"); } catch {}
-          if(r && (r==="creator"||r==="brand"||r==="agency")) {
+          if(r && (r==="creator"||r==="brand")) {
+            const uName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split("@")[0];
             const nameMeta = r==="creator"
-              ? {full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split("@")[0], role: r}
-              : {company_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split("@")[0], role: r};
+              ? {full_name: uName, role: r}
+              : {company_name: uName, role: r};
             await supabase.auth.updateUser({data: nameMeta});
+            // Send welcome email for new Google signups
+            fetch(`${BRIDGN_API_URL}/api/notify/welcome`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:session.user.email,name:uName,role:r})}).catch(()=>{});
           }
         }
         setRole(r||"creator");
