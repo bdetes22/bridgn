@@ -118,7 +118,7 @@ router.post("/", async (req, res) => {
       }
     }
 
-    const row = await insertDeal({
+    const dealFields = {
       bridgn_deal_id:  String(bridgnDealId),
       creator_user_id: creatorUserId || null,
       creator_name:    creatorName || "",
@@ -132,8 +132,12 @@ router.post("/", async (req, res) => {
       source:          "external",
       status:          "pending",
       progress:        0,
-      upfront_pct:     Math.max(0, Math.min(100, parseInt(upfrontPct) || 100)),
-    });
+    };
+    // Only include upfront_pct if provided (graceful when migration hasn't run)
+    const pctVal = parseInt(upfrontPct);
+    if (pctVal && pctVal !== 100) dealFields.upfront_pct = Math.max(1, Math.min(100, pctVal));
+
+    const row = await insertDeal(dealFields);
 
     // Send invite email to the other party (non-blocking)
     const emailTo = inviteeEmail || (createdBy === "brand" ? creatorEmail : brandEmail);

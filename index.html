@@ -4555,6 +4555,8 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
         const {deal} = await resp.json();
         onDealCreated({...dealData, ...deal});
       } else {
+        const errData = await resp.json().catch(()=>({}));
+        console.error("[NewDeal] API error:", resp.status, errData);
         onDealCreated(dealData);
       }
     } catch(e) {
@@ -11859,18 +11861,47 @@ function App() {
     const joinBody = invitedByBrand
       ? { bridgnDealId: dealId, creatorUserId: authUser.id }
       : { bridgnDealId: dealId, brandUserId: authUser.id };
+    console.log("[autoJoinInvite] Attempting join:", joinBody);
     fetch(`${BRIDGN_API_URL}/api/deals/join`, {
       method:"POST", headers:{"Content-Type":"application/json"},
       body:JSON.stringify(joinBody),
     })
-      .then(r=>r.ok?r.json():null)
+      .then(r=>{
+        if(!r.ok) { console.error("[autoJoinInvite] Join failed:", r.status); return r.json().then(e=>{console.error("[autoJoinInvite] Error:", e); return null;}); }
+        return r.json();
+      })
       .then(data=>{
         if(data?.deal) {
+          console.log("[autoJoinInvite] Joined deal:", data.deal.id);
           setDeals(prev=>{
             const exists = prev.some(d=>d.id===data.deal.id);
             return exists ? prev.map(d=>d.id===data.deal.id?data.deal:d) : [...prev, data.deal];
           });
           setSelected(data.deal);
+          setPage("deal-room");
+        } else {
+          console.warn("[autoJoinInvite] No deal in response — building from invite context");
+          // Fallback: show the deal from invite context so the brand sees something
+          const fallbackDeal = {
+            id: inviteCtx.bridgnDealId||inviteCtx.code,
+            brand: inviteCtx.brandName||"Brand",
+            bi: (inviteCtx.brandName||"BR").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase(),
+            ci: 1,
+            amount: inviteCtx.amount||0,
+            platform: inviteCtx.platform||"Instagram",
+            status: "pending",
+            deadline: inviteCtx.deadline||"TBD",
+            deliverables: inviteCtx.deliverables||"",
+            progress: 0,
+            source: "external",
+            campaignTitle: inviteCtx.campaignTitle||"External Deal",
+            escrow: false, escrowReleased: false,
+            creatorUserId: inviteCtx.creatorUserId||"",
+            creatorName: inviteCtx.creatorName||"",
+            upfrontPct: inviteCtx.upfrontPct||100,
+          };
+          setDeals(prev=>[...prev.filter(d=>d.id!==fallbackDeal.id), fallbackDeal]);
+          setSelected(fallbackDeal);
           setPage("deal-room");
         }
       })
