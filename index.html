@@ -2573,7 +2573,7 @@ function WorkspacePage({deals=[],authUser,setPage,setSelected}) {
   );
 }
 
-function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,selected}) {
+function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,selected,showToast:appToast}) {
   const loading = useSkeleton();
   const [fireConfetti,confettiFiring] = useConfetti();
   const [dealView,setDealView] = useState(selected?"room":"list");
@@ -2843,7 +2843,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
         setActiveDeal(prev=>({...prev, ...data.deal}));
       }
     })
-    .catch(e=>console.error("[syncDealFields]",e));
+    .catch(e=>{console.error("[syncDealFields]",e);appToast&&appToast("Failed to save changes. Please try again.","error");});
   };
 
   // Sync local brief/contract state from deal data
@@ -3028,7 +3028,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       setRemainingPhase("done");
       setActiveDeal(prev=>({...prev,remainingPaid:true}));
       updateDeal&&updateDeal(activeDeal.id,{remainingPaid:true});
-    } catch(err) { console.error("[payRemaining]",err); setRemainingError(err.message); setRemainingPhase("error"); }
+    } catch(err) { console.error("[payRemaining]",err); setRemainingError(err.message); setRemainingPhase("error"); appToast&&appToast("Payment failed: "+err.message,"error"); }
   };
   const handleMarkLive = async () => {
     if(!activeDeal || !authUser || !liveUrl.trim()) return;
@@ -3042,8 +3042,12 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
         const {deal} = await resp.json();
         setActiveDeal(prev=>({...prev,...deal}));
         updateDeal && updateDeal(activeDeal.id, deal);
+        appToast&&appToast("Content marked as LIVE!");
+      } else {
+        const err = await resp.json().catch(()=>({}));
+        appToast&&appToast(err.error||"Failed to mark as LIVE","error");
       }
-    } catch(e) { console.error("[markLive]",e); }
+    } catch(e) { console.error("[markLive]",e); appToast&&appToast("Failed to mark as LIVE. Please try again.","error"); }
     setMarkingLive(false);
   };
   const [escrowToast,setEscrowToast] = useState(null);
@@ -3119,6 +3123,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       console.error("[ACH payment]", err);
       setAchError(err.message);
       setAchPhase("error");
+      appToast&&appToast("Payment failed: "+err.message,"error");
     }
   };
 
@@ -12835,7 +12840,7 @@ function App() {
         case "campaigns":    return React.createElement(CampaignsPage,{setPage,setSelected,campaignQuestions,setCampaignQuestions,userName});
         case "campaign-detail": return React.createElement(CampaignDetail,{campaign:selected,setPage});
         case "deals":        return React.createElement(CreatorDealsPage,{setPage,setSelected,deals});
-        case "deal-room":    return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal,selected});
+        case "deal-room":    return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal,selected,showToast});
         case "active-deal":  return React.createElement(ActiveDealPage,{deal:selected,setPage});
         case "new-deal":     return React.createElement(NewDealPage,{setPage,onDealCreated:addDeal,userName,authUser});
         case "dispute":      return React.createElement(DisputePage,{deal:selected,setPage});
@@ -12869,7 +12874,7 @@ function App() {
         case "campaigns":     return React.createElement(BrandCampaignsPage,{setPage,setSelected,campaignQuestions,setCampaignQuestions});
         case "campaign-calendar": return React.createElement(CampaignCalendarPage,{});
         case "deals":         return React.createElement(BrandDealsPage,{setPage,setSelected,deals});
-        case "deal-room":     return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal,selected});
+        case "deal-room":     return React.createElement(DealRoomPage,{setPage,setSelected,deals,role,authUser,updateDeal,selected,showToast});
         case "new-deal":      return React.createElement(BrandNewDealPage,{setPage,onDealCreated:addDeal,userName,authUser});
         case "calendar":      return React.createElement(CalendarPage,{deals,role,setPage,setSelected});
         case "marketplace":   return React.createElement(MarketplaceBrandPage,{setPage,setSelected,deals,addDeal,showToast,userName,authUser});
