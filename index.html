@@ -10154,7 +10154,7 @@ function InviteWelcomeScreen({inviteCtx, onAuth}) {
           </div>
         )}
 
-        <div style={{textAlign:"center",marginTop:16,fontSize:12,color:"var(--text3)"}}>By signing up you agree to the bridgn Terms of Service and Privacy Policy.</div>
+        <div style={{textAlign:"center",marginTop:16,fontSize:12,color:"var(--text3)"}}>By signing up you agree to the bridgn <a href="#" onClick={e=>{e.preventDefault();window.open("https://bridgn.com?page=terms","_blank");}} style={{color:"var(--accent)",textDecoration:"underline"}}>Terms of Service</a> and <a href="#" onClick={e=>{e.preventDefault();window.open("https://bridgn.com?page=privacy","_blank");}} style={{color:"var(--accent)",textDecoration:"underline"}}>Privacy Policy</a>.</div>
       </div>
     </div>
   );
@@ -10198,7 +10198,101 @@ function AnimCounter({value,prefix="",suffix="",duration=1500}) {
 }
 
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
-function LandingPage({onGetStarted,onLogin}) {
+function TermsPage({onBack}) {
+  return (
+    <div style={{minHeight:"100vh",background:"var(--bg)",padding:"40px 20px"}}>
+      <div style={{maxWidth:720,margin:"0 auto"}}>
+        <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--text2)",fontFamily:"DM Sans,sans-serif",marginBottom:20}}>← Back</button>
+        <img src="assets/logo-auth.svg" alt="bridgn" style={{height:40,marginBottom:24}}/>
+        <h1 style={{fontFamily:"DM Serif Display,serif",fontSize:32,fontWeight:400,marginBottom:8}}>Terms of Service</h1>
+        <p style={{fontSize:13,color:"var(--text3)",marginBottom:32}}>Last updated: May 2026</p>
+        <div style={{fontSize:14,color:"var(--text)",lineHeight:1.85}}>
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>1. Acceptance of Terms</h2>
+          <p>By accessing or using bridgn ("the Platform"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Platform.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>2. Description of Service</h2>
+          <p>bridgn is a platform that facilitates partnerships between content creators and brands. The Platform provides tools for deal management, contract handling, escrow payments, messaging, and content delivery tracking.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>3. User Accounts</h2>
+          <p>You must provide accurate information when creating an account. You are responsible for maintaining the security of your account credentials. You must be at least 18 years old to use the Platform. Each person should maintain only one account.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>4. Payments & Escrow</h2>
+          <p>bridgn facilitates payments between brands and creators through Stripe Connect. Funds deposited by brands are held in escrow on the bridgn platform balance until release conditions are met. bridgn charges a platform fee (currently 8%) on transactions, which may be waived for promotional purposes (e.g., first deal free). Creators receive the full agreed deal amount — the platform fee is charged on top to the brand. Payment processing times depend on the payment method (ACH transfers typically take 4-5 business days).</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>5. Creator & Brand Obligations</h2>
+          <p>Creators agree to deliver content as specified in deal terms and to act in good faith throughout the partnership. Brands agree to fund deals as agreed and to review and respond to content submissions in a timely manner. Both parties agree to communicate through the Platform for deal-related matters.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>6. Disputes</h2>
+          <p>Either party may flag a deal for review if they believe the other party has not met their obligations. When a deal is disputed, funds remain held in escrow pending resolution by bridgn's review team. bridgn reserves the right to make final decisions on disputed funds.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>7. Deal Cancellation</h2>
+          <p>Deals may be cancelled by mutual agreement between both parties. If funds have been deposited into escrow and a deal is cancelled, refund terms will be determined based on the stage of the deal and work completed.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>8. Intellectual Property</h2>
+          <p>Content created by creators remains their intellectual property unless otherwise specified in a deal contract. Brands receive usage rights as defined in individual deal agreements. bridgn does not claim ownership of any content created or shared on the Platform.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>9. Limitation of Liability</h2>
+          <p>bridgn provides the Platform "as is" and is not liable for the quality of content delivered, the conduct of users, or any indirect damages arising from use of the Platform. bridgn's total liability is limited to the fees paid to bridgn in the 12 months preceding the claim.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>10. Termination</h2>
+          <p>bridgn reserves the right to suspend or terminate accounts that violate these terms, engage in fraudulent activity, or fail to meet payment obligations. Users may close their account at any time, subject to completion of any active deals.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>11. Changes to Terms</h2>
+          <p>bridgn may update these terms at any time. Continued use of the Platform after changes constitutes acceptance of the updated terms. We will notify users of material changes via email.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>12. Contact</h2>
+          <p>For questions about these terms, contact us at <a href="mailto:hello@bridgn.com" style={{color:"var(--accent)"}}>hello@bridgn.com</a>.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PrivacyPage({onBack}) {
+  return (
+    <div style={{minHeight:"100vh",background:"var(--bg)",padding:"40px 20px"}}>
+      <div style={{maxWidth:720,margin:"0 auto"}}>
+        <button onClick={onBack} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--text2)",fontFamily:"DM Sans,sans-serif",marginBottom:20}}>← Back</button>
+        <img src="assets/logo-auth.svg" alt="bridgn" style={{height:40,marginBottom:24}}/>
+        <h1 style={{fontFamily:"DM Serif Display,serif",fontSize:32,fontWeight:400,marginBottom:8}}>Privacy Policy</h1>
+        <p style={{fontSize:13,color:"var(--text3)",marginBottom:32}}>Last updated: May 2026</p>
+        <div style={{fontSize:14,color:"var(--text)",lineHeight:1.85}}>
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>1. Information We Collect</h2>
+          <p><strong>Account information:</strong> Name, email address, profile photo, and role (creator or brand) when you sign up.</p>
+          <p><strong>Payment information:</strong> Bank account details are collected and processed by Stripe — bridgn does not store your bank account numbers directly.</p>
+          <p><strong>Deal data:</strong> Campaign details, deliverables, contracts, content files, and messages exchanged through the Platform.</p>
+          <p><strong>Usage data:</strong> How you interact with the Platform, pages visited, features used, and device information.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>2. How We Use Your Information</h2>
+          <p>We use your information to: provide and improve the Platform, process payments through Stripe Connect, send notifications about deal activity, communicate important updates about your account, and prevent fraud and abuse.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>3. Information Sharing</h2>
+          <p>We share information with: <strong>Stripe</strong> for payment processing, <strong>Resend</strong> for email delivery, and <strong>Supabase</strong> for data storage and authentication. We share your name and profile information with the other party in a deal (creator sees brand info and vice versa). We do not sell your personal information to third parties.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>4. Data Security</h2>
+          <p>We use industry-standard security measures including encryption in transit (HTTPS), secure authentication through Supabase Auth, and PCI-compliant payment processing through Stripe. Your bank details are never stored on bridgn's servers.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>5. Data Retention</h2>
+          <p>We retain your account data for as long as your account is active. Deal records and payment history are retained for legal and accounting purposes. You may request deletion of your account and associated data by contacting us.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>6. Your Rights</h2>
+          <p>You have the right to: access your personal data, correct inaccurate data, request deletion of your data, export your deal history, and opt out of non-essential communications.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>7. Cookies</h2>
+          <p>We use essential cookies for authentication and session management. We do not use third-party tracking cookies or advertising cookies.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>8. Changes to This Policy</h2>
+          <p>We may update this Privacy Policy from time to time. We will notify you of material changes via email. Continued use of the Platform after changes constitutes acceptance.</p>
+
+          <h2 style={{fontSize:18,fontWeight:700,marginTop:28,marginBottom:8}}>9. Contact</h2>
+          <p>For privacy-related questions or requests, contact us at <a href="mailto:hello@bridgn.com" style={{color:"var(--accent)"}}>hello@bridgn.com</a>.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
   const lp = {text:"#0a1628",text2:"#4a5568",text3:"#8896a8",border:"#d0dbe8",surface:"rgba(255,255,255,.85)",accent:"#0a1628"};
   const [faqOpen,setFaqOpen] = useState(null);
   const [navDrop,setNavDrop] = useState(null);
@@ -10882,6 +10976,10 @@ function LandingPage({onGetStarted,onLogin}) {
             <button onClick={onLogin} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:lp.text2,fontFamily:"DM Sans,sans-serif"}}>Log In</button>
             <span style={{fontSize:12,color:lp.text3}}>Support</span>
           </div>
+          <div style={{display:"flex",justifyContent:"center",gap:16,marginBottom:8}}>
+            <button onClick={onTerms} style={{background:"none",border:"none",cursor:"pointer",fontSize:11,color:lp.text3,fontFamily:"DM Sans,sans-serif",textDecoration:"underline"}}>Terms of Service</button>
+            <button onClick={onPrivacy} style={{background:"none",border:"none",cursor:"pointer",fontSize:11,color:lp.text3,fontFamily:"DM Sans,sans-serif",textDecoration:"underline"}}>Privacy Policy</button>
+          </div>
           <p style={{fontSize:11,color:lp.text3,margin:0}}>2026 bridgn. The creator-brand partnership platform.</p>
         </footer>
       </div>
@@ -10889,7 +10987,7 @@ function LandingPage({onGetStarted,onLogin}) {
   );
 }
 
-function AuthScreen({onAuth,defaultMode,defaultRole,onBack}) {
+function AuthScreen({onAuth,defaultMode,defaultRole,onBack,onTerms,onPrivacy}) {
   const [mode,setMode] = useState(defaultMode||"login");
   const [form,setForm] = useState({email:"",password:"",name:"",role:defaultRole||"creator",brands:""});
   const [loading,setLoading] = useState(false);
@@ -11022,7 +11120,7 @@ function AuthScreen({onAuth,defaultMode,defaultRole,onBack}) {
             </>
           )}
         </div>
-        <div style={{textAlign:"center",marginTop:20,fontSize:12,color:"var(--text3)"}}>By signing up you agree to the bridgn Terms of Service and Privacy Policy.</div>
+        <div style={{textAlign:"center",marginTop:20,fontSize:12,color:"var(--text3)"}}>By signing up you agree to the bridgn <button onClick={onTerms} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--accent)",fontFamily:"inherit",padding:0,textDecoration:"underline"}}>Terms of Service</button> and <button onClick={onPrivacy} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--accent)",fontFamily:"inherit",padding:0,textDecoration:"underline"}}>Privacy Policy</button>.</div>
       </div>
     </div>
   );
@@ -12311,6 +12409,7 @@ function App() {
   const [showAuth,setShowAuth] = useState(false);
   const [authMode,setAuthMode] = useState("signup");
   const [preSelectedRole,setPreSelectedRole] = useState("creator");
+  const [legalPage,setLegalPage] = useState(null); // "terms" or "privacy"
   const [toast,setToast] = useState(null);
   const [demoMode] = useState(()=>{try{return new URLSearchParams(window.location.search).get("demo")==="true";}catch(e){return false;}});
 
@@ -12711,13 +12810,19 @@ function App() {
     </div>
   );
 
+  // Legal pages — accessible without auth
+  if(legalPage==="terms") return React.createElement(TermsPage,{onBack:()=>setLegalPage(null)});
+  if(legalPage==="privacy") return React.createElement(PrivacyPage,{onBack:()=>setLegalPage(null)});
+
   if(!authUser) {
     if(inviteCtx) return React.createElement(InviteWelcomeScreen,{inviteCtx,onAuth:handleInviteAuth});
     if(!showAuth) return React.createElement(LandingPage,{
       onGetStarted:(preRole)=>{setAuthMode("signup");setPreSelectedRole(preRole||"creator");setShowAuth(true);},
       onLogin:()=>{setAuthMode("login");setShowAuth(true);},
+      onTerms:()=>setLegalPage("terms"),
+      onPrivacy:()=>setLegalPage("privacy"),
     });
-    return React.createElement(AuthScreen,{onAuth:u=>{setAuthUser(u);const r=u.user_metadata?.role||"creator";setRole(r);},defaultMode:authMode,defaultRole:preSelectedRole,onBack:()=>setShowAuth(false)});
+    return React.createElement(AuthScreen,{onAuth:u=>{setAuthUser(u);const r=u.user_metadata?.role||"creator";setRole(r);},defaultMode:authMode,defaultRole:preSelectedRole,onBack:()=>setShowAuth(false),onTerms:()=>setLegalPage("terms"),onPrivacy:()=>setLegalPage("privacy")});
   }
 
   const userName = authUser.user_metadata?.full_name || authUser.user_metadata?.company_name || authUser.email.split("@")[0];
