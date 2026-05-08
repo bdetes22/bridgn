@@ -1909,8 +1909,39 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
   const firstName = (userName||"there").split(" ")[0];
   const hour = new Date().getHours();
   const greeting = hour<12?"Good morning":hour<17?"Good afternoon":"Good evening";
+  const isNewUser = deals.length===0 && !onboarding?.seen;
   return (
     <div className="fade-in">
+      {/* Onboarding flow for new creators */}
+      {isNewUser?(
+        <div style={{maxWidth:600,margin:"0 auto"}}>
+          <div style={{textAlign:"center",marginBottom:32}}>
+            <div style={{fontSize:40,marginBottom:12}}>👋</div>
+            <h1 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:400,letterSpacing:"-.5px",marginBottom:8}}>Welcome to bridgn, {firstName}!</h1>
+            <p style={{fontSize:14,color:"var(--text2)",lineHeight:1.7,maxWidth:440,margin:"0 auto"}}>Let's get you set up so brands can find you and you can start managing deals like a pro.</p>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {[
+              {icon:"📸",title:"Set up your profile",desc:"Add your bio, socials, and profile photo so brands know who you are.",btn:"Set Up Profile",page:"profile-settings",done:!!(socialLinks.bio?.trim())},
+              {icon:"🏦",title:"Connect your bank",desc:"Link your bank account so you can receive secure escrow payments.",btn:"Connect Bank",action:()=>{window.location.href=`${BRIDGN_API_URL}/api/stripe/onboard?userId=${authUser?.id||""}&email=${encodeURIComponent(authUser?.email||"")}`;},done:stripeConnected},
+              {icon:"🤝",title:"Create your first deal",desc:"Bring an existing brand deal onto bridgn, or share your profile to get offers.",btn:"Create a Deal",page:"new-deal",done:deals.length>0},
+              {icon:"🔗",title:"Share your profile",desc:"Send your bridgn profile link to brands so they can send you offers directly.",btn:"View Profile",page:"public-profile",done:false},
+            ].map((step,i)=>(
+              <div key={i} className="card" style={{padding:"18px 20px",display:"flex",gap:14,alignItems:"center",opacity:step.done?.6:1}}>
+                <div style={{width:44,height:44,borderRadius:12,background:step.done?"var(--green-bg)":"var(--accent-light)",border:"1px solid "+(step.done?"rgba(52,211,153,.3)":"rgba(91,138,245,.2)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{step.done?"✓":step.icon}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:600,color:step.done?"var(--green)":"var(--text)"}}>{step.title}</div>
+                  <div style={{fontSize:12,color:"var(--text3)",marginTop:2,lineHeight:1.5}}>{step.desc}</div>
+                </div>
+                {!step.done&&<button className="btn btn-primary btn-sm" style={{flexShrink:0}} onClick={()=>step.action?step.action():setPage(step.page)}>{step.btn}</button>}
+              </div>
+            ))}
+          </div>
+          <div style={{textAlign:"center",marginTop:20}}>
+            <button onClick={()=>{updateOnboarding&&updateOnboarding({seen:true});}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,color:"var(--text3)",fontFamily:"DM Sans,sans-serif"}}>Skip for now — I'll explore on my own</button>
+          </div>
+        </div>
+      ):(<>
       {/* Welcome Banner */}
       <div className="welcome-banner" style={{background:"linear-gradient(135deg,#0f4c81,#1a7fa8)"}}>
         <h1>{greeting}, {firstName}</h1>
@@ -1980,6 +2011,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
         </div>
         <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.6}}>A swipeable feed where brands post campaigns and creators can browse, match, and apply — like discovering opportunities on TikTok, but for brand deals.</div>
       </div>
+      </>)}
     </div>
   );
 }
@@ -6807,8 +6839,39 @@ function BrandDashboard({setPage,setSelected,deals=[],authUser}) {
   const greeting = hour<12?"Good morning":hour<17?"Good afternoon":"Good evening";
   const totalSpent = deals.filter(d=>d.escrowReleased).reduce((s,d)=>s+d.amount,0);
 
+  const isNewBrand = deals.length===0 && !profileComplete;
+
   return (
     <div className="fade-in">
+      {isNewBrand?(
+        <div style={{maxWidth:600,margin:"0 auto"}}>
+          <div style={{textAlign:"center",marginBottom:32}}>
+            <div style={{fontSize:40,marginBottom:12}}>🏢</div>
+            <h1 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:400,letterSpacing:"-.5px",marginBottom:8}}>Welcome to bridgn, {brandFirst}!</h1>
+            <p style={{fontSize:14,color:"var(--text2)",lineHeight:1.7,maxWidth:440,margin:"0 auto"}}>Your command center for creator partnerships. Let's get you set up.</p>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {[
+              {icon:"🏢",title:"Set up your company profile",desc:"Add your website, socials, and company info so creators know who you are.",btn:"Set Up Profile",page:"settings",done:profileComplete},
+              {icon:"🤝",title:"Create your first deal",desc:"Start a partnership with a creator — set the terms, deliverables, and budget.",btn:"Create a Deal",page:"new-deal",done:deals.length>0},
+              {icon:"🔍",title:"Browse your Creator CRM",desc:"Discover and manage creator relationships all in one place.",btn:"Open CRM",page:"creator-crm",done:false},
+            ].map((step,i)=>(
+              <div key={i} className="card" style={{padding:"18px 20px",display:"flex",gap:14,alignItems:"center",opacity:step.done?.6:1}}>
+                <div style={{width:44,height:44,borderRadius:12,background:step.done?"var(--green-bg)":"rgba(240,160,80,.1)",border:"1px solid "+(step.done?"rgba(52,211,153,.3)":"rgba(240,160,80,.2)"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{step.done?"✓":step.icon}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:600,color:step.done?"var(--green)":"var(--text)"}}>{step.title}</div>
+                  <div style={{fontSize:12,color:"var(--text3)",marginTop:2,lineHeight:1.5}}>{step.desc}</div>
+                </div>
+                {!step.done&&<button className="btn btn-primary btn-sm" style={{flexShrink:0}} onClick={()=>setPage(step.page)}>{step.btn}</button>}
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:24,padding:"16px 20px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.25)",borderRadius:"var(--radius)",textAlign:"center"}}>
+            <div style={{fontSize:14,fontWeight:600,color:"var(--green)",marginBottom:4}}>Your first deal is free</div>
+            <div style={{fontSize:12,color:"var(--text2)",lineHeight:1.5}}>No platform fees on your first creator partnership. See why brands are switching to bridgn.</div>
+          </div>
+        </div>
+      ):(<>
       {/* Welcome Banner */}
       <div className="welcome-banner" style={{background:"linear-gradient(135deg,#1b2951,#2d4a8a)"}}>
         <h1>{greeting}, {brandFirst}</h1>
@@ -6867,6 +6930,7 @@ function BrandDashboard({setPage,setSelected,deals=[],authUser}) {
           </div>
         )}
       </div>
+      </>)}
     </div>
   );
 }
