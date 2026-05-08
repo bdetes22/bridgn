@@ -80,6 +80,10 @@ function dealToFrontend(row) {
     net30DueAt:        row.net30_due_at,
     upfrontReleased:   !!row.upfront_released,
     remainingPaid:     !!row.remaining_payment_intent_id,
+    // Cancellation
+    cancelRequestedBy: row.cancel_requested_by || null,
+    cancelReason:      row.cancel_reason || "",
+    cancelAgreedAt:    row.cancel_agreed_at || null,
     // Creator workspace (private)
     creatorWorkspace:  row.creator_workspace || {},
   };
@@ -403,6 +407,7 @@ const ALLOWED_FIELDS = [
   "post_cta", "post_link", "post_caption", "post_details_sent",
   "creator_workspace",
   "upfront_pct", "content_live_at", "net30_due_at", "upfront_released",
+  "cancel_requested_by", "cancel_reason", "cancel_agreed_at",
 ];
 
 router.put("/update", async (req, res) => {

@@ -990,7 +990,7 @@ function StatusBadge({s}) {
   const cls = {Active:"badge badge-green",Pending:"badge badge-yellow",Completed:"badge badge-gray",Declined:"badge badge-red",Invited:"badge badge-blue",Expiring:"badge badge-orange",Expired:"badge badge-red",Draft:"badge badge-gray",
     payment_held:"badge badge-green",payment_released:"badge badge-green",payment_processing:"badge badge-yellow",
     content_delivered:"badge badge-green",content_submitted:"badge badge-blue",content_under_review:"badge badge-blue",
-    content_live:"badge badge-green",payment_overdue:"badge badge-red",
+    content_live:"badge badge-green",payment_overdue:"badge badge-red",Cancelled:"badge badge-red",
     contract_signed:"badge badge-blue",contract_sent:"badge badge-yellow",brief_submitted:"badge badge-yellow",pending_brief:"badge badge-yellow"};
   const labels = {payment_held:"In Escrow",payment_released:"Paid",payment_processing:"Processing",
     content_delivered:"Content Approved",content_submitted:"Content Submitted",content_under_review:"Under Review",
@@ -2990,6 +2990,8 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
   const [disputeLoading,setDisputeLoading] = useState(false);
   const [showDisputeModal,setShowDisputeModal] = useState(false);
   const [disputeReason,setDisputeReason] = useState("");
+  const [showCancelModal,setShowCancelModal] = useState(false);
+  const [cancelReason,setCancelReason] = useState("");
   const [liveUrl,setLiveUrl] = useState("");
   const [markingLive,setMarkingLive] = useState(false);
   const [remainingPhase,setRemainingPhase] = useState("idle"); // idle|creating|collecting|confirming|done|error
@@ -3163,6 +3165,34 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       showEscrowToast(err.message, "error");
     }
     setDisputeLoading(false);
+  };
+
+  const handleRequestCancel = async () => {
+    if(!activeDeal || !authUser || !cancelReason.trim()) return;
+    const myRole = isBrand ? "brand" : "creator";
+    // Check if the other side already requested cancellation
+    const otherRequested = activeDeal.cancelRequestedBy && activeDeal.cancelRequestedBy !== myRole;
+    if(otherRequested) {
+      // Both sides agree — cancel the deal
+      await fetch(`${BRIDGN_API_URL}/api/deals/update`, {
+        method:"PUT", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({bridgnDealId:activeDeal.id, userId:authUser.id, fields:{status:"Cancelled",cancel_reason:cancelReason.trim(),cancel_agreed_at:new Date().toISOString()}}),
+      });
+      setActiveDeal(prev=>({...prev,status:"Cancelled"}));
+      updateDeal&&updateDeal(activeDeal.id,{status:"Cancelled"});
+      notifyOther("new_message",{messagePreview:"Deal has been cancelled by mutual agreement."});
+    } else {
+      // First side requesting — mark as pending cancellation
+      await fetch(`${BRIDGN_API_URL}/api/deals/update`, {
+        method:"PUT", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({bridgnDealId:activeDeal.id, userId:authUser.id, fields:{cancel_requested_by:myRole,cancel_reason:cancelReason.trim()}}),
+      });
+      setActiveDeal(prev=>({...prev,cancelRequestedBy:myRole,cancelReason:cancelReason.trim()}));
+      updateDeal&&updateDeal(activeDeal.id,{cancelRequestedBy:myRole});
+      notifyOther("new_message",{messagePreview:`${myRole==="brand"?"Brand":"Creator"} has requested to cancel this deal. Reason: ${cancelReason.trim()}`});
+    }
+    setShowCancelModal(false);
+    setCancelReason("");
   };
 
   // All hooks must be called before any conditional return (React Rules of Hooks).
@@ -3365,6 +3395,77 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           )}
         </div>
       </div>
+
+      {/* Cancelled deal banner */}
+      {activeDeal.status==="Cancelled"&&(
+        <div style={{padding:"16px 20px",background:"rgba(239,68,68,.06)",border:"1.5px solid rgba(239,68,68,.2)",borderRadius:"var(--radius)",marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
+          <span style={{fontSize:20}}>🚫</span>
+          <div style={{flex:1}}>
+            <div style={{fontSize:14,fontWeight:700,color:"var(--red)"}}>Deal Cancelled</div>
+            <div style={{fontSize:12,color:"var(--text3)",marginTop:2}}>This deal was cancelled by mutual agreement.{activeDeal.cancelReason?" Reason: "+activeDeal.cancelReason:""}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Pending cancellation banner */}
+      {activeDeal.cancelRequestedBy&&activeDeal.status!=="Cancelled"&&(
+        <div style={{padding:"16px 20px",background:"rgba(251,146,60,.06)",border:"1.5px solid rgba(251,146,60,.25)",borderRadius:"var(--radius)",marginBottom:16}}>
+          <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:activeDeal.cancelRequestedBy===(isBrand?"brand":"creator")?0:10}}>
+            <span style={{fontSize:20}}>⚠️</span>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:700,color:"var(--orange, #f97316)"}}>Cancellation Requested</div>
+              <div style={{fontSize:12,color:"var(--text3)",marginTop:2}}>
+                {activeDeal.cancelRequestedBy===(isBrand?"brand":"creator")
+                  ? "You requested to cancel this deal. Waiting for the other party to agree."
+                  : `The ${activeDeal.cancelRequestedBy} has requested to cancel this deal.${activeDeal.cancelReason?" Reason: \""+activeDeal.cancelReason+"\"":""}`}
+              </div>
+            </div>
+          </div>
+          {activeDeal.cancelRequestedBy!==(isBrand?"brand":"creator")&&(
+            <div style={{display:"flex",gap:8,marginTop:4}}>
+              <button className="btn btn-secondary btn-sm" style={{color:"var(--red)",borderColor:"var(--red)"}} onClick={()=>{setCancelReason(activeDeal.cancelReason||"Agreed to cancel");setShowCancelModal(true);}}>Agree & Cancel Deal</button>
+              <button className="btn btn-secondary btn-sm" onClick={()=>{
+                fetch(`${BRIDGN_API_URL}/api/deals/update`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({bridgnDealId:activeDeal.id,userId:authUser?.id,fields:{cancel_requested_by:null,cancel_reason:null}})});
+                setActiveDeal(prev=>({...prev,cancelRequestedBy:null,cancelReason:""}));
+                updateDeal&&updateDeal(activeDeal.id,{cancelRequestedBy:null});
+                notifyOther("new_message",{messagePreview:"Cancellation request was declined. The deal continues."});
+              }}>Decline — Keep Deal Active</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Cancel deal button — subtle, at bottom of header area */}
+      {activeDeal.status!=="Cancelled"&&activeDeal.status!=="payment_released"&&activeDeal.status!=="Completed"&&!activeDeal.cancelRequestedBy&&(
+        <div style={{marginBottom:16,textAlign:"right"}}>
+          <button onClick={()=>setShowCancelModal(true)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:"var(--text3)",fontFamily:"DM Sans,sans-serif",textDecoration:"underline"}}>Request to cancel this deal</button>
+        </div>
+      )}
+
+      {/* Cancel modal */}
+      {showCancelModal&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}} onClick={()=>setShowCancelModal(false)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:28,width:"100%",maxWidth:420,boxShadow:"var(--shadow-lg)"}}>
+            <div style={{fontSize:16,fontWeight:700,marginBottom:8}}>Cancel This Deal?</div>
+            <div style={{fontSize:13,color:"var(--text2)",marginBottom:16,lineHeight:1.6}}>
+              {activeDeal.cancelRequestedBy
+                ? "The other party has already requested cancellation. Agreeing will cancel the deal."
+                : "Both sides must agree to cancel. The other party will be notified and can accept or decline."}
+            </div>
+            <div className="fg" style={{marginBottom:16}}>
+              <label className="fl">Reason for cancellation</label>
+              <textarea className="fta" value={cancelReason} onChange={e=>setCancelReason(e.target.value)} placeholder="e.g. Campaign direction changed, timing doesn't work..." style={{minHeight:70}}/>
+            </div>
+            <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+              <button className="btn btn-secondary btn-sm" onClick={()=>{setShowCancelModal(false);setCancelReason("");}}>Never mind</button>
+              <button className="btn btn-sm" style={{background:"var(--red)",color:"#fff",border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:13,padding:"8px 16px",borderRadius:"var(--radius-sm)"}} onClick={handleRequestCancel} disabled={!cancelReason.trim()}>
+                {activeDeal.cancelRequestedBy?"Agree & Cancel":"Request Cancellation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="deal-room-grid" style={{display:"grid",gap:20,alignItems:"start"}}>
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
           <div className="card-lg" style={{overflow:"hidden",background:`linear-gradient(135deg,${g[0]}12,${g[1]}08)`,border:`1.5px solid ${g[0]}30`}}>
