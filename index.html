@@ -10638,26 +10638,28 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
           <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>Everything you need in one place</h2>
           <p style={{textAlign:"center",fontSize:15,color:lp.text2,marginBottom:48,maxWidth:440,margin:"0 auto 48px"}}>No more juggling emails, spreadsheets, and payment apps.</p>
           <div className="lp-bento" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gridTemplateRows:"auto auto",gap:16}}>
-            <div style={{gridRow:"1 / 3",background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"32px 28px",display:"flex",flexDirection:"column",justifyContent:"space-between",backdropFilter:"blur(8px)"}}>
+            <div style={{gridRow:"1 / 3",background:"linear-gradient(135deg,#0f4c81,#1a6fa8)",border:"none",borderRadius:16,padding:"32px 28px",display:"flex",flexDirection:"column",justifyContent:"space-between",color:"white"}}>
               <div>
-                <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:400,lineHeight:1.2,marginBottom:12}}>Deal Room</h3>
-                <p style={{fontSize:14,color:lp.text2,lineHeight:1.65}}>A shared workspace where both sides manage briefs, contracts, content, messages, and approvals in real time.</p>
+                <div style={{fontSize:28,marginBottom:12}}>🤝</div>
+                <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:400,lineHeight:1.2,marginBottom:12,color:"white"}}>Deal Room</h3>
+                <p style={{fontSize:14,color:"rgba(255,255,255,.8)",lineHeight:1.65}}>Your shared workspace. Briefs, contracts, content, messages, approvals, and payments — all in one place for both sides.</p>
               </div>
-              <div style={{marginTop:24,padding:16,background:"#f0f6fa",borderRadius:10,border:"1px solid "+lp.border}}>
+              <div style={{marginTop:24,padding:16,background:"rgba(255,255,255,.12)",borderRadius:10,border:"1px solid rgba(255,255,255,.2)"}}>
                 <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
                   <div style={{width:7,height:7,borderRadius:"50%",background:"#34d399"}}/>
-                  <span style={{fontSize:11,fontWeight:600,color:"#059669"}}>Live collaboration</span>
+                  <span style={{fontSize:11,fontWeight:600,color:"#34d399"}}>Live collaboration</span>
                 </div>
-                <div style={{fontSize:12,color:lp.text3}}>Both sides see updates instantly</div>
+                <div style={{fontSize:12,color:"rgba(255,255,255,.6)"}}>Both sides see updates in real time</div>
               </div>
             </div>
             {[
-              {t:"Escrow Payments",d:"Funds held securely until content is approved. Creators get paid automatically."},
-              {t:"Contracts & Briefs",d:"Upload, review, and sign — all tracked with timestamps."},
-              {t:"Real-time Messaging",d:"Deal-specific conversations. No more searching through DMs and emails."},
-              {t:"Email Notifications",d:"Instant alerts when something needs attention."},
+              {e:"💰",t:"Flexible Escrow",d:"Brands set the upfront % — creators get partial payment secured while the rest follows Net 30 after going live."},
+              {e:"📄",t:"Contracts & Briefs",d:"Upload, review, and sign — all tracked with timestamps. No more lost attachments."},
+              {e:"🔄",t:"Offers & Negotiation",d:"Creators can accept, counter, or decline offers. Back-and-forth negotiation stays on-platform."},
+              {e:"🔔",t:"Smart Notifications",d:"Email and in-app alerts for every deal action. Never miss a payment, approval, or message."},
             ].map((f,i)=>(
               <div key={i} style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 24px",backdropFilter:"blur(8px)"}}>
+                <div style={{fontSize:22,marginBottom:8}}>{f.e}</div>
                 <h4 style={{fontSize:15,fontWeight:700,marginBottom:6}}>{f.t}</h4>
                 <p style={{fontSize:13,color:lp.text2,lineHeight:1.55,margin:0}}>{f.d}</p>
               </div>
@@ -10860,18 +10862,19 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
         <Reveal>
         <section className="lp-section" style={{maxWidth:1060,margin:"0 auto",padding:"80px 24px 100px"}}>
           <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>How it works</h2>
-          <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>Five simple steps from handshake to payment.</p>
+          <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>From first handshake to final payment — all on bridgn.</p>
           <div className="lp-steps-grid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:16}}>
             {[
-              {n:"1",t:"Create a deal",d:"Set the terms, deliverables, and deadline. Send the brand an invite link."},
-              {n:"2",t:"Share the brief",d:"Brand uploads the creative brief and contract. Creator reviews and signs."},
-              {n:"3",t:"Deliver content",d:"Upload drafts, share scripts, and submit final content in the Deal Room."},
-              {n:"4",t:"Approve & fund",d:"Brand reviews deliverables, approves, and funds the deal via escrow."},
-              {n:"5",t:"Get paid",d:"Once approved, funds transfer to the creator automatically. Done."},
+              {n:"1",e:"🤝",t:"Create a deal",d:"Set terms, deliverables, upfront %, and deadline. Invite the other party with one link."},
+              {n:"2",e:"📋",t:"Brief & contract",d:"Brand shares the brief. Both sides review and sign the contract — all tracked in the Deal Room."},
+              {n:"3",e:"🎬",t:"Create & deliver",d:"Creator uploads content, shares drafts, and submits deliverables for review."},
+              {n:"4",e:"✅",t:"Approve & go live",d:"Brand approves deliverables. Creator marks the content as LIVE with the post link."},
+              {n:"5",e:"💰",t:"Get paid",d:"Upfront escrow releases on LIVE. Remaining balance due Net 30. Automatic and secure."},
             ].map((s,i)=>(
               <Reveal key={i} delay={i*0.08}>
               <div className="lp-step" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 20px",backdropFilter:"blur(8px)",textAlign:"center"}}>
-                <div style={{width:36,height:36,borderRadius:"50%",background:lp.accent,color:"white",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700,marginBottom:14}}>{s.n}</div>
+                <div style={{fontSize:28,marginBottom:10}}>{s.e}</div>
+                <div style={{width:28,height:28,borderRadius:"50%",background:lp.accent,color:"white",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,marginBottom:10}}>{s.n}</div>
                 <div style={{fontSize:14,fontWeight:700,marginBottom:6,color:lp.text}}>{s.t}</div>
                 <p style={{fontSize:12,color:lp.text2,lineHeight:1.55,margin:0}}>{s.d}</p>
               </div>
@@ -10911,27 +10914,31 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
             <p style={{fontSize:15,color:lp.text2,maxWidth:520,margin:"0 auto",lineHeight:1.65}}>Whether you create content or manage a brand, bridgn is the one place where every deal — from first message to final payment — lives under one roof.</p>
           </div>
           <div className="lp-cta-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
-            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px"}}>
-              <div style={{fontSize:12,fontWeight:700,color:"#0e7490",textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Creators</div>
-              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:400,marginBottom:12,lineHeight:1.2}}>Get paid on time, every time</h3>
-              <ul style={{fontSize:13,color:lp.text2,lineHeight:1.8,marginBottom:24,paddingLeft:16}}>
-                <li>Funds secured in escrow before you create</li>
-                <li>Upload content, share scripts, sign contracts — one place</li>
-                <li>Real-time messaging with your brand partner</li>
-                <li>Automatic payment release on approval</li>
+            <div style={{background:"linear-gradient(135deg,#0e7490,#0891b2)",border:"none",borderRadius:16,padding:"36px 28px",color:"white"}}>
+              <div style={{fontSize:28,marginBottom:8}}>🎨</div>
+              <div style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Creators</div>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:400,marginBottom:12,lineHeight:1.2,color:"white"}}>Get paid on time, every time</h3>
+              <ul style={{fontSize:13,color:"rgba(255,255,255,.85)",lineHeight:2,marginBottom:24,paddingLeft:16}}>
+                <li>Upfront escrow — money is secured before you start</li>
+                <li>Counter offers — negotiate your rate on-platform</li>
+                <li>Mark content as LIVE and get paid automatically</li>
+                <li>Share your profile and receive offers from brands</li>
+                <li>Track earnings, manage contracts, message partners</li>
               </ul>
-              <button className="lp-cta-btn" onClick={onGetStarted} style={{width:"100%",padding:"12px 0",borderRadius:99,background:"#0e7490",color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Creator<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
+              <button className="lp-cta-btn" onClick={()=>onGetStarted("creator")} style={{width:"100%",padding:"12px 0",borderRadius:99,background:"white",color:"#0e7490",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:700}}>Join as Creator<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
             </div>
-            <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"36px 28px"}}>
-              <div style={{fontSize:12,fontWeight:700,color:lp.accent,textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Brands</div>
-              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:400,marginBottom:12,lineHeight:1.2}}>Manage partnerships, not chaos</h3>
-              <ul style={{fontSize:13,color:lp.text2,lineHeight:1.8,marginBottom:24,paddingLeft:16}}>
-                <li>Send briefs and contracts directly in the Deal Room</li>
+            <div style={{background:"linear-gradient(135deg,#1b2951,#2d4a8a)",border:"none",borderRadius:16,padding:"36px 28px",color:"white"}}>
+              <div style={{fontSize:28,marginBottom:8}}>🏢</div>
+              <div style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,.7)",textTransform:"uppercase",letterSpacing:".1em",marginBottom:14}}>For Brands</div>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:400,marginBottom:12,lineHeight:1.2,color:"white"}}>Manage partnerships, not chaos</h3>
+              <ul style={{fontSize:13,color:"rgba(255,255,255,.85)",lineHeight:2,marginBottom:24,paddingLeft:16}}>
+                <li>Set your own upfront % — don't pay 100% upfront</li>
                 <li>Review and approve content before releasing payment</li>
-                <li>Pay securely via ACH — funds held in escrow</li>
-                <li>Everything tracked, timestamped, and organized</li>
+                <li>Creator CRM to manage all your partnerships</li>
+                <li>Your first deal is completely free — no platform fees</li>
+                <li>Send offers, negotiate terms, track deliverables</li>
               </ul>
-              <button className="lp-cta-btn" onClick={onGetStarted} style={{width:"100%",padding:"12px 0",borderRadius:99,background:lp.accent,color:"white",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:600}}>Join as Brand<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
+              <button className="lp-cta-btn" onClick={()=>onGetStarted("brand")} style={{width:"100%",padding:"12px 0",borderRadius:99,background:"white",color:"#1b2951",border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:14,fontWeight:700}}>Join as Brand<span className="lp-btn-arrow">&nbsp;&rarr;</span></button>
             </div>
           </div>
         </section>
@@ -10940,11 +10947,13 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
         <section className="lp-section" style={{maxWidth:700,margin:"0 auto",padding:"0 24px 100px"}}>
           <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:48,letterSpacing:"-.3px",color:lp.text}}>Frequently asked questions</h2>
           {[
-            {q:"Is bridgn free?",a:"Yes, creating an account is free for both creators and brands. Your first deal has zero platform fees. After that, a small 8% processing fee is added to the brand's payment to cover escrow, payment processing, and platform infrastructure. Creators always receive 100% of their deal amount."},
-            {q:"How do payments work?",a:"Brands fund an escrow account when a deal is agreed upon. The funds are held securely until the creator delivers content and the brand approves it. Once approved, payment releases automatically to the creator. This protects both sides."},
-            {q:"Can I use bridgn for deals I negotiate outside the platform?",a:"Yes, that is what External Deals are for. You can bring in any partnership you have already negotiated elsewhere and manage the deliverables, payments, and communication through bridgn."},
-            {q:"How does the contract process work?",a:"Brands can upload a contract or creative brief directly to the Deal Room. The creator reviews it, and both parties can sign digitally. Everything is timestamped and stored for reference."},
-            {q:"Is my payment information secure?",a:"Yes, all payments are processed through Stripe, a PCI-compliant payment processor trusted by millions of businesses. bridgn never stores your full card or bank details directly."},
+            {q:"Is bridgn free?",a:"Creating an account is free. Your first deal has zero platform fees. After that, a small processing fee is added to the brand's side — creators always receive 100% of their deal amount."},
+            {q:"How do payments work?",a:"Brands set an upfront percentage to deposit into escrow. Once the creator delivers content and marks it as LIVE, the upfront escrow releases automatically. The remaining balance is due Net 30. Both sides are protected."},
+            {q:"Do brands have to pay 100% upfront?",a:"No — that's what makes bridgn different. The creator and brand agree on an upfront percentage (e.g., 50%). The brand only deposits that portion into escrow. The rest is due within 30 days after the content goes live."},
+            {q:"Can I negotiate deals on bridgn?",a:"Yes. When a brand sends an offer, the creator can accept, counter with different terms (amount, deliverables, upfront %), or decline with a reason. Back-and-forth negotiation stays on the platform."},
+            {q:"Can I bring deals I negotiated outside bridgn?",a:"Absolutely. Create a deal, set the terms you already agreed on, and invite the other party. You get the Deal Room, escrow protection, and contract management for any partnership."},
+            {q:"Is my payment information secure?",a:"All payments are processed through Stripe, trusted by millions of businesses. bridgn never stores your bank details. Your data is protected with Row Level Security and encrypted in transit."},
+            {q:"How do I get discovered by brands?",a:"Set up your public profile with your bio, socials, and past collaborations. Share your bridgn profile link anywhere — brands can send you offers directly through your Work With Me page."},
           ].map((item,i)=>(
             <div key={i} style={{borderBottom:"1px solid "+lp.border}}>
               <button
