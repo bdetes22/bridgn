@@ -1200,7 +1200,7 @@ function Navbar({role,setPage,userInitials,profileImageUrl,onSignOut,onMenuToggl
 }
 
 function Sidebar({role,page,setPage,userName,userInitials,profileImageUrl,mobOpen,onClose,collapsed,onToggleCollapse,demoMode,deals=[]}) {
-  const pendingOffers = deals.filter(d=>d.status==="pending").length;
+  const pendingOffers = deals.filter(d=>d.status==="pending" && d.brandUserId).length;
   const cNav = [
     {section:"Overview"},
     {k:"dashboard",l:"Dashboard",i:ICONS.home},
@@ -6181,7 +6181,8 @@ function EarningsPage({deals=[]}) {
 // ─── OFFERS PAGE ─────────────────────────────────────────────────────────────
 function OffersPage({authUser,deals=[],setPage,setSelected,updateDeal}) {
   const loading = useSkeleton();
-  const pendingDeals = deals.filter(d=>d.status==="pending");
+  // Only show pending deals where someone else created the offer (not deals the user created themselves)
+  const pendingDeals = deals.filter(d=>d.status==="pending" && d.brandUserId && d.brandUserId !== authUser?.id);
 
   const handleAccept = async (deal) => {
     try {
