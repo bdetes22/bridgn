@@ -990,11 +990,11 @@ function StatusBadge({s}) {
   const cls = {Active:"badge badge-green",Pending:"badge badge-yellow",Completed:"badge badge-gray",Declined:"badge badge-red",Invited:"badge badge-blue",Expiring:"badge badge-orange",Expired:"badge badge-red",Draft:"badge badge-gray",
     payment_held:"badge badge-green",payment_released:"badge badge-green",payment_processing:"badge badge-yellow",
     content_delivered:"badge badge-green",content_submitted:"badge badge-blue",content_under_review:"badge badge-blue",
-    content_live:"badge badge-green",payment_overdue:"badge badge-red",Cancelled:"badge badge-red",
+    content_live:"badge badge-green",payment_overdue:"badge badge-red",Cancelled:"badge badge-red",countered:"badge badge-yellow",Expired:"badge badge-gray",
     contract_signed:"badge badge-blue",contract_sent:"badge badge-yellow",brief_submitted:"badge badge-yellow",pending_brief:"badge badge-yellow"};
   const labels = {payment_held:"In Escrow",payment_released:"Paid",payment_processing:"Processing",
     content_delivered:"Content Approved",content_submitted:"Content Submitted",content_under_review:"Under Review",
-    content_live:"LIVE",payment_overdue:"Overdue",
+    content_live:"LIVE",payment_overdue:"Overdue",countered:"Countered",Expired:"Expired",
     contract_signed:"Contract Signed",contract_sent:"Contract Sent",brief_submitted:"Brief Sent",pending_brief:"Awaiting Brief"};
   const dot = (s==="Active"||s==="payment_held"||s==="content_delivered"||s==="content_live")?"live-dot live-dot-green":(s==="Pending"||s==="payment_processing"||s==="brief_submitted")?"live-dot live-dot-amber":(s==="payment_overdue")?"live-dot live-dot-red":null;
   const label = labels[s]||s;
@@ -1902,7 +1902,7 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
   };
 
   if(loading) return <SkeletonPage layout="dashboard"/>;
-  const completedStatuses = ["payment_released","Completed","Cancelled","Declined"];
+  const completedStatuses = ["payment_released","Completed","Cancelled","Declined","Expired"];
   const active = deals.filter(d=>!completedStatuses.includes(d.status));
   const pendingEscrow = deals.filter(d=>["payment_held","content_delivered","payment_processing"].includes(d.status));
   const escrowTotal = pendingEscrow.reduce((s,d)=>s+d.amount,0);
@@ -2378,7 +2378,7 @@ function dealRelTime(ts) {
 // ─── CREATOR WORKSPACE PAGE ──────────────────────────────────────────────────
 function WorkspacePage({deals=[],authUser,setPage,setSelected}) {
   const loading = useSkeleton();
-  const activeDealsList = deals.filter(d=>!["Completed","payment_released","Cancelled","Declined"].includes(d.status));
+  const activeDealsList = deals.filter(d=>!["Completed","payment_released","Cancelled","Declined","Expired"].includes(d.status));
   const [selectedDeal,setSelectedDeal] = useState(activeDealsList[0]||deals[0]||null);
   const [tab,setTab] = useState("notes");
   const ws = selectedDeal?.creatorWorkspace || {};
@@ -2596,7 +2596,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
     setWalkStep(-1);
     try { localStorage.setItem("bridgn_brand_walkthrough_done","1"); } catch {}
   };
-  const [activeDeal,setActiveDeal] = useState(selected||deals.find(d=>!["Completed","payment_released","Cancelled","Declined"].includes(d.status))||deals[0]);
+  const [activeDeal,setActiveDeal] = useState(selected||deals.find(d=>!["Completed","payment_released","Cancelled","Declined","Expired"].includes(d.status))||deals[0]);
 
   // Brand profile info (visible to creators in the sidebar)
   const [brandProfile,setBrandProfile] = useState(null);
@@ -3227,7 +3227,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
 
   // ── Deal List View (overview of all deals) ──
   if(dealView==="list" || !activeDeal) {
-    const completedStatuses = ["Completed","payment_released","Cancelled","Declined"];
+    const completedStatuses = ["Completed","payment_released","Cancelled","Declined","Expired"];
     const activeDeals = deals.filter(d=>!completedStatuses.includes(d.status));
     const completedDeals = deals.filter(d=>completedStatuses.includes(d.status));
     const selectDeal = (d) => { setActiveDeal(d); syncFromDeal(d); setDealView("room"); };
@@ -3432,6 +3432,65 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               }}>Decline — Keep Deal Active</button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Counter offer received — brand sees this when creator countered */}
+      {activeDeal.status==="countered"&&activeDeal.counterBy==="creator"&&isBrand&&(()=>{
+        const [showAdjust,setShowAdjust] = React.useState(false);
+        const [adjForm,setAdjForm] = React.useState({amount:String(activeDeal.counterAmount||activeDeal.amount),upfrontPct:String(activeDeal.counterUpfrontPct||activeDeal.upfrontPct||100),deliverables:activeDeal.counterDeliverables||activeDeal.deliverables||"",message:""});
+        const handleAcceptCounter = async () => {
+          await fetch(`${BRIDGN_API_URL}/api/deals/update`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({bridgnDealId:activeDeal.id,userId:authUser?.id,fields:{status:"Active",amount_cents:Math.round((activeDeal.counterAmount||activeDeal.amount)*100),upfront_pct:activeDeal.counterUpfrontPct||activeDeal.upfrontPct||100,deliverables:activeDeal.counterDeliverables||activeDeal.deliverables,counter_amount_cents:null,counter_upfront_pct:null,counter_deliverables:null,counter_message:null,counter_by:null}})});
+          setActiveDeal(prev=>({...prev,status:"Active",amount:activeDeal.counterAmount||activeDeal.amount}));
+          updateDeal&&updateDeal(activeDeal.id,{status:"Active"});
+          if(activeDeal.creatorUserId) supabase.from("inbox_notifications").insert({user_id:activeDeal.creatorUserId,type:"deal_accepted",payload:{bridgn_deal_id:activeDeal.id,message:`Brand accepted your counter offer for "${activeDeal.campaignTitle||"Deal"}"!`}}).then(()=>{});
+        };
+        const handleAdjust = async () => {
+          const amt=parseInt(adjForm.amount)||activeDeal.amount;
+          await fetch(`${BRIDGN_API_URL}/api/deals/update`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({bridgnDealId:activeDeal.id,userId:authUser?.id,fields:{status:"pending",counter_amount_cents:Math.round(amt*100),counter_upfront_pct:parseInt(adjForm.upfrontPct)||100,counter_deliverables:adjForm.deliverables,counter_message:adjForm.message,counter_by:"brand"}})});
+          setActiveDeal(prev=>({...prev,status:"pending",counterAmount:amt,counterBy:"brand"}));
+          updateDeal&&updateDeal(activeDeal.id,{status:"pending",counterBy:"brand"});
+          if(activeDeal.creatorUserId) supabase.from("inbox_notifications").insert({user_id:activeDeal.creatorUserId,type:"countered",payload:{bridgn_deal_id:activeDeal.id,message:`Brand adjusted the offer for "${activeDeal.campaignTitle||"Deal"}" — $${amt.toLocaleString()}`}}).then(()=>{});
+          setShowAdjust(false);
+        };
+        return (
+          <div style={{padding:"18px 22px",background:"rgba(240,160,80,.06)",border:"1.5px solid rgba(240,160,80,.25)",borderRadius:"var(--radius)",marginBottom:16}}>
+            <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
+              <span style={{fontSize:22}}>🔄</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:14,fontWeight:700,color:"var(--orange, #f97316)",marginBottom:4}}>Creator Countered Your Offer</div>
+                <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:8}}>
+                  <div><span style={{fontSize:16,fontWeight:700}}>${(activeDeal.counterAmount||0).toLocaleString()}</span><span style={{fontSize:12,color:"var(--text3)",marginLeft:6}}>(your offer: ${activeDeal.amount.toLocaleString()})</span></div>
+                  {activeDeal.counterUpfrontPct!=null&&<div style={{fontSize:13,fontWeight:600}}>{activeDeal.counterUpfrontPct}% upfront</div>}
+                </div>
+                {activeDeal.counterDeliverables&&<div style={{fontSize:12,color:"var(--text2)",marginBottom:6}}>Deliverables: {activeDeal.counterDeliverables}</div>}
+                {activeDeal.counterMessage&&<div style={{fontSize:12,color:"var(--text2)",fontStyle:"italic",marginBottom:10}}>"{activeDeal.counterMessage}"</div>}
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  <button className="btn btn-primary btn-sm" onClick={handleAcceptCounter}>Accept Counter</button>
+                  <button className="btn btn-secondary btn-sm" onClick={()=>setShowAdjust(!showAdjust)}>{showAdjust?"Cancel":"Adjust & Send Back"}</button>
+                </div>
+              </div>
+            </div>
+            {showAdjust&&(
+              <div style={{padding:"14px 16px",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:"var(--radius-sm)",marginTop:8}}>
+                <div className="frow"><div className="fg"><label className="fl">Your Amount ($)</label><input className="fi" type="number" value={adjForm.amount} onChange={e=>setAdjForm(f=>({...f,amount:e.target.value}))}/></div><div className="fg"><label className="fl">Upfront %</label><input className="fi" type="number" min="1" max="100" value={adjForm.upfrontPct} onChange={e=>setAdjForm(f=>({...f,upfrontPct:e.target.value}))}/></div></div>
+                <div className="fg"><label className="fl">Deliverables</label><input className="fi" value={adjForm.deliverables} onChange={e=>setAdjForm(f=>({...f,deliverables:e.target.value}))}/></div>
+                <div className="fg"><label className="fl">Message</label><textarea className="fta" style={{minHeight:50}} value={adjForm.message} onChange={e=>setAdjForm(f=>({...f,message:e.target.value}))} placeholder="Here's my adjusted offer..."/></div>
+                <button className="btn btn-primary btn-sm" onClick={handleAdjust}>Send Adjusted Offer</button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* Counter offer sent — creator sees waiting state */}
+      {activeDeal.status==="countered"&&activeDeal.counterBy==="creator"&&!isBrand&&(
+        <div style={{padding:"16px 20px",background:"rgba(91,138,245,.06)",border:"1.5px solid rgba(91,138,245,.2)",borderRadius:"var(--radius)",marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
+          <span style={{fontSize:20}}>⏳</span>
+          <div>
+            <div style={{fontSize:14,fontWeight:700,color:"var(--accent)"}}>Counter Offer Sent</div>
+            <div style={{fontSize:12,color:"var(--text3)",marginTop:2}}>You countered with <strong>${(activeDeal.counterAmount||0).toLocaleString()}</strong>. Waiting for the brand to respond.</div>
+          </div>
         </div>
       )}
 
@@ -4045,7 +4104,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               ))}
               <div ref={msgEndRef}/>
             </div>
-            {["Cancelled","Declined"].includes(activeDeal.status)?(
+            {["Cancelled","Declined","Expired"].includes(activeDeal.status)?(
               <div style={{padding:"10px 12px",borderTop:"1px solid var(--border)",textAlign:"center",fontSize:12,color:"var(--text3)"}}>This deal has been {activeDeal.status.toLowerCase()}. Messaging is disabled.</div>
             ):(
               <div style={{padding:"10px 12px",borderTop:"1px solid var(--border)",display:"flex",gap:8,alignItems:"center"}}>
@@ -4123,7 +4182,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           {/* ── Escrow / Payment Panel ── */}
           {(()=>{
             const st = activeDeal.status;
-            if(st==="Cancelled"||st==="Declined") return null;
+            if(st==="Cancelled"||st==="Declined"||st==="Expired") return null;
             const hasPaid = !!activeDeal.paymentIntentId;
             const upPct = activeDeal.upfrontPct ?? 100;
             const isPartial = upPct < 100;
@@ -4828,7 +4887,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
   const loading = useSkeleton();
   const [step,setStep] = useState(1);
   const [form,setForm] = useState(()=>{
-    const base = {creatorName:"",creatorEmail:"",campaignTitle:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:""};
+    const base = {creatorName:"",creatorEmail:"",campaignTitle:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:"",offerValidDays:"14"};
     try { const pf=JSON.parse(localStorage.getItem("bridgn_prefill_deal")||"null"); if(pf){localStorage.removeItem("bridgn_prefill_deal"); base.creatorName=pf.name||"";} } catch{}
     return base;
   });
@@ -4920,6 +4979,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
           campaignTitle: form.campaignTitle||(form.creatorName+" Campaign"),
           inviteLink: inviteLink,
           createdBy: "brand",
+          offerValidDays: parseInt(form.offerValidDays)||14,
         }),
       });
       if(resp.ok) {
@@ -4962,7 +5022,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
               <div className="fg"><label className="fl">Upfront % (escrow deposit)</label><div style={{display:"flex",gap:8,alignItems:"center"}}><input className="fi" type="number" min="1" max="100" value={form.upfrontPct} onChange={e=>up("upfrontPct",e.target.value)} placeholder="50" style={{maxWidth:100}}/><span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600}}>{form.amount&&form.upfrontPct?`$${Math.round((parseInt(form.amount)||0)*(parseInt(form.upfrontPct)||100)/100).toLocaleString()} upfront`:""}</span></div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>Deposit this % into escrow upfront. Remaining balance due Net 30 after content goes live.</div></div>
               <div className="fg"><label className="fl">Submission Deadline</label><input className="fi" type="date" value={form.deadline} onChange={e=>up("deadline",e.target.value)}/></div>
               <div className="fg"><label className="fl">Deliverables</label><input className="fi" value={form.deliverables} onChange={e=>up("deliverables",e.target.value)} placeholder="e.g. 2x Feed Posts, 1x Reel, 3x Stories"/></div>
-              <div className="fg"><label className="fl">Notes (optional)</label><textarea className="fta" style={{minHeight:70}} value={form.notes} onChange={e=>up("notes",e.target.value)} placeholder="Any context about the campaign..."></textarea></div>
+              <div className="frow"><div className="fg"><label className="fl">Notes (optional)</label><textarea className="fta" style={{minHeight:70}} value={form.notes} onChange={e=>up("notes",e.target.value)} placeholder="Any context about the campaign..."></textarea></div><div className="fg"><label className="fl">Offer valid for</label><select className="fsel" value={form.offerValidDays||"14"} onChange={e=>up("offerValidDays",e.target.value)}><option value="7">7 days</option><option value="14">14 days</option><option value="21">21 days</option><option value="30">30 days</option></select><div style={{fontSize:11,color:"var(--text3)",marginTop:3}}>Offer auto-expires if not accepted.</div></div></div>
             </>
           )}
           {step===2&&(
@@ -6186,97 +6246,211 @@ function EarningsPage({deals=[]}) {
 // ─── OFFERS PAGE ─────────────────────────────────────────────────────────────
 function OffersPage({authUser,deals=[],setPage,setSelected,updateDeal}) {
   const loading = useSkeleton();
-  // Only show pending deals where someone else created the offer (not deals the user created themselves)
-  const pendingDeals = deals.filter(d=>d.status==="pending" && d.brandUserId && d.brandUserId !== authUser?.id);
+  const [counterOpen,setCounterOpen] = useState(null); // deal id
+  const [declineOpen,setDeclineOpen] = useState(null); // deal id
+  const [counterForm,setCounterForm] = useState({amount:"",upfrontPct:"",deliverables:"",message:""});
+  const [declineReason,setDeclineReason] = useState("");
+  const [declineMessage,setDeclineMessage] = useState("");
+
+  const activeOffers = deals.filter(d=>(d.status==="pending"||d.status==="countered") && d.brandUserId && d.brandUserId !== authUser?.id);
+  const expiredOffers = deals.filter(d=>d.status==="Expired" && d.brandUserId && d.brandUserId !== authUser?.id);
 
   const handleAccept = async (deal) => {
+    // If there's a counter from the brand, accept the counter terms
+    const acceptAmount = deal.counterBy==="brand" && deal.counterAmount ? deal.counterAmount : deal.amount;
+    const acceptUpfront = deal.counterBy==="brand" && deal.counterUpfrontPct!=null ? deal.counterUpfrontPct : deal.upfrontPct;
+    const acceptDeliverables = deal.counterBy==="brand" && deal.counterDeliverables ? deal.counterDeliverables : deal.deliverables;
     try {
-      const resp = await fetch(`${BRIDGN_API_URL}/api/deals/status`, {
+      // Update deal with accepted terms
+      await fetch(`${BRIDGN_API_URL}/api/deals/update`, {
         method:"PUT", headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({bridgnDealId:deal.id, status:"Active", userId:authUser?.id}),
+        body:JSON.stringify({bridgnDealId:deal.id, userId:authUser?.id, fields:{
+          status:"Active",
+          amount_cents:Math.round(acceptAmount*100),
+          upfront_pct:acceptUpfront,
+          deliverables:acceptDeliverables,
+          counter_amount_cents:null,counter_upfront_pct:null,counter_deliverables:null,counter_message:null,counter_by:null,
+        }}),
       });
-      if(resp.ok) {
-        const {deal:updated} = await resp.json();
-        updateDeal&&updateDeal(deal.id, {status:"Active",...updated});
-        setSelected(updated||{...deal,status:"Active"});
-        // Notify the brand that their offer was accepted
-        if(deal.brandUserId) {
-          supabase.from("inbox_notifications").insert({
-            user_id:deal.brandUserId, type:"deal_accepted",
-            payload:{bridgn_deal_id:deal.id, message:`Your deal offer "${deal.campaignTitle||"Deal"}" has been accepted!`},
-          }).then(()=>{});
-        }
-        setPage("deal-room");
+      updateDeal&&updateDeal(deal.id, {status:"Active",amount:acceptAmount,upfrontPct:acceptUpfront,deliverables:acceptDeliverables});
+      setSelected({...deal,status:"Active",amount:acceptAmount});
+      if(deal.brandUserId) {
+        supabase.from("inbox_notifications").insert({
+          user_id:deal.brandUserId, type:"deal_accepted",
+          payload:{bridgn_deal_id:deal.id, message:`Your deal offer "${deal.campaignTitle||"Deal"}" has been accepted! Amount: $${acceptAmount.toLocaleString()}`},
+        }).then(()=>{});
       }
+      setPage("deal-room");
     } catch(e) { console.error("[acceptOffer]",e); }
   };
 
-  const handleDecline = async (deal) => {
-    if(!confirm("Decline this offer? This cannot be undone.")) return;
+  const handleCounter = async (deal) => {
+    const amt = parseInt(counterForm.amount)||deal.amount;
+    const pct = parseInt(counterForm.upfrontPct)||deal.upfrontPct||100;
+    const deliv = counterForm.deliverables.trim()||deal.deliverables;
     try {
-      await fetch(`${BRIDGN_API_URL}/api/deals/status`, {
+      await fetch(`${BRIDGN_API_URL}/api/deals/update`, {
         method:"PUT", headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({bridgnDealId:deal.id, status:"Declined", userId:authUser?.id}),
+        body:JSON.stringify({bridgnDealId:deal.id, userId:authUser?.id, fields:{
+          status:"countered",
+          counter_amount_cents:Math.round(amt*100),
+          counter_upfront_pct:pct,
+          counter_deliverables:deliv,
+          counter_message:counterForm.message.trim(),
+          counter_by:"creator",
+        }}),
       });
-      updateDeal&&updateDeal(deal.id, {status:"Declined"});
-      // Notify the brand that their offer was declined
+      updateDeal&&updateDeal(deal.id,{status:"countered",counterAmount:amt,counterUpfrontPct:pct,counterDeliverables:deliv,counterMessage:counterForm.message,counterBy:"creator"});
+      if(deal.brandUserId) {
+        supabase.from("inbox_notifications").insert({
+          user_id:deal.brandUserId, type:"countered",
+          payload:{bridgn_deal_id:deal.id, message:`Creator countered your offer for "${deal.campaignTitle||"Deal"}" — $${amt.toLocaleString()} (was $${deal.amount.toLocaleString()})`},
+        }).then(()=>{});
+      }
+      setCounterOpen(null);
+      setCounterForm({amount:"",upfrontPct:"",deliverables:"",message:""});
+    } catch(e) { console.error("[counterOffer]",e); }
+  };
+
+  const handleDecline = async (deal) => {
+    if(!declineReason) return;
+    const fullReason = declineReason + (declineMessage?" — "+declineMessage:"");
+    try {
+      await fetch(`${BRIDGN_API_URL}/api/deals/update`, {
+        method:"PUT", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({bridgnDealId:deal.id, userId:authUser?.id, fields:{status:"Declined",decline_reason:fullReason}}),
+      });
+      updateDeal&&updateDeal(deal.id, {status:"Declined",declineReason:fullReason});
       if(deal.brandUserId) {
         supabase.from("inbox_notifications").insert({
           user_id:deal.brandUserId, type:"deal_declined",
-          payload:{bridgn_deal_id:deal.id, message:`Your deal offer "${deal.campaignTitle||"Deal"}" was declined.`},
+          payload:{bridgn_deal_id:deal.id, message:`Your offer for "${deal.campaignTitle||"Deal"}" was declined. Reason: ${fullReason}`},
         }).then(()=>{});
       }
+      setDeclineOpen(null);
+      setDeclineReason("");
+      setDeclineMessage("");
     } catch(e) { console.error("[declineOffer]",e); }
   };
 
   if(loading) return <SkeletonPage layout="list"/>;
 
+  const renderOfferCard = (deal, isExpired=false) => {
+    const ci = Math.abs((deal.brand||"").length)%6;
+    const g = bg(ci);
+    const upPct = deal.upfrontPct||100;
+    const isPartial = upPct < 100;
+    const upfrontAmount = Math.round((deal.amount||0)*upPct/100);
+    const expiresAt = deal.offerExpiresAt ? new Date(deal.offerExpiresAt) : null;
+    const daysLeft = expiresAt ? Math.max(0,Math.ceil((expiresAt-Date.now())/(1000*60*60*24))) : null;
+    const hasCounter = deal.counterBy==="brand" && deal.counterAmount;
+    return (
+      <div key={deal.id} className="card-lg" style={{padding:"20px 24px",opacity:isExpired?.5:1}}>
+        <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
+          <div style={{width:46,height:46,borderRadius:12,background:`linear-gradient(135deg,${g[0]},${g[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"15px",fontWeight:700,color:"white",flexShrink:0}}>{deal.bi||"?"}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+              <span style={{fontSize:"15px",fontWeight:700,color:"var(--text)"}}>{deal.campaignTitle||deal.brand+" Campaign"}</span>
+              {isExpired?<span className="badge badge-gray">Expired</span>:deal.status==="countered"?<span className="badge badge-yellow">Countered</span>:<span className="badge badge-yellow">New Offer</span>}
+              {!isExpired&&daysLeft!=null&&<span style={{fontSize:11,fontWeight:600,color:daysLeft<=1?"var(--red)":daysLeft<=4?"var(--orange, #f97316)":"var(--text3)"}}>{daysLeft<=0?"Expires today":daysLeft===1?"Expires tomorrow":`Expires in ${daysLeft}d`}</span>}
+            </div>
+            <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:10}}>from <strong>{deal.brand}</strong> · {deal.platform}</div>
+
+            {/* Counter from brand — show updated terms */}
+            {hasCounter&&(
+              <div style={{padding:"12px 16px",background:"rgba(240,160,80,.08)",border:"1px solid rgba(240,160,80,.2)",borderRadius:"var(--radius-sm)",marginBottom:12}}>
+                <div style={{fontSize:12,fontWeight:700,color:"var(--orange, #f97316)",marginBottom:6}}>Brand's Updated Offer</div>
+                <div style={{display:"flex",gap:16,flexWrap:"wrap"}}>
+                  <div><span style={{fontSize:15,fontWeight:700}}>${deal.counterAmount.toLocaleString()}</span><span style={{fontSize:11,color:"var(--text3)",marginLeft:4}}>(was ${deal.amount.toLocaleString()})</span></div>
+                  {deal.counterUpfrontPct!=null&&<div><span style={{fontSize:13,fontWeight:600}}>{deal.counterUpfrontPct}% upfront</span></div>}
+                </div>
+                {deal.counterDeliverables&&<div style={{fontSize:12,color:"var(--text2)",marginTop:4}}>Deliverables: {deal.counterDeliverables}</div>}
+                {deal.counterMessage&&<div style={{fontSize:12,color:"var(--text2)",marginTop:4,fontStyle:"italic"}}>"{deal.counterMessage}"</div>}
+              </div>
+            )}
+
+            <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:12}}>
+              <div><div style={{fontSize:"18px",fontWeight:700,color:"var(--text)"}}>${(deal.amount||0).toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>{hasCounter?"Original Amount":"Deal Value"}</div></div>
+              {isPartial&&<div><div style={{fontSize:"18px",fontWeight:700,color:"var(--accent)"}}>{upPct}%</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Upfront (${upfrontAmount.toLocaleString()})</div></div>}
+              {deal.deadline&&deal.deadline!=="TBD"&&<div><div style={{fontSize:"14px",fontWeight:600,color:"var(--text)"}}>{deal.deadline}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Deadline</div></div>}
+            </div>
+            {deal.deliverables&&<div style={{fontSize:"12px",color:"var(--text2)",marginBottom:12,lineHeight:1.5}}>Deliverables: {deal.deliverables}</div>}
+            {isPartial&&<div style={{fontSize:"11px",color:"var(--accent)",marginBottom:12,padding:"6px 10px",background:"var(--accent-light)",borderRadius:6,display:"inline-block"}}>Split payment: {upPct}% upfront, remaining {100-upPct}% Net 30 after LIVE</div>}
+
+            {!isExpired&&(<>
+              {/* Action buttons */}
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <button className="btn btn-primary" onClick={()=>handleAccept(deal)}>{hasCounter?"Accept Updated Offer":"Accept Offer"}</button>
+                <button className="btn btn-secondary" onClick={()=>{setCounterOpen(counterOpen===deal.id?null:deal.id);setDeclineOpen(null);setCounterForm({amount:String(deal.amount),upfrontPct:String(deal.upfrontPct||100),deliverables:deal.deliverables||"",message:""});}}>Counter</button>
+                <button className="btn btn-secondary" style={{color:"var(--red)"}} onClick={()=>{setDeclineOpen(declineOpen===deal.id?null:deal.id);setCounterOpen(null);setDeclineReason("");setDeclineMessage("");}}>Decline</button>
+              </div>
+
+              {/* Counter form */}
+              {counterOpen===deal.id&&(
+                <div style={{marginTop:14,padding:"16px 18px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:"var(--radius)"}}>
+                  <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>Your Counter Offer</div>
+                  <div className="frow">
+                    <div className="fg"><label className="fl">Amount ($)</label><input className="fi" type="number" value={counterForm.amount} onChange={e=>setCounterForm(f=>({...f,amount:e.target.value}))} placeholder={String(deal.amount)}/></div>
+                    <div className="fg"><label className="fl">Upfront %</label><input className="fi" type="number" min="1" max="100" value={counterForm.upfrontPct} onChange={e=>setCounterForm(f=>({...f,upfrontPct:e.target.value}))} placeholder={String(deal.upfrontPct||100)}/></div>
+                  </div>
+                  <div className="fg"><label className="fl">Deliverables</label><input className="fi" value={counterForm.deliverables} onChange={e=>setCounterForm(f=>({...f,deliverables:e.target.value}))} placeholder={deal.deliverables||"e.g. 2x Reels, 1x Story"}/></div>
+                  <div className="fg"><label className="fl">Message to brand</label><textarea className="fta" style={{minHeight:60}} value={counterForm.message} onChange={e=>setCounterForm(f=>({...f,message:e.target.value}))} placeholder="I'd love to work together! Here's what I think is fair..."/></div>
+                  <div style={{display:"flex",gap:8}}><button className="btn btn-primary btn-sm" onClick={()=>handleCounter(deal)}>Send Counter</button><button className="btn btn-secondary btn-sm" onClick={()=>setCounterOpen(null)}>Cancel</button></div>
+                </div>
+              )}
+
+              {/* Decline form */}
+              {declineOpen===deal.id&&(
+                <div style={{marginTop:14,padding:"16px 18px",background:"rgba(239,68,68,.04)",border:"1px solid rgba(239,68,68,.15)",borderRadius:"var(--radius)"}}>
+                  <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:"var(--red)"}}>Decline This Offer</div>
+                  <div className="fg">
+                    <label className="fl">Reason</label>
+                    <select className="fsel" value={declineReason} onChange={e=>setDeclineReason(e.target.value)}>
+                      <option value="">Select a reason...</option>
+                      <option value="Budget too low">Budget too low</option>
+                      <option value="Not the right fit">Not the right fit</option>
+                      <option value="Timeline doesn't work">Timeline doesn't work</option>
+                      <option value="Already committed">Already committed to another deal</option>
+                      <option value="Not interested in this type of content">Not interested in this type of content</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div className="fg"><label className="fl">Additional message (optional)</label><textarea className="fta" style={{minHeight:50}} value={declineMessage} onChange={e=>setDeclineMessage(e.target.value)} placeholder="Any additional context for the brand..."/></div>
+                  <div style={{display:"flex",gap:8}}><button className="btn btn-sm" style={{background:"var(--red)",color:"#fff",border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:13,padding:"8px 16px",borderRadius:"var(--radius-sm)"}} onClick={()=>handleDecline(deal)} disabled={!declineReason}>Confirm Decline</button><button className="btn btn-secondary btn-sm" onClick={()=>setDeclineOpen(null)}>Cancel</button></div>
+                </div>
+              )}
+            </>)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="fade-in">
-      <div className="ph-row"><div><div className="page-title">Offers</div><div className="page-subtitle">Incoming deal offers from brands. Accept to start working together.</div></div></div>
-      {pendingDeals.length===0?(
+      <div className="ph-row"><div><div className="page-title">Offers</div><div className="page-subtitle">Incoming deal offers from brands. Accept, counter, or decline.</div></div></div>
+      {activeOffers.length===0&&expiredOffers.length===0?(
         <div className="card-lg" style={{padding:"60px 28px",textAlign:"center"}}>
           <div style={{fontSize:"40px",marginBottom:12}}>📬</div>
           <div style={{fontSize:"15px",fontWeight:600,color:"var(--text)",marginBottom:6}}>No offers yet</div>
           <div style={{fontSize:"13px",color:"var(--text3)",lineHeight:1.6,maxWidth:380,margin:"0 auto"}}>When brands send you deal offers or find you through your profile, they'll appear here. Share your profile to start getting offers!</div>
           <button className="btn btn-primary" style={{marginTop:16}} onClick={()=>setPage("public-profile")}>View My Profile</button>
         </div>
-      ):(
-        <div style={{display:"flex",flexDirection:"column",gap:12}}>
-          {pendingDeals.map(deal=>{
-            const ci = Math.abs((deal.brand||"").length)%6;
-            const g = bg(ci);
-            const upPct = deal.upfrontPct||100;
-            const isPartial = upPct < 100;
-            const upfrontAmount = Math.round((deal.amount||0)*upPct/100);
-            return (
-              <div key={deal.id} className="card-lg" style={{padding:"20px 24px"}}>
-                <div style={{display:"flex",gap:14,alignItems:"flex-start"}}>
-                  <div style={{width:46,height:46,borderRadius:12,background:`linear-gradient(135deg,${g[0]},${g[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"15px",fontWeight:700,color:"white",flexShrink:0}}>{deal.bi||"?"}</div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                      <span style={{fontSize:"15px",fontWeight:700,color:"var(--text)"}}>{deal.campaignTitle||deal.brand+" Campaign"}</span>
-                      <span className="badge badge-yellow">New Offer</span>
-                    </div>
-                    <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:10}}>from <strong>{deal.brand}</strong> · {deal.platform}</div>
-                    <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:12}}>
-                      <div><div style={{fontSize:"18px",fontWeight:700,color:"var(--text)"}}>${(deal.amount||0).toLocaleString()}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Deal Value</div></div>
-                      {isPartial&&<div><div style={{fontSize:"18px",fontWeight:700,color:"var(--accent)"}}>{upPct}%</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Upfront (${upfrontAmount.toLocaleString()})</div></div>}
-                      {deal.deadline&&deal.deadline!=="TBD"&&<div><div style={{fontSize:"14px",fontWeight:600,color:"var(--text)"}}>{deal.deadline}</div><div style={{fontSize:"10px",color:"var(--text3)"}}>Deadline</div></div>}
-                    </div>
-                    {deal.deliverables&&<div style={{fontSize:"12px",color:"var(--text2)",marginBottom:12,lineHeight:1.5}}>Deliverables: {deal.deliverables}</div>}
-                    {isPartial&&<div style={{fontSize:"11px",color:"var(--accent)",marginBottom:12,padding:"6px 10px",background:"var(--accent-light)",borderRadius:6,display:"inline-block"}}>Split payment: {upPct}% upfront into escrow, remaining {100-upPct}% due Net 30 after content goes live</div>}
-                    <div style={{display:"flex",gap:8}}>
-                      <button className="btn btn-primary" onClick={()=>handleAccept(deal)}>Accept Offer</button>
-                      <button className="btn btn-secondary" onClick={()=>handleDecline(deal)}>Decline</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      ):(<>
+        {activeOffers.length>0&&(
+          <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:expiredOffers.length?24:0}}>
+            {activeOffers.map(deal=>renderOfferCard(deal))}
+          </div>
+        )}
+        {expiredOffers.length>0&&(
+          <div>
+            <div style={{fontSize:13,fontWeight:600,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>Expired ({expiredOffers.length})</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {expiredOffers.map(deal=>renderOfferCard(deal, true))}
+            </div>
+          </div>
+        )}
+      </>)}
     </div>
   );
 }
@@ -6942,7 +7116,7 @@ function SpendingDashboard({deals=[]}) {
 function BrandDashboard({setPage,setSelected,deals=[],authUser}) {
   const loading = useSkeleton();
   if(loading) return <SkeletonPage layout="dashboard"/>;
-  const active = deals.filter(d=>!["Completed","payment_released","Cancelled","Declined"].includes(d.status));
+  const active = deals.filter(d=>!["Completed","payment_released","Cancelled","Declined","Expired"].includes(d.status));
   const escrowDeals = deals.filter(d=>["payment_held","content_delivered","payment_processing"].includes(d.status));
   const escrowTotal = escrowDeals.reduce((s,d)=>s+d.amount,0);
   const contentCount = deals.filter(d=>(d.contentFile||d.contentFiles?.length>0)).length;

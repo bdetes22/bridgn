@@ -84,6 +84,14 @@ function dealToFrontend(row) {
     cancelRequestedBy: row.cancel_requested_by || null,
     cancelReason:      row.cancel_reason || "",
     cancelAgreedAt:    row.cancel_agreed_at || null,
+    // Offer negotiation
+    offerExpiresAt:      row.offer_expires_at || null,
+    declineReason:       row.decline_reason || "",
+    counterAmount:       row.counter_amount_cents ? Math.round(row.counter_amount_cents / 100) : null,
+    counterUpfrontPct:   row.counter_upfront_pct ?? null,
+    counterDeliverables: row.counter_deliverables || "",
+    counterMessage:      row.counter_message || "",
+    counterBy:           row.counter_by || null,
     // Creator workspace (private)
     creatorWorkspace:  row.creator_workspace || {},
   };
@@ -105,7 +113,7 @@ router.post("/", async (req, res) => {
     brandUserId, brandName, brandEmail,
     creatorEmail, inviteeEmail,
     amount, platform, deliverables, deadline, campaignTitle,
-    inviteLink, createdBy, upfrontPct,
+    inviteLink, createdBy, upfrontPct, offerValidDays,
   } = req.body;
 
   // Either side can create a deal
@@ -140,6 +148,12 @@ router.post("/", async (req, res) => {
     // Only include upfront_pct if provided (graceful when migration hasn't run)
     const pctVal = parseInt(upfrontPct);
     if (pctVal && pctVal !== 100) dealFields.upfront_pct = Math.max(1, Math.min(100, pctVal));
+
+    // Set offer expiration (default 14 days for brand-created offers)
+    if (createdBy === "brand") {
+      const days = Math.max(1, Math.min(90, parseInt(offerValidDays) || 14));
+      dealFields.offer_expires_at = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    }
 
     const row = await insertDeal(dealFields);
 
@@ -408,6 +422,8 @@ const ALLOWED_FIELDS = [
   "creator_workspace",
   "upfront_pct", "content_live_at", "net30_due_at", "upfront_released",
   "cancel_requested_by", "cancel_reason", "cancel_agreed_at",
+  "offer_expires_at", "decline_reason",
+  "counter_amount_cents", "counter_upfront_pct", "counter_deliverables", "counter_message", "counter_by",
 ];
 
 router.put("/update", async (req, res) => {
@@ -526,6 +542,63 @@ router.get("/check-deadlines", async (req, res) => {
       // Mark reminder as sent
       sentReminders.push(reminderKey);
       await updateDealById(deal.id, { sent_reminders: sentReminders.join(",") });
+    }
+
+    // ── Offer expiration — auto-expire pending offers and send reminders ──
+    const { data: pendingOffers } = await db
+      .from("deals")
+      .select("*")
+      .in("status", ["pending", "countered"])
+      .not("offer_expires_at", "is", null);
+
+    for (const deal of (pendingOffers || [])) {
+      const expiresAt = new Date(deal.offer_expires_at);
+      const daysLeft = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+      const sentReminders = (deal.sent_reminders || "").split(",").filter(Boolean);
+
+      // 4 days left reminder
+      if (daysLeft <= 4 && daysLeft > 1 && !sentReminders.includes("offer_4d")) {
+        if (deal.creator_user_id) {
+          await insertNotification(deal.creator_user_id, "payment_reminder", {
+            bridgn_deal_id: deal.bridgn_deal_id,
+            message: `Deal offer "${deal.campaign_title || "Deal"}" expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}. Respond before it's gone!`,
+          });
+        }
+        sentReminders.push("offer_4d");
+        await updateDealById(deal.id, { sent_reminders: sentReminders.join(",") });
+        sent++;
+      }
+
+      // Last day reminder
+      if (daysLeft <= 1 && daysLeft > 0 && !sentReminders.includes("offer_1d")) {
+        if (deal.creator_user_id) {
+          await insertNotification(deal.creator_user_id, "payment_warning", {
+            bridgn_deal_id: deal.bridgn_deal_id,
+            message: `Last day to respond to "${deal.campaign_title || "Deal"}"! This offer expires today.`,
+          });
+        }
+        sentReminders.push("offer_1d");
+        await updateDealById(deal.id, { sent_reminders: sentReminders.join(",") });
+        sent++;
+      }
+
+      // Auto-expire
+      if (daysLeft <= 0) {
+        await updateDealById(deal.id, { status: "Expired" });
+        if (deal.creator_user_id) {
+          await insertNotification(deal.creator_user_id, "deal_declined", {
+            bridgn_deal_id: deal.bridgn_deal_id,
+            message: `Deal offer "${deal.campaign_title || "Deal"}" has expired.`,
+          });
+        }
+        if (deal.brand_user_id) {
+          await insertNotification(deal.brand_user_id, "deal_declined", {
+            bridgn_deal_id: deal.bridgn_deal_id,
+            message: `Your offer for "${deal.campaign_title || "Deal"}" has expired — the creator did not respond in time.`,
+          });
+        }
+        sent++;
+      }
     }
 
     // ── Net 30 escalation for remaining balance payments ──
