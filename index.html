@@ -4412,8 +4412,8 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                     <div style={{fontSize:"13px",fontWeight:700,color:"var(--accent)",marginBottom:3}}>ACH payment processing</div>
                     <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>
                       {isBrand
-                        ? <span>Your payment of <strong>${activeDeal.amount.toLocaleString()}</strong> is being processed via ACH Direct Debit. Funds typically settle in <strong>4–5 business days</strong>, then enter escrow until you release them.</span>
-                        : <span>The brand's payment of <strong>${activeDeal.amount.toLocaleString()}</strong> is being processed. Once settled, funds will be held in escrow until the brand approves your content.</span>}
+                        ? <span>Your payment of <strong>${isPartial?upfrontAmount.toLocaleString()+" ("+upPct+"% upfront)":activeDeal.amount.toLocaleString()}</strong> is being processed via ACH Direct Debit. Funds typically settle in <strong>4–5 business days</strong>, then enter escrow until you release them.{isPartial&&<span> Remaining <strong>${remainingAmount.toLocaleString()}</strong> due Net 30 after content goes live.</span>}</span>
+                        : <span>The brand's payment of <strong>${isPartial?upfrontAmount.toLocaleString()+" ("+upPct+"% upfront)":activeDeal.amount.toLocaleString()}</strong> is being processed. Once settled, funds will be held in escrow until the brand approves your content.{isPartial&&<span> Remaining <strong>${remainingAmount.toLocaleString()}</strong> due Net 30 after content goes live.</span>}</span>}
                     </div>
                     <div style={{marginTop:10,display:"flex",gap:6,alignItems:"center"}}>
                       <div style={{width:8,height:8,borderRadius:"50%",background:"var(--accent)",animation:"pulse 2s infinite"}}/>
