@@ -12944,15 +12944,31 @@ function App() {
       {toast&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",padding:"12px 24px",borderRadius:99,fontSize:13,fontWeight:600,color:"white",background:toast.type==="error"?"var(--red)":"var(--green)",boxShadow:"0 4px 20px rgba(0,0,0,.15)",zIndex:9999,animation:"slideUp .25s ease",whiteSpace:"nowrap"}}>{toast.msg}</div>}
       {/* Guided Demo Tour */}
       {demoMode&&!tourDismissed&&(()=>{
-        const tourSteps = [
-          {page:"dashboard",title:"Welcome to bridgn",desc:"This is your dashboard — your command center for every deal, payment, and partnership. Let's take a quick tour.",pos:"center"},
-          {page:"marketplace",title:"Creator Marketplace",desc:"Browse real campaign opportunities from brands. Scroll through, find what fits your niche, and tap 'I'm Interested' to apply.",pos:"center"},
-          {page:"deal-room",title:"The Deal Room",desc:"Every deal gets a dedicated workspace. Briefs, contracts, content delivery, messages, and payments — all in one place for both sides.",pos:"center"},
-          {page:"earnings",title:"Track Your Earnings",desc:"See your income by month, by brand, and set monthly goals. Know exactly where your money comes from.",pos:"center"},
-          {page:"offers",title:"Incoming Offers",desc:"When brands want to work with you, their offers land here. Accept, counter with your own terms, or decline with a reason.",pos:"center"},
-          {page:"collaborators",title:"Your Network",desc:"Everyone you've worked with. One click to send them a new deal. Build lasting partnerships, not one-off transactions.",pos:"center"},
-          {page:"public-profile",title:"Your Public Profile",desc:"Share this link with brands. They can see your work, your platforms, and send you offers directly through 'Work With Me'.",pos:"center"},
+        const creatorSteps = [
+          {page:"dashboard",title:"Welcome to bridgn",desc:"This is your command center. Active deals, escrow balances, and everything you need at a glance. Let's walk through what bridgn can do for you."},
+          {page:"marketplace",title:"Creator Marketplace",desc:"Browse real campaign opportunities from brands. Skincare launches, fitness challenges, travel vlogs — find what fits your niche, tap 'I'm Interested', and you're in. No cold emailing."},
+          {page:"deal-room",title:"The Deal Room",desc:"Every deal gets its own workspace. The brand uploads briefs here, you sign contracts here, upload content here, and message directly — everything tied to this deal with timestamps."},
+          {page:"workspace",title:"Your Workspace",desc:"Private notes, to-do lists, and inspiration links for each deal. Only you can see this — plan your content, track ideas, and stay organized without leaving bridgn."},
+          {page:"offers",title:"Incoming Offers",desc:"When brands send you deal offers, they land here. Review the terms, accept, counter with your own rate, or decline with a reason. Negotiate without awkward back-and-forth emails."},
+          {page:"earnings",title:"Earnings Dashboard",desc:"Track your income by month, by brand, and set monthly goals. See exactly where your money comes from and watch the progress ring fill up."},
+          {page:"collaborators",title:"Your Network",desc:"Everyone you've completed a deal with. One click to send them a new deal offer. Build lasting partnerships, not one-off transactions."},
+          {page:"contracts",title:"Contract Vault",desc:"Every contract you've signed, organized and searchable. No more digging through email for that agreement you signed 3 months ago."},
+          {page:"public-profile",title:"Your Public Profile",desc:"This is your storefront. Share this link with brands — they see your bio, socials, past collabs, and can send you offers through 'Work With Me'. Every profile share is a potential deal."},
+          {page:"calendar",title:"Deal Calendar",desc:"All your deadlines in one view. Never miss a due date or forget when content needs to go live."},
         ];
+        const brandSteps = [
+          {page:"dashboard",title:"Welcome to bridgn",desc:"Your creator partnership command center. Active deals, escrow status, content received — everything in one place. Let's see what you can do."},
+          {page:"deal-room",title:"The Deal Room",desc:"Every partnership gets a dedicated workspace. Upload briefs, send contracts, review content, approve deliverables, and message the creator — all tracked with timestamps."},
+          {page:"new-deal",title:"Create a Deal",desc:"Start a partnership in 30 seconds. Name it, set the budget, choose the upfront escrow percentage, pick a platform, and invite the creator. They get an email and you're both in the Deal Room."},
+          {page:"creator-crm",title:"Creator CRM",desc:"Your rolodex for influencer marketing. Every creator you've worked with, organized by pipeline stage. Add notes, tags, and reach out for new campaigns with one click."},
+          {page:"review-queue",title:"Review Queue",desc:"All pending content submissions in one place. Review deliverables, approve or request revisions, and keep campaigns moving without switching between deal rooms."},
+          {page:"content-tracker",title:"Content Tracker",desc:"Track the performance of every piece of content. Views, likes, comments, clicks — see which creators and campaigns deliver the best results."},
+          {page:"spending",title:"Spending Dashboard",desc:"See where your budget goes. Total spend by creator, by campaign, by month. Know your ROI before planning the next campaign."},
+          {page:"collaborators",title:"Your Creators",desc:"Everyone you've completed deals with. See deal history, total spend, and start a new partnership with one click. Your best creators are always one tap away."},
+          {page:"calendar",title:"Campaign Calendar",desc:"Every deadline across all your deals. Never lose track of when content is due or when a campaign launches."},
+          {page:"settings",title:"Settings & Team",desc:"Manage your company profile, notification preferences, and account settings. Add your website and socials so creators know who you are."},
+        ];
+        const tourSteps = role==="creator" ? creatorSteps : brandSteps;
         const step = tourSteps[tourStep];
         if(!step) return null;
         const goTo = (idx) => {
@@ -12970,7 +12986,7 @@ function App() {
           <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",zIndex:10000,width:"100%",maxWidth:480,padding:"0 16px"}}>
             <div style={{background:"linear-gradient(135deg,#0f4c81,#1a7fa8)",borderRadius:16,padding:"24px 28px",boxShadow:"0 8px 40px rgba(0,0,0,.25)",color:"white",animation:"slideUp .3s ease"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:"rgba(255,255,255,.6)"}}>Guided Tour · {tourStep+1} of {tourSteps.length}</div>
+                <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:"rgba(255,255,255,.6)"}}>{role==="creator"?"Creator":"Brand"} Tour · {tourStep+1} of {tourSteps.length}</div>
                 <button onClick={dismiss} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.5)",fontSize:18,padding:0,lineHeight:1}}>×</button>
               </div>
               <div style={{fontSize:18,fontWeight:700,marginBottom:6}}>{step.title}</div>

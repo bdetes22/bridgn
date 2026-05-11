@@ -1,8 +1,10 @@
 # bridgn Product Demo Script
 
-**Duration:** 3-4 minutes
+**Duration:** 4-5 minutes total (2-3 min creator, 2 min brand)
 **Tool:** Screen.studio or Loom
-**URL:** bridgn.com?demo=true (creator view) + bridgn.com?demo=true (brand view in separate browser)
+**URLs:**
+- Creator demo: `bridgn.com?demo=true` (sign in as creator)
+- Brand demo: `bridgn.com?demo=true` (sign in as brand, or switch role in Settings)
 
 ---
 
@@ -16,108 +18,143 @@
 
 ---
 
-## THE CREATOR EXPERIENCE (90 seconds)
+## PART 1: THE CREATOR EXPERIENCE (2.5 minutes)
 
 ### Dashboard (10 seconds)
+*Show creator dashboard with deals, earnings, escrow balance*
 
-*Show the creator dashboard with deals, earnings, escrow*
+> "This is your command center. Every deal, every payment, every message — one place. Active deals, money in escrow, total earnings — all at a glance."
 
-> "This is your command center. Every deal, every payment, every message — one place. No more hunting through emails."
+### Marketplace (25 seconds)
+*Click Marketplace — scroll through campaigns with hero images*
 
-### Marketplace (30 seconds)
+> "The Marketplace is where brands come to you. Real campaigns with real budgets. Skincare launches, fitness challenges, travel vlogs — each one is an opportunity. You scroll, you find something that fits, you tap 'I'm Interested' — and you're in. No cold emailing. No waiting for a manager to pitch you."
 
-*Click to Marketplace — show the feed of brand campaigns with the new hero images*
+*Click "I'm Interested" on a campaign*
 
-> "The Marketplace is where brands post campaigns looking for creators. Skincare launches, fitness challenges, travel vlogs — each one is a real opportunity with a budget, deliverables, and deadline. You scroll, you find something that fits, you tap 'I'm Interested' — and you're in."
+### Deal Room (25 seconds)
+*Click Deal Room → open the GlowUp Skincare deal*
 
-*Click "I'm Interested" on a campaign, show the applied state*
+> "Every deal gets its own workspace. The brand uploads a creative brief here. You review and sign the contract right here. Upload your content, share scripts, and have a direct conversation — everything tied to this deal with timestamps. No more 'I sent that last week' — it's all right here."
 
-> "No cold emailing. No waiting for a manager to pitch you. Brands come to you."
+### Workspace (10 seconds)
+*Scroll down to show the workspace section*
 
-### Deal Room (30 seconds)
+> "And this is your private workspace. Notes, to-do lists, inspiration links — only you can see this. Plan your content without leaving the deal."
 
-*Navigate to Deal Room, click on the GlowUp Skincare deal*
+### Offers & Negotiation (15 seconds)
+*Click Offers in sidebar*
 
-> "Every deal gets its own workspace. The brand uploads a creative brief here. You review and sign the contract here. Upload your content here. And have a direct conversation right here — no DMs, no email threads, everything tied to this deal."
+> "When brands send you offers, they land here with all the details — budget, deliverables, platform, deadline. You can accept, counter with your own rate, or decline with a reason. Real negotiation, on-platform."
 
-*Point out the sections: brief, contract, content, messages, progress tracker*
+### Earnings (10 seconds)
+*Click Earnings*
 
-> "Both sides see the same thing. There's no miscommunication, no 'I sent that last week' — it's all right here with timestamps."
+> "Track every dollar. Income by month, by brand, set monthly goals. Know exactly where your money comes from."
 
-### Payments (20 seconds)
+### Escrow Payment (15 seconds)
+*Go back to Deal Room → show a deal with payment_held status*
 
-*Show the escrow panel on a payment_held deal*
+> "Here's the game changer. Before you create a single piece of content, the brand deposits money into escrow. It's secured by bridgn — they can't pull it back. And brands don't have to pay 100% upfront. You negotiate the split — maybe 50% upfront, the rest Net 30 after you go live. Flexible, fair, and protected."
 
-> "Here's the game changer. Before you create a single piece of content, the brand deposits money into escrow. It's secured by bridgn. They can't pull it back. When your content goes live, the money releases to your bank automatically."
+### Public Profile (10 seconds)
+*Click My Profile*
 
-*Show the partial escrow breakdown*
+> "Your public profile is your storefront. Share this link anywhere — Instagram bio, email signature, Twitter. Brands click 'Work With Me', fill out a deal offer, and it lands on your Offers page. Every share is a potential deal."
 
-> "And brands don't have to pay 100% upfront. You negotiate the split — maybe 50% upfront, the rest Net 30 after you go live. It's flexible, it's fair, and it's protected."
+### Collaborators (10 seconds)
+*Click Collaborators*
+
+> "And everyone you've worked with lives here. One click to send them a new deal. Build lasting partnerships, not one-off transactions."
 
 ---
 
-## THE BRAND EXPERIENCE (60 seconds)
+## PART 2: THE BRAND EXPERIENCE (2 minutes)
 
-*Switch to brand view*
+*Switch to brand account (or note: "Now let's flip to the brand side")*
 
 ### Brand Dashboard (10 seconds)
+*Show brand dashboard*
 
-> "Now let's flip to the brand side. Same platform, different view. You see all your creator partnerships, spending, and content in one place."
+> "Same platform, brand perspective. Active deals, escrow status, content received — your influencer marketing command center."
 
-### Creator CRM (15 seconds)
+### Creator CRM (20 seconds)
+*Click Creator CRM — show pipeline view*
 
-*Click Creator CRM*
+> "The Creator CRM is your rolodex. Every creator you've worked with, organized by pipeline stage — discovered, reached out, negotiating, active deal, completed. Add notes, tags, and when you're ready for a new campaign, you already know who to call."
 
-> "The Creator CRM tracks every creator you've worked with. Pipeline stages, notes, tags — it's your rolodex for influencer marketing. When you want to run a new campaign, you already know who to reach out to."
+*Toggle to pipeline view if in database view*
 
-### Creating a Deal (20 seconds)
-
+### Creating a Deal (15 seconds)
 *Click New Deal*
 
-> "Creating a deal takes 30 seconds. Name it, set the budget, pick the platform, set the upfront percentage, and invite the creator. They get an email, they accept, and you're both in the Deal Room."
+> "Creating a deal takes 30 seconds. Name it, set the budget, pick the platform, set the upfront escrow percentage, choose how long the offer is valid, and invite the creator. They get an email, they accept or counter, and you're both in the Deal Room."
 
-### Content Review (15 seconds)
-
+### Deal Room — Brand View (15 seconds)
 *Show a deal with content submitted*
 
-> "When the creator submits content, you review it right here. Approve each deliverable, request revisions if needed. Once everything looks good, approve it and the creator marks it live. Payment handles itself."
+> "Upload your brief, send the contract, and when the creator submits content — review it right here. Approve each deliverable, request revisions if needed. Once everything looks good, they mark it live and payment handles itself."
+
+### Review Queue (10 seconds)
+*Click Review Queue*
+
+> "All pending content across all your deals in one view. No switching between deal rooms — approve and review from one place."
+
+### Content Tracker (10 seconds)
+*Click Content Tracker*
+
+> "Track how every piece of content performs. Views, engagement, clicks — know which creators and campaigns deliver real results."
+
+### Spending (10 seconds)
+*Click Spending*
+
+> "See exactly where your budget goes. By creator, by campaign, by month. Plan your next quarter with real data."
 
 ---
 
-## THE CLOSER (30 seconds)
+## THE CLOSER (20 seconds)
 
 *Back to landing page*
 
-> "No more chasing invoices. No more lost contracts. No more wondering if the content was posted. bridgn is one place for deals, contracts, content, and payments — for both sides."
+> "No more chasing invoices. No more lost contracts. No more wondering if the content was posted. bridgn is one place for deals, contracts, content, and payments — for both creators and brands."
 
-> "The first deal is free. No platform fees. Just the deal room, escrow protection, and everything you need to run partnerships professionally. bridgn.com."
+> "Your first deal is completely free. No platform fees. Just the deal room, escrow protection, and everything you need to run partnerships professionally. bridgn.com."
 
 ---
 
 ## RECORDING TIPS
 
-1. **Use Screen.studio** — Enable auto-zoom on clicks so viewers can see what you're doing
-2. **Move slowly** — Pause 1-2 seconds on each section so viewers can take it in
-3. **Use the demo mode** — Everything is pre-populated with realistic data
-4. **Record creator and brand separately** — Splice them together in editing
-5. **Background music** — Use something upbeat but not distracting (Screen.studio has built-in options)
-6. **Resolution** — Record at 1920x1080 minimum
-7. **Keep it under 4 minutes** — Attention spans are short
+1. **Use Screen.studio** — Enable auto-zoom on clicks so viewers can see details
+2. **Move slowly** — Pause 1-2 seconds on each section
+3. **Record creator and brand separately** — Splice them together in editing
+4. **Background music** — Upbeat but not distracting
+5. **Resolution** — 1920x1080 minimum
+6. **Keep it under 5 minutes** — Attention spans are short
 
 ## PAGE FLOW FOR RECORDING
 
-1. Landing page (5 seconds)
-2. Creator Dashboard
-3. Marketplace (scroll through 2-3 campaigns)
-4. Deal Room → GlowUp Skincare deal
-5. Show brief section
-6. Show contract section  
-7. Show content + deliverables
-8. Show escrow payment panel
-9. Show messages
-10. Switch to brand browser
-11. Brand Dashboard
-12. Creator CRM (pipeline view)
-13. New Deal form
-14. Deal Room with content submitted
-15. Back to landing page for close
+### Creator Tour (record first):
+1. Landing page → click "Join as Creator"
+2. Creator Dashboard (stat cards, deals)
+3. Marketplace (scroll through 2-3 campaigns, click "I'm Interested")
+4. Deal Room → GlowUp Skincare deal (brief, contract, content sections)
+5. Workspace section
+6. Offers page
+7. Earnings (monthly chart, goal ring)
+8. Deal Room → payment_held deal (escrow panel)
+9. Public Profile (Work With Me button)
+10. Collaborators
+
+### Brand Tour (record second):
+1. Brand Dashboard
+2. Creator CRM (database view → pipeline view)
+3. New Deal form (fill a few fields)
+4. Deal Room with content submitted (show approval)
+5. Review Queue
+6. Content Tracker
+7. Spending Dashboard
+8. Back to landing page for close
+
+### Brand Demo Access:
+- Sign up as brand in demo mode, OR
+- Go to Settings → Account Type → switch to Brand
