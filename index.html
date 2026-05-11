@@ -12444,7 +12444,8 @@ function App() {
   const [tourStep,setTourStep] = useState(()=>{try{return parseInt(localStorage.getItem("bridgn_tour_step"))||0;}catch{return 0;}});
   const [tourDismissed,setTourDismissed] = useState(()=>{try{return localStorage.getItem("bridgn_tour_done")==="true";}catch{return false;}});
   const [toast,setToast] = useState(null);
-  const [demoMode] = useState(()=>{try{return new URLSearchParams(window.location.search).get("demo")==="true";}catch(e){return false;}});
+  const [demoMode] = useState(()=>{try{const p=new URLSearchParams(window.location.search).get("demo");return p==="true"||p==="creator"||p==="brand";}catch(e){return false;}});
+  const [demoRole] = useState(()=>{try{const p=new URLSearchParams(window.location.search).get("demo");return p==="brand"?"brand":p==="creator"?"creator":p==="true"?"creator":null;}catch{return null;}});
 
   const showToast = (msg, type="success") => {
     setToast({msg,type});
@@ -12626,15 +12627,38 @@ function App() {
       .catch(e=>console.error("[loadDeals] Failed:", e));
   },[authUser,demoMode]);
 
-  // Seed demo data when demo mode is active
+  // Seed demo data when demo mode is active — works without auth
   useEffect(()=>{
-    if(demoMode && authUser) {
-      setDeals(DEMO_DEALS.map(d=>({...d,creatorUserId:authUser.id})));
-      setProfileFlags({analyticsUploaded:true,rateCardFilled:true,availabilitySet:true});
-      setStripeConnected(true);
-      setSocialLinks({ig:"creator.demo",tt:"creator.demo",yt:"",tw:"",web:"bridgn.com",bio:"Demo creator account — showcasing the bridgn platform",location:"Los Angeles, CA"});
+    if(!demoMode) return;
+    const demoR = demoRole || "creator";
+    // Create a fake user if not authenticated
+    if(!authUser) {
+      const fakeUser = {
+        id:"demo-user-"+demoR,
+        email:demoR+"@demo.bridgn.com",
+        user_metadata:{
+          full_name:demoR==="creator"?"Mia Chen":"Bridgn",
+          company_name:demoR==="brand"?"Bridgn":"",
+          role:demoR,
+          avatar_url:demoR==="creator"?"https://i.pravatar.cc/150?img=5":null,
+        },
+      };
+      setAuthUser(fakeUser);
+      setRole(demoR);
+      setProfileImageUrl(demoR==="creator"?"https://i.pravatar.cc/150?img=5":null);
     }
-  },[demoMode,authUser]);
+    if(demoR==="creator") {
+      setDeals(DEMO_DEALS.map(d=>({...d,creatorUserId:authUser?.id||"demo-user-creator"})));
+      setSocialLinks({ig:"@mia.creates",tt:"@mia.creates",yt:"",tw:"",web:"bridgn.com",bio:"Clean beauty advocate. Making skincare fun since 2021.",location:"Los Angeles, CA"});
+    } else {
+      setDeals(DEMO_DEALS.map(d=>({...d,brandUserId:authUser?.id||"demo-user-brand",brand:d.brand||"Bridgn"})));
+      setSocialLinks({ig:"",tt:"",yt:"",tw:"",web:"bridgn.com",bio:"The creator-brand partnership platform",location:""});
+    }
+    setRole(demoR);
+    setProfileFlags({analyticsUploaded:true,rateCardFilled:true,availabilitySet:true});
+    setStripeConnected(true);
+    setOnboarding({seen:true,steps:{analytics:true}});
+  },[demoMode]);
 
   useEffect(()=>{ loadDeals(); },[authUser]);
 
@@ -12836,7 +12860,7 @@ function App() {
     setPage("deal-room");
   };
 
-  if(authLoading) return (
+  if(authLoading&&!demoMode) return (
     <div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
       <img src="assets/logo-auth.svg" alt="bridgn" style={{height:60}}/>
       <div style={{width:28,height:28,border:"2.5px solid var(--border)",borderTop:"2.5px solid var(--accent)",borderRadius:"50%",animation:"spin .8s linear infinite"}}></div>
@@ -12847,7 +12871,7 @@ function App() {
   if(legalPage==="terms") return React.createElement(TermsPage,{onBack:()=>setLegalPage(null)});
   if(legalPage==="privacy") return React.createElement(PrivacyPage,{onBack:()=>setLegalPage(null)});
 
-  if(!authUser) {
+  if(!authUser&&!demoMode) {
     if(inviteCtx) return React.createElement(InviteWelcomeScreen,{inviteCtx,onAuth:handleInviteAuth});
     if(!showAuth) return React.createElement(LandingPage,{
       onGetStarted:(preRole)=>{setAuthMode("signup");setPreSelectedRole(preRole||"creator");setShowAuth(true);},
