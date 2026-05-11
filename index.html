@@ -2900,10 +2900,23 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           // Update activeDeal + local state if something changed
           setActiveDeal(prev=>{
             if(!prev) return fresh;
-            if(prev.briefSubmitted!==fresh.briefSubmitted || prev.briefAcknowledged!==fresh.briefAcknowledged ||
+            // Check if anything meaningful changed
+            const changed = prev.briefSubmitted!==fresh.briefSubmitted || prev.briefAcknowledged!==fresh.briefAcknowledged ||
                prev.contractSent!==fresh.contractSent || prev.contractSigned!==fresh.contractSigned ||
-               prev.status!==fresh.status) {
+               prev.status!==fresh.status || prev.postLink!==fresh.postLink || prev.contentLiveAt!==fresh.contentLiveAt ||
+               prev.cancelRequestedBy!==fresh.cancelRequestedBy || prev.escrowReleased!==fresh.escrowReleased ||
+               prev.upfrontReleased!==fresh.upfrontReleased ||
+               JSON.stringify(prev.approvedDeliverables)!==JSON.stringify(fresh.approvedDeliverables) ||
+               (prev.contentFile?.name)!==(fresh.contentFile?.name);
+            if(changed) {
               syncFromDeal(fresh);
+              // Update approved state for deliverables
+              if(fresh.approvedDeliverables) setApproved(fresh.approvedDeliverables);
+              // Update content files
+              if(fresh.contentFile || fresh.contentFiles?.length) {
+                const files = fresh.contentFiles?.length ? fresh.contentFiles : fresh.contentFile ? [fresh.contentFile] : [];
+                if(files.length) setContentFiles(files);
+              }
               return fresh;
             }
             return prev;
@@ -3138,13 +3151,16 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       });
       const json = await resp.json();
       if(!resp.ok) throw new Error(json.error || "Server error");
-      const updated = {...activeDeal, status:"payment_released"};
+      const updated = {...activeDeal, status:"payment_released", escrowReleased:true};
       setActiveDeal(updated);
-      updateDeal && updateDeal(activeDeal.id, {status:"payment_released"});
+      updateDeal && updateDeal(activeDeal.id, {status:"payment_released", escrowReleased:true});
       showEscrowToast("Payment released to the creator.");
+      appToast&&appToast("Payment released successfully!");
       notifyOther("content_submitted",{fileName:"Payment released — funds on the way"});
     } catch(err) {
+      console.error("[releasePayment]", err);
       showEscrowToast(err.message, "error");
+      appToast&&appToast("Release failed: "+err.message, "error");
     }
     setReleaseLoading(false);
   };
