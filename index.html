@@ -12924,6 +12924,61 @@ function App() {
       </div>
       <MobBottomNav role={role} page={page} setPage={setPage}/>
       {toast&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",padding:"12px 24px",borderRadius:99,fontSize:13,fontWeight:600,color:"white",background:toast.type==="error"?"var(--red)":"var(--green)",boxShadow:"0 4px 20px rgba(0,0,0,.15)",zIndex:9999,animation:"slideUp .25s ease",whiteSpace:"nowrap"}}>{toast.msg}</div>}
+      {/* Guided Demo Tour */}
+      {demoMode&&(()=>{
+        const [tourStep,setTourStep] = React.useState(()=>{try{return parseInt(localStorage.getItem("bridgn_tour_step"))||0;}catch{return 0;}});
+        const [tourDismissed,setTourDismissed] = React.useState(()=>{try{return localStorage.getItem("bridgn_tour_done")==="true";}catch{return false;}});
+        const tourSteps = [
+          {page:"dashboard",title:"Welcome to bridgn",desc:"This is your dashboard — your command center for every deal, payment, and partnership. Let's take a quick tour.",pos:"center"},
+          {page:"marketplace",title:"Creator Marketplace",desc:"Browse real campaign opportunities from brands. Scroll through, find what fits your niche, and tap 'I'm Interested' to apply.",pos:"center"},
+          {page:"deal-room",title:"The Deal Room",desc:"Every deal gets a dedicated workspace. Briefs, contracts, content delivery, messages, and payments — all in one place for both sides.",pos:"center"},
+          {page:"earnings",title:"Track Your Earnings",desc:"See your income by month, by brand, and set monthly goals. Know exactly where your money comes from.",pos:"center"},
+          {page:"offers",title:"Incoming Offers",desc:"When brands want to work with you, their offers land here. Accept, counter with your own terms, or decline with a reason.",pos:"center"},
+          {page:"collaborators",title:"Your Network",desc:"Everyone you've worked with. One click to send them a new deal. Build lasting partnerships, not one-off transactions.",pos:"center"},
+          {page:"public-profile",title:"Your Public Profile",desc:"Share this link with brands. They can see your work, your platforms, and send you offers directly through 'Work With Me'.",pos:"center"},
+        ];
+        if(tourDismissed) return null;
+        const step = tourSteps[tourStep];
+        if(!step) return null;
+        const goTo = (idx) => {
+          setTourStep(idx);
+          try{localStorage.setItem("bridgn_tour_step",String(idx));}catch{}
+          if(tourSteps[idx]) setPage(tourSteps[idx].page);
+        };
+        const dismiss = () => {
+          setTourDismissed(true);
+          try{localStorage.setItem("bridgn_tour_done","true");}catch{}
+        };
+        // Auto-navigate to the step's page
+        if(page!==step.page) setTimeout(()=>setPage(step.page),100);
+        return ReactDOM.createPortal(
+          <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",zIndex:10000,width:"100%",maxWidth:480,padding:"0 16px"}}>
+            <div style={{background:"linear-gradient(135deg,#0f4c81,#1a7fa8)",borderRadius:16,padding:"24px 28px",boxShadow:"0 8px 40px rgba(0,0,0,.25)",color:"white",animation:"slideUp .3s ease"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".1em",color:"rgba(255,255,255,.6)"}}>Guided Tour · {tourStep+1} of {tourSteps.length}</div>
+                <button onClick={dismiss} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.5)",fontSize:18,padding:0,lineHeight:1}}>×</button>
+              </div>
+              <div style={{fontSize:18,fontWeight:700,marginBottom:6}}>{step.title}</div>
+              <div style={{fontSize:13,color:"rgba(255,255,255,.85)",lineHeight:1.6,marginBottom:18}}>{step.desc}</div>
+              <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                {tourStep>0&&<button onClick={()=>goTo(tourStep-1)} style={{padding:"8px 16px",borderRadius:8,border:"1px solid rgba(255,255,255,.3)",background:"transparent",color:"white",cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"DM Sans,sans-serif"}}>Back</button>}
+                {tourStep<tourSteps.length-1?(
+                  <button onClick={()=>goTo(tourStep+1)} style={{padding:"8px 20px",borderRadius:8,border:"none",background:"white",color:"#0f4c81",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"DM Sans,sans-serif"}}>Next →</button>
+                ):(
+                  <button onClick={dismiss} style={{padding:"8px 20px",borderRadius:8,border:"none",background:"white",color:"#0f4c81",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"DM Sans,sans-serif"}}>Finish Tour ✓</button>
+                )}
+                <div style={{flex:1}}/>
+                <button onClick={dismiss} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.5)",fontSize:12,fontFamily:"DM Sans,sans-serif"}}>Skip tour</button>
+              </div>
+              {/* Progress dots */}
+              <div style={{display:"flex",gap:4,marginTop:14,justifyContent:"center"}}>
+                {tourSteps.map((_,i)=><div key={i} style={{width:i===tourStep?20:6,height:6,borderRadius:3,background:i===tourStep?"white":"rgba(255,255,255,.3)",transition:"all .2s"}}/>)}
+              </div>
+            </div>
+          </div>,
+          document.body
+        );
+      })()}
       {/* Cmd+K Quick Navigation */}
       {cmdkOpen&&(()=>{
         const allPages = role==="creator"?[
