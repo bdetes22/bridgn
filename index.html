@@ -12425,6 +12425,8 @@ function App() {
   const [authMode,setAuthMode] = useState("signup");
   const [preSelectedRole,setPreSelectedRole] = useState("creator");
   const [legalPage,setLegalPage] = useState(null); // "terms" or "privacy"
+  const [tourStep,setTourStep] = useState(()=>{try{return parseInt(localStorage.getItem("bridgn_tour_step"))||0;}catch{return 0;}});
+  const [tourDismissed,setTourDismissed] = useState(()=>{try{return localStorage.getItem("bridgn_tour_done")==="true";}catch{return false;}});
   const [toast,setToast] = useState(null);
   const [demoMode] = useState(()=>{try{return new URLSearchParams(window.location.search).get("demo")==="true";}catch(e){return false;}});
 
@@ -12925,9 +12927,7 @@ function App() {
       <MobBottomNav role={role} page={page} setPage={setPage}/>
       {toast&&<div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",padding:"12px 24px",borderRadius:99,fontSize:13,fontWeight:600,color:"white",background:toast.type==="error"?"var(--red)":"var(--green)",boxShadow:"0 4px 20px rgba(0,0,0,.15)",zIndex:9999,animation:"slideUp .25s ease",whiteSpace:"nowrap"}}>{toast.msg}</div>}
       {/* Guided Demo Tour */}
-      {demoMode&&(()=>{
-        const [tourStep,setTourStep] = React.useState(()=>{try{return parseInt(localStorage.getItem("bridgn_tour_step"))||0;}catch{return 0;}});
-        const [tourDismissed,setTourDismissed] = React.useState(()=>{try{return localStorage.getItem("bridgn_tour_done")==="true";}catch{return false;}});
+      {demoMode&&!tourDismissed&&(()=>{
         const tourSteps = [
           {page:"dashboard",title:"Welcome to bridgn",desc:"This is your dashboard — your command center for every deal, payment, and partnership. Let's take a quick tour.",pos:"center"},
           {page:"marketplace",title:"Creator Marketplace",desc:"Browse real campaign opportunities from brands. Scroll through, find what fits your niche, and tap 'I'm Interested' to apply.",pos:"center"},
@@ -12937,7 +12937,6 @@ function App() {
           {page:"collaborators",title:"Your Network",desc:"Everyone you've worked with. One click to send them a new deal. Build lasting partnerships, not one-off transactions.",pos:"center"},
           {page:"public-profile",title:"Your Public Profile",desc:"Share this link with brands. They can see your work, your platforms, and send you offers directly through 'Work With Me'.",pos:"center"},
         ];
-        if(tourDismissed) return null;
         const step = tourSteps[tourStep];
         if(!step) return null;
         const goTo = (idx) => {
