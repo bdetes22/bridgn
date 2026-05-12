@@ -1,4 +1,4 @@
-const CACHE_NAME = "bridgn-v2";
+const CACHE_NAME = "bridgn-v3";
 const PRECACHE = [
   "/",
   "/index.html",
@@ -8,6 +8,7 @@ const PRECACHE = [
   "/assets/logo-icon-white.svg",
   "/assets/logo-icon-dark.svg",
   "/assets/pwa-icon.png",
+  "/assets/bridgn%20logos/PNG/bridgn-09.png",
 ];
 
 // Install — cache core assets
@@ -38,7 +39,6 @@ self.addEventListener("fetch", (e) => {
   e.respondWith(
     fetch(e.request)
       .then((resp) => {
-        // Cache successful responses
         if (resp.ok) {
           const clone = resp.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
