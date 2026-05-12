@@ -383,7 +383,7 @@ router.post("/release-payment", async (req, res) => {
       return res.status(403).json({ error: "Only the brand on this deal can release payment." });
     }
 
-    const releasable = ["payment_held", "content_delivered"];
+    const releasable = ["payment_held", "content_delivered", "content_live"];
     if (!releasable.includes(deal.status)) {
       return res.status(409).json({
         error: `Cannot release payment — deal status is "${deal.status}". Must be one of: ${releasable.join(", ")}.`,
@@ -396,8 +396,11 @@ router.post("/release-payment", async (req, res) => {
       return res.status(422).json({ error: "Creator's Stripe account not found." });
     }
 
-    // Creator gets the full deal amount — fee was charged on top to the brand
-    const transferCents = deal.amount_cents;
+    // For partial escrow deals, only transfer the upfront portion (remaining comes later)
+    const upPct = deal.upfront_pct || 100;
+    const transferCents = upPct < 100
+      ? Math.round(deal.amount_cents * upPct / 100)
+      : deal.amount_cents;
 
     // Create the Transfer to the creator's connected account
     const transfer = await stripe.transfers.create({
@@ -411,11 +414,13 @@ router.post("/release-payment", async (req, res) => {
       },
     });
 
+    const isPartial = upPct < 100;
     await updateDealById(deal.id, {
-      status:             "payment_released",
+      status:             isPartial ? "content_delivered" : "payment_released",
       transfer_id:        transfer.id,
       escrow_released_at: new Date().toISOString(),
       escrow_released_by: brandUserId,
+      upfront_released:   true,
     });
 
     // Notify the creator
@@ -428,10 +433,12 @@ router.post("/release-payment", async (req, res) => {
     }
 
     res.json({
-      status:       "payment_released",
+      status:       isPartial ? "content_delivered" : "payment_released",
       transferId:   transfer.id,
       amountCents:  transferCents,
       feeCents:     deal.application_fee_cents || 0,
+      isPartial,
+      upfrontReleased: true,
     });
   } catch (err) {
     console.error("[stripe/release-payment]", err);
