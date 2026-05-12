@@ -15,22 +15,16 @@
   },
   "icons": [
     {
-      "src": "assets/bridgn logos/PNG/bridgn-09.png",
+      "src": "assets/bridgn logos/PNG/pwa-icon-square.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "assets/bridgn logos/PNG/bridgn-09.png",
+      "src": "assets/bridgn logos/PNG/pwa-icon-square.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "assets/pwa-icon.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
     }
   ],
   "screenshots": [
