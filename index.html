@@ -4318,23 +4318,27 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                   </div>
                   {/* Brand actions */}
                   {isBrand&&(
-                    <div style={{display:"flex",gap:8}}>
-                      <button
-                        className="btn btn-primary"
-                        style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,opacity:releaseLoading?.65:1}}
-                        onClick={handleRelease}
-                        disabled={releaseLoading}
-                      >
-                        {releaseLoading?<><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span> Releasing…</>:<>Release Payment</>}
-                      </button>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        style={{flexShrink:0}}
-                        onClick={()=>setShowDisputeModal(true)}
-                      >
-                        Dispute
-                      </button>
-                    </div>
+                    isPartial&&activeDeal.upfrontReleased?(
+                      <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:8,fontSize:12,color:"var(--green)",fontWeight:600}}>Upfront payment of ${upfrontAmount.toLocaleString()} released to creator. Remaining ${remainingAmount.toLocaleString()} due Net 30.</div>
+                    ):(
+                      <div style={{display:"flex",gap:8}}>
+                        <button
+                          className="btn btn-primary"
+                          style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,opacity:releaseLoading?.65:1}}
+                          onClick={handleRelease}
+                          disabled={releaseLoading}
+                        >
+                          {releaseLoading?<><span style={{animation:"spin .8s linear infinite",display:"inline-block"}}>⟳</span> Releasing…</>:<>{isPartial?"Release Upfront ("+upPct+"%)":"Release Payment"}</>}
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          style={{flexShrink:0}}
+                          onClick={()=>setShowDisputeModal(true)}
+                        >
+                          Dispute
+                        </button>
+                      </div>
+                    )
                   )}
                 </div>
                 {/* Auto-release countdown bar */}
