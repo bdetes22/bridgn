@@ -4290,6 +4290,30 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               );
             }
 
+            // ── All payments made, waiting for settlement ──
+            if(isPartial&&activeDeal.upfrontReleased&&activeDeal.remainingPaid&&st!=="payment_released") {
+              return (
+                <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(91,138,245,.07),rgba(91,138,245,.03))",border:"1.5px solid rgba(91,138,245,.25)"}}>
+                  <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
+                    <span style={{fontSize:"22px",flexShrink:0}}>✅</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:"13px",fontWeight:700,color:"var(--accent)",marginBottom:3}}>All payments complete</div>
+                      <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>
+                        {isBrand
+                          ? <span>You've paid the full deal amount. Upfront payment released to the creator. Remaining payment is processing via ACH and will settle in 4-5 business days.</span>
+                          : <span>The brand has paid the full deal amount. Your upfront payment has been released. The remaining balance is processing and will arrive in your bank within 4-5 business days.</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,padding:"10px 12px",background:"var(--surface2)",borderRadius:"var(--radius-sm)"}}>
+                    {[["Total deal","$"+activeDeal.amount.toLocaleString()],["Upfront ("+upPct+"%)","$"+upfrontAmount.toLocaleString()+" ✓"],["Remaining ("+String(100-upPct)+"%)","$"+remainingAmount.toLocaleString()+" ⏳"]].map(([l,v],i)=>(
+                      <div key={i} style={{textAlign:"center"}}><div style={{fontSize:"14px",fontWeight:700,color:i===0?"var(--text)":"var(--green)"}}>{v}</div><div style={{fontSize:"10px",color:"var(--text3)",marginTop:2}}>{l}</div></div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
             // ── payment_held or content_delivered WITH payment — escrow active ──
             if((st==="payment_held"||st==="content_delivered"||st==="content_live")&&hasPaid) {
               const autoRelease = activeDeal.autoReleaseAt ? new Date(activeDeal.autoReleaseAt) : null;
