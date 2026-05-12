@@ -4004,7 +4004,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                 {contentFiles.length>0&&(approved.length>0&&approved.every(Boolean))&&!activeDeal.contentLiveAt&&(
                   <div style={{marginTop:14,padding:"16px 18px",background:"linear-gradient(135deg,rgba(34,197,94,.06),rgba(34,197,94,.02))",border:"1.5px solid rgba(34,197,94,.3)",borderRadius:"var(--radius)"}}>
                     <div style={{fontSize:"13px",fontWeight:700,color:"var(--green)",marginBottom:6}}>Ready to go live?</div>
-                    <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:10,lineHeight:1.5}}>Once your content is posted, paste the live link below and mark it as LIVE.{(activeDeal.upfrontPct||100)<100?" This will release your upfront payment and start the Net 30 countdown for the remaining balance.":""}</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:10,lineHeight:1.5}}>Once your content is posted, paste the live link below and mark it as LIVE.{(activeDeal.upfrontPct||100)<100?" This will notify the brand and start the Net 30 countdown for the remaining balance.":""}</div>
                     <div style={{display:"flex",gap:8}}>
                       <input className="fi" style={{flex:1,padding:"8px 11px",fontSize:"12px"}} value={liveUrl} onChange={e=>setLiveUrl(e.target.value)} placeholder="Paste live post URL (e.g. https://tiktok.com/...)" onKeyDown={e=>e.key==="Enter"&&liveUrl.trim()&&handleMarkLive()}/>
                       <button className="btn btn-primary btn-sm" onClick={handleMarkLive} disabled={!liveUrl.trim()||markingLive} style={{opacity:(!liveUrl.trim()||markingLive)?.5:1,whiteSpace:"nowrap"}}>
