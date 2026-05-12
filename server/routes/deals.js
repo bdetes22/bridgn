@@ -561,13 +561,29 @@ router.get("/check-deadlines", async (req, res) => {
       const sentReminders = (deal.sent_reminders || "").split(",").filter(Boolean);
 
       // Day 25: reminder
+      // Day 20 (10 days left): early reminder
+      if (daysSinceLive >= 20 && !sentReminders.includes("net30_day20")) {
+        if (deal.brand_user_id) {
+          const remainCents = Math.round(deal.amount_cents * (100 - upPct) / 100);
+          await insertNotification(deal.brand_user_id, "payment_reminder", {
+            bridgn_deal_id: deal.bridgn_deal_id,
+            amount_cents: remainCents,
+            message: `Reminder: Remaining payment of $${(remainCents / 100).toFixed(2)} is due in 10 days. ACH transfers take 4-5 business days to settle, so initiate payment soon to avoid being late.`,
+          });
+        }
+        sentReminders.push("net30_day20");
+        await updateDealById(deal.id, { sent_reminders: sentReminders.join(",") });
+        sent++;
+      }
+
+      // Day 25 (5 days left): urgent reminder — must pay NOW for ACH to settle on time
       if (daysSinceLive >= 25 && !sentReminders.includes("net30_day25")) {
         if (deal.brand_user_id) {
           const remainCents = Math.round(deal.amount_cents * (100 - upPct) / 100);
           await insertNotification(deal.brand_user_id, "payment_reminder", {
             bridgn_deal_id: deal.bridgn_deal_id,
             amount_cents: remainCents,
-            message: `Reminder: Remaining payment of $${(remainCents / 100).toFixed(2)} is due in 5 days.`,
+            message: `Urgent: Pay the remaining $${(remainCents / 100).toFixed(2)} now. ACH takes 4-5 business days — if you don't initiate today, the payment will be late.`,
           });
         }
         sentReminders.push("net30_day25");
