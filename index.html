@@ -12904,7 +12904,15 @@ function App() {
   if(legalPage==="terms") return React.createElement(TermsPage,{onBack:()=>setLegalPage(null)});
   if(legalPage==="privacy") return React.createElement(PrivacyPage,{onBack:()=>setLegalPage(null)});
 
-  if(!authUser&&!demoMode) {
+  // Demo mode: show loading while fake user is being set up
+  if(demoMode&&!authUser) return (
+    <div style={{minHeight:"100vh",background:"var(--bg)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
+      <img src="assets/logo-auth.svg" alt="bridgn" style={{height:60}}/>
+      <div style={{width:28,height:28,border:"2.5px solid var(--border)",borderTop:"2.5px solid var(--accent)",borderRadius:"50%",animation:"spin .8s linear infinite"}}></div>
+    </div>
+  );
+
+  if(!authUser) {
     if(inviteCtx) return React.createElement(InviteWelcomeScreen,{inviteCtx,onAuth:handleInviteAuth});
     if(!showAuth) return React.createElement(LandingPage,{
       onGetStarted:(preRole)=>{setAuthMode("signup");setPreSelectedRole(preRole||"creator");setShowAuth(true);},
