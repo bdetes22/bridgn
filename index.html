@@ -4318,7 +4318,9 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                   </div>
                   {/* Brand actions */}
                   {isBrand&&(
-                    isPartial&&activeDeal.upfrontReleased?(
+                    isPartial&&activeDeal.upfrontReleased&&activeDeal.remainingPaid?(
+                      <div style={{padding:"10px 14px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.25)",borderRadius:8,fontSize:12,color:"var(--accent)",fontWeight:600,lineHeight:1.5}}>Upfront ${upfrontAmount.toLocaleString()} released. Remaining ${remainingAmount.toLocaleString()} payment processing via ACH — funds will settle in 4-5 business days.</div>
+                    ):isPartial&&activeDeal.upfrontReleased?(
                       <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:8,fontSize:12,color:"var(--green)",fontWeight:600}}>Upfront payment of ${upfrontAmount.toLocaleString()} released to creator. Remaining ${remainingAmount.toLocaleString()} due Net 30.</div>
                     ):(
                       <div style={{display:"flex",gap:8}}>
