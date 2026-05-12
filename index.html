@@ -3151,11 +3151,12 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       });
       const json = await resp.json();
       if(!resp.ok) throw new Error(json.error || "Server error");
-      const updated = {...activeDeal, status:"payment_released", escrowReleased:true};
+      const newStatus = json.status || "payment_released";
+      const updated = {...activeDeal, status:newStatus, escrowReleased:newStatus==="payment_released", upfrontReleased:true};
       setActiveDeal(updated);
-      updateDeal && updateDeal(activeDeal.id, {status:"payment_released", escrowReleased:true});
-      showEscrowToast("Payment released to the creator.");
-      appToast&&appToast("Payment released successfully!");
+      updateDeal && updateDeal(activeDeal.id, {status:newStatus, escrowReleased:newStatus==="payment_released", upfrontReleased:true});
+      showEscrowToast(json.isPartial ? "Upfront payment released to the creator. Remaining balance due Net 30 after content goes live." : "Payment released to the creator.");
+      appToast&&appToast(json.isPartial ? "Upfront released — remaining due Net 30" : "Payment released successfully!");
       notifyOther("content_submitted",{fileName:"Payment released — funds on the way"});
     } catch(err) {
       console.error("[releasePayment]", err);
