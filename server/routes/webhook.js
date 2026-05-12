@@ -21,7 +21,10 @@ const express = require("express");
 const { stripe, STRIPE_WEBHOOK_SECRET, PLATFORM_FEE_PERCENT } = require("../../lib/stripe");
 const {
   getDealByPaymentIntentId,
+  getDealByBridgnDealId,
   upsertDeal,
+  updateDealById,
+  getCreatorProfile,
   getCreatorProfileByStripeAccount,
   updateCreatorProfileByStripeAccount,
   insertNotification,
@@ -155,6 +158,50 @@ async function onPaymentIntentSucceeded(pi) {
       amount_cents:   creatorNetCents,
       message: `$${(creatorNetCents / 100).toFixed(2)} is held in escrow for your deal. Deliver your content and the brand will release payment.`,
     });
+  }
+
+  // Auto-transfer remaining balance payments directly to creator (no manual release needed)
+  if (pi.metadata?.payment_type === "remaining_balance" && dealId && creatorId) {
+    try {
+      const deal = await getDealByBridgnDealId(dealId);
+      if (deal) {
+        const creatorProfile = await getCreatorProfile(creatorId);
+        if (creatorProfile?.stripe_account_id) {
+          const remainingCents = parseInt(pi.metadata?.remaining_cents) || creatorNetCents;
+          const transfer = await stripe.transfers.create({
+            amount: remainingCents,
+            currency: "usd",
+            destination: creatorProfile.stripe_account_id,
+            metadata: {
+              bridgn_deal_id: dealId,
+              payment_intent_id: pi.id,
+              transfer_type: "remaining_auto_release",
+            },
+          });
+          await updateDealById(deal.id, {
+            status: "payment_released",
+            remaining_transfer_id: transfer.id,
+          });
+          await insertNotification(creatorId, "payment_released", {
+            bridgn_deal_id: dealId,
+            amount_cents: remainingCents,
+            message: `Remaining payment of $${(remainingCents / 100).toFixed(2)} has been released and is on its way to your bank account. Deal complete!`,
+          });
+          if (brandId) {
+            await insertNotification(brandId, "payment_released", {
+              bridgn_deal_id: dealId,
+              amount_cents: remainingCents,
+              message: `Remaining payment of $${(remainingCents / 100).toFixed(2)} settled and transferred to the creator. Deal complete!`,
+            });
+          }
+          log.info("payment_intent.succeeded", "Remaining balance auto-transferred to creator", {
+            bridgn_deal_id: dealId, transferId: transfer.id, amount_cents: remainingCents,
+          });
+        }
+      }
+    } catch (transferErr) {
+      log.warn("payment_intent.succeeded", "Auto-transfer of remaining balance failed", { error: transferErr.message, dealId });
+    }
   }
 }
 
