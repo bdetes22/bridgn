@@ -334,6 +334,7 @@ router.put("/mark-live", async (req, res) => {
           postLink: postLink || "",
           remainingAmount: isPartial ? (remainingCents / 100).toFixed(0) : null,
           dueDate: net30Due.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+          dealId: deal.bridgn_deal_id,
         });
         sendEmail({ to: brandUser.email, ...email }).catch(() => {});
       }
@@ -467,6 +468,7 @@ router.get("/check-deadlines", async (req, res) => {
         const email = deadlineReminderEmail({
           recipientName: creator.name, dealTitle, deadline: deadlineFormatted,
           daysLeft, partnerName: brand?.name || deal.brand_name || "the brand",
+          dealId: deal.bridgn_deal_id,
         });
         await sendEmail({ to: creator.email, ...email });
         sent++;
@@ -477,6 +479,7 @@ router.get("/check-deadlines", async (req, res) => {
         const email = deadlineReminderEmail({
           recipientName: brand.name, dealTitle, deadline: deadlineFormatted,
           daysLeft, partnerName: creator?.name || deal.creator_name || "the creator",
+          dealId: deal.bridgn_deal_id,
         });
         await sendEmail({ to: brand.email, ...email });
         sent++;
@@ -609,6 +612,7 @@ router.get("/check-deadlines", async (req, res) => {
               dealTitle: deal.campaign_title || "Deal",
               amount: (remainCents / 100).toFixed(0),
               daysOverdue: daysSinceLive - 30,
+              dealId: deal.bridgn_deal_id,
             });
             sendEmail({ to: brandUser.email, ...email }).catch(() => {});
           }

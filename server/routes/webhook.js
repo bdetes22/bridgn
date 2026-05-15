@@ -126,6 +126,7 @@ async function onPaymentIntentSucceeded(pi) {
           creatorName: deal?.creator_name || "the creator",
           amount: (amountCents / 100).toFixed(2),
           dealTitle: deal?.campaign_title || "your deal",
+          dealId: deal?.bridgn_deal_id,
         });
         await sendEmail({ to: brandUser.user.email, ...email });
       }

@@ -12390,7 +12390,7 @@ function App() {
   const [authUser,setAuthUser] = useState(null);
   const [authLoading,setAuthLoading] = useState(true);
   const [role,setRole] = useState("creator");
-  const [page,setPage] = useState("dashboard");
+  const [page,setPage] = useState(()=>{try{return new URLSearchParams(window.location.search).get("page")||"dashboard";}catch{return "dashboard";}});
   const [selected,setSelected] = useState(null);
   const [deals,setDeals] = useState([]);
   const [availStatus,setAvailStatus] = useState("open");
@@ -12497,6 +12497,17 @@ function App() {
       window.history.replaceState({},"",clean);
     }
   },[]);
+
+  // Deep-link: auto-select deal from ?deal= param once deals are loaded
+  useEffect(()=>{
+    const params = new URLSearchParams(window.location.search);
+    const dealParam = params.get("deal");
+    if(dealParam && deals.length>0) {
+      const match = deals.find(d=>String(d.id)===dealParam || d.bridgnDealId===dealParam);
+      if(match) { setSelected(match); setPage("deal-room"); }
+      window.history.replaceState({},"",window.location.pathname);
+    }
+  },[deals]);
 
   // Check real Stripe Connect status and load profile image from Supabase on auth
   useEffect(()=>{

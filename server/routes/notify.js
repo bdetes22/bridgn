@@ -132,22 +132,22 @@ router.post("/", async (req, res) => {
     let email;
     switch (type) {
       case "brief_submitted":
-        email = briefSubmittedEmail({ creatorName: recipientName, brandName: senderName, dealTitle });
+        email = briefSubmittedEmail({ creatorName: recipientName, brandName: senderName, dealTitle, dealId: deal.bridgn_deal_id });
         break;
       case "contract_sent":
-        email = contractSentEmail({ creatorName: recipientName, brandName: senderName, dealTitle, hasLink: !!deal.contract_link });
+        email = contractSentEmail({ creatorName: recipientName, brandName: senderName, dealTitle, hasLink: !!deal.contract_link, dealId: deal.bridgn_deal_id });
         break;
       case "contract_signed":
-        email = contractSignedEmail({ brandName: recipientName, creatorName: senderName, dealTitle });
+        email = contractSignedEmail({ brandName: recipientName, creatorName: senderName, dealTitle, dealId: deal.bridgn_deal_id });
         break;
       case "content_submitted":
-        email = contentSubmittedEmail({ brandName: recipientName, creatorName: senderName, fileName: fileName || null, dealTitle });
+        email = contentSubmittedEmail({ brandName: recipientName, creatorName: senderName, fileName: fileName || null, dealTitle, dealId: deal.bridgn_deal_id });
         break;
       case "script_shared":
-        email = scriptSharedEmail({ brandName: recipientName, creatorName: senderName, scriptUrl: scriptUrl || null, dealTitle });
+        email = scriptSharedEmail({ brandName: recipientName, creatorName: senderName, scriptUrl: scriptUrl || null, dealTitle, dealId: deal.bridgn_deal_id });
         break;
       case "new_message":
-        email = newMessageEmail({ recipientName, senderName, messagePreview: (messagePreview || "").slice(0, 200), dealTitle });
+        email = newMessageEmail({ recipientName, senderName, messagePreview: (messagePreview || "").slice(0, 200), dealTitle, dealId: deal.bridgn_deal_id });
         break;
       default:
         return res.status(400).json({ error: `Unknown notification type: ${type}` });
