@@ -52,15 +52,12 @@ html.light{
 }
 html.light body{background:var(--bg)}
 html.light .navbar{background:var(--surface);border-bottom-color:var(--border)}
-html.light .sidebar{background:var(--surface);border-right-color:var(--border)}
 html.light .card,html.light .card-lg{background:var(--surface);border-color:var(--border)}
 html.light .card-hover:hover{border-color:var(--accent);box-shadow:var(--shadow-sm)}
 html.light .stat-card{background:var(--surface)}
 html.light .tbl th{background:rgba(240,237,232,.92)}
 html.light .role-toggle{background:rgba(0,0,0,.05)}
 html.light .notif-dot{border-color:rgba(248,247,244,.9)}
-html.light .nav-item.active{background:var(--accent-light);color:var(--accent)}
-html.light .nav-item:hover{background:var(--surface2)}
 html.light .pb-ig{background:#fde8f0;color:#b01050;border-color:rgba(176,16,80,.15)}
 html.light .pb-yt{background:#fde8e8;color:#b80000;border-color:rgba(184,0,0,.15)}
 html.light .pb-tt{background:#e4f9f2;color:#0a7248;border-color:rgba(10,114,72,.15)}
@@ -72,20 +69,26 @@ body::before,body::after{display:none}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 ::-webkit-scrollbar-thumb:hover{background:var(--text3)}
 .app-shell{display:flex;flex-direction:column;min-height:100vh}
-.main-layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 64px)}
-.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);padding:10px 0 0;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:width .2s ease}
-.sidebar.collapsed{width:60px}
-.sidebar.collapsed .sidebar-label{display:none}
-.sidebar.collapsed .sidebar-divider{margin:8px 10px 4px}
-.sidebar.collapsed .nav-item{justify-content:center;padding:9px 0;margin:1px 6px;width:calc(100% - 12px)}
-.sidebar.collapsed .nav-item span:not(.nav-icon){display:none}
-.sidebar.collapsed .nav-item .nav-icon{margin:0}
-.sidebar-collapse-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:10px 0;border:none;background:none;cursor:pointer;color:var(--text3);font-size:16px;border-top:1px solid var(--border)}
-.content-area{flex:1;overflow-y:auto;overflow-x:hidden;padding:32px 36px;background:var(--bg);max-width:100%}
-.navbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 22px;gap:14px;position:sticky;top:0;z-index:100;flex-shrink:0}
+.main-layout{display:flex;flex-direction:column;flex:1;overflow:hidden;height:calc(100vh - 102px)}
+.content-area{flex:1;overflow-y:auto;overflow-x:hidden;padding:32px 48px;background:var(--bg);max-width:100%}
+/* ── TOP BAR (logo + user controls) ── */
+.navbar{height:56px;background:var(--surface);border-bottom:none;display:flex;align-items:center;padding:0 24px;gap:14px;position:sticky;top:0;z-index:100;flex-shrink:0}
 .navbar::before,.navbar::after{display:none}
 .nav-logo{height:24px;cursor:pointer;user-select:none}
 html.light .nav-logo{content:url("assets/logo-dark.svg")}
+/* ── HORIZONTAL PAGE NAV (second bar) ── */
+.topnav{display:flex;align-items:center;gap:2px;height:46px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:99;flex-shrink:0;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.topnav::-webkit-scrollbar{display:none}
+.topnav-sep{width:1px;height:20px;background:var(--border);margin:0 8px;flex-shrink:0;opacity:.6}
+.topnav-item{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .18s;border:none;background:none;white-space:nowrap;position:relative;font-family:"DM Sans",sans-serif}
+.topnav-item:hover{background:var(--surface2);color:var(--text)}
+.topnav-item.active{color:var(--accent);font-weight:600;background:var(--accent-light)}
+.topnav-item.active::after{content:"";position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);width:22px;height:2.5px;border-radius:99px;background:var(--accent);box-shadow:0 0 8px rgba(91,138,245,.5),0 0 20px rgba(91,138,245,.2)}
+.topnav-item .tn-icon{width:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.65;transition:opacity .18s}
+.topnav-item.active .tn-icon{opacity:1}
+html.light .topnav{background:var(--surface);border-bottom-color:var(--border)}
+html.light .topnav-item.active{background:var(--accent-light);color:var(--accent)}
+html.light .topnav-item:hover{background:var(--surface2)}
 .role-toggle{display:flex;background:rgba(0,0,0,.5);border-radius:var(--radius-sm);padding:3px;border:1px solid var(--border)}
 .role-btn{padding:5px 16px;border-radius:7px;border:none;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:13px;font-weight:500;transition:all .18s;background:transparent;color:var(--text2)}
 .role-btn.active{background:var(--surface2);color:var(--text);box-shadow:var(--shadow-sm)}
@@ -94,14 +97,7 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 .notif-dot{width:7px;height:7px;border-radius:50%;background:var(--red);position:absolute;top:7px;right:7px;border:2px solid var(--surface)}
 .nav-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s}
 .nav-avatar:hover{opacity:.85}
-.sidebar-label{font-size:9px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--text3);padding:0 18px;margin:6px 0 5px}
-.sidebar-divider{height:1px;margin:10px 14px 4px;background:var(--border)}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:1px 8px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:background .15s,color .15s;border:none;background:none;width:calc(100% - 16px);text-align:left}
-.nav-item:hover{background:var(--surface2);color:var(--text)}
-.nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:600;border-left:2px solid var(--accent);padding-left:12px}
 .nav-icon{width:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:inherit;opacity:.7}
-.nav-item.active .nav-icon{opacity:1}
-.sidebar-footer{margin-top:auto;padding:12px 8px 10px;border-top:1px solid var(--border)}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;word-break:break-word}
 .card-lg{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;word-break:break-word}
 .card-hover{
@@ -297,20 +293,10 @@ html.light .nav-logo{content:url("assets/logo-dark.svg")}
 /* ── HAMBURGER (hidden on desktop) ── */
 .nav-hamburger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:34px;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);cursor:pointer;flex-shrink:0}
 .nav-hamburger span{display:block;width:16px;height:2px;background:var(--text2);border-radius:2px;transition:all .2s}
-.sidebar-mob-header{display:none}
-/* ── MOBILE OVERLAY ── */
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:299;backdrop-filter:blur(2px)}
-.sidebar-overlay.show{display:block}
 /* ── MOBILE BREAKPOINT ── */
 @media(max-width:768px){
   .nav-hamburger{display:flex}
-  .sidebar-mob-header{display:flex}
-  .sidebar,.sidebar.collapsed{position:fixed;top:0;left:0;height:100vh;z-index:300;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);width:268px !important;padding-top:0}
-  .sidebar.mob-open,.sidebar.collapsed.mob-open{transform:translateX(0);width:268px !important}
-  .sidebar.collapsed .sidebar-label{display:block}
-  .sidebar.collapsed .nav-item{justify-content:flex-start;padding:9px 14px;margin:1px 8px;width:calc(100% - 16px)}
-  .sidebar.collapsed .nav-item span:not(.nav-icon){display:inline}
-  .sidebar-collapse-btn{display:none !important}
+  .topnav{display:none}
   .app-shell{min-height:0;height:auto}
   #root{min-height:0;height:auto}
   .main-layout{display:block;height:auto !important;overflow-x:hidden;overflow-y:visible;flex:none}
@@ -1201,77 +1187,53 @@ function Navbar({role,setPage,userInitials,profileImageUrl,onSignOut,onMenuToggl
   );
 }
 
-function Sidebar({role,page,setPage,userName,userInitials,profileImageUrl,mobOpen,onClose,collapsed,onToggleCollapse,demoMode,deals=[]}) {
+function TopNav({role,page,setPage,demoMode,deals=[]}) {
   const pendingOffers = deals.filter(d=>d.status==="pending" && d.brandUserId).length;
   const cNav = [
-    {section:"Overview"},
     {k:"dashboard",l:"Dashboard",i:ICONS.home},
-    {k:"deal-room",l:"Deal Room",i:ICONS.building},
+    {k:"deal-room",l:"Deals",i:ICONS.building},
     {k:"new-deal",l:"New Deal",i:ICONS.plus},
     {k:"offers",l:"Offers",i:ICONS.handshake,badge:pendingOffers||0},
     ...(demoMode?[{k:"marketplace",l:"Marketplace",i:ICONS.compass,dot:true}]:[]),
     {k:"calendar",l:"Calendar",i:ICONS.calendar},
     {k:"workspace",l:"Workspace",i:ICONS.sparkles},
-    {section:"Business"},
+    {sep:true},
     {k:"earnings",l:"Earnings",i:ICONS.dollar},
     {k:"collaborators",l:"Collaborators",i:ICONS.users},
-    {k:"contracts",l:"Contract Vault",i:ICONS.folder},
-    {k:"public-profile",l:"My Profile",i:ICONS.user},
+    {k:"contracts",l:"Contracts",i:ICONS.folder},
+    {k:"public-profile",l:"Profile",i:ICONS.user},
+    {sep:true},
     {k:"settings",l:"Settings",i:ICONS.gear},
   ];
   const bNav = [
-    {section:"Overview"},
     {k:"dashboard",l:"Dashboard",i:ICONS.home},
-    {k:"deal-room",l:"Deal Room",i:ICONS.building},
+    {k:"deal-room",l:"Deals",i:ICONS.building},
     {k:"new-deal",l:"New Deal",i:ICONS.plus},
     ...(demoMode?[{k:"marketplace",l:"Marketplace",i:ICONS.compass,dot:true}]:[]),
     {k:"calendar",l:"Calendar",i:ICONS.calendar},
-    {section:"Business"},
-    {k:"creator-crm",l:"Creator CRM",i:ICONS.users},
-    {k:"review-queue",l:"Review Queue",i:ICONS.clipboard},
-    {k:"content-tracker",l:"Content Tracker",i:ICONS.chart},
+    {sep:true},
+    {k:"creator-crm",l:"CRM",i:ICONS.users},
+    {k:"review-queue",l:"Reviews",i:ICONS.clipboard},
+    {k:"content-tracker",l:"Content",i:ICONS.chart},
     {k:"spending",l:"Spending",i:ICONS.dollar},
     {k:"collaborators",l:"Collaborators",i:ICONS.users},
-    {section:"Account"},
+    {sep:true},
     {k:"settings",l:"Settings",i:ICONS.gear},
   ];
-  const nav = role==="creator"?cNav:bNav; // agency uses bNav
+  const nav = role==="creator"?cNav:bNav;
   return (
-    <aside className={"sidebar"+(mobOpen?" mob-open":"")+(collapsed?" collapsed":"")}>
-      <button className="sidebar-collapse-btn" onClick={onToggleCollapse} title={collapsed?"Expand sidebar":"Collapse sidebar"} style={{borderTop:"none",borderBottom:"1px solid var(--border)",marginBottom:4}}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{transform:collapsed?"rotate(0deg)":"rotate(180deg)",transition:"transform .2s ease"}}><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-      <div className="sidebar-mob-header" style={{alignItems:"center",justifyContent:"space-between",padding:"16px 14px 8px",borderBottom:"1px solid var(--border)",marginBottom:4}}>
-        <img src="assets/logo-white.svg" alt="bridgn" className="nav-logo" style={{height:22}}/>
-        <button onClick={onClose} style={{background:"none",border:"none",color:"var(--text3)",fontSize:20,cursor:"pointer",lineHeight:1,padding:"2px 4px"}}>✕</button>
-      </div>
-      {nav.map((n,i)=>n.section?(
-        <React.Fragment key={i}>
-          {i>0&&<div className="sidebar-divider"/>}
-          <div className="sidebar-label">{n.section}</div>
-        </React.Fragment>
+    <div className="topnav">
+      {nav.map((n,i)=>n.sep?(
+        <div key={"sep"+i} className="topnav-sep"/>
       ):(
-        <button key={n.k} className={"nav-item"+(page===n.k?" active":"")} onClick={()=>{setPage(n.k);onClose&&onClose();}} title={collapsed?n.l:undefined} style={{position:"relative"}}>
-          <span className="nav-icon">{typeof n.i==="function"?n.i(16):n.i}</span>
-          <span style={{flex:1}}>{n.l}</span>
-          {n.soon&&<span style={{fontSize:"9px",fontWeight:700,background:"rgba(167,139,250,.15)",color:"var(--purple)",border:"1px solid rgba(167,139,250,.3)",borderRadius:99,padding:"1px 6px",letterSpacing:".04em",flexShrink:0}}>SOON</span>}
-          {n.dot&&page!==n.k&&<span style={{width:8,height:8,borderRadius:99,background:"var(--accent)",flexShrink:0,animation:"livePulse 2s ease-in-out infinite"}}/>}
-          {n.badge>0&&<span style={{minWidth:18,height:18,borderRadius:99,background:"var(--accent)",color:"white",fontSize:"10px",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 5px",flexShrink:0}}>{n.badge}</span>}
+        <button key={n.k} className={"topnav-item"+(page===n.k?" active":"")} onClick={()=>setPage(n.k)}>
+          <span className="tn-icon">{typeof n.i==="function"?n.i(15):n.i}</span>
+          <span>{n.l}</span>
+          {n.dot&&page!==n.k&&<span style={{width:7,height:7,borderRadius:99,background:"var(--accent)",flexShrink:0,animation:"livePulse 2s ease-in-out infinite"}}/>}
+          {n.badge>0&&<span style={{minWidth:16,height:16,borderRadius:99,background:"var(--accent)",color:"white",fontSize:"9px",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px",flexShrink:0}}>{n.badge}</span>}
         </button>
       ))}
-      {!collapsed&&<div className="sidebar-footer">
-        <div style={{display:"flex",alignItems:"center",gap:10,padding:10,borderRadius:"var(--radius-sm)",cursor:"pointer"}}>
-          {profileImageUrl?<img src={profileImageUrl} alt="" style={{width:34,height:34,borderRadius:"50%",objectFit:"cover",flexShrink:0}}/>:<div className="nav-avatar" style={{flexShrink:0}}>{userInitials||"?"}</div>}
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:"13px",fontWeight:600}}>{userName||"My Account"}</div>
-            <div style={{fontSize:"11px",color:"var(--text3)",marginTop:1}}>{role==="creator"?"Creator Account":role==="agency"?"Agency Account":"Brand Account"}</div>
-          </div>
-        </div>
-      </div>}
-      {collapsed&&<div style={{marginTop:"auto"}}><button className="sidebar-collapse-btn" onClick={onToggleCollapse} title="Expand sidebar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-      </button></div>}
-    </aside>
+    </div>
   );
 }
 
@@ -12996,9 +12958,8 @@ function App() {
   return (
     <div className="app-shell">
       <Navbar role={role} setPage={setPage} userInitials={userInitials} profileImageUrl={profileImageUrl} onSignOut={handleSignOut} onMenuToggle={()=>setMobSidebar(o=>!o)} darkMode={darkMode} setDarkMode={setDarkMode} authUser={authUser}/>
+      <TopNav role={role} page={page} setPage={setPage} demoMode={demoMode} deals={deals}/>
       <div className="main-layout">
-        <div className={"sidebar-overlay"+(mobSidebar?" show":"")} onClick={()=>setMobSidebar(false)}/>
-        <Sidebar role={role} page={page} setPage={setPage} userName={userName} userInitials={userInitials} profileImageUrl={profileImageUrl} mobOpen={mobSidebar} onClose={()=>setMobSidebar(false)} collapsed={sidebarCollapsed} onToggleCollapse={()=>setSidebarCollapsed(c=>!c)} demoMode={demoMode} deals={deals}/>
         <main className="content-area">
           <div key={page} className="page-enter">
             {render()}
