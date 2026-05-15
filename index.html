@@ -28,27 +28,27 @@ img,video,svg,canvas{max-width:100%;height:auto}
 pre,code{overflow-wrap:break-word;word-break:break-all;max-width:100%}
 #root{overflow-x:hidden}
 :root{
-  --bg:#060818;--surface:#13161f;--surface2:#191d2c;--border:#21273d;
+  --bg:#07080f;--surface:#111318;--surface2:#181b24;--border:#232838;
   --text:#edf0f7;--text2:#8691b0;--text3:#4b5470;
   --accent:#1a7fa8;--accent-light:#0d2a38;--accent2:#f0a050;--accent2-light:#221608;
   --green:#34d399;--green-bg:#0a2619;--yellow:#fbbf24;--yellow-bg:#201b05;
   --red:#f87171;--red-bg:#270e0e;--purple:#a78bfa;--purple-bg:#181130;
   --teal:#0891b2;--teal-bg:#091d2a;
-  --shadow-sm:0 1px 3px rgba(0,0,0,.55),0 1px 2px rgba(0,0,0,.3);
-  --shadow:0 4px 24px rgba(0,0,0,.55),0 1px 6px rgba(0,0,0,.35);
-  --shadow-lg:0 20px 60px rgba(0,0,0,.7),0 4px 20px rgba(0,0,0,.45);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow:0 2px 12px rgba(0,0,0,.4);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.5);
   --radius:12px;--radius-sm:8px;--radius-lg:16px
 }
 html.light{
-  --bg:#f5f3f0;--surface:#ffffff;--surface2:#f0ede8;--border:#e2ded8;
+  --bg:#f4f5f7;--surface:#ffffff;--surface2:#eef0f3;--border:#dfe2e8;
   --text:#0a1628;--text2:#4a5568;--text3:#8896a8;
   --accent:#1a7fa8;--accent-light:#e8f4f8;--accent2:#c4732a;--accent2-light:#fdf3e8;
   --green:#059669;--green-bg:#ecfdf5;--yellow:#a07200;--yellow-bg:#fdf7df;
   --red:#dc2626;--red-bg:#fef2f2;--purple:#6b4ec4;--purple-bg:#f3f0ff;
   --teal:#0e7490;--teal-bg:#e0f7fa;
-  --shadow-sm:0 1px 3px rgba(0,0,0,.06);
-  --shadow:0 2px 12px rgba(0,0,0,.06);
-  --shadow-lg:0 8px 30px rgba(0,0,0,.08)
+  --shadow-sm:0 1px 3px rgba(0,0,0,.05);
+  --shadow:0 2px 8px rgba(0,0,0,.05);
+  --shadow-lg:0 8px 24px rgba(0,0,0,.07)
 }
 html.light body{background:var(--bg)}
 html.light .navbar{background:var(--surface);border-bottom-color:var(--border)}
@@ -98,22 +98,15 @@ html.light .topnav-item:hover{background:var(--surface2)}
 .nav-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s}
 .nav-avatar:hover{opacity:.85}
 .nav-icon{width:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:inherit;opacity:.7}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;word-break:break-word}
-.card-lg{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;word-break:break-word}
-.card-hover{
-  transition:box-shadow .22s,transform .55s cubic-bezier(.16,1,.3,1),border-color .22s;
-  cursor:pointer;position:relative;
-  transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(var(--tz,0px));
-  will-change:transform}
-.card-hover::before{content:"";position:absolute;inset:-1px;border-radius:inherit;background:linear-gradient(135deg,rgba(91,138,245,.4),rgba(167,139,250,.4));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .25s;pointer-events:none;z-index:1}
-.card-hover::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at var(--sx,50%) var(--sy,50%),rgba(255,255,255,.1) 0%,transparent 65%);opacity:var(--so,0);transition:opacity .4s;z-index:1}
-.card-hover{transition:border-color .15s,box-shadow .15s}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;word-break:break-word;box-shadow:var(--shadow-sm)}
+.card-lg{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;word-break:break-word;box-shadow:var(--shadow-sm)}
+.card-hover{transition:border-color .15s,box-shadow .15s;cursor:pointer;position:relative}
 .card-hover:hover{border-color:var(--accent);box-shadow:var(--shadow-sm)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 19px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:14px;font-weight:600;transition:all .18s;white-space:nowrap;line-height:1;letter-spacing:.01em}
 .btn:disabled{opacity:.45;cursor:default}
 .btn-primary{background:var(--accent);color:white}
 .btn-primary:hover:not(:disabled){opacity:.9}
-.btn-primary:active:not(:disabled){transform:translateY(0);box-shadow:0 0 14px rgba(91,138,245,.35),0 0 28px rgba(91,138,245,.12),0 2px 10px rgba(91,138,245,.25)}
+.btn-primary:active:not(:disabled){transform:translateY(1px)}
 .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
 .btn-secondary:hover:not(:disabled){background:var(--border);border-color:var(--text3)}
 .btn-outline{background:transparent;color:var(--accent);border:1px solid rgba(91,138,245,.35)}
@@ -287,9 +280,7 @@ html.light .topnav-item:hover{background:var(--surface2)}
 @keyframes amberGlow{0%,100%{box-shadow:0 0 0 0 rgba(240,160,80,0)}50%{box-shadow:0 0 18px rgba(240,160,80,.18)}}
 .fade-in{animation:fadeInScale .3s cubic-bezier(.16,1,.3,1)}
 .page-enter{animation:pageEnter .25s ease-out both}
-.cursor-glow{position:fixed;top:0;left:0;width:300px;height:300px;border-radius:50%;pointer-events:none;z-index:9998;background:radial-gradient(circle,rgba(91,138,245,.12) 0%,transparent 70%);transform:translate(-400px,-400px);transition:transform 60ms ease-out;will-change:transform}
-@media(pointer:coarse){.cursor-glow{display:none}}
-.trust-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:linear-gradient(135deg,rgba(52,211,153,.12),rgba(8,145,178,.1));border:1px solid rgba(52,211,153,.22);border-radius:99px;font-size:11px;font-weight:700;color:var(--green)}
+.trust-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:var(--green-bg);border:1px solid rgba(52,211,153,.22);border-radius:99px;font-size:11px;font-weight:700;color:var(--green)}
 /* ── HAMBURGER (hidden on desktop) ── */
 .nav-hamburger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:34px;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);cursor:pointer;flex-shrink:0}
 .nav-hamburger span{display:block;width:16px;height:2px;background:var(--text2);border-radius:2px;transition:all .2s}
@@ -532,11 +523,11 @@ const TEAM_MEMBERS = [];
 const CAL_EVENTS = [];
 
 const SOCIALS = [
-  {key:"ig",  label:"Instagram",        icon:"📸", color:"#e1306c", placeholder:"@yourhandle"},
-  {key:"tt",  label:"TikTok",           icon:"♪",  color:"#69c9d0", placeholder:"@yourhandle"},
-  {key:"yt",  label:"YouTube Channel",  icon:"▶",  color:"#ff0000", placeholder:"youtube.com/c/yourchannel"},
+  {key:"ig",  label:"Instagram",        icon:"IG", color:"#e1306c", placeholder:"@yourhandle"},
+  {key:"tt",  label:"TikTok",           icon:"TT", color:"#69c9d0", placeholder:"@yourhandle"},
+  {key:"yt",  label:"YouTube Channel",  icon:"YT", color:"#ff0000", placeholder:"youtube.com/c/yourchannel"},
   {key:"tw",  label:"Twitter / X",      icon:"𝕏",  color:"#94a3b8", placeholder:"@yourhandle"},
-  {key:"web", label:"Personal Website", icon:"🌐", color:"#6366f1", placeholder:"https://yoursite.com"},
+  {key:"web", label:"Personal Website", icon:"WEB", color:"#6366f1", placeholder:"https://yoursite.com"},
 ];
 
 // ─── DEADLINE ALERT BANNER ───────────────────────────────────────────────────
@@ -969,8 +960,8 @@ function EmptySVG({type,size=128}) {
 
 // ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
 function PlatformBadge({p}) {
-  const map = {Instagram:["pb pb-ig","📸"],YouTube:["pb pb-yt","▶"],TikTok:["pb pb-tt","♪"],Twitter:["pb pb-tw","𝕏"]};
-  const [cls,icon] = map[p] || ["pb pb-ig","📸"];
+  const map = {Instagram:["pb pb-ig","IG"],YouTube:["pb pb-yt","YT"],TikTok:["pb pb-tt","TT"],Twitter:["pb pb-tw","X"]};
+  const [cls,icon] = map[p] || ["pb pb-ig","IG"];
   return React.createElement("span",{className:cls},icon+" "+p);
 }
 
@@ -1100,7 +1091,7 @@ function StarRating({value,onChange,readonly}) {
   return (
     <div style={{display:"flex",gap:2}}>
       {[1,2,3,4,5].map(n=>(
-        <button key={n} onClick={()=>!readonly&&onChange&&onChange(n)} className="star-btn" style={{color:n<=value?"#fbbf24":"var(--border)",cursor:readonly?"default":"pointer"}}>{n<=value?"★":"☆"}</button>
+        <button key={n} onClick={()=>!readonly&&onChange&&onChange(n)} className="star-btn" style={{color:n<=value?"#fbbf24":"var(--border)",cursor:readonly?"default":"pointer",display:"inline-flex"}}>{ICONS.star(16)}</button>
       ))}
     </div>
   );
@@ -1160,11 +1151,11 @@ function Navbar({role,setPage,userInitials,profileImageUrl,onSignOut,onMenuToggl
         title={darkMode?"Switch to light mode":"Switch to dark mode"}
         style={{width:36,height:36,borderRadius:"var(--radius-sm)",border:"1px solid var(--border)",background:"var(--surface2)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",position:"relative",zIndex:1,flexShrink:0,padding:0}}
       >
-        <span key={darkMode?"moon":"sun"} style={{animation:"iconSpin 280ms ease both",display:"block",lineHeight:1,fontSize:16}}>
-          {darkMode?"🌙":"☀️"}
+        <span key={darkMode?"moon":"sun"} style={{animation:"iconSpin 280ms ease both",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          {darkMode?LIcon({d:"M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z",size:16}):LIcon({d:"M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42",d2:"M12 17a5 5 0 100-10 5 5 0 000 10z",size:16})}
         </span>
       </button>
-      <div className="nav-notif" onClick={()=>setPage("notifications")} style={{position:"relative",zIndex:1}}>🔔{unreadCount>0&&<span style={{position:"absolute",top:-4,right:-4,minWidth:18,height:18,borderRadius:99,background:"var(--red)",color:"white",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px",border:"2px solid var(--bg)"}}>{unreadCount>99?"99+":unreadCount}</span>}</div>
+      <div className="nav-notif" onClick={()=>setPage("notifications")} style={{position:"relative",zIndex:1}}>{LIcon({d:"M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9",d2:"M13.73 21a2 2 0 01-3.46 0",size:16})}{unreadCount>0&&<span style={{position:"absolute",top:-4,right:-4,minWidth:18,height:18,borderRadius:99,background:"var(--red)",color:"white",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px",border:"2px solid var(--bg)"}}>{unreadCount>99?"99+":unreadCount}</span>}</div>
       <div style={{position:"relative",zIndex:1}}>
         {profileImageUrl?<img src={profileImageUrl} alt="" onClick={()=>setShowMenu(m=>!m)} style={{width:34,height:34,borderRadius:"50%",objectFit:"cover",cursor:"pointer"}}/>:<div className="nav-avatar" onClick={()=>setShowMenu(m=>!m)} style={{cursor:"pointer"}}>{userInitials||"?"}</div>}
         {showMenu&&(
@@ -1886,9 +1877,9 @@ function CreatorDashboard({setPage,setSelected,deals,availStatus,setAvailStatus,
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
             {[
-              {icon:"📸",title:"Set up your profile",desc:"Add your bio, socials, and profile photo so brands know who you are.",btn:"Set Up Profile",page:"profile-settings",done:!!(socialLinks.bio?.trim())},
-              {icon:"🏦",title:"Connect your bank",desc:"Link your bank account so you can receive secure escrow payments.",btn:"Connect Bank",action:()=>{window.location.href=`${BRIDGN_API_URL}/api/stripe/onboard?userId=${authUser?.id||""}&email=${encodeURIComponent(authUser?.email||"")}`;},done:stripeConnected},
-              {icon:"🤝",title:"Create your first deal",desc:"Bring an existing brand deal onto bridgn, or share your profile to get offers.",btn:"Create a Deal",page:"new-deal",done:deals.length>0},
+              {icon:ICONS.user(20),title:"Set up your profile",desc:"Add your bio, socials, and profile photo so brands know who you are.",btn:"Set Up Profile",page:"profile-settings",done:!!(socialLinks.bio?.trim())},
+              {icon:ICONS.creditcard(20),title:"Connect your bank",desc:"Link your bank account so you can receive secure escrow payments.",btn:"Connect Bank",action:()=>{window.location.href=`${BRIDGN_API_URL}/api/stripe/onboard?userId=${authUser?.id||""}&email=${encodeURIComponent(authUser?.email||"")}`;},done:stripeConnected},
+              {icon:ICONS.handshake(20),title:"Create your first deal",desc:"Bring an existing brand deal onto bridgn, or share your profile to get offers.",btn:"Create a Deal",page:"new-deal",done:deals.length>0},
               {icon:"🔗",title:"Share your profile",desc:"Send your bridgn profile link to brands so they can send you offers directly.",btn:"View Profile",page:"public-profile",done:false},
             ].map((step,i)=>(
               <div key={i} className="card" style={{padding:"18px 20px",display:"flex",gap:14,alignItems:"center",opacity:step.done?.6:1}}>
@@ -2102,7 +2093,7 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
                 {/* Deadline badge bottom-right */}
                 <div style={{position:"absolute",bottom:13,right:14}}>
                   <div style={{display:"inline-flex",alignItems:"center",gap:4,padding:"5px 11px",borderRadius:99,background:"rgba(0,0,0,.45)",backdropFilter:"blur(10px)",border:"1px solid rgba(255,255,255,.14)"}}>
-                    <span style={{fontSize:"10px"}}>⏰</span>
+                    <span style={{display:"flex"}}>{ICONS.calendar(10)}</span>
                     <span style={{fontSize:"11px",fontWeight:600,color:"rgba(255,255,255,.85)"}}>{c.deadline}</span>
                   </div>
                 </div>
@@ -2134,7 +2125,7 @@ function CampaignsPage({setPage,setSelected,campaignQuestions={},setCampaignQues
 
                   {/* Comment */}
                   <button onClick={()=>setCommentOpen(c.id)} style={{background:"none",border:"none",cursor:"pointer",padding:"6px 8px",display:"flex",alignItems:"center",gap:5,borderRadius:8}}>
-                    <span style={{fontSize:"21px",lineHeight:1}}>💬</span>
+                    <span style={{display:"flex",alignItems:"center"}}>{LIcon({d:"M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z",size:20})}</span>
                     <span style={{fontSize:"13px",color:(campaignQuestions[c.id]||[]).length>0?"var(--accent)":"var(--text2)",fontWeight:600,fontFamily:"DM Sans,sans-serif"}}>{(campaignQuestions[c.id]||[]).length||commentCount}</span>
                   </button>
 
@@ -2482,7 +2473,7 @@ function WorkspacePage({deals=[],authUser,setPage,setSelected}) {
                 <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
                   {files.map((f,i)=>(
                     <div key={i} style={{display:"flex",gap:10,alignItems:"center",padding:"10px 14px",background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:10}}>
-                      <span style={{fontSize:18,flexShrink:0}}>{/\.(jpg|jpeg|png|gif|webp)$/i.test(f.name)?"🖼":(/\.(mp4|mov|webm)$/i.test(f.name)?"🎬":"📄")}</span>
+                      <span style={{display:"flex",flexShrink:0,color:"var(--text3)"}}>{/\.(jpg|jpeg|png|gif|webp)$/i.test(f.name)?LIcon({d:"M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11",d2:"M16 5h6v6M8 17l5-5 4 4 3-3",size:16}):(/\.(mp4|mov|webm)$/i.test(f.name)?ICONS.film(16):ICONS.folder(16))}</span>
                       <div style={{flex:1,minWidth:0}}>
                         <a href={f.url} target="_blank" rel="noopener noreferrer" style={{fontSize:13,fontWeight:600,color:"var(--accent)",textDecoration:"none",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{f.name}</a>
                         {f.size>0&&<div style={{fontSize:11,color:"var(--text3)"}}>{(f.size/1024).toFixed(0)} KB</div>}
@@ -3385,7 +3376,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       {/* Cancelled deal banner */}
       {activeDeal.status==="Cancelled"&&(
         <div style={{padding:"16px 20px",background:"rgba(239,68,68,.06)",border:"1.5px solid rgba(239,68,68,.2)",borderRadius:"var(--radius)",marginBottom:16,display:"flex",gap:10,alignItems:"center"}}>
-          <span style={{fontSize:20}}>🚫</span>
+          <span style={{display:"flex",color:"var(--red)"}}>{LIcon({d:"M18 6L6 18M6 6l12 12",size:20})}</span>
           <div style={{flex:1}}>
             <div style={{fontSize:14,fontWeight:700,color:"var(--red)"}}>Deal Cancelled</div>
             <div style={{fontSize:12,color:"var(--text3)",marginTop:2}}>This deal was cancelled by mutual agreement.{activeDeal.cancelReason?" Reason: "+activeDeal.cancelReason:""}</div>
@@ -3397,7 +3388,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
       {activeDeal.cancelRequestedBy&&activeDeal.status!=="Cancelled"&&(
         <div style={{padding:"16px 20px",background:"rgba(251,146,60,.06)",border:"1.5px solid rgba(251,146,60,.25)",borderRadius:"var(--radius)",marginBottom:16}}>
           <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:activeDeal.cancelRequestedBy===(isBrand?"brand":"creator")?0:10}}>
-            <span style={{fontSize:20}}>⚠️</span>
+            <span style={{display:"flex",color:"var(--yellow)"}}>{LIcon({d:"M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z",d2:"M12 9v4M12 17h.01",size:20})}</span>
             <div style={{flex:1}}>
               <div style={{fontSize:14,fontWeight:700,color:"var(--orange, #f97316)"}}>Cancellation Requested</div>
               <div style={{fontSize:12,color:"var(--text3)",marginTop:2}}>
@@ -3442,7 +3433,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
         return (
           <div style={{padding:"18px 22px",background:"rgba(240,160,80,.06)",border:"1.5px solid rgba(240,160,80,.25)",borderRadius:"var(--radius)",marginBottom:16}}>
             <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
-              <span style={{fontSize:22}}>🔄</span>
+              <span style={{display:"flex",color:"var(--text3)"}}>{LIcon({d:"M23 4v6h-6",d2:"M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15",size:20})}</span>
               <div style={{flex:1}}>
                 <div style={{fontSize:14,fontWeight:700,color:"var(--orange, #f97316)",marginBottom:4}}>Creator Countered Your Offer</div>
                 <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:8}}>
@@ -3530,7 +3521,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           </div>
           <div className="card-lg" style={{padding:"20px 24px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(91,138,245,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>📋</span> Creative Brief</div>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(91,138,245,.1)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--accent)"}}>{ICONS.clipboard(15)}</span> Creative Brief</div>
               {briefSubmitted?(briefAcknowledged?<span className="badge badge-green">Acknowledged</span>:<span className="badge badge-yellow">Awaiting creator</span>):<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Not submitted</span>}
             </div>
             {isBrand ? (
@@ -3653,7 +3644,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
           {/* ── Contract ── */}
           <div className="card-lg" style={{padding:"20px 24px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(167,139,250,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>📄</span> Contract</div>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(167,139,250,.1)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--purple)"}}>{ICONS.folder(15)}</span> Contract</div>
               {contractSigned?<span className="badge badge-green">Signed</span>:contractSent?<span className="badge badge-yellow">{isBrand?"Awaiting signature":"Needs your signature"}</span>:<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Not sent</span>}
             </div>
             {isBrand ? (
@@ -3883,7 +3874,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
 
           <div className="card-lg" style={{padding:"20px 24px"}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(52,211,153,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>🎬</span> Deliverables</div>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(52,211,153,.1)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--green)"}}>{ICONS.film(15)}</span> Deliverables</div>
               {contentUploaded?<span className="badge badge-green">Submitted</span>:isBrand?<span className="badge" style={{background:"var(--surface2)",color:"var(--text3)"}}>Awaiting creator</span>:null}
             </div>
             {DELIVERABLES.map((d,i)=>(
@@ -3980,7 +3971,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                 {/* ── Already LIVE indicator ── */}
                 {activeDeal.contentLiveAt&&(
                   <div style={{marginTop:14,padding:"12px 16px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",display:"flex",gap:8,alignItems:"center"}}>
-                    <span style={{fontSize:"16px"}}>🟢</span>
+                    <span style={{display:"flex",color:"var(--green)"}}>{LIcon({d:"M22 11.08V12a10 10 0 11-5.93-9.14",d2:"M22 4L12 14.01l-3-3",size:16})}</span>
                     <div style={{flex:1}}>
                       <div style={{fontSize:"12px",fontWeight:700,color:"var(--green)"}}>Content is LIVE</div>
                       {activeDeal.postLink&&<a href={activeDeal.postLink} target="_blank" rel="noopener noreferrer" style={{fontSize:"11px",color:"var(--green)",textDecoration:"underline"}}>{activeDeal.postLink.replace(/https?:\/\/(www\.)?/,"").slice(0,50)}{activeDeal.postLink.length>60?"...":""}</a>}
@@ -4066,7 +4057,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
           <div className="card-lg" style={{overflow:"hidden",display:"flex",flexDirection:"column"}}>
             <div style={{padding:"14px 18px",borderBottom:"1px solid var(--border)"}}>
-              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(91,138,245,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>💬</span> Deal Messages</div>
+              <div style={{fontSize:"14px",fontWeight:700,display:"flex",alignItems:"center",gap:8}}><span style={{width:28,height:28,borderRadius:8,background:"rgba(91,138,245,.1)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--accent)"}}>{LIcon({d:"M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z",size:15})}</span> Deal Messages</div>
               <div style={{fontSize:"11px",color:"var(--text3)",marginTop:2}}>All messages are tied to this deal</div>
             </div>
             <div style={{flex:1,overflowY:"auto",padding:"14px",display:"flex",flexDirection:"column",gap:10,maxHeight:360}}>
@@ -4154,10 +4145,10 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                 {s.bio&&<div style={{fontSize:"12px",color:"var(--text2)",lineHeight:1.6,marginBottom:hasAnySocial?12:0}}>{s.bio}</div>}
                 {hasAnySocial&&(
                   <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                    {s.web&&<a href={s.web.startsWith("http")?s.web:"https://"+s.web} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--accent)",textDecoration:"none",display:"flex",alignItems:"center",gap:6,fontWeight:500}}>🌐 {s.web.replace(/^https?:\/\//,"")}</a>}
+                    {s.web&&<a href={s.web.startsWith("http")?s.web:"https://"+s.web} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--accent)",textDecoration:"none",display:"flex",alignItems:"center",gap:6,fontWeight:500}}>{ICONS.link(12)} {s.web.replace(/^https?:\/\//,"")}</a>}
                     {s.ig&&<a href={"https://instagram.com/"+(s.ig.replace("@",""))} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--text2)",textDecoration:"none",display:"flex",alignItems:"center",gap:6}}>📷 {s.ig}</a>}
                     {s.tt&&<a href={"https://tiktok.com/@"+(s.tt.replace("@",""))} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--text2)",textDecoration:"none",display:"flex",alignItems:"center",gap:6}}>🎵 {s.tt}</a>}
-                    {s.yt&&<a href={s.yt.startsWith("http")?s.yt:"https://"+s.yt} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--text2)",textDecoration:"none",display:"flex",alignItems:"center",gap:6}}>▶️ {s.yt}</a>}
+                    {s.yt&&<a href={s.yt.startsWith("http")?s.yt:"https://"+s.yt} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--text2)",textDecoration:"none",display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:11,fontWeight:700}}>YT</span> {s.yt}</a>}
                     {s.tw&&<a href={"https://x.com/"+(s.tw.replace("@",""))} target="_blank" rel="noopener noreferrer" style={{fontSize:"12px",color:"var(--text2)",textDecoration:"none",display:"flex",alignItems:"center",gap:6}}>𝕏 {s.tw}</a>}
                     {s.location&&<div style={{fontSize:"12px",color:"var(--text3)",display:"flex",alignItems:"center",gap:6}}>📍 {s.location}</div>}
                   </div>
@@ -4225,7 +4216,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               return (
                 <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(239,68,68,.07),rgba(239,68,68,.03))",border:"1.5px solid rgba(239,68,68,.25)"}}>
                   <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:12}}>
-                    <span style={{fontSize:"22px",flexShrink:0}}>⚠️</span>
+                    <span style={{display:"flex",flexShrink:0,color:"var(--yellow)"}}>{LIcon({d:"M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z",d2:"M12 9v4M12 17h.01",size:20})}</span>
                     <div style={{flex:1}}>
                       <div style={{fontSize:"13px",fontWeight:700,color:"var(--red)",marginBottom:3}}>Payment Overdue</div>
                       <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>
@@ -4259,7 +4250,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               return (
                 <div className="card-lg" style={{padding:"16px 18px",background:"linear-gradient(135deg,rgba(91,138,245,.07),rgba(91,138,245,.03))",border:"1.5px solid rgba(91,138,245,.25)"}}>
                   <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
-                    <span style={{fontSize:"22px",flexShrink:0}}>✅</span>
+                    <span style={{display:"flex",flexShrink:0,color:"var(--green)"}}>{LIcon({d:"M20 6L9 17l-5-5",size:20})}</span>
                     <div style={{flex:1}}>
                       <div style={{fontSize:"13px",fontWeight:700,color:"var(--accent)",marginBottom:3}}>All payments complete</div>
                       <div style={{fontSize:"12px",color:"var(--text3)",lineHeight:1.6}}>
@@ -5197,7 +5188,7 @@ function CreatorAnalyticsPage({onAnalyticsUploaded}) {
   const remove=p=>{setUploads(u=>({...u,[p]:{uploaded:false,date:null,age:null,file:null}}));showToast(p+" analytics removed.");};
   const uploaded=Object.values(uploads).filter(u=>u.uploaded).length;
   const PGRADS=[["#be185d","#c17c3a"],["#065f46","#0891b2"],["#6d28d9","#0369a1"]];
-  const PICONS=["📸","🎵","▶️"];
+  const PICONS=["IG","TT","YT"];
   if(loading) return <SkeletonPage layout="analytics"/>;
   return (
     <div className="fade-in">
@@ -5414,7 +5405,7 @@ function RateCardPage({onRateCardFilled}) {
       active:true, tier,
       f, e,
       rates:[
-        {type:"Video",icon:"♪",low:Math.round(b*0.6*100)*10,high:Math.round(b*1.1*100)*10},
+        {type:"Video",icon:"TT",low:Math.round(b*0.6*100)*10,high:Math.round(b*1.1*100)*10},
         {type:"Live Integration",icon:"",low:Math.round(b*0.4*100)*10,high:Math.round(b*0.8*100)*10},
         {type:"Duet / Stitch",icon:"",low:Math.round(b*0.35*100)*10,high:Math.round(b*0.65*100)*10},
       ]
@@ -5430,7 +5421,7 @@ function RateCardPage({onRateCardFilled}) {
       f:s, extra:`${v.toLocaleString()} avg views`,
       rates:[
         {type:"Dedicated Video",icon:"",low:Math.round(b*1.8*100)*10,high:Math.round(b*3.2*100)*10},
-        {type:"Mid-Roll Integration",icon:"▶",low:Math.round(b*0.9*100)*10,high:Math.round(b*1.6*100)*10},
+        {type:"Mid-Roll Integration",icon:"YT",low:Math.round(b*0.9*100)*10,high:Math.round(b*1.6*100)*10},
         {type:"Shorts",icon:"",low:Math.round(b*0.3*100)*10,high:Math.round(b*0.6*100)*10},
       ]
     };
@@ -5507,21 +5498,21 @@ function RateCardPage({onRateCardFilled}) {
 
       <div style={{display:"flex",flexDirection:"column",gap:16}}>
         <PlatformCard
-          name="Instagram" icon="📸" color="#e1306c" data={igData}
+          name="Instagram" icon="IG" color="#e1306c" data={igData}
           inputs={<>
             <div className="fg" style={{margin:0}}><label className="fl">Followers</label><input className="fi" value={ig.followers} onChange={e=>setIg(p=>({...p,followers:e.target.value}))} placeholder="280,000"/></div>
             <div className="fg" style={{margin:0}}><label className="fl">Engagement Rate (%)</label><input className="fi" value={ig.eng} onChange={e=>setIg(p=>({...p,eng:e.target.value}))} placeholder="6.2"/></div>
           </>}
         />
         <PlatformCard
-          name="TikTok" icon="♪" color="#69c9d0" data={ttData}
+          name="TikTok" icon="TT" color="#69c9d0" data={ttData}
           inputs={<>
             <div className="fg" style={{margin:0}}><label className="fl">Followers</label><input className="fi" value={tt.followers} onChange={e=>setTt(p=>({...p,followers:e.target.value}))} placeholder="150,000"/></div>
             <div className="fg" style={{margin:0}}><label className="fl">Engagement Rate (%)</label><input className="fi" value={tt.eng} onChange={e=>setTt(p=>({...p,eng:e.target.value}))} placeholder="8.4"/></div>
           </>}
         />
         <PlatformCard
-          name="YouTube" icon="▶" color="#ff0000" data={ytData}
+          name="YouTube" icon="YT" color="#ff0000" data={ytData}
           inputs={<>
             <div className="fg" style={{margin:0}}><label className="fl">Subscribers</label><input className="fi" value={yt.subscribers} onChange={e=>setYt(p=>({...p,subscribers:e.target.value}))} placeholder="95,000"/></div>
             <div className="fg" style={{margin:0}}><label className="fl">Avg Views per Video</label><input className="fi" value={yt.views} onChange={e=>setYt(p=>({...p,views:e.target.value}))} placeholder="42,000"/></div>
@@ -5831,7 +5822,7 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profile
     setShowAddCollab(false);
   };
   const removeCollab = (id) => saveCollabs(collabs.filter(c=>c.id!==id));
-  const platformIcons = {TikTok:"🎵",Instagram:"📸",YouTube:"▶️",Twitter:"🐦",Other:"🔗"};
+  const platformIcons = {TikTok:"TT",Instagram:"IG",YouTube:"YT",Twitter:"X",Other:"—"};
   const g=bg(0);const handle=(userName||"you").toLowerCase().replace(/\s+/g,"");const copy=()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);};
   const activeSocials=SOCIALS.filter(s=>socialLinks[s.key]?.trim());
 
@@ -5854,7 +5845,7 @@ function PublicProfilePage({setPage,userName,userInitials,socialLinks={},profile
               <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                 <span style={{fontSize:"22px",fontWeight:700,color:"white",fontFamily:"DM Serif Display,serif"}}>{userName}</span>
                 {profilePct===100&&(
-                  <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:99,background:"linear-gradient(135deg,rgba(91,138,245,.35),rgba(167,139,250,.35))",border:"1px solid rgba(167,139,250,.5)",fontSize:"11px",fontWeight:700,color:"white",letterSpacing:".03em",backdropFilter:"blur(6px)"}}>
+                  <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:99,background:"rgba(91,138,245,.3)",border:"1px solid rgba(91,138,245,.5)",fontSize:"11px",fontWeight:700,color:"white",letterSpacing:".03em"}}>
                     ✦ Verified Creator
                   </span>
                 )}
@@ -6507,7 +6498,7 @@ function CollaboratorsPage({authUser,role,setPage,deals=[]}) {
         </div>
       ):collaborators.length===0?(
         <div className="card-lg" style={{padding:"60px 28px",textAlign:"center"}}>
-          <div style={{fontSize:"40px",marginBottom:12}}>🤝</div>
+          <div style={{marginBottom:12,color:"var(--text3)"}}>{ICONS.handshake(36)}</div>
           <div style={{fontSize:"15px",fontWeight:600,color:"var(--text)",marginBottom:6}}>No collaborators yet</div>
           <div style={{fontSize:"13px",color:"var(--text3)",lineHeight:1.6,maxWidth:380,margin:"0 auto"}}>Complete your first deal and your partners will appear here. You'll be able to quickly send them new deals.</div>
         </div>
@@ -7164,7 +7155,7 @@ function BrandDashboard({setPage,setSelected,deals=[],authUser}) {
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
             {[
               {icon:"🏢",title:"Set up your company profile",desc:"Add your website, socials, and company info so creators know who you are.",btn:"Set Up Profile",page:"settings",done:profileComplete},
-              {icon:"🤝",title:"Create your first deal",desc:"Start a partnership with a creator — set the terms, deliverables, and budget.",btn:"Create a Deal",page:"new-deal",done:deals.length>0},
+              {icon:ICONS.handshake(20),title:"Create your first deal",desc:"Start a partnership with a creator — set the terms, deliverables, and budget.",btn:"Create a Deal",page:"new-deal",done:deals.length>0},
               {icon:"🔍",title:"Browse your Creator CRM",desc:"Discover and manage creator relationships all in one place.",btn:"Open CRM",page:"creator-crm",done:false},
             ].map((step,i)=>(
               <div key={i} className="card" style={{padding:"18px 20px",display:"flex",gap:14,alignItems:"center",opacity:step.done?.6:1}}>
@@ -7324,7 +7315,7 @@ function calcBridgnScore(c) {
       {label:"Profile completeness", score:completeness, max:25, desc:c.analyticsUpdated?"Analytics on file":"No analytics uploaded"},
       {label:"Analytics freshness",  score:freshness,    max:25, desc:age==null?"Never uploaded":age+"d since last upload"},
       {label:"Completed deals",      score:dealScore,    max:25, desc:d+" deal"+(d===1?"":"s")+" completed"},
-      {label:"Brand rating",         score:ratingScore,  max:25, desc:(c.rating||"—")+"★ average rating"},
+      {label:"Brand rating",         score:ratingScore,  max:25, desc:(c.rating||"—")+" avg rating"},
     ]
   };
 }
@@ -7454,7 +7445,7 @@ function CreatorProfilePage({creator,setPage}) {
           {tab==="overview"&&(
             <div style={{padding:"22px 26px"}}>
               <div className="det-stats" style={{gridTemplateColumns:"repeat(4,1fr)",marginBottom:20}}>
-                {[[c.followers,"Followers"],[c.engagement,"Engagement"],[c.auth,"Authenticity"],[c.rating+"★","Brand Rating"]].map(([v,l],i)=>(
+                {[[c.followers,"Followers"],[c.engagement,"Engagement"],[c.auth,"Authenticity"],[c.rating+"/5","Brand Rating"]].map(([v,l],i)=>(
                   <div key={i} className="det-stat"><div className="det-stat-v">{v}</div><div className="det-stat-l">{l}</div></div>
                 ))}
               </div>
@@ -7575,7 +7566,7 @@ function BrandCampaignsPage({setPage,setSelected,campaignQuestions={},setCampaig
       {allQuestions.length>0&&(
         <div className="card-lg" style={{padding:0,overflow:"hidden",marginBottom:20}}>
           <div style={{padding:"14px 20px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:"18px"}}>💬</span>
+            <span style={{display:"flex",color:"var(--accent)"}}>{LIcon({d:"M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z",size:16})}</span>
             <span style={{fontSize:"14px",fontWeight:700,flex:1}}>Creator Questions</span>
             <span style={{fontSize:"11px",fontWeight:700,padding:"2px 9px",borderRadius:99,background:"rgba(91,138,245,.12)",color:"var(--accent)",border:"1px solid rgba(91,138,245,.2)"}}>{allQuestions.filter(q=>!q.reply).length} awaiting reply</span>
           </div>
@@ -8639,7 +8630,7 @@ function AffiliateCreatorPage({authUser}) {
           <div style={{padding:26}}>
             <div style={{fontFamily:"DM Serif Display,serif",fontSize:"20px",fontWeight:400,marginBottom:14}}>Share Captions</div>
             <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:16}}>Pre-written captions with your {shareModal.type==="code"?"code":"link"} embedded. Copy and customize.</div>
-            {[["📸 Instagram","instagram"],["🎵 TikTok","tiktok"],["🐦 Twitter/X","twitter"]].map(([label,platform])=>{
+            {[["Instagram","instagram"],["TikTok","tiktok"],["Twitter/X","twitter"]].map(([label,platform])=>{
               const text = shareText(shareModal,platform);
               const key = platform;
               return (
@@ -9287,11 +9278,11 @@ function NotificationsPage({setPage,setSelected,deals=[],authUser,demoMode}) {
   },[authUser,demoMode]);
 
   const typeIcons = {
-    payment_held:"💰",payment_failed:"❌",payment_released:"✅",payout_received:"🏦",
-    deal_disputed:"⚠️",brief_submitted:"📋",contract_sent:"📄",contract_signed:"✍️",
-    content_submitted:"🎬",new_message:"💬",content_live:"🟢",payment_overdue:"🔴",
-    payment_reminder:"⏰",payment_warning:"⚠️",account_flagged:"🚫",script_shared:"📝",
-    cancel_requested:"🚫",deal_accepted:"🤝",
+    payment_held:ICONS.dollar(16),payment_failed:LIcon({d:"M18 6L6 18M6 6l12 12",size:16}),payment_released:LIcon({d:"M20 6L9 17l-5-5",size:16}),payout_received:ICONS.creditcard(16),
+    deal_disputed:LIcon({d:"M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z",d2:"M12 9v4M12 17h.01",size:16}),brief_submitted:ICONS.clipboard(16),contract_sent:ICONS.folder(16),contract_signed:LIcon({d:"M20 6L9 17l-5-5",size:16}),
+    content_submitted:ICONS.film(16),new_message:LIcon({d:"M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z",size:16}),content_live:LIcon({d:"M22 11.08V12a10 10 0 11-5.93-9.14",d2:"M22 4L12 14.01l-3-3",size:16}),payment_overdue:LIcon({d:"M12 22a10 10 0 100-20 10 10 0 000 20z",d2:"M12 8v4M12 16h.01",size:16}),
+    payment_reminder:ICONS.calendar(16),payment_warning:LIcon({d:"M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z",d2:"M12 9v4M12 17h.01",size:16}),account_flagged:LIcon({d:"M18 6L6 18M6 6l12 12",size:16}),script_shared:ICONS.clipboard(16),
+    cancel_requested:LIcon({d:"M18 6L6 18M6 6l12 12",size:16}),deal_accepted:ICONS.handshake(16),
   };
   const typeColors = {
     payment_held:"var(--teal)",payment_failed:"var(--red)",payment_released:"var(--green)",
@@ -9365,7 +9356,7 @@ function NotificationsPage({setPage,setSelected,deals=[],authUser,demoMode}) {
       </div>
       {filtered.length===0?(
         <div className="card" style={{padding:"48px 20px",textAlign:"center"}}>
-          <div style={{fontSize:"36px",marginBottom:10}}>{filter==="Unread"?"✅":"🔔"}</div>
+          <div style={{marginBottom:10,color:"var(--text3)"}}>{filter==="Unread"?LIcon({d:"M20 6L9 17l-5-5",size:32}):LIcon({d:"M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9",d2:"M13.73 21a2 2 0 01-3.46 0",size:32})}</div>
           <div style={{fontSize:15,fontWeight:600,marginBottom:6}}>{filter==="Unread"?"All caught up!":"No notifications yet"}</div>
           <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.65,maxWidth:340,margin:"0 auto"}}>{filter==="Unread"?"You've read all your notifications.":"When deals are updated, content is submitted, or payments come through — you'll see them here."}</div>
         </div>
@@ -9373,7 +9364,7 @@ function NotificationsPage({setPage,setSelected,deals=[],authUser,demoMode}) {
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
           {filtered.map(n=>{
             const color = typeColors[n.type]||"var(--accent)";
-            const icon = typeIcons[n.type]||"🔔";
+            const icon = typeIcons[n.type]||LIcon({d:"M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9",d2:"M13.73 21a2 2 0 01-3.46 0",size:16});
             const label = typeLabels[n.type]||n.type.replace(/_/g," ");
             const isUnread = !n.read_at;
             const msg = n.payload?.message || label;
@@ -9986,20 +9977,6 @@ function ParticleCanvas() {
   return <canvas ref={ref} style={{position:"fixed",top:0,left:0,pointerEvents:"none",zIndex:-1}}/>;
 }
 
-// ─── CURSOR GLOW ──────────────────────────────────────────────────────────────
-function CursorGlow() {
-  const ref = useRef(null);
-  useEffect(()=>{
-    const el = ref.current;
-    if(!el) return;
-    const onMove = e => {
-      el.style.transform = `translate(${e.clientX-150}px,${e.clientY-150}px)`;
-    };
-    window.addEventListener("mousemove", onMove, {passive:true});
-    return () => window.removeEventListener("mousemove", onMove);
-  }, []);
-  return <div ref={ref} className="cursor-glow"/>;
-}
 
 // ─── INVITE WELCOME SCREEN ────────────────────────────────────────────────────
 function InviteWelcomeScreen({inviteCtx, onAuth}) {
@@ -10551,10 +10528,10 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
         {/* Hero content */}
         <div style={{position:"relative",zIndex:5,flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"100px 24px 140px",textAlign:"center"}}>
           <h1 className="lp-hero-title" style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(36px,5.5vw,56px)",fontWeight:400,lineHeight:1.08,letterSpacing:"-1px",marginBottom:20,color:"white",maxWidth:650}}>
-            <em style={{fontStyle:"italic",fontWeight:400}}>Dive in</em> to seamless creator-brand partnerships
+            Deals, payments, and content — <em style={{fontStyle:"italic",fontWeight:400}}>sorted</em>
           </h1>
           <p className="lp-hero-sub" style={{fontSize:"clamp(15px,2vw,18px)",color:"rgba(255,255,255,.75)",lineHeight:1.7,maxWidth:480,margin:"0 auto 36px"}}>
-            One place for deals, contracts, payments, and content — so you can focus on the work, not the admin.
+            Stop managing partnerships over email and spreadsheets. bridgn handles contracts, escrow payments, and content delivery in one place.
           </p>
           <div className="lp-hero-buttons" style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
             <button onClick={()=>onGetStarted("creator")} style={{padding:"14px 36px",borderRadius:99,background:"white",color:lp.accent,border:"none",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:15,fontWeight:700,boxShadow:"0 4px 20px rgba(0,0,0,.12)"}}>Join as Creator</button>
@@ -10627,16 +10604,15 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
         {/* ── Social Proof Bar ── */}
         <Reveal>
         <section className="lp-section" style={{maxWidth:960,margin:"0 auto",padding:"60px 24px 0",textAlign:"center"}}>
-          <p style={{fontSize:14,color:lp.text3,fontWeight:500,marginBottom:28,letterSpacing:".02em"}}>Trusted by creators and brands managing real partnerships</p>
-          <div style={{display:"flex",justifyContent:"center",gap:48,flexWrap:"wrap"}}>
+          <div style={{display:"flex",justifyContent:"center",gap:32,flexWrap:"wrap"}}>
             {[
-              {val:500,prefix:"",suffix:"+",label:"Deals managed"},
-              {val:100,prefix:"$",suffix:"K+",label:"In payments processed"},
-              {val:10,prefix:"",suffix:"K+",label:"Messages sent"},
+              {icon:ICONS.dollar(18),label:"Escrow payments"},
+              {icon:ICONS.folder(18),label:"Built-in contracts"},
+              {icon:LIcon({d:"M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z",size:18}),label:"Deal messaging"},
             ].map((s,i)=>(
-              <div key={i} className="lp-stat" style={{textAlign:"center"}}>
-                <div style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:400,color:lp.text}}><AnimCounter value={s.val} prefix={s.prefix} suffix={s.suffix}/></div>
-                <div style={{fontSize:12,color:lp.text3,marginTop:4}}>{s.label}</div>
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:lp.text2,fontWeight:500}}>
+                <span style={{color:lp.text3}}>{s.icon}</span>
+                {s.label}
               </div>
             ))}
           </div>
@@ -10646,14 +10622,14 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
         {/* ── Bento feature grid ── */}
         <Reveal>
         <section className="lp-section" style={{maxWidth:960,margin:"0 auto",padding:"80px 24px 100px"}}>
-          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>Everything you need in one place</h2>
-          <p style={{textAlign:"center",fontSize:15,color:lp.text2,marginBottom:48,maxWidth:440,margin:"0 auto 48px"}}>No more juggling emails, spreadsheets, and payment apps.</p>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:28,fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>What you get</h2>
+          <p style={{textAlign:"center",fontSize:15,color:lp.text2,marginBottom:48,maxWidth:440,margin:"0 auto 48px"}}>Every tool a creator-brand partnership needs.</p>
           <div className="lp-bento" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gridTemplateRows:"auto auto",gap:16}}>
-            <div style={{gridRow:"1 / 3",background:"linear-gradient(135deg,#0f4c81,#1a6fa8)",border:"none",borderRadius:16,padding:"32px 28px",display:"flex",flexDirection:"column",justifyContent:"space-between",color:"white"}}>
+            <div style={{gridRow:"1 / 3",background:lp.accent,border:"none",borderRadius:16,padding:"32px 28px",display:"flex",flexDirection:"column",justifyContent:"space-between",color:"white"}}>
               <div>
-                <div style={{fontSize:28,marginBottom:12}}>🤝</div>
+                <div style={{marginBottom:12}}>{ICONS.building(24)}</div>
                 <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:22,fontWeight:400,lineHeight:1.2,marginBottom:12,color:"white"}}>Deal Room</h3>
-                <p style={{fontSize:14,color:"rgba(255,255,255,.8)",lineHeight:1.65}}>Your shared workspace. Briefs, contracts, content, messages, approvals, and payments — all in one place for both sides.</p>
+                <p style={{fontSize:14,color:"rgba(255,255,255,.8)",lineHeight:1.65}}>Briefs, contracts, content, messages, and payments. Both sides see the same workspace.</p>
               </div>
               <div style={{marginTop:24,padding:16,background:"rgba(255,255,255,.12)",borderRadius:10,border:"1px solid rgba(255,255,255,.2)"}}>
                 <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
@@ -10664,14 +10640,14 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
               </div>
             </div>
             {[
-              {e:"💰",t:"Flexible Escrow",d:"Brands set the upfront % — creators get partial payment secured while the rest follows Net 30 after going live."},
-              {e:"📄",t:"Contracts & Briefs",d:"Upload, review, and sign — all tracked with timestamps. No more lost attachments."},
-              {e:"🔄",t:"Offers & Negotiation",d:"Creators can accept, counter, or decline offers. Back-and-forth negotiation stays on-platform."},
-              {e:"🔔",t:"Smart Notifications",d:"Email and in-app alerts for every deal action. Never miss a payment, approval, or message."},
+              {icon:ICONS.dollar(20),color:"var(--teal)",t:"Escrow Payments",d:"Brands deposit upfront. Creators know the money is there before they start working."},
+              {icon:ICONS.folder(20),color:"var(--purple)",t:"Contracts & Briefs",d:"Upload, review, and sign. Everything tracked with timestamps."},
+              {icon:ICONS.handshake(20),color:"var(--accent)",t:"Offers & Negotiation",d:"Accept, counter, or decline. No more awkward email chains."},
+              {icon:LIcon({d:"M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9",d2:"M13.73 21a2 2 0 01-3.46 0",size:20}),color:"var(--accent2)",t:"Notifications",d:"Email and in-app alerts for payments, approvals, and messages."},
             ].map((f,i)=>(
-              <div key={i} style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 24px",backdropFilter:"blur(8px)"}}>
-                <div style={{fontSize:22,marginBottom:8}}>{f.e}</div>
-                <h4 style={{fontSize:15,fontWeight:700,marginBottom:6}}>{f.t}</h4>
+              <div key={i} style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 24px"}}>
+                <div style={{marginBottom:8,color:f.color}}>{f.icon}</div>
+                <h4 style={{fontSize:14,fontWeight:600,marginBottom:6}}>{f.t}</h4>
                 <p style={{fontSize:13,color:lp.text2,lineHeight:1.55,margin:0}}>{f.d}</p>
               </div>
             ))}
@@ -10682,11 +10658,11 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
         {/* ── Product Showcase — How It Looks ── */}
         <Reveal>
         <section className="lp-section" style={{maxWidth:1060,margin:"0 auto",padding:"0 24px 100px"}}>
-          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>See how it looks</h2>
-          <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:480,margin:"0 auto 48px"}}>Every deal gets a dedicated workspace. Here is what you will actually use.</p>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>How it looks</h2>
+          <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:480,margin:"0 auto 48px"}}>Every deal gets its own workspace.</p>
           <div className="lp-showcase-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:24}}>
             {/* Deal Room mockup */}
-            <div className="lp-card" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
+            <div className="lp-card" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden"}}>
               <div style={{padding:"20px 20px 0"}}>
                 <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:400,marginBottom:6}}>Deal Room</h4>
               </div>
@@ -10704,11 +10680,10 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
                 </div>
               </div>
               <div style={{padding:"0 20px 16px"}}>
-                <p style={{fontSize:12,color:lp.text3,lineHeight:1.5,margin:0}}>Your shared workspace for briefs, deliverables, and approvals.</p>
               </div>
             </div>
             {/* Messages mockup */}
-            <div className="lp-card" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
+            <div className="lp-card" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden"}}>
               <div style={{padding:"20px 20px 0"}}>
                 <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:400,marginBottom:6}}>Messages</h4>
               </div>
@@ -10729,11 +10704,10 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
                 </div>
               </div>
               <div style={{padding:"0 20px 16px"}}>
-                <p style={{fontSize:12,color:lp.text3,lineHeight:1.5,margin:0}}>Real conversations tied to each deal. No more lost email threads.</p>
               </div>
             </div>
             {/* Payment mockup */}
-            <div className="lp-card" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden",backdropFilter:"blur(8px)"}}>
+            <div className="lp-card" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,overflow:"hidden"}}>
               <div style={{padding:"20px 20px 0"}}>
                 <h4 style={{fontFamily:"DM Serif Display,serif",fontSize:17,fontWeight:400,marginBottom:6}}>Payments</h4>
               </div>
@@ -10772,7 +10746,7 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
           <Reveal delay={0.1}>
           <div className="lp-deep-dive" style={{display:"flex",gap:48,alignItems:"center",marginBottom:80}}>
             <div className="lp-deep-left" style={{width:"50%",flexShrink:0}}>
-              <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
+              <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24}}>
                 <div style={{padding:"10px 14px",borderBottom:"1px solid "+lp.border,display:"flex",alignItems:"center",gap:5,marginBottom:14}}>
                   <div style={{width:7,height:7,borderRadius:"50%",background:"#ff6059"}}/>
                   <div style={{width:7,height:7,borderRadius:"50%",background:"#ffbd2e"}}/>
@@ -10804,7 +10778,7 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
           <Reveal delay={0.1}>
           <div className="lp-deep-dive-reverse" style={{display:"flex",flexDirection:"row-reverse",gap:48,alignItems:"center",marginBottom:80}}>
             <div className="lp-deep-right" style={{width:"50%",flexShrink:0}}>
-              <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
+              <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24}}>
                 <div style={{padding:"10px 14px",borderBottom:"1px solid "+lp.border,display:"flex",alignItems:"center",gap:5,marginBottom:14}}>
                   <div style={{width:7,height:7,borderRadius:"50%",background:"#ff6059"}}/>
                   <div style={{width:7,height:7,borderRadius:"50%",background:"#ffbd2e"}}/>
@@ -10837,7 +10811,7 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
           <Reveal delay={0.1}>
           <div className="lp-deep-dive" style={{display:"flex",gap:48,alignItems:"center",marginBottom:0}}>
             <div className="lp-deep-left" style={{width:"50%",flexShrink:0}}>
-              <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24,backdropFilter:"blur(8px)"}}>
+              <div style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:24}}>
                 <div style={{padding:"10px 14px",borderBottom:"1px solid "+lp.border,display:"flex",alignItems:"center",gap:5,marginBottom:14}}>
                   <div style={{width:7,height:7,borderRadius:"50%",background:"#ff6059"}}/>
                   <div style={{width:7,height:7,borderRadius:"50%",background:"#ffbd2e"}}/>
@@ -10862,8 +10836,8 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
               </div>
             </div>
             <div className="lp-deep-right" style={{width:"50%"}}>
-              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:400,lineHeight:1.15,marginBottom:16,color:lp.text}}>Real conversations, not email threads</h3>
-              <p style={{fontSize:15,color:lp.text2,lineHeight:1.7,margin:0}}>Every deal has its own message thread. Discuss deliverables, share feedback, ask questions, and keep a full history. No more digging through inboxes or losing context across platforms.</p>
+              <h3 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(22px,3vw,28px)",fontWeight:400,lineHeight:1.15,marginBottom:16,color:lp.text}}>Messages tied to deals</h3>
+              <p style={{fontSize:15,color:lp.text2,lineHeight:1.7,margin:0}}>Every deal has its own thread. Share feedback, discuss deliverables, and keep a full history — no more digging through email.</p>
             </div>
           </div>
           </Reveal>
@@ -10873,18 +10847,17 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
         <Reveal>
         <section className="lp-section" style={{maxWidth:1060,margin:"0 auto",padding:"80px 24px 100px"}}>
           <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>How it works</h2>
-          <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>From first handshake to final payment — all on bridgn.</p>
+          <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>Five steps from handshake to payment.</p>
           <div className="lp-steps-grid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:16}}>
             {[
-              {n:"1",e:"🤝",t:"Create a deal",d:"Set terms, deliverables, upfront %, and deadline. Invite the other party with one link."},
-              {n:"2",e:"📋",t:"Brief & contract",d:"Brand shares the brief. Both sides review and sign the contract — all tracked in the Deal Room."},
-              {n:"3",e:"🎬",t:"Create & deliver",d:"Creator uploads content, shares drafts, and submits deliverables for review."},
-              {n:"4",e:"✅",t:"Approve & go live",d:"Brand approves deliverables. Creator marks the content as LIVE with the post link."},
-              {n:"5",e:"💰",t:"Get paid",d:"Upfront escrow releases on LIVE. Remaining balance due Net 30. Automatic and secure."},
+              {n:"1",t:"Create a deal",d:"Set terms, deliverables, upfront %, and deadline. Invite the other party with one link."},
+              {n:"2",t:"Brief & contract",d:"Brand shares the brief. Both sides review and sign the contract in the Deal Room."},
+              {n:"3",t:"Create & deliver",d:"Creator uploads content, shares drafts, and submits deliverables for review."},
+              {n:"4",t:"Approve & go live",d:"Brand approves deliverables. Creator marks content as LIVE with the post link."},
+              {n:"5",t:"Get paid",d:"Upfront escrow releases on LIVE. Remaining balance due Net 30."},
             ].map((s,i)=>(
               <Reveal key={i} delay={i*0.08}>
-              <div className="lp-step" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 20px",backdropFilter:"blur(8px)",textAlign:"center"}}>
-                <div style={{fontSize:28,marginBottom:10}}>{s.e}</div>
+              <div className="lp-step" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"28px 20px",textAlign:"center"}}>
                 <div style={{width:28,height:28,borderRadius:"50%",background:lp.accent,color:"white",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,marginBottom:10}}>{s.n}</div>
                 <div style={{fontSize:14,fontWeight:700,marginBottom:6,color:lp.text}}>{s.t}</div>
                 <p style={{fontSize:12,color:lp.text2,lineHeight:1.55,margin:0}}>{s.d}</p>
@@ -10898,15 +10871,15 @@ function LandingPage({onGetStarted,onLogin,onTerms,onPrivacy}) {
         {/* ── Testimonials ── */}
         <Reveal>
         <section className="lp-section" style={{maxWidth:1000,margin:"0 auto",padding:"0 24px 100px"}}>
-          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>What people are saying</h2>
-          <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>Creators and brands who use bridgn to manage their partnerships.</p>
+          <h2 style={{fontFamily:"DM Serif Display,serif",fontSize:"clamp(24px,3.5vw,32px)",fontWeight:400,textAlign:"center",marginBottom:12,letterSpacing:"-.3px",color:lp.text}}>Early feedback</h2>
+          <p style={{textAlign:"center",fontSize:15,color:lp.text2,maxWidth:440,margin:"0 auto 48px"}}>From creators and brands in our beta.</p>
           <div className="lp-testimonial-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:20}}>
             {[
-              {quote:"I used to spend hours chasing payments and managing contracts over email. Now everything lives in one deal room and I actually get paid on time.",name:"Jordan Nguyen",role:"Creator"},
-              {quote:"As a brand, knowing the funds are in escrow before the creator starts gives us confidence. And the Deal Room keeps everything organized — no more hunting through email.",name:"Alex Rivera",role:"Marketing Lead"},
-              {quote:"The escrow feature changed everything for me. I know the money is there before I start working, and it releases the moment my content is approved.",name:"Marcus Chen",role:"Creator"},
+              {quote:"I was managing six brand deals through email and Venmo. Having contracts and payments in one place is a big deal for me.",name:"Jordan N.",role:"Creator, 85K followers"},
+              {quote:"Knowing the escrow is funded before a creator starts working removes a lot of the back-and-forth we used to deal with.",name:"Alex R.",role:"Brand Marketing"},
+              {quote:"I got paid the day my content went live. That's never happened before — usually it's 60+ days of follow-ups.",name:"Marcus C.",role:"Creator, 120K followers"},
             ].map((t,i)=>(
-              <div key={i} className="lp-testimonial" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"32px 28px",backdropFilter:"blur(8px)"}}>
+              <div key={i} className="lp-testimonial" style={{background:lp.surface,border:"1px solid "+lp.border,borderRadius:16,padding:"32px 28px"}}>
                 <p style={{fontSize:14,color:lp.text2,lineHeight:1.7,fontStyle:"italic",margin:"0 0 20px"}}>"{t.quote}"</p>
                 <div>
                   <div style={{fontSize:14,fontWeight:700,color:lp.text}}>{t.name}</div>
@@ -11340,7 +11313,7 @@ function MarketplaceCreatorPage({setPage,setSelected,deals,addDeal,showToast}) {
             <span style={{fontFamily:"'DM Serif Display',serif",fontSize:18,fontWeight:700,color:"#fff"}}>${campaign.budgetMin.toLocaleString()} – ${campaign.budgetMax.toLocaleString()}</span>
           </div>
           {/* Trending badge */}
-          {isTrending&&<div style={{position:"absolute",top:14,left:14,background:"rgba(0,0,0,.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",borderRadius:8,padding:"4px 10px",fontSize:12,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",gap:4}}>🔥 Trending</div>}
+          {isTrending&&<div style={{position:"absolute",top:14,left:14,background:"rgba(0,0,0,.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",borderRadius:8,padding:"4px 10px",fontSize:12,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",gap:4}}>{ICONS.trending(12)} Trending</div>}
           {/* Platform badges */}
           <div style={{position:"absolute",top:14,right:14,display:"flex",gap:4}}>
             {campaign.platforms.map(p=><span key={p} style={{padding:"3px 8px",borderRadius:6,fontSize:10,fontWeight:600,background:"rgba(0,0,0,.4)",backdropFilter:"blur(4px)",color:"#fff"}}>{p}</span>)}
@@ -11819,7 +11792,7 @@ function ReviewQueuePage({deals=[],setPage,setSelected,showToast}) {
       {/* Queue */}
       {filtered.length===0?(
         <div className="card-lg" style={{textAlign:"center",padding:"50px 20px"}}>
-          <div style={{fontSize:32,marginBottom:12}}>{filter==="pending"?"✅":"📋"}</div>
+          <div style={{marginBottom:12,color:"var(--text3)"}}>{filter==="pending"?LIcon({d:"M20 6L9 17l-5-5",size:28}):ICONS.clipboard(28)}</div>
           <h3 style={{fontSize:16,fontWeight:600,marginBottom:6,color:"var(--text)"}}>{filter==="pending"?"All caught up!":"No items"}</h3>
           <p style={{fontSize:13,color:"var(--text2)"}}>{filter==="pending"?"No content waiting for your review.":"No content in this category yet."}</p>
         </div>
@@ -12071,7 +12044,7 @@ function CreatorCRMPage({setPage,setSelected,deals,addDeal,showToast,userName,au
           {c.tags.length>0&&<div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:6}}>
             {c.tags.map((t,i)=><span key={t} style={{padding:"2px 8px",borderRadius:4,fontSize:10,fontWeight:600,background:TAG_COLORS[i%TAG_COLORS.length]+"1a",color:TAG_COLORS[i%TAG_COLORS.length],border:"1px solid "+TAG_COLORS[i%TAG_COLORS.length]+"33"}}>{t}</span>)}
           </div>}
-          {c.notes.length>0&&<div style={{fontSize:11,color:"var(--text3)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>📝 {c.notes[0].text}</div>}
+          {c.notes.length>0&&<div style={{fontSize:11,color:"var(--text3)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}}>{ICONS.clipboard(10)} {c.notes[0].text}</div>}
         </>}
       </div>
     );
@@ -12127,11 +12100,11 @@ function CreatorCRMPage({setPage,setSelected,deals,addDeal,showToast,userName,au
             {/* Social Links */}
             <div><div style={{fontSize:12,fontWeight:600,color:"var(--text3)",marginBottom:6,textTransform:"uppercase",letterSpacing:".5px"}}>Social Links</div>
               <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                {c.socials.ig&&<div style={{fontSize:12,color:"var(--text2)"}}>📸 instagram.com/{c.socials.ig}</div>}
+                {c.socials.ig&&<div style={{fontSize:12,color:"var(--text2)",display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,fontWeight:700}}>IG</span> instagram.com/{c.socials.ig}</div>}
                 {c.socials.tt&&<div style={{fontSize:12,color:"var(--text2)"}}>🎵 tiktok.com/@{c.socials.tt}</div>}
-                {c.socials.yt&&<div style={{fontSize:12,color:"var(--text2)"}}>▶️ youtube.com/@{c.socials.yt}</div>}
+                {c.socials.yt&&<div style={{fontSize:12,color:"var(--text2)",display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:10,fontWeight:700}}>YT</span> youtube.com/@{c.socials.yt}</div>}
                 {c.socials.tw&&<div style={{fontSize:12,color:"var(--text2)"}}>🐦 x.com/{c.socials.tw}</div>}
-                {c.socials.web&&<div style={{fontSize:12,color:"var(--text2)"}}>🌐 {c.socials.web}</div>}
+                {c.socials.web&&<div style={{fontSize:12,color:"var(--text2)",display:"flex",alignItems:"center",gap:4}}>{ICONS.link(12)} {c.socials.web}</div>}
                 {!c.socials.ig&&!c.socials.tt&&!c.socials.yt&&<div style={{fontSize:12,color:"var(--text3)",fontStyle:"italic"}}>No social links added yet</div>}
               </div>
             </div>
@@ -12225,10 +12198,10 @@ function CreatorCRMPage({setPage,setSelected,deals,addDeal,showToast,userName,au
             <textarea className="fi" rows={2} placeholder="What they're known for..." value={newCreator.bio} onChange={e=>setNewCreator(x=>({...x,bio:e.target.value}))} style={{resize:"vertical"}}/></div>
             <div style={{fontSize:12,fontWeight:600,color:"var(--text3)",marginTop:4}}>Social Links</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              <input className="fi" placeholder="📸 Instagram handle" value={newCreator.ig} onChange={e=>setNewCreator(x=>({...x,ig:e.target.value}))} style={{fontSize:12}}/>
+              <input className="fi" placeholder="Instagram handle" value={newCreator.ig} onChange={e=>setNewCreator(x=>({...x,ig:e.target.value}))} style={{fontSize:12}}/>
               <input className="fi" placeholder="🎵 TikTok handle" value={newCreator.tt} onChange={e=>setNewCreator(x=>({...x,tt:e.target.value}))} style={{fontSize:12}}/>
-              <input className="fi" placeholder="▶️ YouTube handle" value={newCreator.yt} onChange={e=>setNewCreator(x=>({...x,yt:e.target.value}))} style={{fontSize:12}}/>
-              <input className="fi" placeholder="🌐 Website" value={newCreator.web} onChange={e=>setNewCreator(x=>({...x,web:e.target.value}))} style={{fontSize:12}}/>
+              <input className="fi" placeholder="YouTube handle" value={newCreator.yt} onChange={e=>setNewCreator(x=>({...x,yt:e.target.value}))} style={{fontSize:12}}/>
+              <input className="fi" placeholder="Website URL" value={newCreator.web} onChange={e=>setNewCreator(x=>({...x,web:e.target.value}))} style={{fontSize:12}}/>
             </div>
             <button className="btn btn-primary" onClick={handleAddCreator} style={{marginTop:4}}>Add to Database</button>
           </div>
