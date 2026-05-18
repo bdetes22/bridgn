@@ -1229,6 +1229,20 @@ function TopNav({role,page,setPage,demoMode,deals=[]}) {
 }
 
 // ─── AVAILABILITY BANNER ──────────────────────────────────────────────────────
+function SubscriptionGate({role,feature,onSubscribe}) {
+  return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"80px 24px",textAlign:"center",maxWidth:480,margin:"0 auto"}}>
+      <div style={{width:56,height:56,borderRadius:"50%",background:"var(--accent-light)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--accent)",marginBottom:20}}>{ICONS.sparkles(24)}</div>
+      <div style={{fontSize:22,fontWeight:700,marginBottom:8}}>Upgrade to access {feature||"this feature"}</div>
+      <p style={{fontSize:14,color:"var(--text2)",lineHeight:1.6,marginBottom:24}}>
+        Start your free 30-day trial to unlock your full {role==="creator"?"creator":"brand"} dashboard — analytics, earnings, CRM, and unlimited deals.
+      </p>
+      <button className="btn btn-primary" onClick={onSubscribe} style={{padding:"12px 32px",fontSize:15}}>Start Free Trial — {role==="creator"?"$25":"$50"}/mo</button>
+      <div style={{fontSize:12,color:"var(--text3)",marginTop:10}}>No charge for 30 days. Cancel anytime.</div>
+    </div>
+  );
+}
+
 function AvailabilityBanner({status,setStatus}) {
   const open = status==="open";
   return (
@@ -4156,8 +4170,33 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
               </div>
             );
           })()}
+          {/* ── External Payment Tracking ── */}
+          {activeDeal.paymentMethod==="external"&&activeDeal.status!=="Cancelled"&&activeDeal.status!=="Declined"&&activeDeal.status!=="Expired"&&(
+            <div className="card-lg" style={{padding:"16px 18px"}}>
+              <div style={{fontSize:13,fontWeight:700,marginBottom:10,display:"flex",alignItems:"center",gap:8}}>Payment <span className="badge badge-gray" style={{fontSize:10}}>External</span></div>
+              <div style={{fontSize:12,color:"var(--text2)",marginBottom:14,lineHeight:1.5}}>This deal's payment is being handled outside bridgn.</div>
+              {isBrand&&!activeDeal.externalPaymentSent&&(
+                <button className="btn btn-primary btn-sm" style={{width:"100%"}} onClick={async()=>{
+                  const resp=await fetch(`${BRIDGN_API_URL}/api/deals/mark-external-paid`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bridgnDealId:activeDeal.id,userId:authUser?.id,action:"mark_sent"})});
+                  if(resp.ok){const{deal}=await resp.json();updateDeal(activeDeal.id,{externalPaymentSent:true,...deal});}
+                }}>Mark Payment as Sent</button>
+              )}
+              {isBrand&&activeDeal.externalPaymentSent&&!activeDeal.externalPaymentConfirmed&&(
+                <div style={{padding:"10px 14px",background:"var(--yellow-bg)",border:"1px solid rgba(251,191,36,.3)",borderRadius:"var(--radius-sm)",fontSize:12,color:"var(--yellow)",fontWeight:600}}>Payment marked as sent — waiting for creator to confirm.</div>
+              )}
+              {!isBrand&&activeDeal.externalPaymentSent&&!activeDeal.externalPaymentConfirmed&&(
+                <button className="btn btn-success btn-sm" style={{width:"100%"}} onClick={async()=>{
+                  const resp=await fetch(`${BRIDGN_API_URL}/api/deals/mark-external-paid`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bridgnDealId:activeDeal.id,userId:authUser?.id,action:"confirm_received"})});
+                  if(resp.ok){const{deal}=await resp.json();updateDeal(activeDeal.id,{externalPaymentConfirmed:true,status:"payment_released",...deal});}
+                }}>Confirm Payment Received</button>
+              )}
+              {activeDeal.externalPaymentSent&&activeDeal.externalPaymentConfirmed&&(
+                <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(52,211,153,.3)",borderRadius:"var(--radius-sm)",fontSize:12,color:"var(--green)",fontWeight:600}}>Payment confirmed by both parties.</div>
+              )}
+            </div>
+          )}
           {/* ── Escrow / Payment Panel ── */}
-          {(()=>{
+          {activeDeal.paymentMethod!=="external"&&(()=>{
             const st = activeDeal.status;
             if(st==="Cancelled"||st==="Declined"||st==="Expired") return null;
             const hasPaid = !!activeDeal.paymentIntentId;
@@ -4166,7 +4205,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
             const upfrontAmount = Math.round(activeDeal.amount * upPct / 100);
             const remainingAmount = activeDeal.amount - upfrontAmount;
             // Fee calculated on upfront portion only (remaining has its own fee later)
-            const feeDollars = isFirstDealFree ? 0 : Math.round(upfrontAmount * 0.08);
+            const feeDollars = isFirstDealFree ? 0 : Math.round(upfrontAmount * 0.03);
             const brandTotal = upfrontAmount + feeDollars;
             const creatorNet = activeDeal.amount;
 
@@ -4444,7 +4483,7 @@ function DealRoomPage({setPage,setSelected,deals,role,authUser,updateDeal,select
                   {isFirstDealFree?(
                     <div style={{padding:"10px 14px",background:"var(--green-bg)",border:"1px solid rgba(5,150,105,.2)",borderRadius:8,marginBottom:12,fontSize:12,color:"var(--green)",fontWeight:600,lineHeight:1.5}}>Your first deal is free — no platform fee. You'll only be charged {isPartial?"the upfront amount of $"+upfrontAmount.toLocaleString():"the deal amount of $"+activeDeal.amount.toLocaleString()}.</div>
                   ):(
-                    <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>The creator receives <strong>${activeDeal.amount.toLocaleString()}</strong> total. You'll be charged <strong>${brandTotal.toLocaleString()}</strong> now ({isPartial?upPct+"% upfront + ":""}8% processing fee). Funds are held in escrow until you approve the content.</div>
+                    <div style={{fontSize:"12px",color:"var(--text3)",marginBottom:12,lineHeight:1.55}}>The creator receives <strong>${activeDeal.amount.toLocaleString()}</strong> total. You'll be charged <strong>${brandTotal.toLocaleString()}</strong> now ({isPartial?upPct+"% upfront + ":""}3% processing fee). Funds are held in escrow until you approve the content.</div>
                   )}
                   {achPhase==="error"&&achError&&(
                     <div style={{padding:"9px 12px",borderRadius:"var(--radius-sm)",background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",fontSize:"12px",color:"var(--red)",marginBottom:12,lineHeight:1.5}}>{achError}</div>
@@ -4696,11 +4735,12 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
   const loading = useSkeleton();
   const [step,setStep] = useState(1);
   const [form,setForm] = useState(()=>{
-    const base = {dealName:"",brandName:"",brandEmail:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:""};
+    const base = {dealName:"",brandName:"",brandEmail:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:"",paymentMethod:"escrow",brandContactEmail:""};
     try { const pf=JSON.parse(localStorage.getItem("bridgn_prefill_deal")||"null"); if(pf){localStorage.removeItem("bridgn_prefill_deal"); base.brandName=pf.name||"";} } catch{}
     return base;
   });
   const [contractTypes,setContractTypes] = useState(["flat"]);
+  const soloMode = !!form.brandContactEmail && !form.brandEmail;
   const [sending,setSending] = useState(false);
   const [done,setDone] = useState(false);
   const [dealId] = useState(()=>String(Date.now()));
@@ -4787,11 +4827,13 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
           campaignTitle: form.dealName||(form.brandName+" Campaign"),
           inviteLink: inviteLink,
           createdBy: "creator",
+          paymentMethod: form.paymentMethod||"escrow",
+          brandContactEmail: form.brandContactEmail||undefined,
         }),
       });
       if(resp.ok) {
         const {deal} = await resp.json();
-        onDealCreated({...dealData, ...deal});
+        onDealCreated({...dealData, paymentMethod:form.paymentMethod, ...deal});
       } else {
         const errData = await resp.json().catch(()=>({}));
         console.error("[NewDeal] API error:", resp.status, errData);
@@ -4826,9 +4868,14 @@ function NewDealPage({setPage,onDealCreated,userName,authUser}) {
           {step===1&&(
             <>
               <div className="fg"><label className="fl">Deal Name</label><input className="fi" value={form.dealName} onChange={e=>up("dealName",e.target.value)} placeholder="e.g. Summer Campaign, Product Review"/></div>
-              <div className="frow"><div className="fg"><label className="fl">Brand Name</label><input className="fi" value={form.brandName} onChange={e=>up("brandName",e.target.value)} placeholder="e.g. Nike, GlowUp Co."/></div><div className="fg"><label className="fl">Brand Email</label><input className="fi" type="email" value={form.brandEmail} onChange={e=>up("brandEmail",e.target.value)} placeholder="contact@brand.com"/></div></div>
+              <div className="frow"><div className="fg"><label className="fl">Brand Name</label><input className="fi" value={form.brandName} onChange={e=>up("brandName",e.target.value)} placeholder="e.g. Nike, GlowUp Co."/></div><div className="fg"><label className="fl">Brand Email {form.brandContactEmail?"(relay mode)":""}</label><input className="fi" type="email" value={form.brandContactEmail||form.brandEmail} onChange={e=>{if(soloMode){up("brandContactEmail",e.target.value)}else{up("brandEmail",e.target.value)}}} placeholder="contact@brand.com"/></div></div>
+              <div className="fg" style={{display:"flex",gap:16,alignItems:"center",padding:"8px 0"}}>
+                <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",fontSize:13,color:"var(--text2)"}}><input type="checkbox" checked={!!form.brandContactEmail} onChange={e=>{if(e.target.checked){up("brandContactEmail",form.brandEmail||"");up("brandEmail","");}else{up("brandEmail",form.brandContactEmail||"");up("brandContactEmail","");}}} style={{accentColor:"var(--accent)"}}/> Brand isn't on bridgn (use email relay)</label>
+              </div>
+              {soloMode&&<div style={{padding:"10px 14px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.2)",borderRadius:"var(--radius-sm)",marginBottom:14,fontSize:12,color:"var(--accent)"}}>Email relay mode: when you upload content or scripts, we'll email the brand and they can approve directly from their inbox.</div>}
               <div className="frow"><div className="fg"><label className="fl">Agreed Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="2500"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={form.platform} onChange={e=>up("platform",e.target.value)}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Twitter</option><option>Multiple</option></select></div></div>
-              <div className="fg"><label className="fl">Upfront % (escrow deposit)</label><div style={{display:"flex",gap:8,alignItems:"center"}}><input className="fi" type="number" min="0" max="100" value={form.upfrontPct} onChange={e=>up("upfrontPct",e.target.value)} placeholder="50" style={{maxWidth:100}}/><span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600}}>{form.amount&&form.upfrontPct?`$${Math.round((parseInt(form.amount)||0)*(parseInt(form.upfrontPct)||100)/100).toLocaleString()} upfront`:""}</span></div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>Brand deposits this % into escrow upfront. Set to 100% for full escrow, or lower for split payment with remaining due Net 30 after content goes live.</div></div>
+              <div className="fg"><label className="fl">Payment</label><div style={{display:"flex",gap:8}}><button onClick={()=>up("paymentMethod","escrow")} style={{flex:1,padding:"10px 14px",borderRadius:"var(--radius-sm)",border:"1.5px solid "+(form.paymentMethod!=="external"?"var(--accent)":"var(--border)"),background:form.paymentMethod!=="external"?"var(--accent-light)":"transparent",color:form.paymentMethod!=="external"?"var(--accent)":"var(--text2)",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>Process on bridgn</button><button onClick={()=>up("paymentMethod","external")} style={{flex:1,padding:"10px 14px",borderRadius:"var(--radius-sm)",border:"1.5px solid "+(form.paymentMethod==="external"?"var(--accent)":"var(--border)"),background:form.paymentMethod==="external"?"var(--accent-light)":"transparent",color:form.paymentMethod==="external"?"var(--accent)":"var(--text2)",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>Paying outside bridgn</button></div><div style={{fontSize:11,color:"var(--text3)",marginTop:4}}>{form.paymentMethod==="external"?"Track the deal without processing payments through bridgn.":"Secure escrow payments via ACH. 3% processing fee on the brand side."}</div></div>
+              {form.paymentMethod!=="external"&&<div className="fg"><label className="fl">Upfront % (escrow deposit)</label><div style={{display:"flex",gap:8,alignItems:"center"}}><input className="fi" type="number" min="0" max="100" value={form.upfrontPct} onChange={e=>up("upfrontPct",e.target.value)} placeholder="50" style={{maxWidth:100}}/><span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600}}>{form.amount&&form.upfrontPct?`$${Math.round((parseInt(form.amount)||0)*(parseInt(form.upfrontPct)||100)/100).toLocaleString()} upfront`:""}</span></div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>Brand deposits this % into escrow upfront. Set to 100% for full escrow, or lower for split payment with remaining due Net 30 after content goes live.</div></div>}
               <div className="fg"><label className="fl">Submission Deadline</label><input className="fi" type="date" value={form.deadline} onChange={e=>up("deadline",e.target.value)}/></div>
               <div className="fg"><label className="fl">Deliverables</label><input className="fi" value={form.deliverables} onChange={e=>up("deliverables",e.target.value)} placeholder="e.g. 2x Feed Posts, 1x Reel, 3x Stories"/></div>
               <div className="fg"><label className="fl">Notes (optional)</label><textarea className="fta" style={{minHeight:70}} value={form.notes} onChange={e=>up("notes",e.target.value)} placeholder="Any context about how this deal was negotiated..."></textarea></div>
@@ -4894,7 +4941,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
   const loading = useSkeleton();
   const [step,setStep] = useState(1);
   const [form,setForm] = useState(()=>{
-    const base = {creatorName:"",creatorEmail:"",campaignTitle:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:"",offerValidDays:"14"};
+    const base = {creatorName:"",creatorEmail:"",campaignTitle:"",amount:"",upfrontPct:"50",platform:"Instagram",deadline:"",deliverables:"",notes:"",offerValidDays:"14",paymentMethod:"escrow"};
     try { const pf=JSON.parse(localStorage.getItem("bridgn_prefill_deal")||"null"); if(pf){localStorage.removeItem("bridgn_prefill_deal"); base.creatorName=pf.name||"";} } catch{}
     return base;
   });
@@ -4987,6 +5034,7 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
           inviteLink: inviteLink,
           createdBy: "brand",
           offerValidDays: parseInt(form.offerValidDays)||14,
+          paymentMethod: form.paymentMethod||"escrow",
         }),
       });
       if(resp.ok) {
@@ -5026,7 +5074,8 @@ function BrandNewDealPage({setPage,onDealCreated,userName,authUser}) {
               <div className="fg"><label className="fl">Campaign Title</label><input className="fi" value={form.campaignTitle} onChange={e=>up("campaignTitle",e.target.value)} placeholder="e.g. Summer Launch, Product Review"/></div>
               <div className="frow"><div className="fg"><label className="fl">Creator Name</label><input className="fi" value={form.creatorName} onChange={e=>up("creatorName",e.target.value)} placeholder="e.g. Sarah Johnson"/></div><div className="fg"><label className="fl">Creator Email</label><input className="fi" type="email" value={form.creatorEmail} onChange={e=>up("creatorEmail",e.target.value)} placeholder="creator@email.com"/></div></div>
               <div className="frow"><div className="fg"><label className="fl">Agreed Amount ($)</label><input className="fi" type="number" value={form.amount} onChange={e=>up("amount",e.target.value)} placeholder="2500"/></div><div className="fg"><label className="fl">Platform</label><select className="fsel" value={form.platform} onChange={e=>up("platform",e.target.value)}><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Twitter</option><option>Multiple</option></select></div></div>
-              <div className="fg"><label className="fl">Upfront % (escrow deposit)</label><div style={{display:"flex",gap:8,alignItems:"center"}}><input className="fi" type="number" min="0" max="100" value={form.upfrontPct} onChange={e=>up("upfrontPct",e.target.value)} placeholder="50" style={{maxWidth:100}}/><span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600}}>{form.amount&&form.upfrontPct?`$${Math.round((parseInt(form.amount)||0)*(parseInt(form.upfrontPct)||100)/100).toLocaleString()} upfront`:""}</span></div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>Deposit this % into escrow upfront. Remaining balance due Net 30 after content goes live.</div></div>
+              <div className="fg"><label className="fl">Payment</label><div style={{display:"flex",gap:8}}><button onClick={()=>up("paymentMethod","escrow")} style={{flex:1,padding:"10px 14px",borderRadius:"var(--radius-sm)",border:"1.5px solid "+(form.paymentMethod!=="external"?"var(--accent)":"var(--border)"),background:form.paymentMethod!=="external"?"var(--accent-light)":"transparent",color:form.paymentMethod!=="external"?"var(--accent)":"var(--text2)",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>Process on bridgn</button><button onClick={()=>up("paymentMethod","external")} style={{flex:1,padding:"10px 14px",borderRadius:"var(--radius-sm)",border:"1.5px solid "+(form.paymentMethod==="external"?"var(--accent)":"var(--border)"),background:form.paymentMethod==="external"?"var(--accent-light)":"transparent",color:form.paymentMethod==="external"?"var(--accent)":"var(--text2)",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>Paying outside bridgn</button></div><div style={{fontSize:11,color:"var(--text3)",marginTop:4}}>{form.paymentMethod==="external"?"Track the deal without processing payments through bridgn.":"Secure escrow payments via ACH. 3% processing fee."}</div></div>
+              {form.paymentMethod!=="external"&&<div className="fg"><label className="fl">Upfront % (escrow deposit)</label><div style={{display:"flex",gap:8,alignItems:"center"}}><input className="fi" type="number" min="0" max="100" value={form.upfrontPct} onChange={e=>up("upfrontPct",e.target.value)} placeholder="50" style={{maxWidth:100}}/><span style={{fontSize:"13px",color:"var(--text2)",fontWeight:600}}>{form.amount&&form.upfrontPct?`$${Math.round((parseInt(form.amount)||0)*(parseInt(form.upfrontPct)||100)/100).toLocaleString()} upfront`:""}</span></div><div style={{fontSize:"11px",color:"var(--text3)",marginTop:3}}>Deposit this % into escrow upfront. Remaining balance due Net 30 after content goes live.</div></div>}
               <div className="fg"><label className="fl">Submission Deadline</label><input className="fi" type="date" value={form.deadline} onChange={e=>up("deadline",e.target.value)}/></div>
               <div className="fg"><label className="fl">Deliverables</label><input className="fi" value={form.deliverables} onChange={e=>up("deliverables",e.target.value)} placeholder="e.g. 2x Feed Posts, 1x Reel, 3x Stories"/></div>
               <div className="frow"><div className="fg"><label className="fl">Notes (optional)</label><textarea className="fta" style={{minHeight:70}} value={form.notes} onChange={e=>up("notes",e.target.value)} placeholder="Any context about the campaign..."></textarea></div><div className="fg"><label className="fl">Offer valid for</label><select className="fsel" value={form.offerValidDays||"14"} onChange={e=>up("offerValidDays",e.target.value)}><option value="7">7 days</option><option value="14">14 days</option><option value="21">21 days</option><option value="30">30 days</option></select><div style={{fontSize:11,color:"var(--text3)",marginTop:3}}>Offer auto-expires if not accepted.</div></div></div>
@@ -9453,7 +9502,7 @@ function BrandCompanyProfile({socialLinks,setSocialLinks,sectionCard,sectionTitl
   </>);
 }
 
-function SettingsPage({authUser,darkMode,setDarkMode,onSignOut,role,setRole,socialLinks={},setSocialLinks,userName:passedName,userInitials:passedInitials}) {
+function SettingsPage({authUser,darkMode,setDarkMode,onSignOut,role,setRole,socialLinks={},setSocialLinks,userName:passedName,userInitials:passedInitials,subStatus,trialEndsAt,isSubscribed,onSubscribe,onManageBilling}) {
   const loading = useSkeleton();
 
   // Notification emails (brand accounts)
@@ -9587,6 +9636,29 @@ function SettingsPage({authUser,darkMode,setDarkMode,onSignOut,role,setRole,soci
           <div className="page-subtitle">Manage your account, notifications, and preferences.</div>
         </div>
       </div>
+
+      {/* Plan & Billing */}
+      {sectionCard(<>
+        {sectionTitle("Plan & Billing")}
+        {subStatus==="trialing"&&trialEndsAt&&(()=>{
+          const days=Math.max(0,Math.ceil((new Date(trialEndsAt)-Date.now())/(1000*60*60*24)));
+          return <div style={{padding:"10px 16px",background:"var(--accent-light)",border:"1px solid rgba(91,138,245,.2)",borderRadius:"var(--radius-sm)",marginBottom:14,fontSize:13,color:"var(--accent)",fontWeight:600}}>Free trial — {days} day{days!==1?"s":""} remaining</div>;
+        })()}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <div style={{fontSize:14,fontWeight:700}}>{role==="creator"?"Creator Plan":"Brand Plan"}</div>
+            <div style={{fontSize:12,color:"var(--text3)",marginTop:3}}>
+              {subStatus==="active"?`$${role==="creator"?"25":"50"}/month`:subStatus==="trialing"?"Trial active":subStatus==="past_due"?"Payment failed — update billing":"No active plan"}
+            </div>
+          </div>
+          {isSubscribed?(
+            <button className="btn btn-secondary btn-sm" onClick={onManageBilling}>Manage Subscription</button>
+          ):(
+            <button className="btn btn-primary btn-sm" onClick={onSubscribe}>Start Free Trial</button>
+          )}
+        </div>
+        {subStatus==="canceled"&&<div style={{fontSize:12,color:"var(--text3)",marginTop:8}}>Your subscription ended. Start a new trial to regain full access.</div>}
+      </>)}
 
       {/* Account */}
       {sectionCard(<>
@@ -12397,6 +12469,8 @@ function App() {
   const [mobSidebar,setMobSidebar] = useState(false);
   const [cmdkOpen,setCmdkOpen] = useState(false);
   const [cmdkQuery,setCmdkQuery] = useState("");
+  const [subStatus,setSubStatus] = useState("none");
+  const [trialEndsAt,setTrialEndsAt] = useState(null);
   const [socialLinks,setSocialLinks] = useState({ig:"",tt:"",yt:"",tw:"",web:"",bio:"",location:""});
   const [campaignQuestions,setCampaignQuestions] = useState({});
   const [onboarding,setOnboarding] = useState({seen:false,steps:{analytics:false}});
@@ -12508,6 +12582,20 @@ function App() {
       window.history.replaceState({},"",window.location.pathname);
     }
   },[deals]);
+
+  // Fetch subscription status on auth
+  useEffect(()=>{
+    if(!authUser || demoMode) return;
+    fetch(`${BRIDGN_API_URL}/api/subscription/status?userId=${authUser.id}&role=${role}`)
+      .then(r=>r.json())
+      .then(d=>{setSubStatus(d.subscription_status||"none");setTrialEndsAt(d.trial_ends_at||null);})
+      .catch(()=>{});
+    // Handle ?sub=success return from Stripe Checkout
+    const params = new URLSearchParams(window.location.search);
+    if(params.get("sub")==="success"){setSubStatus("trialing");window.history.replaceState({},"",window.location.pathname);}
+  },[authUser,role]);
+
+  const isSubscribed = ["active","trialing"].includes(subStatus) || demoMode;
 
   // Check real Stripe Connect status and load profile image from Supabase on auth
   useEffect(()=>{
@@ -12872,6 +12960,16 @@ function App() {
   const userName = authUser.user_metadata?.full_name || authUser.user_metadata?.company_name || authUser.email.split("@")[0];
   const userInitials = userName.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
 
+  const handleSubscribe = () => {
+    fetch(`${BRIDGN_API_URL}/api/subscription/create-checkout`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:authUser.id,email:authUser.email,role})})
+      .then(r=>r.json()).then(d=>{if(d.url) window.location.href=d.url;}).catch(()=>{});
+  };
+  const handleManageBilling = () => {
+    fetch(`${BRIDGN_API_URL}/api/subscription/create-portal`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:authUser.id,role})})
+      .then(r=>r.json()).then(d=>{if(d.url) window.location.href=d.url;}).catch(()=>{});
+  };
+  const gate = (feature, el) => isSubscribed ? el : React.createElement(SubscriptionGate,{role,feature,onSubscribe:handleSubscribe});
+
   const render = () => {
     if(role==="creator") {
       switch(page) {
@@ -12884,7 +12982,7 @@ function App() {
         case "new-deal":     return React.createElement(NewDealPage,{setPage,onDealCreated:addDeal,userName,authUser});
         case "dispute":      return React.createElement(DisputePage,{deal:selected,setPage});
         case "offer":        return React.createElement(OfferPage,{offer:selected,setPage});
-        case "analytics":    return React.createElement(CreatorAnalyticsPage,{onAnalyticsUploaded:()=>updateProfileFlags({analyticsUploaded:true})});
+        case "analytics":    return gate("Analytics",React.createElement(CreatorAnalyticsPage,{onAnalyticsUploaded:()=>updateProfileFlags({analyticsUploaded:true})}));
         case "calendar":     return React.createElement(CalendarPage,{deals,role,setPage,setSelected});
         case "workspace":    return React.createElement(WorkspacePage,{deals,authUser,setPage,setSelected});
         case "marketplace":  return React.createElement(MarketplaceCreatorPage,{setPage,setSelected,deals,addDeal,showToast});
@@ -12893,8 +12991,8 @@ function App() {
         case "invoices":     return React.createElement(InvoicesPage,{role});
         case "public-profile": return React.createElement(PublicProfilePage,{setPage,userName,userInitials,socialLinks,deals,demoMode,profileImageUrl,profilePct:PC_ITEMS.reduce((s,it)=>s+(({initials:true,bio:!!socialLinks.bio?.trim(),social:SOCIALS.some(x=>socialLinks[x.key]?.trim()),analytics:!!profileFlags.analyticsUploaded,ratecard:!!profileFlags.rateCardFilled,avail:!!profileFlags.availabilitySet})[it.key]?it.weight:0),0)});
         case "profile-settings": return React.createElement(ProfileSettingsPage,{socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials,authUser,role,profileImageUrl,setProfileImageUrl});
-        case "earnings":     return React.createElement(EarningsPage,{deals});
-        case "collaborators": return React.createElement(CollaboratorsPage,{authUser,role,setPage,deals});
+        case "earnings":     return gate("Earnings",React.createElement(EarningsPage,{deals}));
+        case "collaborators": return gate("Collaborators",React.createElement(CollaboratorsPage,{authUser,role,setPage,deals}));
         case "offers":       return React.createElement(OffersPage,{authUser,deals,setPage,setSelected,updateDeal});
         case "my-affiliate": return React.createElement(AffiliateCreatorPage,{authUser});
         case "contracts":    return React.createElement(ContractVaultPage,{authUser,deals});
@@ -12902,7 +13000,7 @@ function App() {
         case "expenses":     return React.createElement(ExpensesPage,{});
         case "messages":     return React.createElement(MessagesPage,{setPage,demoMode});
         case "notifications":return React.createElement(NotificationsPage,{setPage,setSelected,deals,authUser,demoMode});
-        case "settings":     return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role,setRole});
+        case "settings":     return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role,setRole,subStatus,trialEndsAt,isSubscribed,onSubscribe:handleSubscribe,onManageBilling:handleManageBilling});
         default:             return React.createElement(CreatorDashboard,{setPage,setSelected,deals,availStatus,setAvailStatus,userName,profileFlags});
       }
     } else {
@@ -12917,11 +13015,11 @@ function App() {
         case "new-deal":      return React.createElement(BrandNewDealPage,{setPage,onDealCreated:addDeal,userName,authUser});
         case "calendar":      return React.createElement(CalendarPage,{deals,role,setPage,setSelected});
         case "marketplace":   return React.createElement(MarketplaceBrandPage,{setPage,setSelected,deals,addDeal,showToast,userName,authUser});
-        case "creator-crm":   return React.createElement(CreatorCRMPage,{setPage,setSelected,deals,addDeal,showToast,userName,authUser});
-        case "review-queue":  return React.createElement(ReviewQueuePage,{deals,setPage,setSelected,showToast});
-        case "content-tracker": return React.createElement(ContentTrackerPage,{authUser,deals,demoMode});
-        case "spending":      return React.createElement(SpendingDashboard,{deals});
-        case "collaborators": return React.createElement(CollaboratorsPage,{authUser,role,setPage,deals});
+        case "creator-crm":   return gate("Creator CRM",React.createElement(CreatorCRMPage,{setPage,setSelected,deals,addDeal,showToast,userName,authUser}));
+        case "review-queue":  return gate("Review Queue",React.createElement(ReviewQueuePage,{deals,setPage,setSelected,showToast}));
+        case "content-tracker": return gate("Content Tracker",React.createElement(ContentTrackerPage,{authUser,deals,demoMode}));
+        case "spending":      return gate("Spending",React.createElement(SpendingDashboard,{deals}));
+        case "collaborators": return gate("Collaborators",React.createElement(CollaboratorsPage,{authUser,role,setPage,deals}));
         case "content-library": return React.createElement(ContentLibraryPage,{});
         case "affiliate":     return React.createElement(AffiliateManagerPage,{authUser,deals});
         case "brief-builder": return React.createElement(BriefBuilderPage,{});
@@ -12933,7 +13031,7 @@ function App() {
         case "invoices":      return React.createElement(InvoicesPage,{role});
         case "messages":      return React.createElement(MessagesPage,{setPage,demoMode});
         case "notifications": return React.createElement(NotificationsPage,{setPage,setSelected,deals,authUser,demoMode});
-        case "settings":      return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role,setRole,socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials,profileImageUrl,setProfileImageUrl});
+        case "settings":      return React.createElement(SettingsPage,{authUser,darkMode,setDarkMode,onSignOut:handleSignOut,role,setRole,socialLinks,setSocialLinks:saveSocialLinks,userName,userInitials,profileImageUrl,setProfileImageUrl,subStatus,trialEndsAt,isSubscribed,onSubscribe:handleSubscribe,onManageBilling:handleManageBilling});
         default:              return React.createElement(BrandDashboard,{setPage,setSelected,authUser});
       }
     }

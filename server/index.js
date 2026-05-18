@@ -12,6 +12,7 @@ const dealsRouter   = require("./routes/deals");
 const notifyRouter    = require("./routes/notify");
 const affiliateRouter = require("./routes/affiliate");
 const contentRouter   = require("./routes/content");
+const subscriptionRouter = require("./routes/subscription");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -50,6 +51,7 @@ app.use("/api/deals", dealsRouter);
 app.use("/api/notify", notifyRouter);
 app.use("/api/affiliate", affiliateRouter);
 app.use("/api/content", contentRouter);
+app.use("/api/subscription", subscriptionRouter);
 
 // Affiliate redirect — /r/:code (must be before the catch-all)
 app.use(affiliateRouter);

@@ -28,6 +28,7 @@ const {
   getCreatorProfileByStripeAccount,
   updateCreatorProfileByStripeAccount,
   insertNotification,
+  updateSubscription,
 } = require("../../lib/db");
 const { sendEmail, paymentSettledEmail } = require("../../lib/email");
 
@@ -465,6 +466,45 @@ router.post("/", async (req, res) => {
       case "charge.dispute.created":
         await onDisputeCreated(obj);
         break;
+
+      // ── Subscription lifecycle ──
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const sub = obj;
+        const userId = sub.metadata?.bridgn_user_id;
+        const role = sub.metadata?.role;
+        if (userId && role) {
+          const fields = {
+            stripe_subscription_id: sub.id,
+            subscription_status: sub.status,
+            trial_ends_at: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+          };
+          await updateSubscription(userId, role, fields);
+          log.info("webhook", `Subscription ${event.type}: ${sub.status}`, { userId, role, subId: sub.id });
+          if (sub.status === "past_due") {
+            await insertNotification(userId, "payment_warning", {
+              message: "Your bridgn subscription payment failed. Please update your payment method to keep your account active.",
+            });
+          }
+        }
+        break;
+      }
+      case "customer.subscription.deleted": {
+        const sub = obj;
+        const userId = sub.metadata?.bridgn_user_id;
+        const role = sub.metadata?.role;
+        if (userId && role) {
+          await updateSubscription(userId, role, {
+            subscription_status: "canceled",
+            stripe_subscription_id: null,
+          });
+          await insertNotification(userId, "account_flagged", {
+            message: "Your bridgn subscription has ended. Subscribe again to create new deals and access all features.",
+          });
+          log.info("webhook", "Subscription canceled", { userId, role, subId: sub.id });
+        }
+        break;
+      }
 
       default:
         log.info("webhook", `Unhandled event type: ${event.type}`, { eventId: event.id });

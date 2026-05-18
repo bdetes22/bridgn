@@ -20,8 +20,11 @@ const {
   getCreatorProfile,
   getBrandProfile,
   upsertBrandProfile,
+  getDealByGuestToken,
+  getSubscriptionStatus,
+  countActiveDealsForUser,
 } = require("../../lib/db");
-const { sendEmail, dealInviteEmail, deadlineReminderEmail, contentLiveEmail, paymentOverdueEmail } = require("../../lib/email");
+const { sendEmail, dealInviteEmail, deadlineReminderEmail, contentLiveEmail, paymentOverdueEmail, guestDealNotificationEmail } = require("../../lib/email");
 const { stripe } = require("../../lib/stripe");
 
 const router = express.Router();
@@ -94,6 +97,12 @@ function dealToFrontend(row) {
     counterBy:           row.counter_by || null,
     // Creator workspace (private)
     creatorWorkspace:  row.creator_workspace || {},
+    // Payment method & external tracking
+    paymentMethod:           row.payment_method || "escrow",
+    externalPaymentSent:     !!row.external_payment_sent,
+    externalPaymentConfirmed:!!row.external_payment_confirmed,
+    brandContactEmail:       row.brand_contact_email || null,
+    guestToken:              row.guest_token || null,
   };
 }
 
@@ -114,6 +123,7 @@ router.post("/", async (req, res) => {
     creatorEmail, inviteeEmail,
     amount, platform, deliverables, deadline, campaignTitle,
     inviteLink, createdBy, upfrontPct, offerValidDays,
+    paymentMethod, brandContactEmail,
   } = req.body;
 
   // Either side can create a deal
@@ -148,6 +158,15 @@ router.post("/", async (req, res) => {
     // Only include upfront_pct if provided (graceful when migration hasn't run)
     const pctVal = parseInt(upfrontPct);
     if (pctVal && pctVal !== 100) dealFields.upfront_pct = Math.max(1, Math.min(100, pctVal));
+
+    // Payment method: "escrow" (default) or "external"
+    if (paymentMethod === "external") dealFields.payment_method = "external";
+
+    // Solo creator mode: brand not on platform, use email relay
+    if (brandContactEmail && !brandUserId) {
+      dealFields.brand_contact_email = brandContactEmail;
+      dealFields.guest_token = require("crypto").randomUUID();
+    }
 
     // Set offer expiration (default 14 days for brand-created offers)
     if (createdBy === "brand") {
@@ -368,6 +387,8 @@ const ALLOWED_FIELDS = [
   "cancel_requested_by", "cancel_reason", "cancel_agreed_at",
   "offer_expires_at", "decline_reason",
   "counter_amount_cents", "counter_upfront_pct", "counter_deliverables", "counter_message", "counter_by",
+  "payment_method", "external_payment_sent", "external_payment_confirmed",
+  "brand_contact_email",
 ];
 
 router.put("/update", async (req, res) => {
@@ -739,6 +760,139 @@ router.get("/profile/:userId", async (req, res) => {
     });
   } catch (err) {
     console.error("[deals/profile]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── POST /api/deals/mark-external-paid — brand marks sent / creator confirms ─
+
+router.post("/mark-external-paid", async (req, res) => {
+  const { bridgnDealId, userId, action } = req.body;
+  if (!bridgnDealId || !userId || !action) {
+    return res.status(400).json({ error: "bridgnDealId, userId, and action are required" });
+  }
+  try {
+    const deal = await getDealByBridgnDealId(bridgnDealId);
+    if (!deal) return res.status(404).json({ error: "Deal not found" });
+
+    const isBrand = userId === deal.brand_user_id;
+    const isCreator = userId === deal.creator_user_id;
+    if (!isBrand && !isCreator) return res.status(403).json({ error: "Not authorized" });
+
+    const updates = {};
+    if (action === "mark_sent" && isBrand) {
+      updates.external_payment_sent = true;
+    } else if (action === "confirm_received" && isCreator) {
+      updates.external_payment_confirmed = true;
+      if (deal.external_payment_sent) {
+        updates.status = "payment_released";
+      }
+    } else {
+      return res.status(400).json({ error: "Invalid action for your role" });
+    }
+
+    const updated = await updateDealById(deal.id, updates);
+
+    // Notify the other party
+    const recipientId = isBrand ? deal.creator_user_id : deal.brand_user_id;
+    if (recipientId) {
+      await insertNotification(recipientId, isBrand ? "payment_held" : "payment_released", {
+        bridgn_deal_id: deal.bridgn_deal_id,
+        message: isBrand
+          ? `${deal.brand_name || "Brand"} marked the payment as sent for ${deal.campaign_title || "your deal"}.`
+          : `${deal.creator_name || "Creator"} confirmed payment received for ${deal.campaign_title || "your deal"}.`,
+      });
+    }
+
+    res.json({ deal: dealToFrontend(updated) });
+  } catch (err) {
+    console.error("[deals/mark-external-paid]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── GET /api/deals/guest-action — tokenized actions for non-platform brands ─
+
+router.get("/guest-action", async (req, res) => {
+  const { token, action } = req.query;
+  if (!token || !action) {
+    return res.status(400).send("<h2>Invalid link</h2><p>This action link is missing required parameters.</p>");
+  }
+  try {
+    const deal = await getDealByGuestToken(token);
+    if (!deal) {
+      return res.status(404).send("<h2>Deal not found</h2><p>This link may have expired or the deal no longer exists.</p>");
+    }
+
+    const dealTitle = deal.campaign_title || "Deal";
+    const updates = {};
+
+    if (action === "approve") {
+      updates.approved_deliverables = ["all"];
+      if (deal.status === "content_submitted" || deal.status === "Active") {
+        updates.status = "content_delivered";
+      }
+      // Notify creator
+      if (deal.creator_user_id) {
+        await insertNotification(deal.creator_user_id, "content_submitted", {
+          bridgn_deal_id: deal.bridgn_deal_id,
+          message: `${deal.brand_name || "Your brand partner"} approved the deliverables for ${dealTitle}.`,
+        });
+      }
+    } else if (action === "request_changes") {
+      // Notify creator about changes requested
+      if (deal.creator_user_id) {
+        await insertNotification(deal.creator_user_id, "new_message", {
+          bridgn_deal_id: deal.bridgn_deal_id,
+          message: `${deal.brand_name || "Your brand partner"} requested changes on ${dealTitle}. Check your email or deal room for details.`,
+        });
+      }
+    } else {
+      return res.status(400).send("<h2>Invalid action</h2>");
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await updateDealById(deal.id, updates);
+    }
+
+    const CLIENT_URL = process.env.CLIENT_URL || process.env.APP_URL || "https://bridgn.com";
+    res.send(`
+      <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+      <title>bridgn — Action Confirmed</title>
+      <style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f4f5f7;margin:0}
+      .card{background:white;border-radius:16px;padding:48px;text-align:center;max-width:420px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+      h2{color:#1f2937;margin:0 0 12px}p{color:#6b7280;line-height:1.6;margin:0 0 24px}
+      a{display:inline-block;padding:12px 28px;background:#1a7fa8;color:white;text-decoration:none;border-radius:10px;font-weight:600}</style></head>
+      <body><div class="card">
+        <h2>${action === "approve" ? "Deliverables Approved" : "Changes Requested"}</h2>
+        <p>${action === "approve"
+          ? `You approved the deliverables for <strong>${dealTitle}</strong>. The creator has been notified.`
+          : `You requested changes on <strong>${dealTitle}</strong>. The creator has been notified.`}</p>
+        <a href="${CLIENT_URL}">Open bridgn</a>
+      </div></body></html>
+    `);
+  } catch (err) {
+    console.error("[deals/guest-action]", err);
+    res.status(500).send("<h2>Something went wrong</h2><p>Please try again or contact support.</p>");
+  }
+});
+
+// ─── GET /api/deals/subscription-check — verify user can create deals ────────
+
+router.get("/subscription-check", async (req, res) => {
+  const { userId, role } = req.query;
+  if (!userId || !role) return res.status(400).json({ error: "userId and role required" });
+  try {
+    const sub = await getSubscriptionStatus(userId, role);
+    const isSubscribed = ["active", "trialing"].includes(sub.subscription_status);
+    if (isSubscribed) return res.json({ allowed: true, reason: "subscribed" });
+
+    const activeCount = await countActiveDealsForUser(userId);
+    if (activeCount < 2) return res.json({ allowed: true, reason: "guest", activeDeals: activeCount, limit: 2 });
+
+    return res.json({ allowed: false, reason: "limit_reached", activeDeals: activeCount, limit: 2 });
+  } catch (err) {
+    console.error("[deals/subscription-check]", err);
     res.status(500).json({ error: err.message });
   }
 });
